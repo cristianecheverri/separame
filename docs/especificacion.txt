@@ -1,0 +1,281 @@
+NUEVO PROYECTO (fuera de Cartazos)
+Actualizado: 20 de octubre de 2026
+
+Objetivo: un sistema que ayude a las personas en algo concreto y que genere
+ingresos, reaprovechando lo que ya construí en Cartazos (serverless en AWS,
+tiempo real, enlaces sin registro, PWA en español e inglés).
+
+
+####################################################################
+PROYECTO ELEGIDO: SEPÁRAME  (separame.app)
+####################################################################
+
+QUÉ ES
+  Agenda de citas en línea para CUALQUIER tipo de profesional: médicos,
+  odontólogos, psicólogos, abogados, estética, entrenadores, tutores...
+  - El profesional tiene su perfil y su calendario, y lo administra.
+  - Comparte un enlace (ej. separame.app/dra-perez).
+  - El cliente, sin crear cuenta, elige día y hora, pone nombre, correo y
+    teléfono, y listo.
+  - La cita confirmada trae enlace para Google Calendar y Outlook.
+
+A QUIÉN AYUDA / QUIÉN PAGA
+  - Ayuda al cliente (agenda en segundos, sin llamar ni esperar respuesta).
+  - Ayuda al profesional (menos citas perdidas, menos tiempo agendando).
+  - Paga el profesional, con suscripción. Se vende solo: una cita perdida
+    le cuesta entre $50.000 y $150.000.
+
+CÓMO NOS DIFERENCIAMOS (hay competencia: Google Calendar gratis,
+Calendly, Fresha, AgendaPro)
+  - Hecho para Colombia: pesos, Nequi, festivos colombianos, en español.
+  - Menos citas perdidas: recordatorios automáticos.
+  - Facilidad extrema para el profesional y para el cliente.
+  - Precio muy bajo.
+
+
+--------------------------------------------------------------------
+FUNCIONES DE LA PRIMERA VERSIÓN (MVP)
+--------------------------------------------------------------------
+  1. Perfil público del profesional con su enlace propio.
+  2. Servicios con duración y precio de referencia
+     (ej. "Consulta 30 min", "Control 15 min").
+  3. Disponibilidad:
+     - horario semanal + excepciones (vacaciones, festivos);
+     - margen entre citas;
+     - anticipación mínima (nadie agenda para dentro de 1 hora);
+     - hasta cuántos días adelante se puede reservar.
+  4. Reserva sin cuenta: día, hora, nombre, correo, teléfono.
+     Casilla de autorización de datos personales (Ley 1581).
+  5. Correo de confirmación con:
+     - archivo .ics + botones "Agregar a Google Calendar" / "Outlook"
+       (no requiere conectarse a Google ni a Microsoft);
+     - enlace para cancelar o reprogramar sin cuenta.
+  6. Recordatorio por correo 24 h antes.
+  7. Cero citas dobles: el horario se reserva de forma atómica.
+  8. Protección anti-spam en la página pública (límite + captcha invisible).
+  9. Panel del profesional: ver, crear, mover y cancelar citas.
+
+DESPUÉS (algunas como extras de pago)
+  - Recordatorios por WhatsApp (NO por ahora; cada mensaje tiene costo).
+  - Sincronización con Google Calendar (requiere revisión de Google,
+    tarda semanas).
+  - Cobro de anticipo al reservar (el mejor remedio contra ausencias).
+  - Lista de espera: si alguien cancela, se avisa al siguiente.
+  - Plan para equipos: varios profesionales en un mismo consultorio.
+  - Estadísticas: ocupación, tasa de ausencias.
+
+FUERA DE LA PRIMERA VERSIÓN
+  - WhatsApp.
+  - Notas clínicas (datos de salud = "datos sensibles" por ley).
+
+
+--------------------------------------------------------------------
+REGLAS DE SUSCRIPCIÓN
+--------------------------------------------------------------------
+  - Prueba gratis de 7 días por profesional.
+    Una sola prueba por correo verificado (evita abusos). No se verifica
+    el teléfono por SMS; se bloquean los correos desechables.
+  - Suscripción VIGENTE: todo funciona.
+  - Suscripción VENCIDA:
+    - Panel en solo lectura: puede entrar y ver sus citas, no administrar.
+    - Nadie puede pedir citas nuevas. La página pública dice
+      "Agenda no disponible temporalmente" (nunca "no ha pagado").
+    - Las citas ya agendadas SÍ siguen enviando recordatorios y se pueden
+      cancelar (el cliente del profesional no tiene la culpa).
+  - 2-3 días de gracia antes de bloquear (un pago fallido no corta la
+    agenda de golpe).
+  - Pago manual (por fuera de Wompi): desde el panel de administración
+    puedo registrar un pago hecho por transferencia, Nequi directo,
+    efectivo o como cortesía, y fijar la vigencia (+3 / +6 / +12 meses o
+    una fecha exacta). La agenda se activa al instante.
+    - Si el plan ya venció, los meses se cuentan desde hoy.
+    - Conserva la versión de precio del profesional.
+    - Queda registrado quién lo hizo, cuándo, método, monto y referencia.
+    - Opcional: correo al profesional con el comprobante y la nueva fecha.
+  - Todas estas reglas se comprueban en el SERVIDOR, no solo en la pantalla.
+
+
+--------------------------------------------------------------------
+PRECIOS
+--------------------------------------------------------------------
+  - Configurables desde un panel de administración.
+  - Idea inicial: desde $5.000 COP/mes (valor dinámico; se define luego).
+  - PRECIO CONGELADO: quien se suscribe a un precio lo conserva, salvo
+    que yo se lo suba a él (o a su grupo).
+    Cómo se maneja:
+    - Cada precio es una versión (monto, moneda, periodo, activo).
+      Cambiar el precio = crear una versión nueva; la anterior no se toca.
+    - Cada suscripción guarda su versión de precio; las renovaciones
+      cobran esa.
+    - Subir el precio a alguien = acción en el panel, con fecha efectiva
+      y aviso por correo 30 días antes.
+  - Gancho de marketing: "PRECIO FUNDADOR". Los primeros clientes se quedan
+    con $5.000 para siempre; después se sube solo para los nuevos.
+
+  OJO con la comisión de Wompi (2,65% + $700 + IVA): el cargo fijo se come
+  los cobros pequeños.
+    1 mes   · $5.000   -> comisión ~$991    (~20%)
+    3 meses · $15.000  -> comisión ~$1.306  (~9%)
+    6 meses · $30.000  -> comisión ~$1.779  (~6%)
+    12 meses· $50.000  -> comisión ~$2.410  (~5%)   (2 meses gratis)
+  Propuesta: anunciar "desde $5.000/mes" pero cobrar en paquetes de 3, 6 o
+  12 meses. Si hay plan mensual, que sea de unos $5.900.
+
+
+--------------------------------------------------------------------
+PASARELA DE PAGOS: WOMPI (Bancolombia)
+--------------------------------------------------------------------
+  - Un solo checkout con Nequi, tarjetas, PSE, botón Bancolombia y
+    Daviplata.
+  - 2,65% + $700 + IVA por transacción, sin mensualidad.
+    El dinero llega al día hábil siguiente.
+  - Promoción Nequi: devuelve comisiones de Wompi a comercios nuevos,
+    vigente hasta el 31-dic-2026 (confirmar condiciones).
+  - Cómo cobrar al principio: PREPAGO, no renovación automática.
+    El profesional paga 1/3/12 meses -> Wompi avisa al sistema (webhook,
+    verificando la firma) -> la suscripción se extiende hasta una fecha.
+    3 días antes de vencer: correo con enlace para renovar.
+    Ventajas: sin cobros fallidos ni reintentos, sirve con PSE.
+  - Después: renovación automática guardando tarjeta o Nequi
+    (Wompi lo permite; cada cobro lo dispara mi sistema).
+  - Alternativa: Mercado Pago (suscripciones automáticas con prueba y
+    reintentos), pero sin Nequi y menos usado en Colombia.
+  - Para cobrar en USD fuera de Colombia más adelante: una plataforma que
+    actúe como vendedor y gestione impuestos (Paddle, Lemon Squeezy).
+    Empezar solo con Colombia y en pesos.
+
+
+--------------------------------------------------------------------
+ARQUITECTURA (todo serverless, casi gratis en reposo)
+--------------------------------------------------------------------
+  - Mismo enfoque que Cartazos, con AWS CDK.
+  - Cuenta de AWS actual (ahí están los créditos y el dominio). Sepárame
+    se aísla dentro de ella: cuota de Lambdas simultáneas subida a 1.000,
+    etiqueta project=separame en todo (para ver sus costos aparte),
+    prefijo separame-<ambiente>- y permisos mínimos por Lambda.
+  - Dos ambientes idénticos, dev y prod (mismo código, solo cambia la
+    configuración):
+    - dev: dev.separame.app, api.dev.separame.app,
+      noreply@dev.separame.app, Wompi sandbox. Se despliega desde local.
+    - prod: separame.app, api.separame.app, noreply@separame.app, Wompi
+      real. Se despliega solo con cada push a main (GitHub Actions corre
+      typecheck, lint y tests antes de desplegar).
+    - Tablas, usuarios de Cognito y buckets separados por ambiente.
+  - Profesionales y admin: cuenta real en Cognito (plan Essentials,
+    gratis hasta 10.000 usuarios activos al mes). Entran sin contraseña,
+    con un código de 6 dígitos que les llega al correo. Los correos de
+    Cognito salen por SES. Clientes: sin cuenta, solo el enlace público.
+  - TODO con CDK, como Cartazos y blobhive.
+  - Backend: API Gateway HTTP API en api.separame.app + DynamoDB
+    (tabla única, on-demand).
+    Cada horario reservado es un registro único -> sin citas dobles.
+    - Varias Lambdas pequeñas y específicas (una por grupo de rutas,
+      el webhook, los jobs y los triggers de Cognito), no una que lo
+      haga todo. Cada una empaqueta solo lo que usa para arrancar rápido.
+    - Rutas públicas sin login; rutas del panel y del admin protegidas
+      con el autorizador JWT de Cognito que trae el HTTP API.
+    - Límites de tráfico por ruta (más bajos al reservar).
+    - Lambdas en ARM (Graviton): ~20% más baratas.
+  - DESCARTADO: AppSync. Cuesta ~4 veces más por llamada, el webhook de
+    Wompi necesita un endpoint HTTP normal de todas formas y la página
+    pública sin cuenta es más simple sin API key. No hace falta tiempo
+    real: el panel se refresca al abrirlo o cada 1-2 minutos.
+  - Correos con SES desde noreply@separame.app (dominio verificado con
+    DKIM, SPF y DMARC), con su propio configuration set: los rebotes y
+    quejas se registran para no volver a escribir a esas direcciones.
+    SES se comparte con Cartazos y blobhive en la misma cuenta, así que
+    cuidar la tasa de rebote es obligatorio.
+  - Sin SMS: no se verifica el teléfono ni se envían mensajes de texto.
+  - Correos por eventos: reservar, mover o cancelar solo escribe en la
+    base de datos; un DynamoDB Stream dispara el envío del correo, con
+    reintentos. Así el cliente recibe respuesta rápido y ningún correo
+    se pierde por una falla momentánea.
+  - Recordatorios y avisos de vencimiento: UNA tarea recurrente cada 10
+    minutos (EventBridge Scheduler), no una tarea por cita. La hora del
+    recordatorio se guarda en la misma cita y cambia con ella al moverla
+    o cancelarla, así que nunca queda un recordatorio equivocado.
+  - Respaldo continuo de la base de datos (PITR) en ambos ambientes.
+  - Webhook de Wompi: Lambda aparte que verifica la firma y extiende la
+    fecha (idempotente por id de transacción).
+  - Anti-spam: Cloudflare Turnstile (gratis) + límite de reservas.
+    NO usar AWS WAF (cobra mensualidad).
+  - Secretos en SSM Parameter Store (gratis), no en Secrets Manager.
+  - Logs con 14 días de retención.
+  - Frontend: CloudFront + S3, con certificado ACM. Dos partes:
+    - Página de reserva: paquete liviano (Preact, meta < 50 KB) para que
+      cargue rápido en el celular del cliente.
+    - Panel del profesional y admin: React (PWA).
+  - Página pública separame.app/<slug>: HTML estático por perfil,
+    generado al guardar el perfil, con los servicios ya incluidos (se ve
+    al instante y el enlace se ve bien al compartirlo en WhatsApp o
+    Instagram). La disponibilidad y si la agenda está activa siempre
+    vienen del API, en una sola llamada para 14 días.
+
+COSTOS ESTIMADOS
+  - Por profesional: ~USD 0,05-0,10 al mes (lo que más gasta son los
+    correos: SES cobra ~USD 0,10 por cada 1.000).
+  - Fijos: dominio separame.app USD 20/año + zona DNS USD 0,50/mes.
+
+
+--------------------------------------------------------------------
+NOMBRE Y DOMINIO
+--------------------------------------------------------------------
+  Elegido: SEPÁRAME -> "¿Me separa una cita?" es como se pide en Colombia.
+  - separame.app: USD 20/año en Route 53 -> COMPRAR (activar renovación
+    automática). .app obliga a HTTPS (sin problema con CloudFront).
+  - separame.co: USD 38/año en Route 53 -> esperar a tener tracción.
+    Alternativa más barata: otro registrador (Namecheap, Porkbun) y
+    apuntar DNS a Route 53. Comparar el precio de RENOVACIÓN.
+  - Pega: "separar una cita" es muy colombiano; fuera de Colombia se
+    entiende menos.
+
+  Otros nombres considerados (con .co libre al 20-oct-2026, por DNS):
+    Muy colombianos: Cuádrame, Momentico, Quedamos, Agéndame
+    Neutros: Citemos (.co y .app libres), Resérvame, Agendemos
+    Serios: Hora Fija (.co y .app libres), PuntoCita, Mi Hora
+    Tomados: separalo.co, citame.co, citaya.co, agendalo.co, turnero.co
+
+
+--------------------------------------------------------------------
+LEGAL Y ADMINISTRATIVO
+--------------------------------------------------------------------
+  - Ley 1581 de 2012 (datos personales): casilla de autorización en la
+    reserva, política de privacidad y forma de borrar datos.
+  - Marca: buscar "Sepárame" en la SIC antes de invertir en el nombre.
+  - Impuestos: consultar con un contador si debo emitir facturación
+    electrónica ante la DIAN y en qué régimen registrarme.
+
+
+--------------------------------------------------------------------
+PRÓXIMOS PASOS
+--------------------------------------------------------------------
+  [ ] Buscar la marca "Sepárame" en la SIC.
+  [ ] Comprar separame.app en Route 53 (renovación automática).
+  [ ] Consultar con un contador (DIAN, régimen).
+  [ ] Crear cuenta de comercio en Wompi (y revisar la promoción Nequi).
+  [ ] Definir precios de lanzamiento ("precio fundador").
+  [ ] Construir el MVP.
+
+
+####################################################################
+OTRAS IDEAS (por si acaso)
+####################################################################
+
+  - Filas virtuales para negocios pequeños: QR en la puerta, el cliente
+    se apunta y le avisan cuando le toca. Paga el negocio (mensual).
+    Reutiliza mucho de Cartazos (salas, QR, tiempo real, turnos).
+  - Asambleas de conjuntos residenciales: votación en vivo con QR,
+    quórum y coeficientes, acta automática. Paga la administración
+    (por asamblea o anual). Demanda segura: la asamblea es obligatoria.
+  - Quizzes en vivo para clases (tipo Kahoot, barato, en español).
+    Plan gratis + pro por profesor o colegio. El sector educativo paga poco.
+  - Trivias y bingo para bares y eventos de empresa (TV + móviles).
+    Podría ser un "modo evento" de pago dentro de Cartazos.
+  - Pedidos por QR en restaurantes pequeños, con pantalla de cocina en
+    tiempo real.
+  - Recordatorio de medicamentos para adultos mayores: si no confirma,
+    se avisa a la familia. Paga la familia.
+  - Control de asistencia y mensualidades para academias (fútbol, baile,
+    música) con QR y aviso a los padres.
+  - "Cuaderno del fiado" digital para tiendas de barrio. Ayuda mucho,
+    pero el tendero paga poco.
