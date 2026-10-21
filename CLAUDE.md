@@ -15,7 +15,9 @@ convenir, página principal con precios y el panel optimizado para celular; tamb
 rol OIDC `SeparameGithubDeployRole`; GitHub firma los tokens de este repo con el `sub` de
 ids inmutables `repo:cristianecheverri@37417336/separame@1427543331:…`). ≈ 510 tests.
 Pendiente antes de anunciarlo: completar privacidad/términos (responsable, cédula/NIT,
-correo; revisión legal) y `billing/instructions` en SSM de prod.
+correo; revisión legal) y `billing/instructions` en SSM de prod. **Los pendientes de la semana
+(tuyos y de desarrollo, incluida la fase 2) están en `docs/backlog.md`**: léelo al empezar y
+marca lo que se termine.
 `shared/` (contrato del API, modelo de datos, disponibilidad, festivos, suscripción),
 `backend/` (22 Lambdas), `cdk/` (8 stacks por ambiente), `frontend/booking` (Preact,
 ~25 KB de JS) y `frontend/app` (React, panel + admin, modo mock con `VITE_MOCK=1`).
