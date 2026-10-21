@@ -6,7 +6,7 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
 
 ## 1. Lo que haces tú (Cristian)
 
-- [ ] **Datos de pago en prod.** Sin esto, la sección "Cómo pagar" de Suscripción no muestra a
+- [x] **Datos de pago en prod** (21-oct: llave Bre-B como `transfer`). Sin esto, la sección "Cómo pagar" de Suscripción no muestra a
       dónde pagarte:
       ```bash
       AWS_PROFILE=personal-admin aws ssm put-parameter --region us-east-1 --type String \
