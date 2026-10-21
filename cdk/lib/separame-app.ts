@@ -25,6 +25,8 @@ export interface SeparameStacks {
 }
 
 export const GITHUB_REPOSITORY = 'cristianecheverri/separame';
+/** Same repo with GitHub's immutable ids — the form its OIDC tokens actually use (seen in CloudTrail). */
+export const GITHUB_REPOSITORY_WITH_IDS = 'cristianecheverri@37417336/separame@1427543331';
 
 /**
  * Wires every stack of one stage. Shared by bin/app.ts and the tests.
@@ -112,7 +114,7 @@ export function buildSeparame(app: cdk.App, account = process.env.CDK_DEFAULT_AC
   const cicdRequested = String(app.node.tryGetContext('cicd')) === 'true';
   const cicd =
     stage === 'prod' && cicdRequested
-      ? new CiCdStack(app, 'SeparameCiCd', { env, repository: GITHUB_REPOSITORY })
+      ? new CiCdStack(app, 'SeparameCiCd', { env, repository: GITHUB_REPOSITORY, repositoryWithIds: GITHUB_REPOSITORY_WITH_IDS })
       : undefined;
 
   return { config, data, mail, auth, site, api, workers, frontendDeploy, monitoring, cicd };

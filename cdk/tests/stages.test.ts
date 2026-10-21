@@ -88,3 +88,19 @@ function alarmNames(template: Template): string[] {
     .map((a) => a.Properties.AlarmName)
     .sort();
 }
+
+describe('CiCd trust policy', () => {
+  it('trusts both GitHub OIDC subject formats for main only', async () => {
+    const { synthStage } = await import('./helpers');
+    const { Template } = await import('aws-cdk-lib/assertions');
+    const stacks = synthStage('prod', { cicd: 'true' });
+    const role = Object.values(Template.fromStack(stacks.cicd!).findResources('AWS::IAM::Role'))[0] as {
+      Properties: { AssumeRolePolicyDocument: { Statement: { Condition: { StringLike: Record<string, string[]> } }[] } };
+    };
+    const subs = role.Properties.AssumeRolePolicyDocument.Statement[0].Condition.StringLike['token.actions.githubusercontent.com:sub'];
+    expect(subs).toEqual([
+      'repo:cristianecheverri/separame:ref:refs/heads/main',
+      'repo:cristianecheverri@37417336/separame@1427543331:ref:refs/heads/main',
+    ]);
+  });
+});

@@ -5,6 +5,12 @@ import { Construct } from 'constructs';
 export interface CiCdStackProps extends cdk.StackProps {
   /** GitHub `owner/repo`. */
   repository: string;
+  /**
+   * The same repo with GitHub's immutable numeric ids, `owner@<ownerId>/repo@<repoId>`.
+   * Newer repos get OIDC subjects in this form; trusting the ids means a deleted
+   * and re-created repo (or org) with the same name can't assume the role.
+   */
+  repositoryWithIds?: string;
   /** Branches allowed to deploy. Defaults to `main`. */
   branches?: string[];
 }
@@ -32,13 +38,18 @@ export class CiCdStack extends cdk.Stack {
       `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`,
     );
 
-    // Trust only tokens whose `sub` is this repo on an allowed branch.
+    // Trust only tokens whose `sub` is this repo on an allowed branch, in either
+    // subject format: classic `repo:owner/repo:…` or the immutable-id form
+    // `repo:owner@123/repo@456:…` that GitHub issues for newer repositories.
+    const repos = [props.repository, ...(props.repositoryWithIds ? [props.repositoryWithIds] : [])];
     const role = new iam.Role(this, 'GithubDeployRole', {
       roleName: 'SeparameGithubDeployRole',
       assumedBy: new iam.OpenIdConnectPrincipal(provider, {
         StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
         StringLike: {
-          'token.actions.githubusercontent.com:sub': branches.map((b) => `repo:${props.repository}:ref:refs/heads/${b}`),
+          'token.actions.githubusercontent.com:sub': repos.flatMap((repo) =>
+            branches.map((b) => `repo:${repo}:ref:refs/heads/${b}`),
+          ),
         },
       }),
       description: 'Assumed by GitHub Actions (separame repo) to run cdk deploy',
