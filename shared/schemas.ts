@@ -185,6 +185,9 @@ export const createBlockSchema = z
   })
   .refine((b) => new Date(b.start) < new Date(b.end), 'El final debe ser después del inicio');
 
+/** Longest `from`–`to` span the pro's appointment list accepts (the panel asks for 90 days back or ahead). */
+export const MAX_APPOINTMENTS_RANGE_DAYS = 92;
+
 export const listAppointmentsQuerySchema = z
   .object({ from: isoDateSchema, to: isoDateSchema })
   .refine((q) => q.from <= q.to, 'Rango inválido');

@@ -11,12 +11,12 @@ import type {
 import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
-  createAppointmentSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
+  MAX_APPOINTMENTS_RANGE_DAYS, createAppointmentSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
   moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil } from '@shared/subscription';
-import { addDays, addMinutes, bogotaDate, toInstant, todayBogota } from '@shared/time';
+import { addDays, addMinutes, bogotaDate, diffDays, toInstant, todayBogota } from '@shared/time';
 import type { Appointment, Block, ClientRecord, Payment, PriceMigration, ProProfile, ProStats, Service, SubscriptionStatus, WaitlistEntry } from '@shared/types';
 import { endpointHash } from '../lib/push';
 import type { HttpMethod, TransportRequest, TransportResponse } from '../lib/api';
@@ -393,6 +393,10 @@ on('GET', '/me/appointments', (_p, _b, q): AppointmentsResponse => {
   requireProfile();
   const from = q.get('from') ?? '';
   const to = q.get('to') ?? '';
+  // Same limit as the backend, so mock mode catches ranges the real API rejects.
+  if (diffDays(from, to) > MAX_APPOINTMENTS_RANGE_DAYS) {
+    throw new HttpError(400, 'validation', 'Revisa los datos marcados.', { to: `El rango puede ser de máximo ${MAX_APPOINTMENTS_RANGE_DAYS} días` });
+  }
   return {
     appointments: db.appointments
       .filter((a) => {

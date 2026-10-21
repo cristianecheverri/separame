@@ -57,6 +57,14 @@ describe('GET /me/appointments', () => {
     expect(a.LSI1SK).toBeUndefined();
     expect(a.lockBufferMin).toBeUndefined();
   });
+
+  it('accepts the 90-day ranges the Citas page asks for and rejects longer ones', async () => {
+    const past = await handler(apiEvent('GET /me/appointments', { claims: proClaims, query: { from: '2026-07-22', to: '2026-10-20' } }));
+    expect(past.statusCode).toBe(200);
+    const tooLong = await handler(apiEvent('GET /me/appointments', { claims: proClaims, query: { from: '2026-07-01', to: '2026-10-20' } }));
+    expect(tooLong.statusCode).toBe(400);
+    expect(parse(tooLong).error.fields.to).toBe('El rango puede ser de máximo 92 días');
+  });
 });
 
 describe('name-only appointments (pro-created, no email and no phone)', () => {

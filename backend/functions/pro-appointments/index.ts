@@ -1,6 +1,6 @@
 import {
-  availabilityQuerySchema, cancelAppointmentSchema, createAppointmentSchema, listAppointmentsQuerySchema, moveAppointmentSchema,
-  setOutcomeSchema,
+  MAX_APPOINTMENTS_RANGE_DAYS, availabilityQuerySchema, cancelAppointmentSchema, createAppointmentSchema, listAppointmentsQuerySchema,
+  moveAppointmentSchema, setOutcomeSchema,
 } from '../../../shared/schemas';
 import { diffDays } from '../../../shared/time';
 import { requirePro } from '../../lib/auth';
@@ -22,12 +22,10 @@ import { loadSubscription, requireWritable } from '../../services/subscriptions'
  * (attended / no-show), which is record keeping.
  */
 
-const MAX_RANGE_DAYS = 62;
-
 export const handler = createApiHandler({
   'GET /me/appointments': async (event) => {
     const query = parseQuery(event, listAppointmentsQuerySchema);
-    if (diffDays(query.from, query.to) > MAX_RANGE_DAYS) throw validationError({ to: `El rango puede ser de máximo ${MAX_RANGE_DAYS} días` });
+    if (diffDays(query.from, query.to) > MAX_APPOINTMENTS_RANGE_DAYS) throw validationError({ to: `El rango puede ser de máximo ${MAX_APPOINTMENTS_RANGE_DAYS} días` });
     const proId = await requireProId(requirePro(event));
     return ok({ appointments: await listAppointments(proId, query.from, query.to) });
   },
