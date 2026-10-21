@@ -55,6 +55,15 @@ FUNCIONES DE LA PRIMERA VERSIÓN (MVP)
   8. Protección anti-spam en la página pública (límite + captcha invisible).
   9. Panel del profesional: ver, crear, mover y cancelar citas.
 
+PLAN PARA EQUIPOS (decidido el 21-oct-2026, se implementa después de la fase 1)
+  - El registro normal sigue igual de fácil. Equipos se SOLICITA desde el
+    panel y el admin lo aprueba fijando cuántos profesionales habilita.
+  - Una sola cuenta paga: plan + valor por cada profesional adicional
+    (configurable en el admin, con precio congelado).
+  - Solo el dueño administra todas las agendas (selector de profesional).
+  - Página del consultorio con paso "¿Con quién?" ("Cualquiera
+    disponible" incluido) y además el enlace propio de cada profesional.
+
 DESPUÉS (algunas como extras de pago)
   - Recordatorios por WhatsApp (NO por ahora; cada mensaje tiene costo).
   - Sincronización con Google Calendar (requiere revisión de Google,

@@ -67,6 +67,20 @@ equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
   versión de precio y queda **auditado** (quién, cuándo, método, monto, referencia).
   Correo opcional al profesional con el comprobante.
 
+## Plan para equipos (fase 2 — decidido el 21-oct-2026, aún sin implementar)
+- **El registro normal no cambia ni se complica.** Equipos es un caso especial que se
+  **solicita**: tarjeta discreta en el panel "¿Trabajas con más profesionales?" → formulario
+  corto (consultorio, cuántos profesionales, mensaje) → el **admin aprueba** fijando el número
+  de cupos (o rechaza con motivo). Más cupos = nueva solicitud que el admin aprueba.
+- **Una sola cuenta paga**: precio del plan + **valor por cada profesional adicional**,
+  configurable en cada versión de precio (congelado como el resto). Un solo vencimiento: si la
+  cuenta del dueño vence, ningún profesional del equipo recibe reservas nuevas.
+- **Solo el dueño administra**: gestiona todas las agendas desde su panel con un selector de
+  profesional; los profesionales del equipo no tienen usuario (quizá "invitar" después).
+- **Reserva**: página del consultorio `separame.app/<slug-del-consultorio>` con un primer paso
+  "¿Con quién?" (incluye "Cualquiera disponible") **y** cada profesional conserva su enlace.
+- **Plan superior con anticipo al reservar**: depende de la pasarela (respuesta de Nequi).
+
 ## Precios (configurables, con precio congelado)
 - Meta inicial: desde **$5.000 COP/mes** (valor dinámico, se configura desde el panel de admin). "Precio fundador" para los primeros.
 - Los precios son **versiones inmutables** (`amount`, `currency`, `period`, `active`).
