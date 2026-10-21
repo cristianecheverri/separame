@@ -20,6 +20,12 @@ correo; revisión legal) y `billing/instructions` en SSM de prod.
 Los mockups de la línea A (`mockups/line-a/`) son la fuente de verdad visual: se implementan
 **exactos** y con responsive perfecto.
 
+**Regla del usuario: mockups siempre al día.** Todo lo visible que se agregue o cambie
+(pantallas, estados, correos, flujos, textos, rediseños) se agrega o actualiza **también** en el
+lienzo de diseño (https://claude.ai/artifact/NzP2yy3ZJkNRZamXN4zTyD, privado) y se exporta a
+`mockups/line-a/` (nombres en inglés, tabla del README). Es parte de "terminado". Las propuestas
+y rediseños van primero al lienzo para que el usuario los apruebe antes de implementarlos.
+
 ## Idioma y convenciones
 - Habla con el usuario **en español**.
 - **Todo lo técnico en inglés**: código, comentarios, nombres de variables, funciones,
