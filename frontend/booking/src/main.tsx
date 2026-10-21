@@ -1,0 +1,23 @@
+/**
+ * Entry of /b/booking.js — serves both the profile pages (/<slug>) and the
+ * manage page (/c/<token>, lazily loaded).
+ */
+import { render } from 'preact';
+import './styles.css';
+import { BookingApp } from './booking/BookingApp';
+import { createRuntime, manageTokenFromLocation, readEmbeddedData, slugFromLocation } from './lib/bootstrap';
+
+async function start(root: HTMLElement): Promise<void> {
+  const { profile, config } = readEmbeddedData();
+  const runtime = await createRuntime(config);
+  const token = manageTokenFromLocation();
+  if (token) {
+    const { ManageApp } = await import('./manage/ManageApp');
+    render(<ManageApp token={token} api={runtime.api} />, root);
+    return;
+  }
+  render(<BookingApp slug={profile?.slug ?? slugFromLocation()} initialProfile={profile} runtime={runtime} />, root);
+}
+
+const root = document.getElementById('app');
+if (root) void start(root);

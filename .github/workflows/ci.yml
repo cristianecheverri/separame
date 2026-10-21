@@ -1,0 +1,93 @@
+# CI — runs on pull requests and on pushes to any branch except main (main is
+# validated by deploy.yml). Validates without deploying and without AWS
+# credentials:
+#   typecheck + lint + tests (root: shared + backend), CDK tests, frontend
+#   tests + builds, and `cdk synth` of both stages with placeholder frontends.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Test + Synth + Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            cdk/package-lock.json
+            frontend/booking/package-lock.json
+            frontend/app/package-lock.json
+
+      # Root deps provide esbuild, which NodejsFunction runs from the repo root
+      # (projectRoot) to bundle the backend Lambdas during synth.
+      - name: Install root deps
+        run: npm ci --prefer-offline --no-audit
+
+      # esbuild bundles without type-checking, so this is the only gate on
+      # backend/shared type errors.
+      - name: Typecheck (shared + backend)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (shared + backend)
+        run: npm test
+
+      - name: Install CDK deps
+        working-directory: cdk
+        run: npm ci --prefer-offline --no-audit
+
+      - name: CDK tests
+        working-directory: cdk
+        run: npm test
+
+      - name: Booking frontend (install, test, build)
+        working-directory: frontend/booking
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm test --if-present
+          npm run build
+
+      - name: App frontend (install, test, build)
+        working-directory: frontend/app
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm test --if-present
+          npm run build
+
+      # Synthesizes every stack of both stages (bundles the Lambdas, skips the
+      # frontend builds). A fake account keeps it fully offline.
+      - name: CDK synth (dev)
+        working-directory: cdk
+        run: npx cdk synth -c stage=dev -c frontendBuild=skip --quiet
+        env:
+          CDK_DEFAULT_ACCOUNT: '000000000000'
+          CDK_DEFAULT_REGION: us-east-1
+
+      - name: CDK synth (prod)
+        working-directory: cdk
+        run: npx cdk synth -c stage=prod -c frontendBuild=skip --quiet
+        env:
+          CDK_DEFAULT_ACCOUNT: '000000000000'
+          CDK_DEFAULT_REGION: us-east-1

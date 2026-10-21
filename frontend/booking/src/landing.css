@@ -1,0 +1,14 @@
+/* Landing (/) and 404 stylesheet — static HTML, no JS. */
+@import 'tailwindcss' source(none);
+@import '../../theme.css';
+@import './fonts.css';
+@import './base.css';
+
+@source '../index.html';
+@source '../404.html';
+@source '../privacy/index.html';
+@source '../terms/index.html';
+
+@theme {
+  --breakpoint-xs: 22.5rem;
+}

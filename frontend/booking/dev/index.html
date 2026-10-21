@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sepárame booking · dev</title>
+    <style>
+      body { font: 15px/1.5 system-ui, sans-serif; color: #15241d; max-width: 720px; margin: 32px auto; padding: 0 16px; }
+      h1 { font-size: 22px; } h2 { font-size: 16px; margin-top: 28px; }
+      a { color: #0b6e4f; } code { background: #f3f6f4; padding: 1px 5px; border-radius: 6px; }
+      li { margin: 4px 0; }
+    </style>
+  </head>
+  <body>
+    <!-- Dev-only index (not part of the production build). -->
+    <h1>Sepárame · booking (dev)</h1>
+    <p>Mock mode uses in-memory fixtures (<code>?mock=1</code> or <code>VITE_MOCK=1</code>). Without it the pages call <code>VITE_API_URL</code>.</p>
+    <h2>Booking flow</h2>
+    <ul>
+      <li><a href="/dra-laura-perez?mock=1">/dra-laura-perez</a> — normal flow</li>
+      <li><a href="/dra-laura-perez?mock=1&amp;fail=slot_taken">fail=slot_taken</a> — first booking attempt loses the slot</li>
+      <li><a href="/dra-laura-perez?mock=1&amp;fail=network">fail=network</a> · <a href="/dra-laura-perez?mock=1&amp;fail=validation">fail=validation</a> · <a href="/dra-laura-perez?mock=1&amp;fail=agenda_unavailable">fail=agenda_unavailable</a></li>
+      <li><a href="/dra-laura-perez?mock=1&amp;state=unavailable">state=unavailable</a> — agenda no disponible</li>
+      <li><a href="/dra-laura-perez?mock=1&amp;state=empty">state=empty</a> — no free slots</li>
+      <li><a href="/dra-laura-perez?mock=1&amp;state=notfound">state=notfound</a> — unknown slug</li>
+      <li><a href="/dra-laura-perez?mock=1&amp;delay=2000">delay=2000</a> — slow network</li>
+    </ul>
+    <h2>Manage page</h2>
+    <ul>
+      <li><a href="/c/demo-token?mock=1">/c/demo-token</a> — menu → move / cancel</li>
+      <li><a href="/c/late?mock=1">/c/late</a> — too late to change</li>
+      <li><a href="/c/cancelled?mock=1">/c/cancelled</a> — already cancelled</li>
+      <li><a href="/c/invalid?mock=1">/c/invalid</a> — bad link</li>
+    </ul>
+    <h2>Static pages</h2>
+    <ul>
+      <li><a href="/">/</a> — landing</li>
+      <li><a href="/404.html">/404.html</a></li>
+    </ul>
+  </body>
+</html>

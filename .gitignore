@@ -7,3 +7,5 @@ coverage/
 .env.*
 .DS_Store
 .vscode/
+cdk/outputs-*.json
+!.env.example

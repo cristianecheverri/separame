@@ -1,0 +1,47 @@
+{
+  "name": "separame",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sepárame — agenda de citas en línea para profesionales en Colombia (AWS serverless, CDK).",
+  "scripts": {
+    "typecheck:shared": "tsc -p shared/tsconfig.json",
+    "typecheck:backend": "tsc -p backend/tsconfig.json",
+    "typecheck": "npm run typecheck:shared && npm run typecheck:backend",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "bash scripts/dev.sh",
+    "dev:api": "bash scripts/dev.sh --api",
+    "deploy:dev": "bash scripts/deploy-dev.sh",
+    "deploy:dev:fast": "bash scripts/deploy-dev.sh --fast",
+    "deploy:prod": "bash scripts/deploy-prod.sh",
+    "deploy:prod:local": "bash scripts/deploy-prod.sh --local",
+    "deploy:cicd": "bash scripts/deploy-prod.sh --cicd",
+    "synth:dev": "cd cdk && npx cdk synth -c stage=dev -c frontendBuild=skip --quiet",
+    "synth:prod": "cd cdk && npx cdk synth -c stage=prod -c frontendBuild=skip --quiet"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cloudfront": "^3.1154.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1154.0",
+    "@aws-sdk/client-dynamodb": "^3.1154.0",
+    "@aws-sdk/client-s3": "^3.1154.0",
+    "@aws-sdk/client-sesv2": "^3.1154.0",
+    "@aws-sdk/client-ssm": "^3.1154.0",
+    "@aws-sdk/lib-dynamodb": "^3.1154.0",
+    "@aws-sdk/util-dynamodb": "^3.996.9",
+    "@eslint/js": "^10.0.1",
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^24.19.2",
+    "aws-sdk-client-mock": "^4.1.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.13.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  }
+}

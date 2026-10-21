@@ -1,0 +1,36 @@
+import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createMemoryRouter, RouterProvider } from 'react-router';
+import { routes } from '../app/router';
+import { ToastProvider } from '../components/ui/Toast';
+import { setTransport } from '../lib/api';
+import { auth } from '../lib/auth';
+import { pinClock } from '../lib/clock';
+import { MOCK_NOW, type BillingMockState, type MockState } from '../mocks/fixtures';
+import { mockAuthClient } from '../mocks/install';
+import { mockTransport, resetMockDb } from '../mocks/mockApi';
+
+interface Options {
+  state?: MockState;
+  admin?: boolean;
+  signedIn?: boolean;
+  billing?: BillingMockState;
+}
+
+/** Renders the whole app at `path` against the in-memory mock API. */
+export async function renderApp(path: string, { state = 'trial', admin = false, signedIn = true, billing = 'none' }: Options = {}) {
+  pinClock(MOCK_NOW);
+  resetMockDb({ state, isAdmin: admin, billing });
+  setTransport((req) => mockTransport(req, 0));
+  await auth.init(mockAuthClient(signedIn ? 'laura@consultoriolaura.co' : null));
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchInterval: false, refetchOnWindowFocus: false } } });
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const utils = render(
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </QueryClientProvider>,
+  );
+  return { ...utils, router };
+}

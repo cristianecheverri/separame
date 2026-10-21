@@ -6,15 +6,24 @@ El profesional administra su calendario; sus clientes reservan desde un enlace p
 (`separame.app/<slug>`) sin crear cuenta.
 
 La especificación completa (decisiones, precios, pasarela, legal, ideas descartadas)
-está en **`docs/especificacion.txt`**. Léela antes de proponer cambios de producto.
+está en **`docs/specification.txt`**. Léela antes de proponer cambios de producto.
 
-Estado (20-oct-2026): el dominio `separame.app` está comprado en Route 53 y el repo
-está recién creado; aún no hay código. Siguiente paso: montar la estructura base.
+Estado (20-oct-2026): MVP implementado y verificado localmente (≈ 260 tests, lint,
+typecheck, synth de dev y prod con los frontends reales); **aún no desplegado**.
+`shared/` (contrato del API, modelo de datos, disponibilidad, festivos, suscripción),
+`backend/` (16 Lambdas), `cdk/` (8 stacks por ambiente), `frontend/booking` (Preact,
+~19 KB de JS) y `frontend/app` (React, panel + admin, modo mock con `VITE_MOCK=1`).
+Los mockups de la línea A (`mockups/`) son la fuente de verdad visual: se implementan
+**exactos** y con responsive perfecto. Siguiente paso: primer despliegue a dev.
 
-## Idioma
+## Idioma y convenciones
 - Habla con el usuario **en español**.
-- Código, comentarios, nombres de variables y commits **en inglés** (como en Cartazos).
-- La interfaz es en español (Colombia) primero; prepárala para i18n (inglés después).
+- **Todo lo técnico en inglés**: código, comentarios, nombres de variables, funciones,
+  tipos, **carpetas y archivos**, rutas internas, claves de DynamoDB, nombres de recursos
+  AWS y commits (como en Cartazos). Siempre con buenas prácticas (tipado estricto, nombres
+  descriptivos, funciones pequeñas, validación de entrada, tests).
+- Lo que ve el usuario va en **español (Colombia)**, con tuteo: textos de la interfaz,
+  correos y mensajes de error. Prepáralo para i18n (inglés después).
 
 ## Producto
 
@@ -47,7 +56,7 @@ equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
     disponible temporalmente" (nunca "no ha pagado").
   - Las citas **ya agendadas** siguen enviando recordatorios y se pueden cancelar
     (el cliente del profesional no tiene la culpa).
-- **Pago manual (admin):** el admin puede registrar un pago hecho por fuera de Wompi
+- **Pago manual (admin):** el admin puede registrar un pago hecho por fuera de una pasarela
   (transferencia, Nequi directo, efectivo o cortesía) y fijar la vigencia
   (+3 / +6 / +12 meses o una fecha exacta) → actualiza `paidUntil` y activa la agenda
   al instante. Si el plan ya venció, los meses se cuentan desde hoy. Conserva la
@@ -61,19 +70,21 @@ equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
 - Cada suscripción guarda su **versión de precio** y renueva a ese precio. Solo cambia
   si un admin migra a ese profesional (o a su grupo) con fecha efectiva y aviso por
   correo **30 días antes**.
-- La comisión de Wompi tiene un cargo fijo ($700) que se come los cobros pequeños:
+- Las pasarelas cobran un cargo fijo por transacción (Wompi: $700) que se come los cobros pequeños:
   se cobra en **paquetes de 3, 6 o 12 meses** (el anual con descuento). Si hay plan
   mensual, que sea de unos $5.900.
 
-## Pagos: Wompi (Bancolombia)
-- Un solo checkout con Nequi, tarjetas, PSE, botón Bancolombia y Daviplata.
-  2,65% + $700 + IVA por transacción, sin mensualidad.
-- **Primera versión = prepago, sin renovación automática:** el profesional paga un
-  paquete → Wompi llama a nuestro webhook → **verificar la firma del evento** →
-  extender `paidUntil` (idempotente por id de transacción). Correo 3 días antes de
-  vencer con el enlace para renovar.
-- Después: renovación automática con tarjeta o Nequi tokenizados (cada cobro lo
-  dispara nuestro sistema; Wompi no gestiona planes ni reintentos).
+## Pagos: SIN pasarela por ahora (Wompi descartado; se evalúa Nequi directo)
+- **Primera versión = pago manual y prepago:** el profesional ve los paquetes y los datos
+  de pago (Nequi / transferencia, en SSM `billing/instructions`), paga y toca **"Ya pagué"**
+  → queda un aviso `pending` y se avisa al admin por correo → el admin lo **aprueba**
+  (extiende `paidUntil`, auditado) o lo **rechaza** con motivo. El admin también puede
+  registrar pagos directamente. Correo 3 días antes de vencer para renovar.
+- **Listo para varias pasarelas:** cada una será un adaptador detrás de una interfaz común
+  (crear cobro, verificar firma del webhook, leer evento), con su propia Lambda y ruta
+  `/webhooks/<proveedor>`, idempotente por proveedor + id de transacción, y pagos con
+  `source: 'gateway'`. Agregar una no toca suscripciones, admin ni panel. **No integrar
+  ninguna hasta que el usuario lo decida.**
 - Solo COP y Colombia por ahora. Para USD más adelante: un merchant of record
   (Paddle / Lemon Squeezy).
 
@@ -94,7 +105,7 @@ docs/       especificación y diagramas
 ### Cuenta y ambientes
 - **Cuenta actual** (créditos y dominio están aquí), aislando a Sepárame dentro de ella:
   cuota de Lambdas simultáneas subida a 1.000 (Service Quotas), etiqueta
-  `project=separame` en todo (activada para costos, con presupuesto propio filtrado por
+  `Project=separame` en todo (la clave `Project` ya está activada para costos, igual que en Cartazos; con presupuesto propio filtrado por
   etiqueta), prefijo `separame-<stage>-` en los recursos y permisos mínimos por Lambda.
 - **Dos ambientes idénticos, `dev` y `prod`:** el mismo código CDK desplegado con
   `-c stage=dev|prod`. Solo cambian los valores de configuración, nunca la estructura:
@@ -102,7 +113,6 @@ docs/       especificación y diagramas
   |---|---|---|
   | Web / API | `dev.separame.app` / `api.dev.separame.app` | `separame.app` / `api.separame.app` |
   | Correo | `noreply@dev.separame.app` (identidad SES propia) | `noreply@separame.app` |
-  | Wompi | llaves y eventos de **sandbox** | llaves de producción |
   | Turnstile | llaves de prueba | llaves reales |
   | Secretos SSM | `/separame/dev/...` | `/separame/prod/...` |
   | Borrado | se puede destruir | protección contra borrado + `RETAIN` |
@@ -119,11 +129,11 @@ docs/       especificación y diagramas
   ACM + alias en Route 53) + DynamoDB (tabla única, on-demand).
   - **Varias Lambdas pequeñas y específicas**, una por grupo de rutas (disponibilidad
     pública, reservar, gestionar cita con token, citas del panel, configuración del
-    profesional, cobro, admin), más el **webhook de Wompi**, los **jobs programados** y los
+    profesional, cobro, admin), más los **jobs programados** y los
     triggers de Cognito. Nada de una Lambda "que lo hace todo".
   - **Rápidas:** cada Lambda empaqueta solo lo que usa (esbuild, clientes modulares del
     SDK v3, sin librerías pesadas), crea sus clientes fuera del handler y corre en
-    ARM64 con Node.js 22 y 512 MB (más memoria = más CPU = arranque en frío más corto, y
+    ARM64 con Node.js 24 y 512 MB (más memoria = más CPU = arranque en frío más corto, y
     casi el mismo costo porque termina antes). Sin provisioned concurrency.
   - **CORS** solo para `https://separame.app`, con `maxAge` alto para que el navegador
     guarde la verificación previa (preflight) y no la repita en cada llamada.
@@ -134,15 +144,21 @@ docs/       especificación y diagramas
     admin se verifica en la Lambda con el grupo `admin` (`cognito:groups`).
   - **Throttling** en el stage, más bajo en `POST` de reservas: además frena el abuso que
     podría agotar la concurrencia de Lambda compartida con Cartazos.
-  - Lambdas en **ARM64 (Graviton)**, Node.js 22, 256 MB.
+- **Dependencias: siempre la versión más reciente** compatible con el resto (hoy:
+  TypeScript 6.0 — la 7 aún no es compatible con typescript-eslint —, Vite 8, Vitest 5,
+  ESLint 10, Tailwind 4, React 19, Preact 11, aws-cdk-lib 2.27x, zod 4). TypeScript con
+  `module: preserve` + `moduleResolution: bundler` (esbuild/Vite empaquetan).
 - **Por qué no AppSync:** cuesta ~4× más por llamada (≈ USD 4 vs. USD 1 por millón), el
-  webhook de Wompi necesita un endpoint HTTP normal de todas formas y la página pública sin
+  webhook de una pasarela necesitaría un endpoint HTTP normal de todas formas y la página pública sin
   cuenta es más simple sin API key ni identity pool. No hace falta tiempo real: el panel
   se refresca al abrirlo o consulta cada 1–2 minutos.
-- **Profesionales y admin:** Cognito User Pool (plan Essentials, gratis hasta 10.000 MAU).
-  Entran **sin contraseña, con un código de 6 dígitos al correo** (EMAIL_OTP, nativo de
-  Essentials; nada de enlace mágico con triggers propios). Passkeys quizá después. El
-  admin es un usuario del grupo `admin`, creado por CDK. Cognito manda sus correos
+- **Profesionales y admin:** Cognito User Pool (plan **Lite**, gratis hasta 10.000 MAU).
+  Entran con **correo y contraseña** (decisión del usuario: **nada de acceso por código**).
+  Flujo **SRP** (la contraseña nunca viaja) con Amplify Auth v6 en el panel (solo
+  `aws-amplify/auth`). Política: mínimo 8 caracteres, una minúscula y un número. Al
+  registrarse se confirma el correo una vez con un código; "¿Olvidaste tu contraseña?" por
+  código al correo. El admin es un usuario del grupo `admin`, creado por CDK: recibe una
+  invitación con contraseña temporal y la cambia al entrar. Cognito manda sus correos
   por **SES** (el envío por defecto de Cognito tiene un tope diario muy bajo). Solo se
   verifica el **correo**: **no se verifica teléfono ni se envían SMS** por ahora.
   **Clientes:** sin cuenta.
@@ -172,7 +188,7 @@ docs/       especificación y diagramas
 - **Anti-spam:** Cloudflare Turnstile (gratis) verificado en la Lambda + límite de
   reservas con contadores en DynamoDB (TTL) + throttling del HTTP API. **Nada de AWS WAF**
   (cobra mensualidad por reglas).
-- **Secretos** (Wompi, firma de enlaces): SSM Parameter Store `SecureString` (gratis).
+- **Secretos** (Turnstile, firma de enlaces; datos de pago como `String`): SSM Parameter Store (gratis).
   Nada de Secrets Manager ni llaves KMS propias.
 - **Logs:** retención de 14 días y sin nivel debug en producción.
 - **Frontend:** CloudFront + S3 + certificado ACM. `.app` **obliga a HTTPS**.
@@ -217,6 +233,14 @@ docs/       especificación y diagramas
 - **Impuestos:** facturación electrónica DIAN y régimen, por confirmar con un contador.
 
 ## Cómo trabajar en este repo
+- **Scripts** (en `scripts/`, perfil AWS `personal-admin`, región `us-east-1`; verifican la cuenta):
+  - `npm run dev` → reserva en `localhost:5173` + panel en `localhost:5174/app/` con datos de
+    prueba (sin AWS). `npm run dev:api` → lo mismo contra el API de dev.
+  - `npm run deploy:dev` → checks + despliegue completo de dev. `npm run deploy:dev:fast` →
+    solo código de Lambdas (hotswap). Crea solo los secretos generables en SSM y avisa los que faltan.
+  - `npm run deploy:prod` → checks + `git push` a `main` (GitHub Actions despliega prod).
+    `npm run deploy:prod:local` → desplegar prod desde la máquina (primera vez o si CI falla).
+    `npm run deploy:cicd` → crear una vez el rol OIDC de GitHub y ver cómo poner el secreto.
 - Commit solo cuando el usuario lo pida; mensajes en inglés.
 - Antes de dar algo por terminado: typecheck, lint y tests de lo que se tocó.
 - Mantén los costos fijos cerca de cero: on-demand, sin servidores encendidos, sin NAT

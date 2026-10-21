@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Disponibilidad — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 980px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+      <a href="pro-billing-plans.dc.html" style="height: 44px; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.8px">Disponibilidad</h1>
+        <div style="font-size: 15px; color: #56645D">Cuándo pueden reservarte. Todo en hora de Colombia.</div>
+      </div>
+      <button style="height: 46px; padding: 0 22px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; cursor: pointer">Guardar cambios</button>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section style="flex: 999 1 480px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0 0 10px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Horario semanal</h2>
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #E3E8E5; min-height: 48px">
+            <button onClick="{{d.toggle}}" aria-pressed="{{d.open}}" aria-label="Atender el {{d.name}}" style="{{d.switchStyle}}"><span style="width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; display: block"></span></button>
+            <div style="width: 96px; font-weight: 700; font-size: 15px">{{d.name}}</div>
+            <sc-if value="{{d.open}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; flex-grow: 1; align-items: center">
+                <sc-for list="{{d.ranges}}" as="r" hint-placeholder-count="2">
+                  <span style="height: 40px; padding: 0 14px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; font-weight: 700; font-size: 14px">{{r}}</span>
+                </sc-for>
+                <button aria-label="Agregar franja el {{d.name}}" style="width: 40px; height: 40px; border-radius: 999px; border: 2px dashed #CFDAD4; background: #FFFFFF; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+            </sc-if>
+            <sc-if value="{{d.closed}}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 14px; color: #56645D">Cerrado</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </section>
+
+      <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Reglas de reserva</h2>
+          <sc-for list="{{rules}}" as="r" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 700; font-size: 14px">{{r.label}}</span>
+                <span style="font-size: 12px; color: #56645D">{{r.help}}</span>
+              </div>
+              <button aria-label="{{r.label}}: {{r.value}}" style="height: 44px; padding: 0 12px 0 14px; border-radius: 12px; border: 2px solid #E3E8E5; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 6px; align-items: center; white-space: nowrap; cursor: pointer">{{r.value}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Festivos de Colombia</h2>
+            <button onClick="{{toggleHolidays}}" aria-pressed="{{holidays}}" aria-label="Cerrar en festivos" style="{{holidaySwitch}}"><span style="width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; display: block"></span></button>
+          </div>
+          <div style="font-size: 13px; color: #56645D">{{holidayText}}</div>
+          <sc-for list="{{nextHolidays}}" as="h" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0">
+              <span style="font-weight: 600">{{h.date}}</span>
+              <span style="color: #56645D">{{h.name}}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Días bloqueados</h2>
+            <a href="#" style="font-weight: 700; font-size: 14px">+ Agregar</a>
+          </div>
+          <div style="background: #FFF4D1; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 700; font-size: 14px">Vacaciones</span>
+            <span style="font-size: 13px; color: #3E4C45">21 dic. 2026 – 4 ene. 2027</span>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 700; font-size: 14px">Congreso de odontología</span>
+            <span style="font-size: 13px; color: #3E4C45">Viernes 13 nov., todo el día</span>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ closed: { 6: true }, holidays: true }, this.state || {});
+    const navItems = ['Agenda', 'Citas', 'Servicios', 'Disponibilidad', 'Perfil público', 'Suscripción'];
+    const hrefs = ['pro-agenda-day.dc.html', '#', 'pro-services.dc.html', 'pro-availability.dc.html', 'Main.dc.html', 'pro-billing-plans.dc.html'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const sw = (on) => 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;box-sizing:border-box;' + (on ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;');
+    const weekday = ['8:00 a. m. – 12:00 m.', '2:00 p. m. – 6:00 p. m.'];
+    const days = [
+      ['Lunes', weekday], ['Martes', weekday], ['Miércoles', weekday], ['Jueves', weekday],
+      ['Viernes', ['8:00 a. m. – 12:00 m.', '2:00 p. m. – 5:00 p. m.']], ['Sábado', ['8:00 a. m. – 12:00 m.']], ['Domingo', weekday]
+    ];
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 3 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      week: days.map((d, i) => {
+        const open = !st.closed[i];
+        return {
+          name: d[0], ranges: d[1], open, closed: !open,
+          switchStyle: sw(open),
+          toggle: () => { const c = Object.assign({}, st.closed); c[i] = open; this.setState({ closed: c }); }
+        };
+      }),
+      rules: [
+        { label: 'Tiempo entre citas', help: 'Para descansar o preparar', value: '10 min' },
+        { label: 'Anticipación mínima', help: 'Nadie reserva para dentro de menos', value: '2 horas' },
+        { label: 'Reservar hasta', help: 'Qué tan adelante ven tu agenda', value: '60 días' }
+      ],
+      holidays: st.holidays,
+      toggleHolidays: () => this.setState({ holidays: !st.holidays }),
+      holidaySwitch: sw(st.holidays),
+      holidayText: st.holidays ? 'Tu agenda se cierra sola en estos días.' : 'Atiendes también en festivos.',
+      nextHolidays: [
+        { date: 'Lun 2 nov.', name: 'Todos los Santos' },
+        { date: 'Lun 16 nov.', name: 'Independencia de Cartagena' },
+        { date: 'Mar 8 dic.', name: 'Inmaculada Concepción' },
+        { date: 'Vie 25 dic.', name: 'Navidad' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

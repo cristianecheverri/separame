@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reserva por pasos — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E3E8E5">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+      <sc-if value="{{showBack}}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{back}}" aria-label="Paso anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      </sc-if>
+      <sc-if value="{{showAvatar}}" hint-placeholder-val="{{ true }}">
+        <div style="width: 44px; height: 44px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; flex-shrink: 0">LP</div>
+      </sc-if>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px">Dra. Laura Pérez</div>
+        <div style="font-size: 13px; color: #56645D">Odontóloga · El Poblado, Medellín</div>
+      </div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="4">
+          <span style="{{b.style}}"></span>
+        </sc-for>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso {{step}} de 4 · {{stepName}}</div>
+    </div>
+  </header>
+
+  <div style="flex-grow: 1; min-height: 0; padding: 22px 20px 16px; display: flex; flex-direction: column">
+
+    <sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <h1 style="margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Qué necesitas?</h1>
+        <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+          <button onClick="{{s.pick}}" aria-pressed="{{s.selected}}" style="{{s.cardStyle}}">
+            <span style="{{s.dotStyle}}"></span>
+            <span style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+              <span style="font-weight: 700; font-size: 17px">{{s.name}}</span>
+              <span style="font-size: 14px; color: #56645D">{{s.dur}} · {{s.desc}}</span>
+            </span>
+            <span style="font-weight: 700; font-size: 15px">{{s.price}}</span>
+          </button>
+        </sc-for>
+        <div style="font-size: 13px; color: #56645D">Precios de referencia. El valor final lo confirma la profesional.</div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Cuándo te sirve?</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+          <div style="display: flex; gap: 4px">
+            <button aria-label="Semana anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+            <button aria-label="Semana siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+            <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
+              <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
+              <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{hasDay}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 14px; font-weight: 600; color: #56645D">Mañana</div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{morning}}" as="t" hint-placeholder-count="6">
+                <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+              </sc-for>
+            </div>
+            <div style="font-size: 14px; font-weight: 600; color: #56645D">Tarde</div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+              <sc-for list="{{afternoon}}" as="t" hint-placeholder-count="6">
+                <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{noDay}}" hint-placeholder-val="{{ false }}">
+          <div style="background: #F3F6F4; border-radius: 18px; padding: 18px; font-size: 14px; color: #3E4C45; text-align: center">Elige un día para ver las horas libres.</div>
+        </sc-if>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿A nombre de quién?</h1>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="p-name" style="font-size: 14px; font-weight: 600">Nombre completo</label>
+          <input id="p-name" type="text" autocomplete="name" placeholder="Ej. Mariana Gómez" value="{{name}}" onChange="{{onName}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="p-mail" style="font-size: 14px; font-weight: 600">Correo</label>
+          <input id="p-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+          <span style="font-size: 12px; color: #56645D">Aquí te llega la confirmación y el recordatorio.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="p-phone" style="font-size: 14px; font-weight: 600">Celular</label>
+          <div style="display: flex; gap: 8px">
+            <div style="height: 52px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px">+57</div>
+            <input id="p-phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+          </div>
+        </div>
+        <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
+          <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+          <span>Autorizo el tratamiento de mis datos personales para gestionar esta cita, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
+        </label>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Todo bien?</h1>
+        <div style="background: #EAF5F0; border-radius: 22px; padding: 6px 16px">
+          <sc-for list="{{review}}" as="r" hint-placeholder-count="3">
+            <div style="{{r.rowStyle}}">
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                <span style="font-size: 13px; color: #3E4C45">{{r.label}}</span>
+                <span style="font-weight: 700; font-size: 15px">{{r.value}}</span>
+                <span style="font-size: 13px; color: #3E4C45">{{r.sub}}</span>
+              </div>
+              <button onClick="{{r.edit}}" style="height: 44px; padding: 0 12px; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; cursor: pointer; flex-shrink: 0">Cambiar</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: #3E4C45; line-height: 1.45">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <span>Cra. 43A #1-50, consultorio 302, El Poblado</span>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+
+  <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF">
+    <sc-if value="{{hasSummary}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #3E4C45">
+        <span style="width: 8px; height: 8px; border-radius: 999px; background: #FFC93C; flex-shrink: 0"></span>
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{summary}}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{next}}" disabled="{{cantNext}}" style="{{nextStyle}}">{{nextLabel}}</button>
+    </sc-if>
+    <sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+      <a href="client-booking-confirmed.dc.html" style="height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Separar mi cita</a>
+    </sc-if>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["1","2","3","4"],"default":"1"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const init = Math.min(4, Math.max(1, Number(this.props.step || 1)));
+    const pre = init >= 2;
+    const filled = init >= 3;
+    const st = Object.assign({
+      step: init,
+      service: pre ? 0 : null,
+      day: pre ? 2 : null,
+      slot: pre ? 3 : null,
+      name: filled ? 'Mariana Gómez' : '',
+      email: filled ? 'mariana@correo.com' : '',
+      phone: filled ? '300 123 4567' : '',
+      agree: filled
+    }, this.state || {});
+
+    const services = [
+      { name: 'Valoración', dur: '30 min', desc: 'Primera vez', price: '$60.000' },
+      { name: 'Limpieza dental', dur: '45 min', desc: 'Incluye profilaxis', price: '$120.000' },
+      { name: 'Control', dur: '15 min', desc: 'En tratamiento', price: 'Sin costo' }
+    ];
+    const days = [
+      { dow: 'Mar', num: '20', off: true, long: 'Martes 20 de octubre' },
+      { dow: 'Mié', num: '21', long: 'Miércoles 21 de octubre' },
+      { dow: 'Jue', num: '22', long: 'Jueves 22 de octubre' },
+      { dow: 'Vie', num: '23', long: 'Viernes 23 de octubre' },
+      { dow: 'Sáb', num: '24', long: 'Sábado 24 de octubre' },
+      { dow: 'Dom', num: '25', off: true, long: 'Domingo 25 de octubre' },
+      { dow: 'Lun', num: '26', long: 'Lunes 26 de octubre' }
+    ];
+    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '10:00 a. m.', '10:30 a. m.', '11:30 a. m.', '2:00 p. m.', '2:30 p. m.', '3:00 p. m.', '4:00 p. m.', '4:30 p. m.', '5:30 p. m.'];
+    const names = ['Servicio', 'Día y hora', 'Tus datos', 'Confirmar'];
+
+    const cardBase = 'display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;border-radius:20px;font:inherit;color:inherit;cursor:pointer;min-height:84px;box-sizing:border-box;';
+    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;border:2px solid;';
+    const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:15px;min-height:46px;cursor:pointer;border:2px solid;';
+
+    const valid = {
+      1: st.service != null,
+      2: st.day != null && st.slot != null,
+      3: !!(st.name.trim() && st.email.trim() && st.phone.trim() && st.agree),
+      4: true
+    };
+    const canNext = valid[st.step];
+    const svc = st.service != null ? services[st.service] : null;
+    const when = st.day != null && st.slot != null ? days[st.day].long + ' · ' + labels[st.slot] : '';
+
+    let summary = '';
+    if (st.step === 2 && svc) summary = svc.name + ' · ' + svc.dur;
+    if (st.step === 3 && svc && when) summary = svc.name + ' · ' + days[st.day].dow + ' ' + days[st.day].num + ', ' + labels[st.slot];
+
+    const go = (n) => this.setState({ step: n });
+    const slotItem = (i) => {
+      const selected = st.slot === i;
+      return { label: labels[i], selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
+    };
+
+    return {
+      step: st.step,
+      stepName: names[st.step - 1],
+      is1: st.step === 1, is2: st.step === 2, is3: st.step === 3, is4: st.step === 4,
+      notLast: st.step < 4,
+      showBack: st.step > 1,
+      showAvatar: st.step === 1,
+      back: () => go(st.step - 1),
+      next: () => { if (canNext) go(st.step + 1); },
+      cantNext: !canNext,
+      nextLabel: canNext ? 'Siguiente' : ['Elige un servicio', 'Elige día y hora', 'Completa tus datos'][st.step - 1],
+      nextStyle: 'height:56px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:17px;' + (canNext ? 'background:#0B6E4F;color:#FFFFFF;cursor:pointer;' : 'background:#DCE3DF;color:#56645D;cursor:not-allowed;'),
+      hasSummary: !!summary,
+      summary,
+      bars: names.map((n, i) => ({ style: 'height:6px;border-radius:999px;display:block;background:' + (i < st.step ? '#0B6E4F' : '#E3E8E5') + ';' })),
+
+      services: services.map((s, i) => {
+        const selected = st.service === i;
+        return Object.assign({}, s, {
+          selected,
+          pick: () => this.setState({ service: i }),
+          cardStyle: cardBase + (selected ? 'border:2px solid #0B6E4F;background:#EAF5F0;' : 'border:2px solid #E3E8E5;background:#FFFFFF;'),
+          dotStyle: 'width:22px;height:22px;border-radius:999px;flex-shrink:0;box-sizing:border-box;' + (selected ? 'border:7px solid #0B6E4F;background:#FFFFFF;' : 'border:2px solid #B9C4BE;background:#FFFFFF;')
+        });
+      }),
+
+      days: days.map((d, i) => {
+        const selected = st.day === i;
+        let style = dayBase;
+        if (d.off) style += 'background:#F3F6F4;border-color:#F3F6F4;color:#5E6C65;cursor:default;';
+        else if (selected) style += 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;cursor:pointer;';
+        else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
+        return { dow: d.dow, num: d.num, selected, disabled: !!d.off, style, pick: d.off ? undefined : () => this.setState({ day: i }) };
+      }),
+      hasDay: st.day != null,
+      noDay: st.day == null,
+      morning: [0, 1, 2, 3, 4, 5].map(slotItem),
+      afternoon: [6, 7, 8, 9, 10, 11].map(slotItem),
+
+      name: st.name, email: st.email, phone: st.phone, agree: st.agree,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPhone: (e) => this.setState({ phone: e.target.value }),
+      toggleAgree: () => this.setState({ agree: !st.agree }),
+
+      review: [
+        { label: 'Servicio', value: svc ? svc.name + ' · ' + svc.dur : '—', sub: svc ? svc.price : '', edit: () => go(1) },
+        { label: 'Cuándo', value: st.day != null ? days[st.day].long : '—', sub: st.slot != null ? labels[st.slot] : '', edit: () => go(2) },
+        { label: 'A nombre de', value: st.name || '—', sub: st.email + (st.phone ? ' · +57 ' + st.phone : ''), edit: () => go(3) }
+      ].map((r, i) => Object.assign(r, { rowStyle: 'display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;' + (i > 0 ? 'border-top:1px solid #CFE3DA;' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

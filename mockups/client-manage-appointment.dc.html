@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cancelar o reprogramar — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; padding: 24px 20px; gap: 20px">
+  <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
+
+  <div style="background: #EAF5F0; border-radius: 22px; padding: 16px; display: flex; gap: 12px; align-items: center">
+    <div style="width: 44px; height: 44px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; flex-shrink: 0">LP</div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 13px; color: #3E4C45">{{cardLabel}}</div>
+      <div style="{{cardWhenStyle}}">{{cardWhen}}</div>
+      <div style="font-size: 14px; color: #3E4C45">Valoración con la Dra. Laura Pérez</div>
+    </div>
+  </div>
+
+  <sc-if value="{{isMenu}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 16px; flex-grow: 1">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">Hola, Mariana. ¿Qué quieres hacer con tu cita?</h1>
+      <button onClick="{{goMove}}" style="display: flex; gap: 14px; align-items: center; width: 100%; min-height: 76px; padding: 14px 16px; border-radius: 20px; border: 2px solid #E3E8E5; background: #FFFFFF; font: inherit; color: inherit; text-align: left; cursor: pointer">
+        <span style="width: 44px; height: 44px; border-radius: 14px; background: #FFF4D1; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></span>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 700; font-size: 16px">Cambiar día u hora</span><span style="font-size: 14px; color: #56645D">Elige otro espacio libre</span></span>
+      </button>
+      <button onClick="{{goCancel}}" style="display: flex; gap: 14px; align-items: center; width: 100%; min-height: 76px; padding: 14px 16px; border-radius: 20px; border: 2px solid #E3E8E5; background: #FFFFFF; font: inherit; color: inherit; text-align: left; cursor: pointer">
+        <span style="width: 44px; height: 44px; border-radius: 14px; background: #F3F6F4; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 700; font-size: 16px">Cancelar la cita</span><span style="font-size: 14px; color: #56645D">Le avisamos a la profesional</span></span>
+      </button>
+      <div style="margin-top: auto; font-size: 13px; color: #56645D; line-height: 1.45">Puedes hacer cambios hasta 2 horas antes de la cita. No necesitas cuenta: este enlace es solo para ti.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isMove}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">Elige el nuevo espacio</h1>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="5">
+          <button onClick="{{d.pick}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
+            <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
+            <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{slots}}" as="t" hint-placeholder-count="6">
+          <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+        <button onClick="{{confirmMove}}" style="height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Mover a {{newWhen}}</button>
+        <button onClick="{{goMenu}}" style="height: 44px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 14px; color: #3E4C45; cursor: pointer">Volver</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isCancel}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">¿Seguro que quieres cancelar?</h1>
+      <div style="font-size: 15px; color: #3E4C45; line-height: 1.45">El espacio queda libre para otra persona. Si quieres, cuéntale a la Dra. Laura por qué.</div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="a-reason" style="font-size: 14px; font-weight: 600">Motivo (opcional)</label>
+        <textarea id="a-reason" rows="3" placeholder="Ej. Me salió un viaje" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+      </div>
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+        <button onClick="{{confirmCancel}}" style="height: 56px; border-radius: 999px; border: 2px solid #15241D; background: #FFFFFF; color: #15241D; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Sí, cancelar la cita</button>
+        <button onClick="{{goMove}}" style="height: 44px; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; cursor: pointer">Mejor la cambio de día</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+      <div style="width: 56px; height: 56px; border-radius: 999px; background: #FFC93C; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.6px">{{doneTitle}}</h1>
+      <div style="font-size: 15px; color: #3E4C45; line-height: 1.45">{{doneText}}</div>
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; align-items: center">
+        <a href="client-booking-single-page.dc.html" style="font-weight: 700; font-size: 15px">Separar otra cita</a>
+        <button onClick="{{reset}}" style="height: 44px; border: 0; background: transparent; font: inherit; font-size: 13px; color: #56645D; cursor: pointer">Reiniciar demo</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ mode: 'menu', day: 2, slot: 1 }, this.state || {});
+    const days = [['Mié', '21', 'miércoles 21'], ['Jue', '22', 'jueves 22'], ['Vie', '23', 'viernes 23'], ['Sáb', '24', 'sábado 24'], ['Lun', '26', 'lunes 26']];
+    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '2:00 p. m.', '3:00 p. m.', '4:30 p. m.'];
+    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;cursor:pointer;border:2px solid;';
+    const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:15px;min-height:46px;cursor:pointer;border:2px solid;';
+    const newWhen = days[st.day][0].toLowerCase() + ' ' + days[st.day][1] + ', ' + labels[st.slot];
+    const moved = st.mode === 'moved';
+    const cancelled = st.mode === 'cancelled';
+    let cardLabel = 'Tu cita';
+    let cardWhen = 'Jueves 22 de octubre · 10:00 a. m.';
+    if (moved) { cardLabel = 'Tu nueva cita'; cardWhen = days[st.day][2].replace(/^./, (c) => c.toUpperCase()) + ' de octubre · ' + labels[st.slot]; }
+    if (cancelled) cardLabel = 'Cita cancelada';
+    return {
+      isMenu: st.mode === 'menu',
+      isMove: st.mode === 'move',
+      isCancel: st.mode === 'cancel',
+      isDone: moved || cancelled,
+      cardLabel, cardWhen,
+      cardWhenStyle: 'font-weight:700;font-size:16px;' + (cancelled ? 'text-decoration:line-through;color:#56645D;' : ''),
+      goMenu: () => this.setState({ mode: 'menu' }),
+      goMove: () => this.setState({ mode: 'move' }),
+      goCancel: () => this.setState({ mode: 'cancel' }),
+      confirmMove: () => this.setState({ mode: 'moved' }),
+      confirmCancel: () => this.setState({ mode: 'cancelled' }),
+      reset: () => this.setState({ mode: 'menu', day: 2, slot: 1 }),
+      newWhen,
+      doneTitle: moved ? 'Listo, tu cita cambió.' : 'Tu cita quedó cancelada.',
+      doneText: moved
+        ? 'Te enviamos un correo con la nueva fecha y el archivo para tu calendario. El recordatorio se movió también.'
+        : 'Le avisamos a la Dra. Laura Pérez y no te llegarán más recordatorios de esta cita.',
+      days: days.map((d, i) => {
+        const selected = st.day === i;
+        return { dow: d[0], num: d[1], selected, pick: () => this.setState({ day: i }), style: dayBase + (selected ? 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
+      }),
+      slots: labels.map((label, i) => {
+        const selected = st.slot === i;
+        return { label, selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

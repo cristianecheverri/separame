@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Detalle del profesional — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 960px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú de administración" style="flex: 1 1 220px; box-sizing: border-box; background: #15241D; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 12px 20px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></span>
+      <span style="font-size: 11px; font-weight: 700; background: #FFC93C; color: #15241D; padding: 3px 8px; border-radius: 999px">ADMIN</span>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 28px; display: flex; flex-direction: column; gap: 20px">
+    <a href="admin-subscriptions.dc.html" style="align-self: flex-start; display: flex; gap: 6px; align-items: center; min-height: 44px; font-weight: 700; font-size: 14px; text-decoration: none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+      Suscripciones
+    </a>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center">
+      <div style="display: flex; gap: 16px; align-items: center">
+        <div style="width: 60px; height: 60px; border-radius: 999px; background: #FFC93C; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; flex-shrink: 0">EL</div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -0.8px">Estudio Lúa</h1>
+          <div style="font-size: 14px; color: #56645D">separame.app/estudio-lua · hola@estudiolua.co · +57 310 555 0199</div>
+        </div>
+      </div>
+      <span style="{{statusStyle}}">{{statusLabel}}</span>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start">
+
+      <section aria-label="Registrar pago manual" style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">Registrar pago manual</h2>
+          <div style="font-size: 14px; color: #56645D">Para pagos hechos por fuera de Wompi. Activa la agenda al instante.</div>
+        </div>
+
+        <sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 18px">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="font-size: 14px; font-weight: 600">¿Cómo pagó?</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{methods}}" as="m" hint-placeholder-count="4">
+                  <button onClick="{{m.pick}}" aria-pressed="{{m.selected}}" style="{{m.style}}">{{m.label}}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="font-size: 14px; font-weight: 600">Vigencia</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{periods}}" as="p" hint-placeholder-count="4">
+                  <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">{{p.label}}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{isExact}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px">
+                  <label for="pm-until" style="font-size: 13px; font-weight: 600">Vigente hasta</label>
+                  <input id="pm-until" type="date" value="2026-12-31" style="height: 48px; max-width: 240px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+                </div>
+              </sc-if>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="pm-amount" style="font-size: 14px; font-weight: 600">Monto recibido</label>
+                <div style="display: flex; gap: 8px">
+                  <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 12px; display: flex; align-items: center; font-weight: 600; font-size: 14px">COP $</div>
+                  <input id="pm-amount" type="text" inputmode="numeric" placeholder="{{amount}}" disabled="{{isCourtesy}}" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; background: #FFFFFF">
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="pm-date" style="font-size: 14px; font-weight: 600">Fecha del pago</label>
+                <input id="pm-date" type="date" value="2026-10-20" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="pm-note" style="font-size: 14px; font-weight: 600">Referencia o nota</label>
+              <textarea id="pm-note" rows="2" placeholder="{{notePlaceholder}}" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+            </div>
+
+            <div style="background: #EAF5F0; border-radius: 18px; padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 13px; color: #3E4C45">Queda vigente hasta</span>
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">{{until}}</span>
+                <span style="font-size: 13px; color: #3E4C45">{{fromText}}</span>
+              </div>
+              <div style="font-size: 13px; color: #3E4C45; text-align: right">Mantiene su precio<br><strong style="color: #15241D">Fundador · $5.000/mes</strong></div>
+            </div>
+
+            <label style="display: flex; gap: 12px; align-items: center; font-size: 14px; cursor: pointer">
+              <input type="checkbox" checked="{{notify}}" onChange="{{toggleNotify}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+              Enviarle un correo con el comprobante y la nueva fecha
+            </label>
+
+            <button onClick="{{confirm}}" style="height: 54px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Registrar pago y activar agenda</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+            <div style="width: 56px; height: 56px; border-radius: 999px; background: #FFC93C; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">Pago registrado. Vigente hasta el {{until}}.</div>
+            <div style="font-size: 15px; color: #3E4C45; line-height: 1.5">La página de Estudio Lúa ya está recibiendo reservas otra vez. {{doneNotify}}</div>
+            <button onClick="{{reset}}" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Reiniciar demo</button>
+          </div>
+        </sc-if>
+      </section>
+
+      <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Suscripción</h2>
+          <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="color: #56645D">Precio</span><strong>Fundador · $5.000/mes</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="color: #56645D">Venció</span><strong>18 oct. 2026</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="color: #56645D">Gracia hasta</span><strong>21 oct. 2026</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="color: #56645D">Prueba gratis</span><strong>Usada (jul. 2026)</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px"><span style="color: #56645D">Citas agendadas</span><strong>9 próximas</strong></div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Historial de pagos</h2>
+          <sc-for list="{{history}}" as="h" hint-placeholder-count="3">
+            <div style="display: flex; gap: 12px; align-items: flex-start">
+              <span style="{{h.dot}}"></span>
+              <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                <div style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-weight: 700; font-size: 14px">{{h.title}}</span>
+                  <span style="font-weight: 700; font-size: 14px; white-space: nowrap">{{h.amount}}</span>
+                </div>
+                <span style="font-size: 13px; color: #56645D">{{h.detail}}</span>
+              </div>
+            </div>
+          </sc-for>
+          <div style="font-size: 12px; color: #56645D; padding-top: 4px">Cada registro manual guarda quién lo hizo y cuándo.</div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ method: 0, period: 0, notify: true, done: false }, this.state || {});
+    const navItems = ['Resumen', 'Profesionales', 'Suscripciones', 'Precios', 'Pagos Wompi', 'Correos'];
+    const hrefs = ['#', '#', 'admin-subscriptions.dc.html', 'admin-prices.dc.html', '#', '#'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
+    const on = 'background:#FFC93C;border-color:#FFC93C;color:#15241D;';
+    const off = 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;';
+    const badge = 'font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;white-space:nowrap;';
+    const dot = 'width:10px;height:10px;border-radius:999px;flex-shrink:0;margin-top:5px;';
+
+    const methods = [
+      { label: 'Transferencia', note: 'Ej. Bancolombia, comprobante #482913' },
+      { label: 'Nequi directo', note: 'Ej. Nequi al 300 000 0000, ref. M12345' },
+      { label: 'Efectivo', note: 'Ej. Recibido en persona en Medellín' },
+      { label: 'Cortesía', note: 'Ej. Compensación por falla del 12 oct.' }
+    ];
+    const periods = [
+      { label: '+3 meses', until: '20 ene. 2027', amount: '15.000' },
+      { label: '+6 meses', until: '20 abr. 2027', amount: '30.000' },
+      { label: '+12 meses', until: '20 oct. 2027', amount: '50.000' },
+      { label: 'Fecha exacta', until: '31 dic. 2026', amount: '' }
+    ];
+    const p = periods[st.period];
+    const m = methods[st.method];
+    const courtesy = st.method === 3;
+
+    const history = [
+      { title: 'Wompi · PSE rechazado', amount: '$15.000', detail: '18 oct. 2026 · fondos insuficientes', dot: dot + 'background:#E8A33D;' },
+      { title: 'Wompi · PSE aprobado', amount: '$15.000', detail: '18 jul. 2026 · 3 meses · firma verificada', dot: dot + 'background:#0B6E4F;' },
+      { title: 'Prueba gratis', amount: '—', detail: '11 jul. 2026 · 7 días', dot: dot + 'background:#CFDAD4;' }
+    ];
+    if (st.done) {
+      history.unshift({
+        title: 'Manual · ' + m.label,
+        amount: courtesy ? 'Sin cobro' : '$' + (p.amount || '—'),
+        detail: '20 oct. 2026 · hasta ' + p.until + ' · registrado por Cristian E.',
+        dot: dot + 'background:#FFC93C;'
+      });
+    }
+
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 2 ? 'background:#FFC93C;color:#15241D;' : 'color:#FFFFFF;') })),
+      statusLabel: st.done ? 'Vigente hasta ' + p.until : 'En gracia hasta el 21 oct.',
+      statusStyle: badge + (st.done ? 'background:#0B6E4F;color:#FFFFFF;' : 'background:#FFE6CC;color:#7A3E00;'),
+      methods: methods.map((x, i) => ({ label: x.label, selected: st.method === i, pick: () => this.setState({ method: i }), style: chip + (st.method === i ? on : off) })),
+      periods: periods.map((x, i) => ({ label: x.label, selected: st.period === i, pick: () => this.setState({ period: i }), style: chip + (st.period === i ? on : off) })),
+      isExact: st.period === 3,
+      isCourtesy: courtesy,
+      amount: courtesy ? 'Sin cobro' : (p.amount || 'Monto'),
+      notePlaceholder: m.note,
+      until: p.until,
+      fromText: st.period === 3 ? 'Fecha elegida a mano' : 'Se cuenta desde hoy porque el plan ya había vencido',
+      notify: st.notify,
+      toggleNotify: () => this.setState({ notify: !st.notify }),
+      notDone: !st.done,
+      done: st.done,
+      confirm: () => this.setState({ done: true }),
+      reset: () => this.setState({ done: false, method: 0, period: 0, notify: true }),
+      doneNotify: st.notify ? 'Le enviamos el comprobante a hola@estudiolua.co.' : 'No se envió correo.',
+      history
+    };
+  }
+}
+</script>
+</body>
+</html>

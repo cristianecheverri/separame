@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Servicios — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+      <a href="pro-billing-plans.dc.html" style="height: 44px; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.8px">Servicios</h1>
+        <div style="font-size: 15px; color: #56645D">Lo que tus clientes pueden reservar desde tu página.</div>
+      </div>
+      <button style="height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: flex; gap: 8px; align-items: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        Nuevo servicio
+      </button>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-label="Lista de servicios" style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{services}}" as="s" hint-placeholder-count="4">
+          <div style="{{s.cardStyle}}">
+            <button onClick="{{s.pick}}" aria-label="Editar {{s.name}}" style="display: flex; align-items: center; gap: 16px; flex-grow: 1; min-width: 0; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 0; min-height: 44px">
+              <span style="width: 52px; height: 52px; border-radius: 16px; background: #FFF4D1; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1">
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">{{s.mins}}</span>
+                <span style="font-size: 11px; font-weight: 600; color: #3E4C45">min</span>
+              </span>
+              <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                <span style="{{s.nameStyle}}">{{s.name}}</span>
+                <span style="font-size: 14px; color: #56645D">{{s.price}} · {{s.note}}</span>
+              </span>
+            </button>
+            <button onClick="{{s.toggle}}" aria-pressed="{{s.visible}}" aria-label="Mostrar {{s.name}} en mi página" style="{{s.switchStyle}}"><span style="{{s.knobStyle}}"></span></button>
+          </div>
+        </sc-for>
+        <div style="font-size: 13px; color: #56645D; padding: 4px 4px 0">Los servicios ocultos no aparecen en tu página, pero puedes agendarlos tú desde el panel.</div>
+      </section>
+
+      <section aria-label="Editar servicio" style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Editar «{{sel.name}}»</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="svc-name" style="font-size: 14px; font-weight: 600">Nombre</label>
+          <input id="svc-name" type="text" placeholder="{{sel.name}}" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 14px; font-weight: 600">Duración</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{durations}}" as="d" hint-placeholder-count="5">
+              <button onClick="{{d.pick}}" aria-pressed="{{d.selected}}" style="{{d.style}}">{{d.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="svc-price" style="font-size: 14px; font-weight: 600">Precio de referencia</label>
+          <div style="display: flex; gap: 8px">
+            <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 15px">COP $</div>
+            <input id="svc-price" type="text" inputmode="numeric" placeholder="{{sel.priceRaw}}" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="font-size: 12px; color: #56645D">Déjalo vacío para mostrar «Sin costo». No se cobra en línea.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="svc-desc" style="font-size: 14px; font-weight: 600">Descripción corta (opcional)</label>
+          <textarea id="svc-desc" rows="2" placeholder="Ej. Revisión general y plan de tratamiento" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; padding-top: 4px">
+          <button style="flex-grow: 1; height: 48px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Guardar cambios</button>
+          <button aria-label="Eliminar servicio" style="width: 48px; height: 48px; border-radius: 999px; border: 2px solid #E3E8E5; background: #FFFFFF; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = [
+      { name: 'Valoración', mins: 30, priceRaw: '60.000', note: 'Primera vez' },
+      { name: 'Limpieza dental', mins: 45, priceRaw: '120.000', note: 'Incluye profilaxis' },
+      { name: 'Control', mins: 15, priceRaw: '', note: 'Pacientes en tratamiento' },
+      { name: 'Blanqueamiento', mins: 60, priceRaw: '450.000', note: 'Oculto en la página' }
+    ];
+    const st = Object.assign({ sel: 0, hidden: { 3: true }, dur: null }, this.state || {});
+    const navItems = ['Agenda', 'Citas', 'Servicios', 'Disponibilidad', 'Perfil público', 'Suscripción'];
+    const hrefs = ['pro-agenda-day.dc.html', '#', 'pro-services.dc.html', 'pro-availability.dc.html', 'Main.dc.html', 'pro-billing-plans.dc.html'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const card = 'display:flex;align-items:center;gap:16px;padding:14px 16px 14px 14px;border-radius:20px;background:#FFFFFF;border:2px solid;';
+    const sel = base[st.sel];
+    const curDur = st.dur == null ? sel.mins : st.dur;
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 2 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      sel: Object.assign({}, sel, { priceRaw: sel.priceRaw || 'Sin costo' }),
+      services: base.map((s, i) => {
+        const visible = !st.hidden[i];
+        return {
+          name: s.name, mins: s.mins, note: visible ? s.note : 'Oculto en la página',
+          price: s.priceRaw ? '$' + s.priceRaw : 'Sin costo',
+          visible,
+          cardStyle: card + (st.sel === i ? 'border-color:#0B6E4F;' : 'border-color:#FFFFFF;'),
+          nameStyle: 'font-weight:700;font-size:16px;' + (visible ? '' : 'color:#56645D;'),
+          pick: () => this.setState({ sel: i, dur: null }),
+          toggle: () => { const h = Object.assign({}, st.hidden); h[i] = visible; this.setState({ hidden: h }); },
+          switchStyle: 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;box-sizing:border-box;' + (visible ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;'),
+          knobStyle: 'width:26px;height:26px;border-radius:999px;background:#FFFFFF;display:block;'
+        };
+      }),
+      durations: [15, 30, 45, 60, 90].map((m) => ({
+        label: m + ' min', selected: curDur === m,
+        pick: () => this.setState({ dur: m }),
+        style: chip + (curDur === m ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

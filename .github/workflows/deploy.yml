@@ -1,0 +1,91 @@
+# Deploy — every push to main (and manual runs) deploys the PROD stage.
+# dev is deployed from a laptop (`npm run deploy:dev`).
+#
+# Authenticates with GitHub OIDC (no static keys): the role
+# `SeparameGithubDeployRole` comes from the SeparameCiCd stack, deployed once with
+#   cd cdk && npx cdk deploy SeparameCiCd -c stage=prod -c cicd=true
+# and its ARN goes in the repo secret `AWS_DEPLOY_ROLE_ARN`.
+# The real Turnstile site key (public) goes in the repo variable `TURNSTILE_SITE_KEY`.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: cdk deploy --all (prod)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Never run two deploys at once, and never cancel one halfway.
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            cdk/package-lock.json
+            frontend/booking/package-lock.json
+            frontend/app/package-lock.json
+
+      - name: Install root deps
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Typecheck (shared + backend)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (shared + backend)
+        run: npm test
+
+      - name: Install CDK deps
+        working-directory: cdk
+        run: npm ci --prefer-offline --no-audit
+
+      - name: CDK tests
+        working-directory: cdk
+        run: npm test
+
+      # The FrontendDeploy stack builds both frontends again during the deploy
+      # (local bundling); these steps gate the deploy on their tests and warm
+      # node_modules so that rebuild is quick.
+      - name: Booking frontend (install, test, build)
+        working-directory: frontend/booking
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm test --if-present
+          npm run build
+
+      - name: App frontend (install, test, build)
+        working-directory: frontend/app
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm test --if-present
+          npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: CDK deploy --all (prod)
+        working-directory: cdk
+        env:
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+        run: npx cdk deploy --all -c stage=prod --require-approval never --concurrency 4

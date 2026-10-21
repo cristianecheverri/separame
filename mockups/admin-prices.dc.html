@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Precios y migraciones — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 900px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú de administración" style="flex: 1 1 220px; box-sizing: border-box; background: #15241D; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 12px 20px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></span>
+      <span style="font-size: 11px; font-weight: 700; background: #FFC93C; color: #15241D; padding: 3px 8px; border-radius: 999px">ADMIN</span>
+    </div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.8px">Precios</h1>
+        <div style="font-size: 15px; color: #56645D">Cada versión es inmutable. Cambiar un precio es crear una versión nueva.</div>
+      </div>
+      <button style="height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; cursor: pointer">+ Nueva versión</button>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 8px 8px 12px">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 700px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; color: #56645D; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px">
+              <th style="padding: 14px 14px 10px; font-weight: 700">Versión</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Precio</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Paquetes</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Estado</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Suscripciones</th>
+              <th style="padding: 14px 14px 10px; font-weight: 700">Creada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{versions}}" as="v" hint-placeholder-count="4">
+              <tr style="border-top: 1px solid #E3E8E5">
+                <td style="padding: 12px 14px"><div style="font-weight: 700">{{v.name}}</div><div style="font-size: 12px; color: #56645D">{{v.code}}</div></td>
+                <td style="padding: 12px 10px; white-space: nowrap; font-weight: 700">{{v.amount}}</td>
+                <td style="padding: 12px 10px; color: #3E4C45">{{v.packs}}</td>
+                <td style="padding: 12px 10px"><span style="{{v.tagStyle}}">{{v.tag}}</span></td>
+                <td style="padding: 12px 10px">{{v.subs}}</td>
+                <td style="padding: 12px 14px; white-space: nowrap; color: #3E4C45">{{v.created}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start">
+      <section style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Migrar profesionales a otro precio</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 14px; font-weight: 600">¿A quiénes?</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{targets}}" as="t" hint-placeholder-count="3">
+              <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+          <div style="font-size: 13px; color: #56645D">{{targetHelp}}</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Desde</span>
+            <button style="height: 48px; padding: 0 14px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; color: #15241D; text-align: left; cursor: pointer">Mensual · $5.900</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Hacia</span>
+            <button style="height: 48px; padding: 0 14px; border-radius: 14px; border: 2px solid #0B6E4F; background: #EAF5F0; font: inherit; font-size: 15px; font-weight: 700; color: #15241D; text-align: left; cursor: pointer">Estándar · [PRECIO]</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="mig-date" style="font-size: 14px; font-weight: 600">Fecha efectiva</label>
+          <input id="mig-date" type="text" placeholder="1 de diciembre de 2026" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          <div style="font-size: 13px; color: #56645D">Mínimo 30 días después del aviso. Si avisas hoy, la primera fecha posible es el 19 de noviembre. El cambio aplica en la siguiente renovación.</div>
+        </div>
+        <button style="height: 52px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Programar y enviar aviso a {{targetCount}}</button>
+      </section>
+
+      <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #56645D">Vista previa del aviso</div>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.5">
+            <strong style="font-size: 15px">Tu precio en Sepárame cambia el 1 de diciembre</strong>
+            <span style="color: #3E4C45">Hola, Felipe. Desde tu renovación del 1 de diciembre, tu plan pasa de $5.900 a [PRECIO] al mes. Hasta esa fecha todo sigue igual. Si tienes dudas, responde este correo.</span>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Programadas</h2>
+          <div style="background: #FFF4D1; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 700; font-size: 14px">Tutorías (3) · Mensual → Estándar</span>
+            <span style="font-size: 13px; color: #3E4C45">Aviso enviado 31 oct. · efectiva 1 dic.</span>
+          </div>
+          <div style="font-size: 13px; color: #56645D">Los precios fundador no se migran salvo que tú lo decidas.</div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ target: 0 }, this.state || {});
+    const navItems = ['Resumen', 'Profesionales', 'Suscripciones', 'Precios', 'Pagos Wompi', 'Correos'];
+    const hrefs = ['#', '#', 'admin-subscriptions.dc.html', 'admin-prices.dc.html', '#', '#'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const tag = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
+    const targets = [
+      { label: 'Un grupo', help: 'Grupo «Tutorías»: 3 profesionales en Mensual.', count: '3 profesionales' },
+      { label: 'Profesionales elegidos', help: 'Selecciónalos desde la lista de Suscripciones.', count: 'los elegidos' },
+      { label: 'Todos los de una versión', help: 'Las 4 suscripciones que hoy están en Mensual.', count: '4 profesionales' }
+    ];
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 3 ? 'background:#FFC93C;color:#15241D;' : 'color:#FFFFFF;') })),
+      versions: [
+        { name: 'Fundador', code: 'fundador-v1', amount: '$5.000 / mes', packs: '3 m $15.000 · 6 m $30.000 · 12 m $50.000', tag: 'Activa', tagStyle: tag + 'background:#0B6E4F;color:#FFFFFF;', subs: '38', created: '1 oct. 2026' },
+        { name: 'Mensual', code: 'mensual-v1', amount: '$5.900 / mes', packs: 'Solo 1 mes', tag: 'Activa', tagStyle: tag + 'background:#0B6E4F;color:#FFFFFF;', subs: '4', created: '1 oct. 2026' },
+        { name: 'Estándar', code: 'estandar-v1', amount: '[PRECIO] / mes', packs: '[POR DEFINIR]', tag: 'Borrador', tagStyle: tag + 'background:#F3F6F4;color:#3E4C45;', subs: '0', created: '18 oct. 2026' }
+      ],
+      targets: targets.map((t, i) => ({
+        label: t.label, selected: st.target === i,
+        pick: () => this.setState({ target: i }),
+        style: chip + (st.target === i ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      })),
+      targetHelp: targets[st.target].help,
+      targetCount: targets[st.target].count
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+/**
+ * Slot computation — the single implementation used by the API (to offer and
+ * to validate a booking) and by the frontends (to preview). Pure and
+ * deterministic: everything time-dependent comes in through `now`.
+ *
+ * Conflict rule: a candidate [s, s+d) is free when it stays `bufferMin` away
+ * from every confirmed appointment and doesn't overlap any block.
+ *
+ * Double-booking is prevented at write time with lock items on a 5-minute grid
+ * (see `lockUnits`): each appointment locks [start, end + buffer). Two bookings
+ * closer than the buffer always share at least one unit, so the second
+ * conditional write fails inside the DynamoDB transaction.
+ */
+import { holidayOn } from './holidays';
+import {
+  addDays, addMinutes, bogotaDate, diffDays, hhmm, minutesOf, toInstant, todayBogota, weekdayOf,
+  type ISODate, type ISOInstant, type Weekday,
+} from './time';
+import type { BookingRules, TimeRange, WeeklySchedule } from './types';
+
+export const LOCK_UNIT_MIN = 5;
+
+export interface Interval {
+  start: ISOInstant;
+  end: ISOInstant;
+}
+
+export type ClosedReason = 'past' | 'weekly' | 'holiday' | 'out_of_window' | 'blocked';
+
+export interface DayAvailability {
+  date: ISODate;
+  weekday: Weekday;
+  /** Why the whole day is closed; `null` when open (even if every slot is taken). */
+  closed: ClosedReason | null;
+  holidayName?: string;
+  /** Bookable start instants, ascending. */
+  slots: ISOInstant[];
+}
+
+export interface AvailabilityContext {
+  schedule: WeeklySchedule;
+  rules: BookingRules;
+  /** Blocked periods (vacations, congress…). */
+  blocks: Interval[];
+  /** Confirmed appointments (cancelled ones must be excluded by the caller). */
+  busy: Interval[];
+  durationMin: number;
+  now: Date;
+}
+
+export const DEFAULT_RULES: BookingRules = {
+  bufferMin: 10,
+  minNoticeMin: 120,
+  maxDaysAhead: 60,
+  slotStepMin: 30,
+  closedOnHolidays: true,
+};
+
+const WEEKDAY_RANGES: TimeRange[] = [
+  { start: '08:00', end: '12:00' },
+  { start: '14:00', end: '18:00' },
+];
+
+export const DEFAULT_SCHEDULE: WeeklySchedule = {
+  mon: WEEKDAY_RANGES,
+  tue: WEEKDAY_RANGES,
+  wed: WEEKDAY_RANGES,
+  thu: WEEKDAY_RANGES,
+  fri: WEEKDAY_RANGES,
+  sat: [{ start: '08:00', end: '12:00' }],
+  sun: [],
+};
+
+const ms = (iso: ISOInstant) => new Date(iso).getTime();
+
+function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
+  return aStart < bEnd && aEnd > bStart;
+}
+
+export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailability {
+  const weekday = weekdayOf(date);
+  const base = { date, weekday, slots: [] as ISOInstant[] };
+  const today = todayBogota(ctx.now);
+  const ahead = diffDays(today, date);
+
+  if (ahead < 0) return { ...base, closed: 'past' };
+  if (ahead > ctx.rules.maxDaysAhead) return { ...base, closed: 'out_of_window' };
+
+  const holiday = holidayOn(date);
+  if (holiday && ctx.rules.closedOnHolidays) return { ...base, closed: 'holiday', holidayName: holiday.name };
+
+  const ranges = ctx.schedule[weekday] ?? [];
+  if (ranges.length === 0) return { ...base, closed: 'weekly' };
+
+  const dayBlocks = ctx.blocks.map((b) => [ms(b.start), ms(b.end)] as const);
+  const fullyBlocked = ranges.every((r) => {
+    const rs = ms(toInstant(date, r.start));
+    const re = ms(toInstant(date, r.end));
+    return dayBlocks.some(([bs, be]) => bs <= rs && be >= re);
+  });
+  if (fullyBlocked) return { ...base, closed: 'blocked', ...(holiday ? { holidayName: holiday.name } : {}) };
+
+  const earliest = ctx.now.getTime() + ctx.rules.minNoticeMin * 60_000;
+  const buffer = ctx.rules.bufferMin * 60_000;
+  const duration = ctx.durationMin * 60_000;
+  const busy = ctx.busy.map((b) => [ms(b.start), ms(b.end)] as const);
+  const step = Math.max(LOCK_UNIT_MIN, ctx.rules.slotStepMin);
+
+  const slots: ISOInstant[] = [];
+  for (const range of ranges) {
+    const startMin = minutesOf(range.start);
+    const endMin = minutesOf(range.end);
+    for (let m = startMin; m + ctx.durationMin <= endMin; m += step) {
+      const s = ms(toInstant(date, hhmm(m)));
+      const e = s + duration;
+      if (s < earliest) continue;
+      if (busy.some(([bs, be]) => overlaps(s, e, bs - buffer, be + buffer))) continue;
+      if (dayBlocks.some(([bs, be]) => overlaps(s, e, bs, be))) continue;
+      slots.push(new Date(s).toISOString());
+    }
+  }
+  return { ...base, closed: null, ...(holiday ? { holidayName: holiday.name } : {}), slots };
+}
+
+export function computeAvailability(from: ISODate, days: number, ctx: AvailabilityContext): DayAvailability[] {
+  return Array.from({ length: days }, (_, i) => computeDay(addDays(from, i), ctx));
+}
+
+/** Server-side guard: is this exact start instant offered right now? */
+export function isSlotBookable(start: ISOInstant, ctx: AvailabilityContext): boolean {
+  const iso = new Date(start).toISOString();
+  return computeDay(bogotaDate(iso), ctx).slots.includes(iso);
+}
+
+/**
+ * Lock instants (5-minute grid) an appointment occupies: [start, end + buffer).
+ * Start times are always on the grid because schedule times, steps and
+ * durations are validated as multiples of 5 minutes.
+ */
+export function lockUnits(start: ISOInstant, durationMin: number, bufferMin: number): ISOInstant[] {
+  const total = durationMin + bufferMin;
+  const count = Math.ceil(total / LOCK_UNIT_MIN);
+  const first = new Date(start).toISOString();
+  return Array.from({ length: count }, (_, i) => addMinutes(first, i * LOCK_UNIT_MIN));
+}

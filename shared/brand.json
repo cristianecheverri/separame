@@ -1,0 +1,31 @@
+{
+  "$comment": "Line A 'Cercano' design tokens, straight from the mockups. Used by the HTML emails; frontend/theme.css (Tailwind v4 @theme) mirrors them and shared/brand.test.ts keeps both in sync.",
+  "colors": {
+    "green": "#0B6E4F",
+    "greenDark": "#084C37",
+    "greenSoft": "#EAF5F0",
+    "greenLine": "#CFE3DA",
+    "mint": "#D5EDE3",
+    "yellow": "#FFC93C",
+    "yellowDeep": "#E0A800",
+    "yellowSoft": "#FFF4D1",
+    "yellowInk": "#5C4300",
+    "orangeSoft": "#FFE6CC",
+    "orangeInk": "#7A3E00",
+    "warn": "#E8A33D",
+    "ink": "#15241D",
+    "ink2": "#3E4C45",
+    "muted": "#56645D",
+    "faint": "#5E6C65",
+    "line": "#E3E8E5",
+    "lineStrong": "#CFDAD4",
+    "radio": "#B9C4BE",
+    "surface": "#F3F6F4",
+    "disabled": "#DCE3DF",
+    "white": "#FFFFFF"
+  },
+  "fonts": {
+    "display": "'Bricolage Grotesque', system-ui, sans-serif",
+    "body": "'Figtree', system-ui, sans-serif"
+  }
+}

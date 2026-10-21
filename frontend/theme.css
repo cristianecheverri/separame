@@ -1,0 +1,42 @@
+/*
+ * Line A "Cercano" design tokens for Tailwind CSS v4 — shared by
+ * frontend/booking and frontend/app. Import after Tailwind:
+ *
+ *   @import "tailwindcss";
+ *   @import "../../theme.css";
+ *
+ * Values mirror shared/brand.json (the emails use that file); the test in
+ * shared/brand.test.ts fails if the two ever drift apart.
+ * Utilities: bg-primary, bg-primary-soft, text-ink-2, border-line-strong,
+ * bg-accent, bg-accent-soft, text-warn-ink, bg-surface, font-display, …
+ */
+@theme {
+  --color-primary: #0B6E4F;
+  --color-primary-dark: #084C37;
+  --color-primary-soft: #EAF5F0;
+  --color-primary-line: #CFE3DA;
+  --color-mint: #D5EDE3;
+
+  --color-accent: #FFC93C;
+  --color-accent-deep: #E0A800;
+  --color-accent-soft: #FFF4D1;
+  --color-accent-ink: #5C4300;
+
+  --color-warn: #E8A33D;
+  --color-warn-soft: #FFE6CC;
+  --color-warn-ink: #7A3E00;
+
+  --color-ink: #15241D;
+  --color-ink-2: #3E4C45;
+  --color-muted: #56645D;
+  --color-faint: #5E6C65;
+
+  --color-line: #E3E8E5;
+  --color-line-strong: #CFDAD4;
+  --color-radio: #B9C4BE;
+  --color-surface: #F3F6F4;
+  --color-disabled: #DCE3DF;
+
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-sans: "Figtree", system-ui, sans-serif;
+}

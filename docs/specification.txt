@@ -84,7 +84,7 @@ REGLAS DE SUSCRIPCIÓN
       cancelar (el cliente del profesional no tiene la culpa).
   - 2-3 días de gracia antes de bloquear (un pago fallido no corta la
     agenda de golpe).
-  - Pago manual (por fuera de Wompi): desde el panel de administración
+  - Pago manual (por fuera de una pasarela): desde el panel de administración
     puedo registrar un pago hecho por transferencia, Nequi directo,
     efectivo o como cortesía, y fijar la vigencia (+3 / +6 / +12 meses o
     una fecha exacta). La agenda se activa al instante.
@@ -123,8 +123,19 @@ PRECIOS
 
 
 --------------------------------------------------------------------
-PASARELA DE PAGOS: WOMPI (Bancolombia)
+PASARELA DE PAGOS: POR DEFINIR (Wompi descartado por ahora)
 --------------------------------------------------------------------
+  DECISIÓN ACTUAL (20-oct-2026): no integrar pasarela todavía; se evalúa
+  la pasarela propia de Nequi. Mientras tanto:
+    - El profesional elige paquete, ve cómo pagar (Nequi / transferencia),
+      paga y toca "Ya pagué". Llega un aviso al admin.
+    - El admin aprueba (se extiende la suscripción, queda auditado) o
+      rechaza con motivo.
+  El sistema queda listo para VARIAS pasarelas: cada una es un adaptador
+  con su propio webhook (/webhooks/<proveedor>); agregar una no cambia
+  suscripciones, admin ni panel.
+
+  Notas de la evaluación de Wompi (por si se retoma):
   - Un solo checkout con Nequi, tarjetas, PSE, botón Bancolombia y
     Daviplata.
   - 2,65% + $700 + IVA por transacción, sin mensualidad.
@@ -151,19 +162,22 @@ ARQUITECTURA (todo serverless, casi gratis en reposo)
   - Mismo enfoque que Cartazos, con AWS CDK.
   - Cuenta de AWS actual (ahí están los créditos y el dominio). Sepárame
     se aísla dentro de ella: cuota de Lambdas simultáneas subida a 1.000,
-    etiqueta project=separame en todo (para ver sus costos aparte),
+    etiqueta Project=separame en todo (para ver sus costos aparte),
     prefijo separame-<ambiente>- y permisos mínimos por Lambda.
   - Dos ambientes idénticos, dev y prod (mismo código, solo cambia la
     configuración):
     - dev: dev.separame.app, api.dev.separame.app,
-      noreply@dev.separame.app, Wompi sandbox. Se despliega desde local.
-    - prod: separame.app, api.separame.app, noreply@separame.app, Wompi
-      real. Se despliega solo con cada push a main (GitHub Actions corre
+      noreply@dev.separame.app. Se despliega desde local.
+    - prod: separame.app, api.separame.app, noreply@separame.app.
+      Se despliega solo con cada push a main (GitHub Actions corre
       typecheck, lint y tests antes de desplegar).
     - Tablas, usuarios de Cognito y buckets separados por ambiente.
-  - Profesionales y admin: cuenta real en Cognito (plan Essentials,
-    gratis hasta 10.000 usuarios activos al mes). Entran sin contraseña,
-    con un código de 6 dígitos que les llega al correo. Los correos de
+  - Profesionales y admin: cuenta real en Cognito (plan Lite, gratis
+    hasta 10.000 usuarios activos al mes). Entran con correo y
+    contraseña (NO acceso por código). Al registrarse confirman el
+    correo una vez con un código, y pueden recuperar la contraseña por
+    correo. El admin recibe una invitación con contraseña temporal y la
+    cambia al entrar. Los correos de
     Cognito salen por SES. Clientes: sin cuenta, solo el enlace público.
   - TODO con CDK, como Cartazos y blobhive.
   - Backend: API Gateway HTTP API en api.separame.app + DynamoDB
@@ -177,7 +191,7 @@ ARQUITECTURA (todo serverless, casi gratis en reposo)
     - Límites de tráfico por ruta (más bajos al reservar).
     - Lambdas en ARM (Graviton): ~20% más baratas.
   - DESCARTADO: AppSync. Cuesta ~4 veces más por llamada, el webhook de
-    Wompi necesita un endpoint HTTP normal de todas formas y la página
+    una pasarela necesitaría un endpoint HTTP normal y la página
     pública sin cuenta es más simple sin API key. No hace falta tiempo
     real: el panel se refresca al abrirlo o cada 1-2 minutos.
   - Correos con SES desde noreply@separame.app (dominio verificado con
@@ -195,8 +209,9 @@ ARQUITECTURA (todo serverless, casi gratis en reposo)
     recordatorio se guarda en la misma cita y cambia con ella al moverla
     o cancelarla, así que nunca queda un recordatorio equivocado.
   - Respaldo continuo de la base de datos (PITR) en ambos ambientes.
-  - Webhook de Wompi: Lambda aparte que verifica la firma y extiende la
-    fecha (idempotente por id de transacción).
+  - Pagos: manuales por ahora ("Ya pagué" + aprobación del admin). Cada
+    pasarela futura tendrá su Lambda y webhook propios, verificando la
+    firma e idempotente por proveedor + id de transacción.
   - Anti-spam: Cloudflare Turnstile (gratis) + límite de reservas.
     NO usar AWS WAF (cobra mensualidad).
   - Secretos en SSM Parameter Store (gratis), no en Secrets Manager.
@@ -252,7 +267,7 @@ PRÓXIMOS PASOS
   [ ] Buscar la marca "Sepárame" en la SIC.
   [ ] Comprar separame.app en Route 53 (renovación automática).
   [ ] Consultar con un contador (DIAN, régimen).
-  [ ] Crear cuenta de comercio en Wompi (y revisar la promoción Nequi).
+  [ ] Elegir pasarela (evaluar la de Nequi directo); por ahora pago manual.
   [ ] Definir precios de lanzamiento ("precio fundador").
   [ ] Construir el MVP.
 

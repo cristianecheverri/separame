@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@import "../../theme.css";
+
+/* Variable Bricolage with the optical-size axis: the mockups load it from Google Fonts with
+   opsz 12..96, and optical sizing changes glyph widths at display sizes. */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource/figtree/400.css";
+@import "@fontsource/figtree/500.css";
+@import "@fontsource/figtree/600.css";
+@import "@fontsource/figtree/700.css";
+
+@theme {
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", system-ui, sans-serif;
+}
+
+@layer base {
+  /* The mockups use the browser's default line-height; Tailwind's preflight would make every line taller. */
+  html {
+    line-height: normal;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Links as in the mockups. Utilities still win: they live in a later cascade layer. */
+  a {
+    color: var(--color-primary);
+  }
+  a:hover {
+    color: var(--color-primary-dark);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--color-accent);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #8A968F;
+  }
+}
+
+@utility hit-44 {
+  /* Expands the click/tap target to 44 px without changing what is drawn. */
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -4px 0;
+  }
+}
+
+@keyframes pulse-soft {
+  50% { opacity: 0.55; }
+}
+.skeleton {
+  background: #E8EDEA;
+  border-radius: 12px;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}

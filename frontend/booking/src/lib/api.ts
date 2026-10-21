@@ -1,0 +1,93 @@
+/**
+ * Public API client for the booking site. `ApiClient` is an interface so the
+ * dev-only mock (src/mock) can stand in for the HTTP implementation.
+ */
+import {
+  apiPaths,
+  type ApiErrorBody,
+  type AvailabilityQuery,
+  type AvailabilityResponse,
+  type BookingMutationResponse,
+  type CancelBookingRequest,
+  type CreateBookingRequest,
+  type CreateBookingResponse,
+  type ErrorCode,
+  type GetPublicProResponse,
+  type ManagedAppointmentResponse,
+  type RescheduleBookingRequest,
+} from '@shared/api';
+
+export type ApiErrorCode = ErrorCode | 'network';
+
+export class ApiError extends Error {
+  constructor(
+    readonly code: ApiErrorCode,
+    message: string,
+    readonly status = 0,
+    readonly fields?: Record<string, string>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export interface ApiClient {
+  getPro(slug: string): Promise<GetPublicProResponse>;
+  getAvailability(slug: string, query: AvailabilityQuery): Promise<AvailabilityResponse>;
+  createBooking(slug: string, body: CreateBookingRequest): Promise<CreateBookingResponse>;
+  getAppointment(token: string): Promise<ManagedAppointmentResponse>;
+  cancelAppointment(token: string, body: CancelBookingRequest): Promise<BookingMutationResponse>;
+  rescheduleAppointment(token: string, body: RescheduleBookingRequest): Promise<BookingMutationResponse>;
+}
+
+const TIMEOUT_MS = 15_000;
+
+export function createHttpApi(baseUrl: string): ApiClient {
+  async function request<T>(path: string, body?: unknown): Promise<T> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(baseUrl + path, {
+        method: body === undefined ? 'GET' : 'POST',
+        headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch {
+      throw new ApiError('network', 'Sin conexión');
+    } finally {
+      clearTimeout(timer);
+    }
+    const data = (await response.json().catch(() => null)) as unknown;
+    if (!response.ok) {
+      const error = (data as ApiErrorBody | null)?.error;
+      throw new ApiError(error?.code ?? 'internal', error?.message ?? 'Error', response.status, error?.fields);
+    }
+    return data as T;
+  }
+
+  return {
+    getPro: (slug) => request(apiPaths.publicPro(slug)),
+    getAvailability: (slug, query) => request(apiPaths.publicAvailability(slug, query)),
+    createBooking: (slug, body) => request(apiPaths.publicBookings(slug), body),
+    getAppointment: (token) => request(apiPaths.publicAppointment(token)),
+    cancelAppointment: (token, body) => request(apiPaths.publicCancel(token), body),
+    rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), body),
+  };
+}
+
+/** User-facing Spanish message for errors that don't have a dedicated screen. */
+export function errorMessage(error: unknown): string {
+  const code = error instanceof ApiError ? error.code : 'internal';
+  switch (code) {
+    case 'network':
+      return 'No pudimos conectarnos. Revisa tu internet e inténtalo de nuevo.';
+    case 'rate_limited':
+      return 'Hiciste varios intentos seguidos. Espera un momento e inténtalo de nuevo.';
+    case 'captcha_failed':
+      return 'No pudimos verificar que eres una persona. Inténtalo de nuevo.';
+    default:
+      return 'Algo salió mal de nuestro lado. Inténtalo de nuevo en un momento.';
+  }
+}
