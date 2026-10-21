@@ -6,6 +6,7 @@ import { trialHash } from '../../services/profiles';
 import { DEFAULT_PRICE_SEEDS } from '../../services/prices';
 import { apiEvent, canceledTx, parse, proClaims, setTestEnv, SUB_ID } from '../../testing/fixtures';
 import { handler } from './index';
+import { TRIAL_DAYS } from '../../../shared/subscription';
 
 setTestEnv();
 const ddb = mockClient(DynamoDBDocumentClient);
@@ -34,7 +35,7 @@ describe('POST /me/onboarding', () => {
     expect(items[0].Put!.Item).toMatchObject(ownerKey(SUB_ID));
     expect(items[1].Put!.Item).toMatchObject(slugKey('dra-laura-perez'));
     const sub = items[3].Put!.Item!;
-    expect(sub).toMatchObject({ SK: 'SUB', trialEndsAt: '2026-10-27T15:00:00.000Z', paidUntil: null, priceVersionId: 'fundador-v1', GSI1PK: 'SUBS' });
+    expect(sub).toMatchObject({ SK: 'SUB', trialEndsAt: new Date(NOW.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(), paidUntil: null, priceVersionId: 'fundador-v1', GSI1PK: 'SUBS' });
     expect(items[5].Put!.Item).toMatchObject(trialKey(trialHash('laura@correo.com')));
     expect(parse(res).subscription.state).toBe('trial');
   });

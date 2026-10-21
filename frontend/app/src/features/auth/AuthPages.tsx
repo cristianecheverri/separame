@@ -4,6 +4,7 @@ import { emailSchema } from '@shared/schemas';
 import { auth } from '../../lib/auth';
 import { authErrorMessage, passwordOk, type SignInStep } from '../../lib/authClient';
 import { AuthHeading, AuthLayout, CodeInput, EmailField, FormError, FormNotice, PasswordField, ResendButton, SubmitButton } from './parts';
+import { TRIAL_DAYS } from '@shared/subscription';
 
 const normalizeEmail = (raw: string) => raw.trim().toLowerCase();
 
@@ -186,7 +187,7 @@ export function SignupPage() {
       }
     >
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
-        <AuthHeading title="Crea tu cuenta">7 días gratis. Sin tarjeta.</AuthHeading>
+        <AuthHeading title="Crea tu cuenta">{TRIAL_DAYS} días gratis. Sin tarjeta.</AuthHeading>
         <EmailField value={email} onChange={setEmail} autoFocus />
         <PasswordField label="Contraseña" value={password} onChange={setPassword} autoComplete="new-password" showRules />
         <FormError message={error} />

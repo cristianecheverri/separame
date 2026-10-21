@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type AdminProDetailResponse, type ManualPaymentMethod, type ManualPaymentRequest, type ManualPaymentResponse } from '@shared/api';
 import { formatCop, formatDateNoYear, formatDateShort, initials } from '@shared/format';
 import { manualPaymentSchema, rejectNoticeSchema } from '@shared/schemas';
-import { extendPaidUntil } from '@shared/subscription';
+import { TRIAL_DAYS, extendPaidUntil } from '@shared/subscription';
 import { bogotaDate, todayBogota } from '@shared/time';
 import type { Payment, SubscriptionStatus } from '@shared/types';
 import { Chip } from '../../components/ui/Chip';
@@ -361,7 +361,7 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
                     <span className="font-bold text-[14px]">Prueba gratis</span>
                     <span className="font-bold text-[14px]">—</span>
                   </div>
-                  <span className="text-[13px] text-muted">{formatDateShort(bogotaDate(data.trialStartedAt))} · 7 días</span>
+                  <span className="text-[13px] text-muted">{formatDateShort(bogotaDate(data.trialStartedAt))} · {TRIAL_DAYS} días</span>
                 </div>
               </li>
             </ul>

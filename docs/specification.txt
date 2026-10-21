@@ -72,7 +72,7 @@ FUERA DE LA PRIMERA VERSIÓN
 --------------------------------------------------------------------
 REGLAS DE SUSCRIPCIÓN
 --------------------------------------------------------------------
-  - Prueba gratis de 7 días por profesional.
+  - Prueba gratis de 10 días por profesional.
     Una sola prueba por correo verificado (evita abusos). No se verifica
     el teléfono por SMS; se bloquean los correos desechables.
   - Suscripción VIGENTE: todo funciona.

@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type ProfileResponse, type UpsertServiceRequest } from '@shared/api';
+import { TRIAL_DAYS } from '@shared/subscription';
 import { DEFAULT_RULES, DEFAULT_SCHEDULE } from '@shared/availability';
 import { formatCop, formatDuration } from '@shared/format';
 import { onboardingSchema, upsertServiceSchema } from '@shared/schemas';
@@ -297,7 +298,7 @@ export function OnboardingPage() {
               </div>
             </div>
           </div>
-          <div className="text-[14px] text-ink-2 leading-[1.45]">Tienes 7 días de prueba gratis con todo funcionando. Después eliges un plan desde «Suscripción».</div>
+          <div className="text-[14px] text-ink-2 leading-[1.45]">Tienes {TRIAL_DAYS} días de prueba gratis con todo funcionando. Después eliges un plan desde «Suscripción».</div>
           <div>
             <button type="button" onClick={finish} className="h-[52px] px-8 rounded-full bg-primary text-white font-bold text-[16px] hover:bg-primary-dark w-full sm:w-auto">
               Ir a mi agenda

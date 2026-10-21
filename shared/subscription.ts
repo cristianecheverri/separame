@@ -6,7 +6,7 @@
 import { addMonths, maxInstant, type ISOInstant } from './time';
 import type { SubscriptionStatus } from './types';
 
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 10;
 export const GRACE_DAYS = 3;
 /** Renewal reminder email this many days before accessUntil. */
 export const RENEWAL_NOTICE_DAYS = 3;
