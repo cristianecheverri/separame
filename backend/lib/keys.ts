@@ -59,6 +59,10 @@ export const lockKey = (proId: string, unit: ISOInstant) => ({
   SK: bogotaTime(unit),
 });
 
+/** Calendar sync settings and the secret feed token → professional lookup (deleted on rotate). */
+export const calSyncKey = (proId: string) => ({ PK: proPk(proId), SK: 'CALSYNC' });
+export const calFeedKey = (token: string) => ({ PK: `CALFEED#${token}`, SK: 'CALFEED' });
+
 export const PRICE_PK = 'PRICE';
 export const PRICE_PREFIX = 'PRICE#';
 export const priceKey = (priceId: string) => ({ PK: PRICE_PK, SK: `${PRICE_PREFIX}${priceId}` });

@@ -251,3 +251,19 @@ export const instructions: PaymentInstructions = {
   holderName: 'Sepárame',
   note: 'Envía el valor exacto del plan. Activamos tu plan el mismo día hábil.',
 };
+
+/** "Tu calendario" links for a feed token (same shapes the API returns). */
+export function calendarSyncFor(token: string, invitesEnabled: boolean) {
+  const feedUrl = `https://api.dev.separame.app/public/calendar/${token}.ics`;
+  const webcalUrl = feedUrl.replace(/^https:/, 'webcal:');
+  return {
+    feedUrl,
+    webcalUrl,
+    googleUrl: `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`,
+    outlookUrl: `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(feedUrl)}&name=${encodeURIComponent('Sepárame')}`,
+    invitesEnabled,
+    createdAt: '2026-10-18T15:00:00.000Z',
+  };
+}
+
+export const CALENDAR_TOKEN = 'demoToken7f3a9c1e5b2d4086';

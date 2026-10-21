@@ -158,6 +158,10 @@ export const cancelAppointmentSchema = z.object({
   reason: z.string().trim().max(300).optional(),
 });
 
+export const updateCalendarSyncSchema = z.object({
+  invitesEnabled: z.boolean(),
+});
+
 export const paymentNoticeSchema = z.object({
   months: z.number().int().min(1).max(36),
   method: z.enum(['nequi', 'transfer']),

@@ -21,6 +21,8 @@
  *  PRO#<proId>                      PAY#<createdAtISO>#<id>    Payment (admin-recorded or "Ya pagué" notice, with audit)
  *                                                              approved only: GSI1PK=PAYMENTS#<YYYY-MM>  GSI1SK=<paidAt>#<proId>#<id>
  *                                                              (monthly revenue in one query)
+ *  PRO#<proId>                      CALSYNC                    { token, invitesEnabled, createdAt } — calendar sync settings
+ *  CALFEED#<token>                  CALFEED                    { proId } — resolves the secret .ics feed URL (deleted on rotate)
  *  SLUG#<slug>                      SLUG                       { proId }  — uniqueness via conditional put
  *  LOCK#<proId>#<bogotaDate>        <HH:mm>                    { apptId } — 5-min double-booking locks (TTL: slot end + 7 days)
  *  OWNER#<cognitoSub>               OWNER                      { proId } — Cognito user → professional

@@ -40,7 +40,14 @@ export interface AppointmentItem extends Appointment {
   lockBufferMin: number;
   /** Who made the last change (stream-emails decides whom to notify). */
   lastChangedBy?: Actor;
+  /**
+   * Monotonic revision: 0 on create, +1 in every update transaction (move,
+   * cancel). Used as the iCalendar SEQUENCE (feed + invitations). Missing = 0.
+   */
+  revision?: number;
 }
+
+export const revisionOf = (appt: Pick<AppointmentItem, 'revision'>): number => appt.revision ?? 0;
 
 export function toAppointment(item: Item): Appointment {
   const a = item as AppointmentItem;
@@ -228,6 +235,7 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
     id, proId, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin, priceCop: service.priceCop,
     start, end: addMinutes(start, service.durationMin), status: 'confirmed', client: input.client,
     createdBy: input.createdBy, createdAt: at, updatedAt: at, lockBufferMin: ctx.rules.bufferMin, lastChangedBy: input.createdBy,
+    revision: 0,
   };
   const item = {
     ...apptKey(proId, id),
@@ -278,9 +286,9 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
 
   const values: Record<string, unknown> = {
     ':start': start, ':end': end, ':lsi': apptStartSk(start), ':u': at, ':by': input.actor,
-    ':buf': ctx.rules.bufferMin, ':confirmed': 'confirmed', ':old': appt.start,
+    ':buf': ctx.rules.bufferMin, ':confirmed': 'confirmed', ':old': appt.start, ':zero': 0, ':one': 1,
   };
-  let update = 'SET #start = :start, #end = :end, #lsi = :lsi, updatedAt = :u, lastChangedBy = :by, lockBufferMin = :buf';
+  let update = 'SET #start = :start, #end = :end, #lsi = :lsi, updatedAt = :u, lastChangedBy = :by, lockBufferMin = :buf, revision = if_not_exists(revision, :zero) + :one';
   const names: Record<string, string> = { '#start': 'start', '#end': 'end', '#lsi': LSI1.sk, '#st': 'status', '#g2pk': GSI2.pk, '#g2sk': GSI2.sk };
   if (reminder) {
     update += ', #g2pk = :g2pk, #g2sk = :g2sk REMOVE reminderSentAt';
@@ -309,7 +317,7 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
   });
   log.info('appointment moved', { proId: appt.proId, appointmentId: appt.id, actor: input.actor });
   return {
-    ...appt, start, end, updatedAt: at, lastChangedBy: input.actor, lockBufferMin: ctx.rules.bufferMin,
+    ...appt, start, end, updatedAt: at, lastChangedBy: input.actor, lockBufferMin: ctx.rules.bufferMin, revision: revisionOf(appt) + 1,
     // A new pending reminder replaces the old "sent" mark.
     reminderSentAt: reminder ? undefined : appt.reminderSentAt,
   };
@@ -321,8 +329,8 @@ export async function cancelAppointment(input: { appt: AppointmentItem; actor: A
   if (appt.status === 'cancelled') return appt;
   const at = now.toISOString();
   const reason = input.reason?.trim() || undefined;
-  const values: Record<string, unknown> = { ':c': 'cancelled', ':by': input.actor, ':u': at, ':confirmed': 'confirmed' };
-  let update = 'SET #st = :c, cancelledBy = :by, updatedAt = :u, lastChangedBy = :by';
+  const values: Record<string, unknown> = { ':c': 'cancelled', ':by': input.actor, ':u': at, ':confirmed': 'confirmed', ':zero': 0, ':one': 1 };
+  let update = 'SET #st = :c, cancelledBy = :by, updatedAt = :u, lastChangedBy = :by, revision = if_not_exists(revision, :zero) + :one';
   if (reason) {
     update += ', cancelReason = :r';
     values[':r'] = reason;
@@ -347,7 +355,10 @@ export async function cancelAppointment(input: { appt: AppointmentItem; actor: A
     lockTtl: 0,
   });
   log.info('appointment cancelled', { proId: appt.proId, appointmentId: appt.id, actor: input.actor });
-  return { ...appt, status: 'cancelled', cancelledBy: input.actor, ...(reason ? { cancelReason: reason } : {}), updatedAt: at, lastChangedBy: input.actor };
+  return {
+    ...appt, status: 'cancelled', cancelledBy: input.actor, ...(reason ? { cancelReason: reason } : {}),
+    updatedAt: at, lastChangedBy: input.actor, revision: revisionOf(appt) + 1,
+  };
 }
 
 /** A pro's appointments with start in the Bogotá days [from, to] (LSI1 range). */

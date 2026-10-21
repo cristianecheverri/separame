@@ -31,6 +31,8 @@ const SCREENS = [
   ['services', '/services?as=pro&state=trial'],
   ['services-expired', '/services?as=pro&state=expired'],
   ['availability', '/availability?as=pro&state=trial'],
+  ['calendar-sync', '/calendar-sync?as=pro&state=trial'],
+  ['calendar-sync-expired', '/calendar-sync?as=pro&state=expired'],
   ['billing', '/billing?as=pro&state=trial&billing=none'],
   ['billing-pending', '/billing?as=pro&state=trial&billing=pending'],
   ['billing-expired', '/billing?as=pro&state=expired&billing=rejected'],

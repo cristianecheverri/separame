@@ -267,6 +267,37 @@ export interface AppointmentResponse {
 /** GET /me/slots?serviceId&from&days — same shape as the public availability. */
 export type ProSlotsResponse = AvailabilityResponse;
 
+// ── Calendar sync (pro's own calendar) ────────────────────────────────────
+
+/** The feed lists appointments from this many days ago… */
+export const CALENDAR_FEED_PAST_DAYS = 30;
+/** …up to this many days ahead (the booking window is ≤ 365 days). */
+export const CALENDAR_FEED_FUTURE_DAYS = 365;
+
+/**
+ * Two complementary ways to get Sepárame appointments into the pro's calendar,
+ * no OAuth: (1) a secret .ics subscription feed (all calendars; Google refreshes
+ * it slowly, hours), and (2) calendar invitations attached to appointment emails
+ * (near real time; same UID so moves/cancellations update the event).
+ */
+export interface CalendarSyncResponse {
+  /** https://api.separame.app/public/calendar/<token>.ics — secret; rotate if leaked. */
+  feedUrl: string;
+  /** Same feed as webcal:// (Apple Calendar / iOS subscribe link). */
+  webcalUrl: string;
+  /** Google Calendar "add by URL" deep link. */
+  googleUrl: string;
+  /** Outlook.com "add from web" deep link. */
+  outlookUrl: string;
+  /** Send a calendar invitation (REQUEST/CANCEL) to the pro on every appointment change. */
+  invitesEnabled: boolean;
+  createdAt: ISOInstant;
+}
+
+export interface UpdateCalendarSyncRequest {
+  invitesEnabled: boolean;
+}
+
 export interface BillingResponse {
   subscription: SubscriptionStatus;
   price: PriceVersion;
@@ -432,6 +463,9 @@ export const apiPaths = {
   appointment: (id: string) => `/me/appointments/${enc(id)}`,
   cancelAppointment: (id: string) => `/me/appointments/${enc(id)}/cancel`,
   slots: (q: AvailabilityQuery) => `/me/slots${qs({ ...q })}`,
+  calendarSync: () => '/me/calendar-sync',
+  calendarSyncRotate: () => '/me/calendar-sync/rotate',
+  publicCalendarFeed: (token: string) => `/public/calendar/${enc(token)}.ics`,
   billing: () => '/me/billing',
   paymentNotices: () => '/me/billing/payment-notices',
 

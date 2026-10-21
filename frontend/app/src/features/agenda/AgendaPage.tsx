@@ -16,7 +16,7 @@ import { useAppointments, useAvailability } from '../../lib/queries';
 import { AppointmentCard } from '../appointments/AppointmentCard';
 import type { AppointmentModalState } from '../appointments/AppointmentModals';
 import { LazyAppointmentModals as AppointmentModals } from '../appointments/LazyAppointmentModals';
-import { ReadOnlyChecklist, ReminderNote, ShareCard, UpcomingCard } from './SideCards';
+import { CalendarSyncCard, ReadOnlyChecklist, ReminderNote, ShareCard, UpcomingCard } from './SideCards';
 import { WeekView } from './WeekView';
 
 function greeting(name: string, count: number, readOnly: boolean): string {
@@ -197,12 +197,16 @@ export function AgendaPage() {
         </section>
 
         {readOnly ? (
-          <ReadOnlyChecklist />
+          <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+            <ReadOnlyChecklist />
+            <CalendarSyncCard />
+          </div>
         ) : (
           <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
             <ShareCard url={publicUrl} slug={profile.slug} />
             <UpcomingCard today={today} appointments={upcomingQuery.data?.appointments} schedule={settings?.schedule} rules={settings?.rules} />
             <ReminderNote today={today} appointments={upcomingQuery.data?.appointments} />
+            <CalendarSyncCard />
           </div>
         )}
       </div>

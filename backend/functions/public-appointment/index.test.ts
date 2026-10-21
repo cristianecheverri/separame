@@ -64,7 +64,8 @@ describe('client manage link', () => {
     expect(tx).toHaveLength(9);
     const update = tx[0].Update!;
     expect(update.UpdateExpression).toContain('REMOVE #g2pk, #g2sk');
-    expect(update.ExpressionAttributeValues).toMatchObject({ ':c': 'cancelled', ':by': 'client', ':r': 'Viaje' });
+    expect(update.ExpressionAttributeValues).toMatchObject({ ':c': 'cancelled', ':by': 'client', ':r': 'Viaje', ':zero': 0, ':one': 1 });
+    expect(update.UpdateExpression).toContain('revision = if_not_exists(revision, :zero) + :one');
     const deletes = tx.slice(1).map((t) => t.Delete!);
     expect(deletes.map((d) => d.Key!.SK)).toEqual(['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30', '10:35']);
     expect(deletes[0].ConditionExpression).toBe('attribute_not_exists(PK) OR apptId = :a');
@@ -90,8 +91,9 @@ describe('client manage link', () => {
     expect(puts).toEqual(['10:40', '10:45', '10:50', '10:55', '11:00', '11:05']);
     expect(tx.filter((t) => t.Put).every((t) => t.Put!.Item!.ttl === Date.parse('2026-10-28T16:10:00.000Z') / 1000)).toBe(true);
     expect(tx[0].Update!.ExpressionAttributeValues).toMatchObject({
-      ':start': '2026-10-21T15:30:00.000Z', ':lsi': 'APPT#2026-10-21T15:30:00.000Z', ':g2pk': 'REMIND#2026-10-20',
+      ':start': '2026-10-21T15:30:00.000Z', ':lsi': 'APPT#2026-10-21T15:30:00.000Z', ':g2pk': 'REMIND#2026-10-20', ':zero': 0, ':one': 1,
     });
+    expect(tx[0].Update!.UpdateExpression).toContain('revision = if_not_exists(revision, :zero) + :one');
   });
 
   it('reschedule needs an active agenda (agenda_unavailable)', async () => {

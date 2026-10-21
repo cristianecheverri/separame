@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { DAY_NAMES } from '@shared/format';
 import { addDays, jsWeekday, type ISODate } from '@shared/time';
 import type { Appointment, BookingRules, WeeklySchedule } from '@shared/types';
@@ -100,7 +101,7 @@ const RULES: [boolean, string][] = [
 
 export function ReadOnlyChecklist() {
   return (
-    <section className={cx(ui.card, 'gap-3 flex-[1_1_300px] min-w-0')}>
+    <section className={cx(ui.card, 'gap-3')}>
       <h2 className={ui.h2sm}>Mientras renuevas</h2>
       <ul className="m-0 p-0 list-none flex flex-col gap-3">
         {RULES.map(([ok, text]) => (
@@ -115,6 +116,18 @@ export function ReadOnlyChecklist() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Compact link to "Tu calendario". */
+export function CalendarSyncCard() {
+  return (
+    <section className={cx(ui.card, 'gap-2')}>
+      <h2 className={ui.h2sm}>¿Ves tus citas en Google Calendar?</h2>
+      <Link to="/calendar-sync" className="self-start font-bold text-[14px] underline underline-offset-2 min-h-11 inline-flex items-center">
+        Sincroniza tu calendario →
+      </Link>
     </section>
   );
 }

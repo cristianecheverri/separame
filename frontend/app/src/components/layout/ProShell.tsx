@@ -20,6 +20,7 @@ const NAV: NavItem[] = [
   { to: '/appointments', label: 'Citas' },
   { to: '/services', label: 'Servicios' },
   { to: '/availability', label: 'Disponibilidad' },
+  { to: '/calendar-sync', label: 'Tu calendario' },
   { to: '/profile', label: 'Perfil público' },
   { to: '/billing', label: 'Suscripción' },
 ];

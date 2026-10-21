@@ -26,10 +26,17 @@ export interface Attachment {
   content: string;
 }
 
+/** Calendar invitation (REQUEST / CANCEL): inline text/calendar part + `invite.ics` attachment. */
+export interface CalendarInvite {
+  method: 'REQUEST' | 'CANCEL';
+  content: string;
+}
+
 export interface OutgoingEmail extends RenderedEmail {
   to: string;
   replyTo?: string;
   attachments?: Attachment[];
+  invite?: CalendarInvite;
 }
 
 export type SendResult = 'sent' | 'suppressed' | 'skipped';
@@ -65,7 +72,11 @@ export const fromAddress = (): string => formatFrom(env.mailFrom());
 
 const base64Lines = (text: string) => Buffer.from(text, 'utf8').toString('base64').replace(/.{1,76}/g, '$&\r\n').trimEnd();
 
-/** multipart/mixed( multipart/alternative(text, html), attachments… ). */
+/**
+ * multipart/mixed( multipart/alternative(text, html[, text/calendar]), attachments… ).
+ * Gmail and Outlook only show an invitation (with the event card) when the
+ * text/calendar part sits inside the alternative AND an .ics is attached.
+ */
 export function buildRawMessage(email: OutgoingEmail, from: string): string {
   const mixed = `mixed_${randomBytes(8).toString('hex')}`;
   const alt = `alt_${randomBytes(8).toString('hex')}`;
@@ -91,9 +102,22 @@ export function buildRawMessage(email: OutgoingEmail, from: string): string {
     'Content-Transfer-Encoding: base64',
     '',
     base64Lines(email.html),
-    `--${alt}--`,
   ];
-  for (const a of email.attachments ?? []) {
+  if (email.invite) {
+    parts.push(
+      `--${alt}`,
+      `Content-Type: text/calendar; method=${email.invite.method}; charset=UTF-8`,
+      'Content-Transfer-Encoding: base64',
+      '',
+      base64Lines(email.invite.content),
+    );
+  }
+  parts.push(`--${alt}--`);
+  const attachments = [
+    ...(email.attachments ?? []),
+    ...(email.invite ? [{ filename: 'invite.ics', contentType: 'application/ics', content: email.invite.content }] : []),
+  ];
+  for (const a of attachments) {
     parts.push(
       `--${mixed}`,
       `Content-Type: ${a.contentType}; name="${a.filename}"`,
@@ -120,7 +144,7 @@ export async function sendEmail(email: OutgoingEmail): Promise<SendResult> {
   }
   const from = fromAddress();
   const configSet = env.mailConfigSet();
-  if (email.attachments?.length) {
+  if (email.attachments?.length || email.invite) {
     await ses.send(new SendEmailCommand({
       ConfigurationSetName: configSet,
       Content: { Raw: { Data: Buffer.from(buildRawMessage({ ...email, to }, from), 'utf8') } },

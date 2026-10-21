@@ -5,7 +5,8 @@ import { env } from '../lib/env';
 import { manageTokenFor } from '../lib/tokens';
 import { googleCalendarUrl, outlookCalendarUrl, type CalendarEvent } from './calendar-links';
 import { buildIcs } from './ics';
-import { sendEmail, type SendResult } from './sender';
+import { sendEmail, type CalendarInvite, type SendResult } from './sender';
+import { proCalendarEmail, type ProCalendarKind } from './templates/pro-calendar';
 import { bookingConfirmedEmail, type BookingEmailData } from './templates/booking-confirmed';
 import { bookingChangedEmail, proBookingChangedEmail } from './templates/booking-changed';
 import { clientCancelledEmail, proCancelledEmail, type CancelledData } from './templates/booking-cancelled';
@@ -126,11 +127,11 @@ export async function sendClientCancelled(appt: Appointment, pro: ProProfile): P
   return sendEmail({ ...clientCancelledEmail(cancelledData(appt, pro)), to: appt.client.email, replyTo: pro.email });
 }
 
-export async function sendProCancelled(appt: Appointment, pro: ProProfile): Promise<SendResult> {
-  return sendEmail({ ...proCancelledEmail(cancelledData(appt, pro)), to: pro.email, replyTo: appt.client.email || undefined });
+export async function sendProCancelled(appt: Appointment, pro: ProProfile, invite?: CalendarInvite): Promise<SendResult> {
+  return sendEmail({ ...proCancelledEmail(cancelledData(appt, pro)), to: pro.email, replyTo: appt.client.email || undefined, invite });
 }
 
-export async function sendProNewBooking(appt: Appointment, pro: ProProfile): Promise<SendResult> {
+export async function sendProNewBooking(appt: Appointment, pro: ProProfile, invite?: CalendarInvite): Promise<SendResult> {
   return sendEmail({
     ...proNewBookingEmail({
       siteUrl: env.siteUrl(), pro: proInfo(pro), client: appt.client, serviceName: appt.serviceName,
@@ -138,10 +139,11 @@ export async function sendProNewBooking(appt: Appointment, pro: ProProfile): Pro
     }),
     to: pro.email,
     replyTo: appt.client.email || undefined,
+    invite,
   });
 }
 
-export async function sendProChanged(appt: Appointment, previousStart: ISOInstant, pro: ProProfile): Promise<SendResult> {
+export async function sendProChanged(appt: Appointment, previousStart: ISOInstant, pro: ProProfile, invite?: CalendarInvite): Promise<SendResult> {
   return sendEmail({
     ...proBookingChangedEmail({
       siteUrl: env.siteUrl(), pro: proInfo(pro), clientName: appt.client.name, serviceName: appt.serviceName,
@@ -149,6 +151,19 @@ export async function sendProChanged(appt: Appointment, previousStart: ISOInstan
     }),
     to: pro.email,
     replyTo: appt.client.email || undefined,
+    invite,
+  });
+}
+
+/** Carrier for the invitation when the pro made the change himself. */
+export async function sendProCalendarNotice(appt: Appointment, pro: ProProfile, kind: ProCalendarKind, invite: CalendarInvite): Promise<SendResult> {
+  return sendEmail({
+    ...proCalendarEmail({
+      siteUrl: env.siteUrl(), kind, clientName: appt.client.name, serviceName: appt.serviceName,
+      durationMin: appt.durationMin, start: appt.start,
+    }),
+    to: pro.email,
+    invite,
   });
 }
 

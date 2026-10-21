@@ -2,7 +2,7 @@
 import { keepPreviousData, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
   apiPaths,
-  type AdminProDetailResponse, type AdminStatsResponse, type AppointmentsResponse, type AvailabilitySettingsResponse,
+  type AdminProDetailResponse, type AdminStatsResponse, type AppointmentsResponse, type AvailabilitySettingsResponse, type CalendarSyncResponse,
   type BillingResponse, type ListPricesResponse, type ListSubscriptionsQuery, type ListSubscriptionsResponse,
   type MeResponse, type MigrationsResponse, type ProSlotsResponse, type ServicesResponse,
 } from '@shared/api';
@@ -19,6 +19,7 @@ export const keys = {
   slotsAll: ['slots'] as const,
   slots: (serviceId: string, from: ISODate, days: number) => ['slots', serviceId, from, days] as const,
   billing: ['billing'] as const,
+  calendarSync: ['calendar-sync'] as const,
   adminStats: ['admin', 'stats'] as const,
   adminSubscriptions: (q: ListSubscriptionsQuery) => ['admin', 'subscriptions', q.state ?? '', q.q ?? ''] as const,
   adminSubscriptionsAll: ['admin', 'subscriptions'] as const,
@@ -60,6 +61,9 @@ export function useSlots(serviceId: string | null, from: ISODate, days: number) 
 export function useBilling(enabled = true) {
   return useQuery({ queryKey: keys.billing, queryFn: () => api.get<BillingResponse>(apiPaths.billing()), enabled, staleTime: 60_000 });
 }
+
+export const useCalendarSync = () =>
+  useQuery({ queryKey: keys.calendarSync, queryFn: () => api.get<CalendarSyncResponse>(apiPaths.calendarSync()), staleTime: 5 * 60_000 });
 
 export const useAdminStats = () => useQuery({ queryKey: keys.adminStats, queryFn: () => api.get<AdminStatsResponse>(apiPaths.adminStats()) });
 

@@ -39,6 +39,7 @@ export const routes: RouteObject[] = [
                       { path: 'appointments', lazy: page(() => import('../features/appointments/AppointmentsPage'), 'AppointmentsPage') },
                       { path: 'services', lazy: page(() => import('../features/services/ServicesPage'), 'ServicesPage') },
                       { path: 'availability', lazy: page(() => import('../features/availability/AvailabilityPage'), 'AvailabilityPage') },
+                      { path: 'calendar-sync', lazy: page(() => import('../features/calendar/CalendarSyncPage'), 'CalendarSyncPage') },
                       { path: 'billing', lazy: page(() => import('../features/billing/BillingPage'), 'BillingPage') },
                       { path: 'profile', lazy: page(() => import('../features/profile/ProfilePage'), 'ProfilePage') },
                     ],

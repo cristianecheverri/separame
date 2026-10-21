@@ -69,6 +69,7 @@ describe('POST /public/pros/{slug}/bookings', () => {
       LSI1SK: 'APPT#2026-10-21T15:00:00.000Z',
       GSI2PK: 'REMIND#2026-10-20',
       createdBy: 'client',
+      revision: 0,
       client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
     });
     expect(appt.GSI2SK).toBe(`2026-10-20T15:00:00.000Z#${PRO_ID}#${appt.id}`);

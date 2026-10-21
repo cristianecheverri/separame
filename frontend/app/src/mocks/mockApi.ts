@@ -12,7 +12,7 @@ import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
   createAppointmentSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
-  moveAppointmentSchema, onboardingSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
+  moveAppointmentSchema, onboardingSchema, updateCalendarSyncSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil } from '@shared/subscription';
@@ -38,6 +38,7 @@ interface Db {
   rows: typeof fx.adminRows;
   details: Record<string, { profile: ProProfile; sub: { trialEndsAt: string; paidUntil: string | null }; payments: Payment[]; upcoming: number; trialStartedAt: string; priceId: string }>;
   takenSlugs: Set<string>;
+  calendar: ReturnType<typeof fx.calendarSyncFor>;
 }
 
 const clone = <T,>(v: T): T => structuredClone(v);
@@ -78,6 +79,7 @@ export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; bi
     rows: clone(fx.adminRows),
     details,
     takenSlugs: new Set(['laura-perez', 'dra-laura', 'estudio-lua', 'camilo-entrena']),
+    calendar: fx.calendarSyncFor(fx.CALENDAR_TOKEN, true),
   };
 }
 
@@ -350,6 +352,20 @@ on('GET', '/me/slots', (_p, _b, q) => {
     from,
     days: computeAvailability(from, days, { schedule: db.schedule, rules: db.rules, blocks: db.blocks, busy: busyFor(), durationMin: service.durationMin, now: now() }),
   };
+});
+
+on('GET', '/me/calendar-sync', () => (requireProfile(), db.calendar));
+on('PUT', '/me/calendar-sync', (_p, body) => {
+  requireProfile();
+  const data = validate(updateCalendarSyncSchema, body);
+  db.calendar = { ...db.calendar, invitesEnabled: data.invitesEnabled };
+  return db.calendar;
+});
+on('POST', '/me/calendar-sync/rotate', () => {
+  requireProfile();
+  const token = `demoToken${Math.random().toString(16).slice(2, 18)}`;
+  db.calendar = { ...fx.calendarSyncFor(token, db.calendar.invitesEnabled), createdAt: now().toISOString() };
+  return db.calendar;
 });
 
 on('GET', '/me/billing', () => {

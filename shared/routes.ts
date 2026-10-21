@@ -33,6 +33,7 @@ export const API_FUNCTIONS = {
   proAvailability: fn('pro-availability', 'Weekly schedule, booking rules and blocked days'),
   proAppointments: fn('pro-appointments', 'Professional calendar: list, create, move, cancel'),
   proBilling: fn('pro-billing', 'Plans, payment instructions, history and "Ya pagué" notices'),
+  calendarSync: fn('calendar-sync', 'Calendar subscription feed (.ics) for the pro and calendar-invite settings'),
   adminSubscriptions: fn('admin-subscriptions', 'Admin: stats, subscriptions, pro detail, manual payments'),
   adminPrices: fn('admin-prices', 'Admin: price versions and price migrations'),
 } as const;
@@ -69,6 +70,8 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/public/appointments/{token}', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/appointments/{token}/cancel', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/appointments/{token}/reschedule', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
+  // Secret-URL calendar feed that Google/Outlook/Apple poll: /public/calendar/<token>.ics
+  { method: 'GET', path: '/public/calendar/{file}', fn: 'calendarSync', auth: 'public' },
 
   // Professional — Cognito JWT
   { method: 'GET', path: '/me', fn: 'proAccount', auth: 'pro' },
@@ -91,6 +94,10 @@ export const ROUTES: RouteDef[] = [
   { method: 'PATCH', path: '/me/appointments/{appointmentId}', fn: 'proAppointments', auth: 'pro' },
   { method: 'POST', path: '/me/appointments/{appointmentId}/cancel', fn: 'proAppointments', auth: 'pro' },
   { method: 'GET', path: '/me/slots', fn: 'proAppointments', auth: 'pro' },
+
+  { method: 'GET', path: '/me/calendar-sync', fn: 'calendarSync', auth: 'pro' },
+  { method: 'PUT', path: '/me/calendar-sync', fn: 'calendarSync', auth: 'pro' },
+  { method: 'POST', path: '/me/calendar-sync/rotate', fn: 'calendarSync', auth: 'pro' },
 
   { method: 'GET', path: '/me/billing', fn: 'proBilling', auth: 'pro' },
   { method: 'POST', path: '/me/billing/payment-notices', fn: 'proBilling', auth: 'pro' },
