@@ -67,7 +67,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Editar «{{sel.name}}»</h2>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-name" style="font-size: 14px; font-weight: 600">Nombre</label>
-          <input id="svc-name" type="text" placeholder="{{sel.name}}" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          <input id="svc-name" type="text" value="{{sel.name}}" placeholder="Nombre del servicio" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px">
           <div style="font-size: 14px; font-weight: 600">Duración</div>
@@ -89,7 +89,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
               <label for="svc-price" style="font-size: 13px; font-weight: 600; color: #3E4C45">Valor de referencia</label>
               <div style="display: flex; gap: 8px">
                 <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 15px">COP $</div>
-                <input id="svc-price" type="text" inputmode="numeric" placeholder="60.000" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+                <input id="svc-price" type="text" inputmode="numeric" placeholder="Valor en pesos" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
               </div>
             </div>
           </sc-if>
@@ -107,7 +107,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         </fieldset>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-desc" style="font-size: 14px; font-weight: 600">Descripción corta (opcional)</label>
-          <textarea id="svc-desc" rows="2" placeholder="Ej. Revisión general y plan de tratamiento" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+          <textarea id="svc-desc" rows="2" placeholder="Qué incluye el servicio" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
         </div>
         <div style="display: flex; gap: 10px; padding-top: 4px">
           <button style="flex-grow: 1; height: 48px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Guardar cambios</button>

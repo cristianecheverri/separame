@@ -82,36 +82,40 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 
 ## Propuestas (por aprobar)
 
-Página «Propuestas (por aprobar)» del lienzo. **No son la fuente de verdad** hasta que el usuario las apruebe:
+Página «Propuestas (por aprobar)» del lienzo. Cada fila del lienzo lleva su estado (**APROBADA** / **RECHAZADA**). Las aprobadas
+se están implementando y pasan a la línea A cuando el código esté listo; hasta entonces **no son la fuente de verdad**:
 cada propuesta trae su «Antes» (estado actual implementado) y su «Después». Mismo nombre en el lienzo y en el repo.
 Los enlaces a pantallas de la línea A apuntan a `../line-a/`.
 
+**Regla de placeholders (en todos los tableros):** los campos vacíos muestran qué va ahí («Tu nombre y apellido»,
+«Tu número de celular», «Tu correo electrónico», «Nombre del servicio»…), nunca datos de ejemplo que parezcan reales.
+
 | Archivo | Propuesta |
 |---|---|
-| `proposals/landing-desktop.dc.html` | Landing (separame.app) en escritorio: hero, profesiones, «Así se ve funcionando», por qué, 3 pasos, precios, preguntas y pie |
-| `proposals/landing-phone.dc.html` | La misma landing en el celular (375) |
-| `proposals/proposal-m1-footer-status-{before,after,after-error,after-verifying}.dc.html` | M-1 · Resumen en el pie en vez de chips arriba (320×568): resumen, error y «Verificando que eres una persona…» |
-| `proposals/proposal-m2-m3-day-slots-{before,after}.dc.html` | M-2/M-3 · Primer día con horas ya elegido; día lleno distinto de cerrado, con leyenda |
-| `proposals/proposal-m4-profile-header-{before,after,before-step-2-320,after-step-2-320}.dc.html` | M-4 · Encabezado de perfil completo en el paso 1; fila compacta sin logo a 320 px |
-| `proposals/proposal-m5-details-{before,after,after-returning}.dc.html` | M-5 · «Tus datos»: el botón dice qué falta, «Recordar mis datos» y cliente que vuelve |
-| `proposals/proposal-field-contrast-{before,after}.dc.html` | Contraste · Borde de campos #8A968F (WCAG 3:1) |
-| `proposals/proposal-m6-landscape-{before,after}.dc.html` | M-6 · Horizontal / pantallas bajas (667×375) |
-| `proposals/proposal-m7-confirmation-calendar-{before,after}.dc.html` | M-7 · Confirmación con el calendario del celular primero (tweak iPhone/Android) |
-| `proposals/proposal-m8-move-appointment-{before,after}.dc.html` | M-8 · Mover la cita con días, Mañana/Tarde y pie fijo |
-| `proposals/proposal-price-option-editor-{before,after}.dc.html` | Precio · Editor del servicio: valor fijo, sin costo, «Precio a convenir» o no mostrar |
-| `proposals/proposal-price-option-booking-{before,after}.dc.html` | Precio · Cómo se ve en el paso 1 de la reserva |
-| `proposals/proposal-mp01-tab-bar-{before,after,after-more-sheet}.dc.html` | MP-01 · Barra inferior Agenda · Citas · Clientes · Más |
-| `proposals/proposal-mp02-mp03-compact-header-{before,after}.dc.html` | MP-02/MP-03 · Encabezado compacto, instalar debajo y botón flotante «Nueva cita» |
-| `proposals/proposal-mp04-appointment-status-{before,after}.dc.html` | MP-04 · Un solo estado por cita y acciones siempre en la misma esquina |
-| `proposals/proposal-mp05-new-appointment-{before,after}.dc.html` | MP-05 · Nueva cita con autocompletar cliente y hora/servicio preseleccionados (celular y correo opcionales) |
-| `proposals/proposal-mp06-waitlist-{before,after,after-menu}.dc.html` | MP-06 · Lista de espera con «Agendar» y menú ⋯ |
-| `proposals/proposal-mp07-native-share-{before,after,after-fallback}.dc.html` | MP-07 · Compartir con la hoja del celular; copiar como respaldo |
-| `proposals/proposal-mp08-stats-two-columns-{before,after}.dc.html` | MP-08 · Estadísticas en 2 columnas a 360 px |
-| `proposals/referral-agenda-card-{desktop,phone}.dc.html` | Referidos · Tarjeta «Invita y gana un mes» en la agenda |
-| `proposals/referral-billing-section-{desktop,phone}.dc.html` | Referidos · Sección «Referidos» en Suscripción (estados: en prueba, ganaste 1 mes, mes guardado) |
-| `proposals/referral-signup-invited-{desktop,phone}.dc.html` | Referidos · Registro con «Te invitó Dra. Laura Pérez» |
-| `proposals/referral-email-month-earned.dc.html` | Referidos · Correo «¡Ganaste un mes gratis!» (tweak: plan vencido → mes guardado) |
-| `proposals/referral-admin-pro-detail.dc.html` | Referidos · Admin: «Referido por…», sus referidos y «Mes gratis por referido» en el historial |
+| `proposals/landing-desktop.dc.html` | **Aprobada.** Landing (separame.app) en escritorio: hero, profesiones, «Así se ve funcionando», por qué, 3 pasos, precios, preguntas y pie |
+| `proposals/landing-phone.dc.html` | **Aprobada.** La misma landing en el celular (375) |
+| `proposals/proposal-m1-footer-status-{before,after,after-error,after-verifying}.dc.html` | **Rechazada**: se quedan los chips arriba, con aire encima. M-1 · Resumen en el pie en vez de chips arriba (320×568): resumen, error y «Verificando que eres una persona…» |
+| `proposals/proposal-m2-m3-day-slots-{before,after}.dc.html` | **Aprobada.** M-2/M-3 · Primer día con horas ya elegido; día lleno distinto de cerrado, con leyenda |
+| `proposals/proposal-m4-profile-header-{before,after,before-step-2-320,after-step-2-320}.dc.html` | **Aprobada.** M-4 · Encabezado de perfil completo en el paso 1; fila compacta sin logo a 320 px |
+| `proposals/proposal-m5-details-{before,after,after-returning}.dc.html` | **Aprobada.** M-5 · «Tus datos»: el botón dice qué falta, «Recordar mis datos» y cliente que vuelve (sin «Olvidar mis datos» por ahora) |
+| `proposals/proposal-field-contrast-{before,after}.dc.html` | **Rechazada**: se queda el borde actual. Contraste · Borde de campos #8A968F (WCAG 3:1) |
+| `proposals/proposal-m6-landscape-{before,after}.dc.html` | **Aprobada.** M-6 · Horizontal / pantallas bajas (667×375) (aprobado el «Después») |
+| `proposals/proposal-m7-confirmation-calendar-{before,after}.dc.html` | **Aprobada.** M-7 · Confirmación con el calendario del celular primero (tweak iPhone/Android) |
+| `proposals/proposal-m8-move-appointment-{before,after}.dc.html` | **Aprobada.** M-8 · Mover la cita con días, Mañana/Tarde y pie fijo |
+| `proposals/proposal-price-option-editor-{before,after}.dc.html` | **Aprobada.** Precio · Editor del servicio: valor fijo, sin costo, «Precio a convenir» o no mostrar |
+| `proposals/proposal-price-option-booking-{before,after}.dc.html` | **Aprobada.** Precio · Cómo se ve en el paso 1 de la reserva |
+| `proposals/proposal-mp01-tab-bar-{before,after,after-more-sheet}.dc.html` | **Aprobada.** MP-01 · Barra inferior Agenda · Citas · Clientes · Más |
+| `proposals/proposal-mp02-mp03-compact-header-{before,after}.dc.html` | **Aprobada.** MP-02/MP-03 · Encabezado compacto, instalar debajo y botón flotante «Nueva cita» |
+| `proposals/proposal-mp04-appointment-status-{before,after}.dc.html` | **Aprobada.** MP-04 · Un solo estado por cita y acciones siempre en la misma esquina |
+| `proposals/proposal-mp05-new-appointment-{before,after}.dc.html` | **Aprobada.** MP-05 · Nueva cita con autocompletar cliente y hora/servicio preseleccionados (celular y correo opcionales) |
+| `proposals/proposal-mp06-waitlist-{before,after,after-menu}.dc.html` | **Aprobada.** MP-06 · Lista de espera con «Agendar» y menú ⋯ |
+| `proposals/proposal-mp07-native-share-{before,after,after-fallback}.dc.html` | **Aprobada.** MP-07 · Compartir con la hoja del celular; copiar como respaldo (aprobado «Después · hoja de compartir») |
+| `proposals/proposal-mp08-stats-two-columns-{before,after}.dc.html` | **Aprobada.** MP-08 · Estadísticas en 2 columnas a 360 px |
+| `proposals/referral-agenda-card-{desktop,phone}.dc.html` | **Aprobada.** Referidos · Tarjeta «Invita y gana un mes» en la agenda |
+| `proposals/referral-billing-section-{desktop,phone}.dc.html` | **Aprobada.** Referidos · Sección «Referidos» en Suscripción (estados: en prueba, ganaste 1 mes, mes guardado) |
+| `proposals/referral-signup-invited-{desktop,phone}.dc.html` | **Aprobada.** Referidos · Registro con «Te invitó Dra. Laura Pérez» |
+| `proposals/referral-email-month-earned.dc.html` | **Aprobada.** Referidos · Correo «¡Ganaste un mes gratis!» (tweak: plan vencido → mes guardado) |
+| `proposals/referral-admin-pro-detail.dc.html` | **Aprobada.** Referidos · Admin: «Referido por…», sus referidos y «Mes gratis por referido» en el historial |
 
 ## Exploración (líneas B y C)
 

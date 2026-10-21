@@ -67,7 +67,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Editar «{{sel.name}}»</h2>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-name" style="font-size: 14px; font-weight: 600">Nombre</label>
-          <input id="svc-name" type="text" placeholder="{{sel.name}}" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          <input id="svc-name" type="text" value="{{sel.name}}" placeholder="Nombre del servicio" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px">
           <div style="font-size: 14px; font-weight: 600">Duración</div>
@@ -81,7 +81,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
             <div style="display: flex; flex-direction: column; gap: 6px">
               <div style="display: flex; align-items: center; gap: 8px">
                 <label for="svc-minutes" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Duración en minutos</label>
-                <input id="svc-minutes" type="text" inputmode="numeric" maxlength="3" placeholder="Ej. 75" style="height: 48px; width: 120px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+                <input id="svc-minutes" type="text" inputmode="numeric" maxlength="3" placeholder="Minutos" style="height: 48px; width: 120px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
                 <span style="font-size: 15px; font-weight: 600; color: #3E4C45">minutos</span>
               </div>
               <div style="font-size: 12px; color: #56645D">De 5 a 480 minutos, en múltiplos de 5.</div>
@@ -98,7 +98,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-desc" style="font-size: 14px; font-weight: 600">Descripción corta (opcional)</label>
-          <textarea id="svc-desc" rows="2" placeholder="Ej. Revisión general y plan de tratamiento" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+          <textarea id="svc-desc" rows="2" placeholder="Qué incluye el servicio" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
         </div>
         <div style="display: flex; gap: 10px; padding-top: 4px">
           <button style="flex-grow: 1; height: 48px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Guardar cambios</button>

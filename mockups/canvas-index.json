@@ -750,7 +750,7 @@
     "proposal-m6-landscape-after.dc.html": {
       "h": 375,
       "page": "propuestas",
-      "title": "M-6 · Después (667×375)",
+      "title": "M-6 · Después (667×375, aprobada)",
       "w": 667,
       "x": 747,
       "y": 14584,
@@ -958,7 +958,7 @@
     "proposal-mp07-native-share-after.dc.html": {
       "h": 520,
       "page": "propuestas",
-      "title": "MP-07 · Después · hoja de compartir",
+      "title": "MP-07 · Después · hoja de compartir (aprobada)",
       "w": 375,
       "x": 455,
       "y": 27127,
@@ -1205,7 +1205,7 @@
       "kind": "title1",
       "maxW": 1735,
       "page": "propuestas",
-      "text": "Landing · La puerta de entrada: qué es, cómo se ve funcionando y cuánto cuesta",
+      "text": "APROBADA · Landing · La puerta de entrada: qué es, cómo se ve funcionando y cuánto cuesta",
       "w": 240,
       "x": 0,
       "y": 0
@@ -1214,7 +1214,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-1 · El resumen baja al pie: más espacio para el formulario en 320 px",
+      "text": "RECHAZADA · M-1 · Resumen en el pie: no. Se quedan los chips arriba (más visibles), con aire encima",
       "w": 240,
       "x": 0,
       "y": 8140
@@ -1223,7 +1223,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-2 y M-3 · Horas visibles al entrar y día lleno distinto de cerrado",
+      "text": "APROBADA · M-2 y M-3 · Horas visibles al entrar y día lleno distinto de cerrado",
       "w": 240,
       "x": 0,
       "y": 9148
@@ -1232,7 +1232,7 @@
       "kind": "title1",
       "maxW": 1630,
       "page": "propuestas",
-      "text": "M-4 · Perfil completo al llegar: quién es, dónde queda y cómo llamar",
+      "text": "APROBADA · M-4 · Perfil completo al llegar: quién es, dónde queda y cómo llamar",
       "w": 240,
       "x": 0,
       "y": 10432
@@ -1241,7 +1241,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-5 · El botón dice qué falta y recuerda tus datos para la próxima",
+      "text": "APROBADA · M-5 · El botón dice qué falta y recuerda tus datos (sin «Olvidar mis datos» por ahora)",
       "w": 240,
       "x": 0,
       "y": 11716
@@ -1250,7 +1250,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "Contraste · Bordes de campo visibles (#8A968F, WCAG 3:1)",
+      "text": "RECHAZADA · Contraste · Borde #8A968F: no. Se queda el borde actual",
       "w": 240,
       "x": 0,
       "y": 13000
@@ -1259,7 +1259,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-6 · En horizontal o pantallas bajas se ve el formulario, no solo el título",
+      "text": "APROBADA · M-6 · En horizontal o pantallas bajas se ve el formulario, no solo el título",
       "w": 240,
       "x": 0,
       "y": 14284
@@ -1268,7 +1268,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-7 · El calendario del celular primero: agendar con un toque",
+      "text": "APROBADA · M-7 · El calendario del celular primero: agendar con un toque",
       "w": 240,
       "x": 0,
       "y": 15099
@@ -1277,7 +1277,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "M-8 · Mover la cita como al reservar: horas por Mañana/Tarde y botón fijo",
+      "text": "APROBADA · M-8 · Mover la cita como al reservar: horas por Mañana/Tarde y botón fijo",
       "w": 240,
       "x": 0,
       "y": 16383
@@ -1286,7 +1286,7 @@
       "kind": "title1",
       "maxW": 2640,
       "page": "propuestas",
-      "text": "Precio · «Precio a convenir» u ocultarlo en vez de «Sin costo»",
+      "text": "APROBADA · Precio · «Precio a convenir» u ocultarlo en vez de «Sin costo»",
       "w": 240,
       "x": 0,
       "y": 17667
@@ -1295,7 +1295,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "Precio · Así lo ve el cliente en el paso 1",
+      "text": "APROBADA · Precio · Así lo ve el cliente en el paso 1",
       "w": 240,
       "x": 0,
       "y": 19007
@@ -1304,7 +1304,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-01 · Barra inferior: Citas y Clientes a un toque, en la zona del pulgar",
+      "text": "APROBADA · MP-01 · Barra inferior: Citas y Clientes a un toque, en la zona del pulgar",
       "w": 240,
       "x": 0,
       "y": 20291
@@ -1313,7 +1313,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-02 y MP-03 · Agenda primero y «Nueva cita» siempre al alcance del pulgar",
+      "text": "APROBADA · MP-02 y MP-03 · Agenda primero y «Nueva cita» siempre al alcance del pulgar",
       "w": 240,
       "x": 0,
       "y": 21575
@@ -1322,7 +1322,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-04 · Un solo estado por cita: se lee de un vistazo, sin contradicciones",
+      "text": "APROBADA · MP-04 · Un solo estado por cita: se lee de un vistazo, sin contradicciones",
       "w": 240,
       "x": 0,
       "y": 22859
@@ -1331,7 +1331,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-05 · Nueva cita: busca al cliente y llega con hora y servicio listos",
+      "text": "APROBADA · MP-05 · Nueva cita: busca al cliente y llega con hora y servicio listos",
       "w": 240,
       "x": 0,
       "y": 24259
@@ -1340,7 +1340,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-06 · Lista de espera accionable: «Agendar» en un toque y menú ⋯",
+      "text": "APROBADA · MP-06 · Lista de espera accionable: «Agendar» en un toque y menú ⋯",
       "w": 240,
       "x": 0,
       "y": 25543
@@ -1349,7 +1349,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-07 · Compartir el enlace con la hoja del celular, no solo copiarlo",
+      "text": "APROBADA · MP-07 · Compartir el enlace con la hoja del celular, no solo copiarlo",
       "w": 240,
       "x": 0,
       "y": 26827
@@ -1358,7 +1358,7 @@
       "kind": "title1",
       "maxW": 1600,
       "page": "propuestas",
-      "text": "MP-08 · Estadísticas en 2 columnas: el resumen cabe en una pantalla",
+      "text": "APROBADA · MP-08 · Estadísticas en 2 columnas: el resumen cabe en una pantalla",
       "w": 240,
       "x": 0,
       "y": 27787
@@ -1367,7 +1367,7 @@
       "kind": "title1",
       "maxW": 3550,
       "page": "propuestas",
-      "text": "Referidos — panel · Invita a un colega y gana un mes gratis",
+      "text": "APROBADA · Referidos — panel · Invita a un colega y gana un mes gratis",
       "w": 240,
       "x": 0,
       "y": 29927
@@ -1376,7 +1376,7 @@
       "kind": "title1",
       "maxW": 3769,
       "page": "propuestas",
-      "text": "Referidos · Registro con invitación, correo del mes ganado y vista admin",
+      "text": "APROBADA · Referidos · Registro con invitación, correo del mes ganado y vista admin",
       "w": 240,
       "x": 0,
       "y": 32247
