@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Entrar — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+input::placeholder{color:#8A968F}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; align-items: center; padding: 64px 16px">
+  <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: -0.5px; line-height: 1; color: #0B6E4F; margin-bottom: 28px">sepárame<span style="color: #FFC93C">.</span></div>
+
+  <main style="background: #FFFFFF; border-radius: 24px; padding: 32px; box-sizing: border-box; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Entra a tu agenda</h1>
+      <p style="margin: 0; font-size: 15px; color: #56645D; line-height: 1.45">Con tu correo y tu contraseña.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="login-email" style="font-size: 14px; font-weight: 600">Correo</label>
+      <input id="login-email" type="email" autocomplete="email" placeholder="tu@correo.com" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #0B6E4F; box-shadow: 0 0 0 3px rgba(11,110,79,0.15); background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <label for="login-pass" style="font-size: 14px; font-weight: 600">Contraseña</label>
+        <a href="account-forgot-password.dc.html" style="font-size: 14px; font-weight: 700; min-height: 44px; display: flex; align-items: center; text-decoration: none">¿Olvidaste tu contraseña?</a>
+      </div>
+      <div style="position: relative">
+        <input id="login-pass" type="password" autocomplete="current-password" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 92px 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+        <button type="button" aria-label="Mostrar contraseña" style="position: absolute; right: 4px; top: 4px; height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: #0B6E4F; cursor: pointer">Mostrar</button>
+      </div>
+    </div>
+
+    <button type="submit" style="height: 52px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Entrar</button>
+  </main>
+
+  <div style="margin-top: 24px; font-size: 14px; color: #3E4C45; text-align: center">¿Nuevo en Sepárame? <a href="account-signup.dc.html" style="font-weight: 700; text-decoration: none">Crea tu cuenta</a></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

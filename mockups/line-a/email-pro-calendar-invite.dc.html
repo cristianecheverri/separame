@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Correo con invitación de calendario — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 594px; min-height: 720px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', Arial, sans-serif; color: #15241D; display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 28px">
+  <div style="background: #FFFFFF; border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #3E4C45">
+    <div><strong style="color: #15241D">De:</strong> Sepárame &lt;citas@separame.app&gt;</div>
+    <div><strong style="color: #15241D">Para:</strong> laura.perez@correo.com</div>
+    <div><strong style="color: #15241D">Asunto:</strong> {{title}} · jue 22 oct., 10:00 a. m. · Mariana Gómez</div>
+    <div style="display: flex; gap: 6px; align-items: center; padding-top: 4px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12l-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 8"></path></svg>
+      invite.ics
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column">
+    <div style="background: #0B6E4F; color: #FFFFFF; padding: 26px 32px; display: flex; flex-direction: column; gap: 18px">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; letter-spacing: -0.8px">{{title}}</h1>
+    </div>
+
+    <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+      <div style="font-size: 15px; line-height: 1.5; color: #3E4C45">{{intro}}</div>
+
+      <div style="background: #EAF5F0; border-radius: 18px; padding: 6px 20px">
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Cliente</span><strong style="text-align: right">Mariana Gómez</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Servicio</span><strong style="text-align: right">Valoración · 30 min</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 15px"><span style="color: #3E4C45">Cuándo</span><strong style="{{whenStyle}}">{{when}}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: #56645D; line-height: 1.5; padding: 0 8px; display: flex; flex-direction: column; gap: 6px">
+    <span>Recibes este correo porque tienes una cuenta en separame.app. Tratamos tus datos según la Ley 1581 de 2012. <a href="#">Política de privacidad</a> · <a href="#">Borrar mis datos</a></span>
+    <span>Sepárame · Medellín, Colombia</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kind":{"editor":"enum","options":["Agregada","Actualizada","Quitada"],"default":"Agregada"},"$preview":{"width":594,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const copy = {
+      'Agregada': { title: 'Agregamos esta cita a tu calendario', intro: 'Abre la invitación adjunta para verla en tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.' },
+      'Actualizada': { title: 'Actualizamos esta cita en tu calendario', intro: 'La invitación adjunta trae la nueva fecha y hora.', when: 'Viernes 23 de octubre, 3:00 p. m.' },
+      'Quitada': { title: 'Quitamos esta cita de tu calendario', intro: 'La cita se canceló; la invitación adjunta la quita de tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.' }
+    };
+    const kind = this.props.kind ?? 'Agregada';
+    const c = copy[kind] || copy['Agregada'];
+    const base = 'text-align:right;';
+    return {
+      title: c.title,
+      intro: c.intro,
+      when: c.when,
+      whenStyle: kind === 'Quitada' ? base + 'text-decoration:line-through;color:#56645D;font-weight:600;' : base
+    };
+  }
+}
+</script>
+</body>
+</html>

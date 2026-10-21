@@ -18,13 +18,16 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 
   <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
     <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
-    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
       <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
     </sc-for>
-    <div style="margin-top: auto; background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
-      <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
-      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
-      <a href="pro-billing-plans.dc.html" style="height: 44px; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+        <a href="pro-billing-plans.dc.html" style="min-height: 44px; padding: 4px 12px; box-sizing: border-box; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+      </div>
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
     </div>
   </nav>
 
@@ -110,8 +113,8 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 class Component extends DCLogic {
   renderVals() {
     const st = Object.assign({ closed: { 6: true }, holidays: true }, this.state || {});
-    const navItems = ['Agenda', 'Citas', 'Servicios', 'Disponibilidad', 'Perfil público', 'Suscripción'];
-    const hrefs = ['pro-agenda-day.dc.html', '#', 'pro-services.dc.html', 'pro-availability.dc.html', 'client-booking-single-page.dc.html', 'pro-billing-plans.dc.html'];
+    const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Suscripción'];
+    const hrefs = ['pro-agenda-day.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'pro-services.dc.html', 'pro-availability.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'pro-billing-plans.dc.html'];
     const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
     const sw = (on) => 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;box-sizing:border-box;' + (on ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;');
     const weekday = ['8:00 a. m. – 12:00 m.', '2:00 p. m. – 6:00 p. m.'];
@@ -120,7 +123,7 @@ class Component extends DCLogic {
       ['Viernes', ['8:00 a. m. – 12:00 m.', '2:00 p. m. – 5:00 p. m.']], ['Sábado', ['8:00 a. m. – 12:00 m.']], ['Domingo', weekday]
     ];
     return {
-      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 3 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 5 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
       week: days.map((d, i) => {
         const open = !st.closed[i];
         return {

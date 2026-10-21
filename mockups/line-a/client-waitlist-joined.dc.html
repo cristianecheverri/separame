@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Lista de espera — listo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 14px 16px; border-bottom: 1px solid #E3E8E5">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+      <div style="width: 44px; height: 44px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; flex-shrink: 0">LP</div>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px">Dra. Laura Pérez</div>
+        <div style="font-size: 13px; color: #56645D">Odontóloga · El Poblado, Medellín</div>
+      </div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
+    </div>
+  </header>
+
+  <section style="flex-grow: 1; min-height: 0; padding: 28px 20px 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="width: 64px; height: 64px; border-radius: 999px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+    </div>
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">Listo. Te escribiremos a <span style="overflow-wrap: anywhere">mariana@correo.com</span> si se libera un cupo.</h1>
+    <p style="margin: 0; font-size: 15px; color: #3E4C45; line-height: 1.45">Quedaste en la lista de espera de Valoración para mar 20 y jue 22. Si alguien cancela, te llega un correo para que separes primero. En ese mismo correo puedes salir de la lista.</p>
+  </section>
+
+  <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF">
+    <a href="client-booking-steps.dc.html" style="height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Volver a la agenda</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

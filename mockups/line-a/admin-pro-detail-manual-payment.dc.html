@@ -14,7 +14,7 @@ body{margin:0}
 a{color:#0B6E4F}a:hover{color:#084C37}
 </style>
 </helmet>
-<div style="min-height: 960px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+<div style="min-height: 1130px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
 
   <nav aria-label="Menú de administración" style="flex: 1 1 220px; box-sizing: border-box; background: #15241D; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
     <div style="display: flex; align-items: center; gap: 10px; padding: 0 12px 20px">
@@ -45,10 +45,26 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 
     <div style="display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start">
 
-      <section aria-label="Registrar pago manual" style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+      <div style="flex: 999 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+      <sc-if value="{{showNotice}}" hint-placeholder-val="{{ true }}">
+        <section aria-label="Aviso de pago" style="background: #FFF4D1; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: #FFC93C; color: #15241D">Aviso de pago</span>
+            <span style="font-size: 13px; color: #3E4C45">enviado el 20 oct.</span>
+          </div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.25">Dice que pagó $15.000 por Nequi directo · plan 3 meses</div>
+          <div style="font-size: 14px; color: #3E4C45">Referencia: M48213. Revisa que el dinero haya llegado antes de aprobar.</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 4px">
+            <button onClick="{{approve}}" style="height: 48px; padding: 0 24px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Aprobar</button>
+            <button onClick="{{reject}}" style="height: 48px; padding: 0 24px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; color: #15241D; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Rechazar</button>
+          </div>
+        </section>
+      </sc-if>
+
+      <section aria-label="Registrar pago manual" style="background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
         <div style="display: flex; flex-direction: column; gap: 4px">
           <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">Registrar pago manual</h2>
-          <div style="font-size: 14px; color: #56645D">Para pagos hechos por fuera de Wompi. Activa la agenda al instante.</div>
+          <div style="font-size: 14px; color: #56645D">Para pagos hechos por fuera de la plataforma. Activa la agenda al instante.</div>
         </div>
 
         <sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
@@ -119,10 +135,11 @@ a{color:#0B6E4F}a:hover{color:#084C37}
             <div style="width: 56px; height: 56px; border-radius: 999px; background: #FFC93C; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
             <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">Pago registrado. Vigente hasta el {{until}}.</div>
             <div style="font-size: 15px; color: #3E4C45; line-height: 1.5">La página de Estudio Lúa ya está recibiendo reservas otra vez. {{doneNotify}}</div>
-            <button onClick="{{reset}}" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Reiniciar demo</button>
+            <button onClick="{{reset}}" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Registrar otro pago</button>
           </div>
         </sc-if>
       </section>
+      </div>
 
       <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
         <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
@@ -155,10 +172,10 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1130}}'>
 class Component extends DCLogic {
   renderVals() {
-    const st = Object.assign({ method: 0, period: 0, notify: true, done: false }, this.state || {});
+    const st = Object.assign({ method: 0, period: 0, notify: true, done: false, notice: 'pending' }, this.state || {});
     const navItems = ['Resumen', 'Profesionales', 'Suscripciones', 'Precios', 'Pagos Wompi', 'Correos'];
     const hrefs = ['#', '#', 'admin-subscriptions.dc.html', 'admin-prices.dc.html', '#', '#'];
     const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
@@ -184,16 +201,22 @@ class Component extends DCLogic {
     const m = methods[st.method];
     const courtesy = st.method === 3;
 
+    const noticeRow = {
+      pending: { title: 'Aviso · Nequi directo · en revisión', detail: '20 oct. 2026 · 3 meses', dot: dot + 'background:#FFC93C;' },
+      approved: { title: 'Aviso · Nequi directo · aprobado', detail: '20 oct. 2026 · 3 meses · hasta 20 ene. 2027', dot: dot + 'background:#0B6E4F;' },
+      rejected: { title: 'Aviso · Nequi directo · rechazado', detail: '20 oct. 2026 · 3 meses · no encontramos el pago', dot: dot + 'background:#E8A33D;' }
+    }[st.notice];
     const history = [
-      { title: 'Wompi · PSE rechazado', amount: '$15.000', detail: '18 oct. 2026 · fondos insuficientes', dot: dot + 'background:#E8A33D;' },
-      { title: 'Wompi · PSE aprobado', amount: '$15.000', detail: '18 jul. 2026 · 3 meses · firma verificada', dot: dot + 'background:#0B6E4F;' },
-      { title: 'Prueba gratis', amount: '—', detail: '11 jul. 2026 · 7 días', dot: dot + 'background:#CFDAD4;' }
+      Object.assign({ amount: '$15.000' }, noticeRow),
+      { title: 'Aviso · Transferencia · rechazado', amount: '$15.000', detail: '18 oct. 2026 · 3 meses · no encontramos la transferencia', dot: dot + 'background:#E8A33D;' },
+      { title: 'Manual · Transferencia', amount: '$15.000', detail: '18 jul. 2026 · 3 meses · hasta 18 oct. 2026 · registrado por cristian@separame.app', dot: dot + 'background:#E0A800;' },
+      { title: 'Prueba gratis', amount: '—', detail: '11 jul. 2026 · 10 días', dot: dot + 'background:#CFDAD4;' }
     ];
-    if (st.done) {
+    if (st.done && st.notice !== 'approved') {
       history.unshift({
         title: 'Manual · ' + m.label,
         amount: courtesy ? 'Sin cobro' : '$' + (p.amount || '—'),
-        detail: '20 oct. 2026 · hasta ' + p.until + ' · registrado por Cristian E.',
+        detail: '20 oct. 2026 · hasta ' + p.until + ' · registrado por cristian@separame.app',
         dot: dot + 'background:#FFC93C;'
       });
     }
@@ -215,7 +238,10 @@ class Component extends DCLogic {
       notDone: !st.done,
       done: st.done,
       confirm: () => this.setState({ done: true }),
-      reset: () => this.setState({ done: false, method: 0, period: 0, notify: true }),
+      reset: () => this.setState({ done: false, method: 0, period: 0, notify: true, notice: 'pending' }),
+      showNotice: st.notice === 'pending' && !st.done,
+      approve: () => this.setState({ done: true, notice: 'approved', method: 1, period: 0, notify: true }),
+      reject: () => this.setState({ notice: 'rejected' }),
       doneNotify: st.notify ? 'Le enviamos el comprobante a hola@estudiolua.co.' : 'No se envió correo.',
       history
     };

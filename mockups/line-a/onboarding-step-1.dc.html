@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Onboarding paso 1 — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+input::placeholder{color:#8A968F}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; align-items: center; padding: 48px 16px">
+  <div style="width: 100%; max-width: 640px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.5px; line-height: 1; color: #0B6E4F">sepárame<span style="color: #FFC93C">.</span></div>
+    <button type="button" style="min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #3E4C45; cursor: pointer">Cerrar sesión</button>
+  </div>
+
+  <main style="width: 100%; max-width: 640px; box-sizing: border-box; background: #FFFFFF; border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div aria-hidden="true" style="display: flex; gap: 6px">
+        <span style="height: 6px; flex-grow: 1; border-radius: 999px; background: #0B6E4F"></span>
+        <span style="height: 6px; flex-grow: 1; border-radius: 999px; background: #E3E8E5"></span>
+        <span style="height: 6px; flex-grow: 1; border-radius: 999px; background: #E3E8E5"></span>
+        <span style="height: 6px; flex-grow: 1; border-radius: 999px; background: #E3E8E5"></span>
+        <span style="height: 6px; flex-grow: 1; border-radius: 999px; background: #E3E8E5"></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 700; color: #56645D">Paso 1 de 5</div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.15; letter-spacing: -0.8px">Tu perfil</h1>
+      <p style="margin: 0; font-size: 15px; color: #56645D; line-height: 1.45">Así te verán tus clientes cuando reserven.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+        <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-name" style="font-size: 14px; font-weight: 600">Tu nombre, como te verán tus clientes</label>
+          <input id="ob-name" type="text" autocomplete="name" placeholder="Ej. Dra. Laura Pérez" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-title" style="font-size: 14px; font-weight: 600">Profesión o especialidad</label>
+          <input id="ob-title" type="text" placeholder="Ej. Odontóloga" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-city" style="font-size: 14px; font-weight: 600">Ciudad</label>
+          <input id="ob-city" type="text" autocomplete="address-level2" placeholder="Ej. Medellín" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-hood" style="font-size: 14px; font-weight: 600">Barrio (opcional)</label>
+          <input id="ob-hood" type="text" placeholder="Ej. El Poblado" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-phone" style="font-size: 14px; font-weight: 600">Celular (opcional)</label>
+          <input id="ob-phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="300 123 4567" aria-describedby="ob-phone-help" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+          <div id="ob-phone-help" style="font-size: 12px; color: #56645D">Aparece si tu agenda no está disponible.</div>
+        </div>
+        <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="ob-address" style="font-size: 14px; font-weight: 600">Dirección (opcional)</label>
+          <input id="ob-address" type="text" autocomplete="street-address" placeholder="Ej. Calle 10 # 43D-25, consultorio 504" aria-describedby="ob-address-help" style="height: 48px; width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D; outline: none">
+          <div id="ob-address-help" style="font-size: 12px; color: #56645D">Déjala vacía si atiendes en línea.</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px">
+        <a href="onboarding-done.dc.html" style="height: 52px; padding: 0 32px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; text-decoration: none">Continuar</a>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

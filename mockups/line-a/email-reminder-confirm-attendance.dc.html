@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Correo de recordatorio — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 594px; min-height: 940px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', Arial, sans-serif; color: #15241D; display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 28px">
+  <div style="background: #FFFFFF; border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #3E4C45">
+    <div><strong style="color: #15241D">De:</strong> Sepárame &lt;citas@separame.app&gt;</div>
+    <div><strong style="color: #15241D">Para:</strong> mariana@correo.com</div>
+    <div><strong style="color: #15241D">Asunto:</strong> {{subject}}</div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column">
+    <div style="background: #0B6E4F; color: #FFFFFF; padding: 26px 32px; display: flex; flex-direction: column; gap: 18px">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></div>
+      <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; letter-spacing: -0.8px">¿Confirmas tu asistencia?</h1>
+      </sc-if>
+      <sc-if value="{{confirmed}}" hint-placeholder-val="{{ false }}">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; letter-spacing: -0.8px">Mariana, tu cita es mañana.</h1>
+      </sc-if>
+    </div>
+
+    <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 16px">
+      <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+        <div style="font-size: 15px; line-height: 1.5; color: #3E4C45">Hola, Mariana. Tu cita es mañana a las 10:00 a. m. Cuéntanos si vas para que Dra. Laura Pérez te espere.</div>
+      </sc-if>
+      <sc-if value="{{confirmed}}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 15px; line-height: 1.5; color: #3E4C45">Te esperamos mañana a las 10:00 a. m. Gracias por confirmar.</div>
+      </sc-if>
+
+      <div style="background: #EAF5F0; border-radius: 18px; padding: 6px 20px">
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Con</span><strong style="text-align: right">Dra. Laura Pérez · Odontóloga</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Servicio</span><strong style="text-align: right">Valoración · 30 min</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Cuándo</span><strong style="text-align: right">Jueves 22 de octubre, 10:00 a. m.</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 15px"><span style="color: #3E4C45">Dónde</span><strong style="text-align: right">Cra. 43A #1-50, consultorio 302, El Poblado, Medellín</strong></div>
+      </div>
+
+      <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+        <a href="client-manage-attendance-confirmed.dc.html" style="height: 50px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; text-decoration: none">Sí, voy</a>
+      </sc-if>
+
+      <div style="display: flex">
+        <a href="client-manage-appointment.dc.html" style="height: 48px; padding: 0 22px; border-radius: 999px; border: 2px solid #0B6E4F; color: #0B6E4F; display: flex; align-items: center; font-weight: 700; font-size: 15px; text-decoration: none">{{manageLabel}}</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: #56645D; line-height: 1.5; padding: 0 8px; display: flex; flex-direction: column; gap: 6px">
+    <span>Recibes este correo porque separaste una cita en separame.app/dra-laura-perez. Tus datos se usan solo para gestionar esta cita (Ley 1581 de 2012). <a href="#">Política de privacidad</a> · <a href="#">Borrar mis datos</a></span>
+    <span>Sepárame · Medellín, Colombia</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["Sin confirmar","Ya confirmó"],"default":"Sin confirmar"},"$preview":{"width":594,"height":940}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const confirmed = (this.props.variant ?? 'Sin confirmar') === 'Ya confirmó';
+    return {
+      confirmed,
+      pending: !confirmed,
+      subject: confirmed
+        ? 'Recordatorio: tu cita es mañana · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez'
+        : '¿Confirmas tu asistencia? · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez',
+      manageLabel: confirmed ? 'Cancelar o reprogramar' : 'Necesito cancelar o cambiar'
+    };
+  }
+}
+</script>
+</body>
+</html>

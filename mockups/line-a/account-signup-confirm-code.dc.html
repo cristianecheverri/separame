@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Confirma tu correo — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; align-items: center; padding: 64px 16px">
+  <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: -0.5px; line-height: 1; color: #0B6E4F; margin-bottom: 28px">sepárame<span style="color: #FFC93C">.</span></div>
+
+  <main style="background: #FFFFFF; border-radius: 24px; padding: 32px; box-sizing: border-box; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Confirma tu correo</h1>
+      <p style="margin: 0; font-size: 15px; color: #56645D; line-height: 1.45">Te enviamos un código de 6 dígitos a <strong style="color: #15241D">laura.perez@correo.com</strong>. Revisa también la carpeta de spam.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="code" style="font-size: 14px; font-weight: 600">Código de 6 dígitos</label>
+      <div style="position: relative">
+        <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #CFDAD4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; box-sizing: border-box">4</div>
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #CFDAD4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; box-sizing: border-box">8</div>
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #CFDAD4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; box-sizing: border-box">2</div>
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #CFDAD4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; box-sizing: border-box">9</div>
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #0B6E4F; box-shadow: 0 0 0 3px rgba(11,110,79,0.15); background: #FFFFFF; box-sizing: border-box"></div>
+          <div style="height: 56px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; box-sizing: border-box"></div>
+        </div>
+        <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="4829" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; cursor: text">
+      </div>
+    </div>
+
+    <button type="submit" disabled="" style="height: 52px; border-radius: 999px; border: 0; background: #DCE3DF; color: #56645D; font: inherit; font-weight: 700; font-size: 16px; cursor: not-allowed">Confirmar y entrar</button>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+      <button type="button" disabled="" style="min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #56645D; cursor: not-allowed">Reenviar código en 0:24</button>
+      <a href="account-signup.dc.html" style="min-height: 44px; display: flex; align-items: center; font-weight: 700; font-size: 14px; color: #3E4C45; text-decoration: none">Cambiar correo</a>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Perfil público — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+        <a href="pro-billing-plans.dc.html" style="min-height: 44px; padding: 4px 12px; box-sizing: border-box; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+      </div>
+      <button style="min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; letter-spacing: -0.8px">Perfil público</h1>
+      <div style="font-size: 15px; color: #56645D">Así te ven tus clientes en tu página de reservas.</div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <form style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 20px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Tus datos</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+          <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-name" style="font-size: 14px; font-weight: 600">Tu nombre, como te verán tus clientes</label>
+            <input id="pf-name" type="text" autocomplete="name" value="Dra. Laura Pérez" placeholder="Ej. Dra. Laura Pérez" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-title" style="font-size: 14px; font-weight: 600">Profesión o especialidad</label>
+            <input id="pf-title" type="text" value="Odontóloga" placeholder="Ej. Odontóloga" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-city" style="font-size: 14px; font-weight: 600">Ciudad</label>
+            <input id="pf-city" type="text" value="Medellín" placeholder="Ej. Medellín" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-hood" style="font-size: 14px; font-weight: 600">Barrio (opcional)</label>
+            <input id="pf-hood" type="text" value="El Poblado" placeholder="Ej. El Poblado" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-phone" style="font-size: 14px; font-weight: 600">Celular (opcional)</label>
+            <input id="pf-phone" type="tel" inputmode="tel" value="3004567890" placeholder="300 123 4567" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+            <span style="font-size: 12px; color: #56645D">Aparece si tu agenda no está disponible.</span>
+          </div>
+          <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 6px">
+            <label for="pf-address" style="font-size: 14px; font-weight: 600">Dirección (opcional)</label>
+            <input id="pf-address" type="text" value="Calle 10 # 43D-25, consultorio 504" placeholder="Ej. Calle 10 # 43D-25, consultorio 504" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+            <span style="font-size: 12px; color: #56645D">Déjala vacía si atiendes en línea.</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <label for="pf-slug" style="font-size: 14px; font-weight: 600">Tu enlace</label>
+          <div style="display: flex; align-items: center; height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; min-width: 0">
+            <span style="padding-left: 14px; font-size: 15px; font-weight: 600; color: #56645D; white-space: nowrap; flex-shrink: 0">separame.app/</span>
+            <input id="pf-slug" type="text" value="{{slug}}" onChange="{{onSlug}}" autocapitalize="none" spellcheck="false" aria-describedby="pf-slug-status" style="height: 100%; flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 0 14px 0 0; font: inherit; font-size: 15px; font-weight: 600; color: #15241D">
+          </div>
+          <div id="pf-slug-status" aria-live="polite" style="font-size: 13px; min-height: 18px">
+            <sc-if value="{{isCurrent}}" hint-placeholder-val="{{ true }}">
+              <span style="color: #56645D">Es tu enlace actual.</span>
+            </sc-if>
+            <sc-if value="{{isFree}}" hint-placeholder-val="{{ false }}">
+              <span style="font-weight: 600; color: #0B6E4F">¡Está libre!</span>
+            </sc-if>
+          </div>
+        </div>
+        <sc-if value="{{isFree}}" hint-placeholder-val="{{ false }}">
+          <div style="background: #FFF4D1; border-radius: 14px; padding: 12px 16px; font-size: 13px; line-height: 1.45; margin-top: -8px">Ojo: tu enlace anterior deja de funcionar. Actualízalo en tu WhatsApp, Instagram y donde lo hayas compartido.</div>
+        </sc-if>
+        <div>
+          <button type="button" style="height: 48px; padding: 0 24px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 15px; color: #FFFFFF; cursor: pointer">Guardar cambios</button>
+        </div>
+      </form>
+
+      <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Tu enlace</h2>
+          <div style="font-weight: 700; font-size: 15px; color: #0B6E4F">separame.app/dra-laura-perez</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg>
+              Copiar enlace
+            </button>
+            <a href="client-booking-steps.dc.html" style="height: 46px; padding: 0 18px; box-sizing: border-box; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; text-decoration: none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"></path></svg>
+              Abrir mi página
+            </a>
+          </div>
+          <div style="display: flex; gap: 14px; align-items: center; padding-top: 4px">
+            <div aria-hidden="true" style="width: 88px; height: 88px; flex-shrink: 0; border-radius: 14px; background: #F3F6F4; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 10px; box-sizing: border-box">
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #0B6E4F; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #3E4C45; line-height: 1.4">
+              Imprímelo o ponlo en tus redes: lleva directo a tu agenda.
+              <button style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; color: #0B6E4F; cursor: pointer">Descargar QR</button>
+            </div>
+          </div>
+        </section>
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Tu cuenta</h2>
+          <div style="font-size: 14px; color: #3E4C45">Entras con <strong style="color: #15241D">laura@consultoriolaura.co</strong></div>
+          <div>
+            <button style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Cerrar sesión</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const current = 'dra-laura-perez';
+    const st = Object.assign({ slug: current }, this.state || {});
+    const NAV = [['Agenda', 'pro-agenda-day.dc.html'], ['Citas', 'pro-appointments-waitlist.dc.html'], ['Clientes', 'pro-clients.dc.html'], ['Estadísticas', 'pro-stats.dc.html'], ['Servicios', 'pro-services.dc.html'], ['Disponibilidad', 'pro-availability.dc.html'], ['Tu calendario', 'pro-calendar-sync.dc.html'], ['Perfil público', 'pro-public-profile.dc.html'], ['Suscripción', 'pro-billing-plans.dc.html']];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const valid = st.slug.length >= 3;
+    return {
+      nav: NAV.map(([label, href], i) => ({ label, href, style: navBase + (i === 7 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      slug: st.slug,
+      onSlug: (e) => this.setState({ slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }),
+      isCurrent: st.slug === current,
+      isFree: st.slug !== current && valid
+    };
+  }
+}
+</script>
+</body>
+</html>

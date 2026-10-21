@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Lista de espera — unirse</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 390px; height: 980px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 14px 16px; border-bottom: 1px solid #E3E8E5">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+      <a href="client-waitlist-full-day.dc.html" aria-label="Volver a elegir día y hora" style="width: 44px; height: 44px; border-radius: 999px; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></a>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px">Dra. Laura Pérez</div>
+        <div style="font-size: 13px; color: #56645D">Odontóloga · El Poblado, Medellín</div>
+      </div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
+    </div>
+  </header>
+
+  <section style="flex-grow: 1; min-height: 0; padding: 22px 20px 16px; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">Te avisamos si se libera un cupo</h1>
+    <p style="margin: 0; font-size: 15px; color: #3E4C45; line-height: 1.45">Elige hasta 7 días que te sirvan para Valoración. Si alguien cancela, te escribimos para que separes primero.</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+      <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+      <span aria-live="polite" style="font-size: 14px; font-weight: 600; color: #56645D">{{count}} de 7</span>
+    </div>
+    <div role="group" aria-label="Días que te sirven" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="11">
+        <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" aria-label="{{d.label}}" style="{{d.style}}">
+          <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
+          <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="w-name" style="font-size: 14px; font-weight: 600">Nombre completo</label>
+      <input id="w-name" type="text" autocomplete="name" placeholder="Ej. Mariana Gómez" value="{{name}}" onChange="{{onName}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="w-mail" style="font-size: 14px; font-weight: 600">Correo</label>
+      <input id="w-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+      <span style="font-size: 12px; color: #56645D">Aquí te escribimos si se libera un cupo.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="w-phone" style="font-size: 14px; font-weight: 600">Celular</label>
+      <div style="display: flex; gap: 8px">
+        <div style="height: 52px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px">+57</div>
+        <input id="w-phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+      </div>
+    </div>
+    <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
+      <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+      <span>Autorizo el tratamiento de mis datos personales para gestionar esta cita, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
+    </label>
+  </section>
+
+  <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF">
+    <sc-if value="{{ready}}" hint-placeholder-val="{{ false }}">
+      <a href="client-waitlist-joined.dc.html" style="height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Avisarme si se libera</a>
+    </sc-if>
+    <sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}">
+      <button disabled style="height: 56px; border-radius: 999px; border: 0; font: inherit; font-weight: 700; font-size: 17px; background: #DCE3DF; color: #56645D; cursor: not-allowed">{{blockedLabel}}</button>
+    </sc-if>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ picked: ['20', '22'], name: '', email: '', phone: '', agree: false }, this.state || {});
+    const all = [
+      ['Mar', '20', 'Martes 20 de octubre'], ['Mié', '21', 'Miércoles 21 de octubre'], ['Jue', '22', 'Jueves 22 de octubre'],
+      ['Vie', '23', 'Viernes 23 de octubre'], ['Sáb', '24', 'Sábado 24 de octubre'], ['Lun', '26', 'Lunes 26 de octubre'],
+      ['Mar', '27', 'Martes 27 de octubre'], ['Mié', '28', 'Miércoles 28 de octubre'], ['Jue', '29', 'Jueves 29 de octubre'],
+      ['Vie', '30', 'Viernes 30 de octubre'], ['Sáb', '31', 'Sábado 31 de octubre']
+    ];
+    const max = 7;
+    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;border:2px solid;';
+    const filled = !!(st.name.trim() && st.email.trim() && st.phone.trim() && st.agree);
+    const count = st.picked.length;
+    return {
+      count,
+      days: all.map(([dow, num, label]) => {
+        const selected = st.picked.includes(num);
+        const disabled = !selected && count >= max;
+        let style = dayBase;
+        if (selected) style += 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;cursor:pointer;';
+        else if (disabled) style += 'background:#F3F6F4;border-color:#F3F6F4;color:#5E6C65;cursor:default;';
+        else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
+        return {
+          dow, num, label, selected, disabled, style,
+          pick: () => this.setState({ picked: selected ? st.picked.filter((x) => x !== num) : (count >= max ? st.picked : st.picked.concat([num])) })
+        };
+      }),
+      ready: count > 0 && filled,
+      notReady: !(count > 0 && filled),
+      blockedLabel: count === 0 ? 'Elige al menos un día' : 'Completa tus datos',
+      name: st.name, email: st.email, phone: st.phone, agree: st.agree,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPhone: (e) => this.setState({ phone: e.target.value }),
+      toggleAgree: () => this.setState({ agree: !st.agree })
+    };
+  }
+}
+</script>
+</body>
+</html>

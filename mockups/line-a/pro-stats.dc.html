@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Estadísticas — línea A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+        <a href="pro-billing-plans.dc.html" style="min-height: 44px; padding: 4px 12px; box-sizing: border-box; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+      </div>
+      <button style="min-height: 44px; padding: 0 12px; border-radius: 12px; border: 0; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; letter-spacing: -0.8px">Estadísticas</h1>
+      <div style="font-size: 15px; color: #56645D">Cómo va tu agenda: citas, ocupación y asistencia.</div>
+    </div>
+    <div role="group" aria-label="Periodo" style="display: flex; flex-wrap: wrap; gap: 8px">
+      <sc-for list="{{periods}}" as="p" hint-placeholder-count="4">
+        <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">{{p.label}}</button>
+      </sc-for>
+    </div>
+
+    <div style="background: #FFF4D1; border-radius: 20px; padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+      <span style="font-weight: 700; font-size: 15px">Tienes 5 citas sin marcar asistencia</span>
+      <a href="pro-appointments-waitlist.dc.html" style="font-weight: 700; font-size: 14px; text-decoration: underline; text-underline-offset: 2px; min-height: 44px; display: inline-flex; align-items: center">Marcar ahora →</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="5">
+        <div style="{{t.style}}">
+          <div style="font-size: 14px; font-weight: 600">{{t.label}}</div>
+          <div style="{{t.valueStyle}}">{{t.value}}</div>
+          <div style="{{t.changeStyle}}">{{t.change}}</div>
+          <sc-if value="{{t.note}}" hint-placeholder-val="{{ false }}">
+            <div style="font-size: 12px; line-height: 1.4; color: #56645D">{{t.note}}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section style="flex: 999 1 420px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Días con más citas</h2>
+        <div role="img" aria-label="{{chartLabel}}" style="display: flex; align-items: flex-end; gap: 12px; height: 180px">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+            <div aria-hidden="true" style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px">
+              <span style="font-size: 13px; font-weight: 700">{{b.v}}</span>
+              <div style="{{b.style}}"></div>
+              <span style="font-size: 12px; font-weight: 600; color: #56645D">{{b.day}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Servicios más pedidos</h2>
+        <ol aria-label="Citas por servicio" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+          <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+            <li style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14px">
+                <span style="font-weight: 700">{{s.name}}</span>
+                <span style="color: #3E4C45; white-space: nowrap">{{s.detail}}</span>
+              </div>
+              <div aria-hidden="true" style="height: 10px; border-radius: 999px; background: #F3F6F4; overflow: hidden">
+                <div style="{{s.barStyle}}"></div>
+              </div>
+            </li>
+          </sc-for>
+        </ol>
+        <div style="font-size: 13px; color: #56645D; border-top: 1px solid #E3E8E5; padding-top: 12px">Reservadas por tus clientes: <strong style="color: #15241D">{{byClient}}</strong> · Agendadas por ti: <strong style="color: #15241D">{{byPro}}</strong></div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ period: 'month' }, this.state || {});
+    const NAV = [['Agenda', 'pro-agenda-day.dc.html'], ['Citas', 'pro-appointments-waitlist.dc.html'], ['Clientes', 'pro-clients.dc.html'], ['Estadísticas', 'pro-stats.dc.html'], ['Servicios', 'pro-services.dc.html'], ['Disponibilidad', 'pro-availability.dc.html'], ['Tu calendario', 'pro-calendar-sync.dc.html'], ['Perfil público', 'pro-public-profile.dc.html'], ['Suscripción', 'pro-billing-plans.dc.html']];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;cursor:pointer;';
+    const DATA = {
+      month: {
+        tiles: [['66', '+61 %', 1], ['15 %', '+6 pts', 1], ['15 %', '+5 pts', 1], ['6 / 16', '+38 %', 1], ['$3.000.000', '+56 %', 1]],
+        bars: [13, 9, 14, 13, 11, 6, 0],
+        services: [['Control', 28, 'Sin costo'], ['Valoración', 26, '$1.560.000'], ['Limpieza dental', 12, '$1.440.000']],
+        byClient: 59, byPro: 7
+      },
+      last90: {
+        tiles: [['135', '+141 %', 1], ['11 %', '+7 pts', 1], ['13 %', '0 pts', 0], ['6 / 16', '+38 %', 1], ['$6.660.000', '+178 %', 1]],
+        bars: [25, 24, 21, 19, 23, 23, 0],
+        services: [['Valoración', 55, '$3.300.000'], ['Control', 52, 'Sin costo'], ['Limpieza dental', 28, '$3.360.000']],
+        byClient: 109, byPro: 26
+      }
+    };
+    const key = st.period === 'last90' || st.period === 'year' ? 'last90' : 'month';
+    const d = DATA[key];
+    const labels = ['Citas', 'Ocupación', 'Inasistencias', 'Clientes nuevos / recurrentes', 'Ingresos estimados'];
+    const tones = ['primary', 'accent', 'white', 'white', 'white'];
+    const tileBase = 'border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px;';
+    const tiles = d.tiles.map(([value, change, dir], i) => {
+      const dark = tones[i] === 'primary';
+      const goodWhenUp = i !== 2;
+      const good = dir !== 0 && (goodWhenUp ? dir > 0 : dir < 0);
+      const bad = dir !== 0 && !good;
+      const color = good ? (dark ? '#D5EDE3' : '#0B6E4F') : bad ? (dark ? '#FFC93C' : '#7A3E00') : (dark ? '#D5EDE3' : '#56645D');
+      return {
+        label: labels[i], value,
+        change: change + ' vs. periodo anterior',
+        note: i === 4 ? 'Estimado con tus precios de referencia; Sepárame no cobra a tus clientes.' : '',
+        style: tileBase + (dark ? 'background:#0B6E4F;color:#FFFFFF;' : tones[i] === 'accent' ? 'background:#FFF4D1;' : 'background:#FFFFFF;'),
+        valueStyle: "font-family:'Bricolage Grotesque',sans-serif;font-weight:800;line-height:1;white-space:nowrap;font-size:" + (value.length > 8 ? '28px;' : '36px;'),
+        changeStyle: 'font-size:13px;font-weight:600;color:' + color + ';'
+      };
+    });
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const longDays = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    const max = Math.max(1, ...d.bars);
+    const smax = Math.max(...d.services.map((s) => s[1]));
+    const periods = [['month', 'Este mes'], ['lastMonth', 'Mes pasado'], ['last90', 'Últimos 90 días'], ['year', 'Este año']];
+    return {
+      nav: NAV.map(([label, href], i) => ({ label, href, style: navBase + (i === 3 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      periods: periods.map(([k, label]) => ({ label, selected: st.period === k, pick: () => this.setState({ period: k }), style: chip + (st.period === k ? 'background:#FFC93C;border-color:#FFC93C;' : 'background:#FFFFFF;border-color:#E3E8E5;') })),
+      tiles,
+      bars: d.bars.map((v, i) => ({ v, day: days[i], style: 'width:100%;max-width:44px;border-radius:10px 10px 4px 4px;height:' + Math.max(4, (v / max) * 120) + 'px;background:' + (v === max && v > 0 ? '#0B6E4F' : v > 0 ? '#CFE3DA' : '#E3E8E5') + ';' })),
+      chartLabel: 'Citas por día de la semana: ' + d.bars.map((v, i) => longDays[i] + ' ' + v).join(', ') + '.',
+      services: d.services.map(([name, n, money]) => ({ name, detail: n + ' citas · ' + money, barStyle: 'height:100%;border-radius:999px;background:#0B6E4F;width:' + (n / smax) * 100 + '%;' })),
+      byClient: d.byClient, byPro: d.byPro
+    };
+  }
+}
+</script>
+</body>
+</html>
