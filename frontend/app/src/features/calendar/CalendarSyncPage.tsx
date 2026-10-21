@@ -47,7 +47,7 @@ function InvitesCard({ sync }: { sync: CalendarSyncResponse }) {
     },
   });
   return (
-    <section className={cx(ui.card, 'flex-[1_1_340px] min-w-0 gap-4')}>
+    <section className={cx(ui.card, 'gap-4')}>
       <CardHeader title="Invitaciones por correo" tag="Al instante" tagClass="bg-accent text-ink" />
       <div className="flex gap-4 items-start justify-between">
         <p className="m-0 text-[14px] text-ink-2 leading-[1.45]">Cada cita nueva, movida o cancelada te llega como invitación y se agrega sola a tu calendario principal.</p>
@@ -99,7 +99,7 @@ function FeedCard({ sync }: { sync: CalendarSyncResponse }) {
           Enlace de tu calendario
         </label>
         <div className="flex gap-2">
-          <input id="feed-url" readOnly value={sync.feedUrl} onFocus={(e) => e.currentTarget.select()} className={cx(ui.input, 'grow text-[14px] text-ink-2')} />
+          <input id="feed-url" readOnly value={sync.feedUrl} onFocus={(e) => e.currentTarget.select()} className={cx(ui.input, 'grow text-ink-2')} />
           <button
             type="button"
             className={cx(ui.btnOutline, 'h-12 shrink-0')}
@@ -160,15 +160,18 @@ export function CalendarSyncPage() {
         </div>
       ) : (
         <>
+          {/* Phone avisos sit right under the email invitations (both are "how you hear about a booking"). */}
           <div className="flex flex-wrap gap-6 items-start">
-            <InvitesCard sync={sync.data} />
+            <div className="flex-[1_1_340px] min-w-0 flex flex-col gap-6">
+              <InvitesCard sync={sync.data} />
+              <PushCard />
+            </div>
             <FeedCard sync={sync.data} />
           </div>
           <section className="bg-accent-soft rounded-[24px] py-[18px] px-[18px] sm:px-[22px] flex gap-3 items-start text-[14px] leading-[1.45]">
             <AlertIcon size={20} className="shrink-0 mt-[1px]" />
             <span>Si usas las dos opciones verás cada cita dos veces (una en tu calendario principal y otra en el suscrito). Puedes ocultar uno de los dos en tu calendario.</span>
           </section>
-          <PushCard />
         </>
       )}
     </div>

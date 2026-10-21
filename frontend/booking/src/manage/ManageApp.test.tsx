@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/preact';
+import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockApi } from '../mock/mockApi';
 import { LeaveWaitlist } from './LeaveWaitlist';
@@ -31,12 +31,17 @@ describe('ManageApp', () => {
   it('moves the appointment to a new slot', async () => {
     render(<ManageApp token="demo-token" api={api()} />);
     click(await screen.findByRole('button', { name: /Cambiar día u hora/ }));
-    click(await screen.findByRole('button', { name: 'Viernes 23 de octubre' }));
+    // The appointment's own day comes preselected; its current hour shows dashed and can't be picked.
+    expect(await screen.findByRole('button', { name: 'Jueves 22 de octubre', pressed: true })).toBeTruthy();
+    expect((screen.getByRole('button', { name: '10:00 a. m., tu cita actual' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText('La hora con borde punteado es tu cita actual.')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Elige la nueva hora' }) as HTMLButtonElement).disabled).toBe(true);
+    click(screen.getByRole('button', { name: 'Lunes 26 de octubre' }));
     click('8:30 a. m.');
-    click('Mover a vie 23, 8:30 a. m.');
+    click('Mover a lun 26, 8:30 a. m.');
     expect(await screen.findByRole('heading', { name: 'Listo, tu cita cambió.' })).toBeTruthy();
     expect(screen.getByText('Tu nueva cita')).toBeTruthy();
-    expect(screen.getByText('Viernes 23 de octubre · 8:30 a. m.')).toBeTruthy();
+    expect(screen.getByText('Lunes 26 de octubre · 8:30 a. m.')).toBeTruthy();
   });
 
   it('explains when it is too late or already cancelled', async () => {
@@ -62,11 +67,22 @@ describe('ManageApp', () => {
     expect(screen.queryByRole('button', { name: 'Confirmar asistencia' })).toBeNull();
   });
 
-  it('confirms automatically with ?action=confirm and strips the param', async () => {
+  it('?action=confirm only highlights and focuses the button (one tap still needed) and strips the param', async () => {
     history.replaceState(null, '', '/c/demo-token?action=confirm');
     render(<ManageApp token="demo-token" api={api()} />);
-    expect(await screen.findByRole('heading', { name: '¡Gracias, Mariana! Confirmaste tu asistencia.' })).toBeTruthy();
+    const button = await screen.findByRole('button', { name: 'Confirmar asistencia' });
     expect(location.search).toBe('');
+    await waitFor(() => expect(document.activeElement).toBe(button));
+    expect(button.className).toContain('ring-4');
+    expect(screen.queryByText('Asistencia confirmada')).toBeNull();
+    click(button);
+    expect(await screen.findByRole('heading', { name: '¡Gracias, Mariana! Confirmaste tu asistencia.' })).toBeTruthy();
+  });
+
+  it('?action=confirm on an already confirmed appointment shows the thank-you screen', async () => {
+    history.replaceState(null, '', '/c/confirmed?action=confirm');
+    render(<ManageApp token="confirmed" api={api()} />);
+    expect(await screen.findByRole('heading', { name: '¡Gracias, Mariana! Confirmaste tu asistencia.' })).toBeTruthy();
   });
 
   it('shows the badge when attendance was already confirmed', async () => {
@@ -78,14 +94,21 @@ describe('ManageApp', () => {
 });
 
 describe('LeaveWaitlist', () => {
-  it('takes the client off the waitlist', async () => {
-    render(<LeaveWaitlist token="tok" api={api()} />);
+  it('asks first, then takes the client off the waitlist with one tap', async () => {
+    const client = api();
+    const leave = vi.spyOn(client, 'leaveWaitlist');
+    render(<LeaveWaitlist token="tok" api={client} />);
+    expect(screen.getByRole('heading', { name: '¿Quieres salir de la lista de espera?' })).toBeTruthy();
+    expect(leave).not.toHaveBeenCalled();
+    click('Sí, sácame de la lista');
     expect(await screen.findByRole('heading', { name: 'Listo, ya no estás en la lista de espera.' })).toBeTruthy();
+    expect(leave).toHaveBeenCalledOnce();
     expect(screen.getByRole('link', { name: 'Separar una cita con Dra. Laura Pérez' }).getAttribute('href')).toBe('/dra-laura-perez');
   });
 
   it('handles a bad link', async () => {
     render(<LeaveWaitlist token="invalid" api={api()} />);
+    click('Sí, sácame de la lista');
     expect(await screen.findByRole('heading', { name: 'Este enlace no es válido' })).toBeTruthy();
   });
 });

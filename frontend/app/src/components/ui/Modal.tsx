@@ -86,8 +86,8 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             <CloseIcon />
           </button>
         </div>
-        <div className="px-5 sm:px-6 py-3 overflow-y-auto flex flex-col gap-4">{children}</div>
-        {footer && <div className="px-5 sm:px-6 pt-3 pb-5 sm:pb-6 flex flex-wrap gap-[10px] border-t border-line mt-1">{footer}</div>}
+        <div className={cx('px-5 sm:px-6 pt-3 overflow-y-auto flex flex-col gap-4', footer ? 'pb-3' : 'pb-[max(20px,env(safe-area-inset-bottom))] sm:pb-6')}>{children}</div>
+        {footer && <div className="px-5 sm:px-6 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] sm:pb-6 flex flex-wrap gap-[10px] border-t border-line mt-1">{footer}</div>}
       </div>
     </div>,
     document.body,

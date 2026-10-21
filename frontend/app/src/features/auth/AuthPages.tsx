@@ -5,6 +5,8 @@ import { auth } from '../../lib/auth';
 import { authErrorMessage, passwordOk, type SignInStep } from '../../lib/authClient';
 import { AuthHeading, AuthLayout, CodeInput, EmailField, FormError, FormNotice, PasswordField, ResendButton, SubmitButton } from './parts';
 import { TRIAL_DAYS } from '@shared/subscription';
+import { InvitedBy } from '../referrals/InvitedBy';
+import { captureReferralCode } from '../referrals/storedCode';
 
 const normalizeEmail = (raw: string) => raw.trim().toLowerCase();
 
@@ -117,7 +119,7 @@ export function LoginPage() {
     <AuthLayout
       footer={
         <>
-          ¿Nuevo en Sepárame? <Link to="/signup" className="font-bold">Crea tu cuenta</Link>
+          ¿Nuevo en Sepárame? <Link to="/signup" className="font-bold hit-44 inline-block">Crea tu cuenta</Link>
         </>
       }
     >
@@ -144,6 +146,9 @@ export function LoginPage() {
 }
 
 export function SignupPage() {
+  const location = useLocation();
+  // /r/<code> lands here as ?ref=<code>: kept in localStorage for onboarding and sent to Cognito.
+  const [referralCode] = useState(() => captureReferralCode(location.search));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirming, setConfirming] = useState(false);
@@ -155,7 +160,7 @@ export function SignupPage() {
     if (!emailSchema.safeParse(email).success) return setError('Escribe un correo válido.');
     if (!passwordOk(password)) return setError('La contraseña no cumple las reglas.');
     void run(async () => {
-      const result = await auth.client.signUp(normalizeEmail(email), password);
+      const result = await auth.client.signUp(normalizeEmail(email), password, { referralCode });
       if (result === 'confirm') setConfirming(true);
       else await finish(false);
     });
@@ -182,11 +187,12 @@ export function SignupPage() {
     <AuthLayout
       footer={
         <>
-          ¿Ya tienes cuenta? <Link to="/login" className="font-bold">Entra</Link>
+          ¿Ya tienes cuenta? <Link to="/login" className="font-bold hit-44 inline-block">Entra</Link>
         </>
       }
     >
       <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+        <InvitedBy code={referralCode} />
         <AuthHeading title="Crea tu cuenta">{TRIAL_DAYS} días gratis. Sin tarjeta.</AuthHeading>
         <EmailField value={email} onChange={setEmail} autoFocus />
         <PasswordField label="Contraseña" value={password} onChange={setPassword} autoComplete="new-password" showRules />
@@ -231,7 +237,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthLayout
       footer={
-        <Link to="/login" className="font-bold">
+        <Link to="/login" className="font-bold hit-44 inline-block">
           Volver a entrar
         </Link>
       }

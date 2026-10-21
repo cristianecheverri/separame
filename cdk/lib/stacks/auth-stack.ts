@@ -1,5 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { ADMIN_GROUP } from '../../../shared/infra';
 import { BACKGROUND_FUNCTIONS } from '../../../shared/routes';
@@ -8,6 +10,8 @@ import { commonEnvironment, createFunction } from '../lambda';
 
 export interface AuthStackProps extends cdk.StackProps {
   config: StageConfig;
+  /** The pre sign-up trigger remembers the sign-up's referral code (PutItem only). */
+  table: dynamodb.ITable;
 }
 
 /**
@@ -21,7 +25,8 @@ export interface AuthStackProps extends cdk.StackProps {
  *  - Mail goes through SES (`noreply@<mailDomain>` + the stage configuration
  *    set) — Cognito's built-in sender has a tiny daily cap. The SES identity
  *    must exist (and be verified) first, hence the dependency on MailStack.
- *  - Triggers: PRE_SIGN_UP rejects disposable email domains; CUSTOM_MESSAGE
+ *  - Triggers: PRE_SIGN_UP rejects disposable email domains and remembers the
+ *    referral code sent as clientMetadata (`REFSIGNUP#` item, PutItem only); CUSTOM_MESSAGE
  *    brands every Cognito email (sign-up code, password reset, admin
  *    invitation). They live here (not in the API stack) to avoid a circular
  *    reference between the pool and its functions.
@@ -35,11 +40,17 @@ export class AuthStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
-    const { config } = props;
+    const { config, table } = props;
 
     // Triggers can't receive USER_POOL_ID (circular): it comes in the event.
     const triggerEnv = commonEnvironment(config);
-    const preSignUp = createFunction(this, { config, def: BACKGROUND_FUNCTIONS.cognitoPreSignUp, environment: triggerEnv });
+    const preSignUp = createFunction(this, {
+      config,
+      def: BACKGROUND_FUNCTIONS.cognitoPreSignUp,
+      environment: commonEnvironment(config, { table }),
+    });
+    // Least privilege: it only writes the sign-up's referral code marker.
+    preSignUp.addToRolePolicy(new iam.PolicyStatement({ actions: ['dynamodb:PutItem'], resources: [table.tableArn] }));
     const customMessage = createFunction(this, {
       config,
       def: BACKGROUND_FUNCTIONS.cognitoCustomMessage,

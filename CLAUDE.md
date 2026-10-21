@@ -8,15 +8,17 @@ El profesional administra su calendario; sus clientes reservan desde un enlace p
 La especificación completa (decisiones, precios, pasarela, legal, ideas descartadas)
 está en **`docs/specification.txt`**. Léela antes de proponer cambios de producto.
 
-Estado (21-oct-2026): **MVP en producción** (https://separame.app) y en dev
+Estado (21-oct-2026): **en producción** (https://separame.app) el MVP + fase 1 (asistencia,
+lista de espera, clientes, estadísticas, avisos push, app instalable), referidos, precio a
+convenir, página principal con precios y el panel optimizado para celular; también en dev
 (https://dev.separame.app). Prod se despliega solo con cada push a `main` (GitHub Actions,
 rol OIDC `SeparameGithubDeployRole`; GitHub firma los tokens de este repo con el `sub` de
-ids inmutables `repo:cristianecheverri@37417336/separame@1427543331:…`). ≈ 265 tests.
+ids inmutables `repo:cristianecheverri@37417336/separame@1427543331:…`). ≈ 510 tests.
 Pendiente antes de anunciarlo: completar privacidad/términos (responsable, cédula/NIT,
 correo; revisión legal) y `billing/instructions` en SSM de prod.
 `shared/` (contrato del API, modelo de datos, disponibilidad, festivos, suscripción),
-`backend/` (16 Lambdas), `cdk/` (8 stacks por ambiente), `frontend/booking` (Preact,
-~19 KB de JS) y `frontend/app` (React, panel + admin, modo mock con `VITE_MOCK=1`).
+`backend/` (22 Lambdas), `cdk/` (8 stacks por ambiente), `frontend/booking` (Preact,
+~25 KB de JS) y `frontend/app` (React, panel + admin, modo mock con `VITE_MOCK=1`).
 Los mockups de la línea A (`mockups/line-a/`) son la fuente de verdad visual: se implementan
 **exactos** y con responsive perfecto.
 
@@ -59,8 +61,8 @@ antes, cero citas dobles (reserva atómica del horario) y anti-spam en la págin
 pública (límite de reservas + captcha invisible).
 
 **Fuera por ahora:** WhatsApp y SMS (cada mensaje cuesta), sincronización con Google
-Calendar (requiere revisión de Google), anticipos, lista de espera, planes para
-equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
+Calendar (requiere revisión de Google), anticipos, planes para
+equipos (fase 2) y **notas clínicas** (datos de salud = datos sensibles por ley).
 
 ## Reglas de suscripción (se aplican SIEMPRE en el servidor, nunca solo en la UI)
 - **Prueba gratis de 10 días** por profesional (`TRIAL_DAYS` en `shared/subscription.ts`). Una sola prueba por correo verificado

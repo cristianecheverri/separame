@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="fixed z-[60] bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 flex flex-col gap-2 items-stretch sm:items-end pointer-events-none" aria-live="polite" role="status">
+      <div className="fixed z-[60] bottom-[max(16px,env(safe-area-inset-bottom),calc(var(--bottom-nav)+12px))] inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-[calc(var(--bottom-nav)+24px)] flex flex-col gap-2 items-stretch sm:items-end pointer-events-none" aria-live="polite" role="status">
         {items.map((t) => (
           <div key={t.id} className="pointer-events-auto bg-ink text-white rounded-[16px] px-4 py-3 flex gap-3 items-center text-[14px] font-semibold leading-[1.35] sm:max-w-[420px] shadow-[0_10px_30px_rgba(21,36,29,0.25)]">
             <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${t.kind === 'error' ? 'bg-accent text-ink' : 'bg-primary text-white'}`}>

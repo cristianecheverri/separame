@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toInstant } from '@shared/time';
-import { firstName, formatBlockRange, formatCopInput, formatDateLong, formatDayShortMonth, formatPhone, formatWeekdayDay, linkLabel, parseCopInput } from './format';
+import { endSentence, firstName, formatBlockRange, formatWhenInline, formatCopInput, formatDateLong, formatDayShortMonth, formatPhone, formatWeekdayDay, linkLabel, parseCopInput } from './format';
 
 describe('panel formatting', () => {
   it('formats blocked periods like the mockup', () => {
@@ -27,5 +27,11 @@ describe('panel formatting', () => {
     expect(formatCopInput('0012a3')).toBe('123');
     expect(parseCopInput('450.000')).toBe(450000);
     expect(parseCopInput('')).toBeNull();
+  });
+
+  it('words date and time for the middle of a sentence without a double period', () => {
+    expect(formatWhenInline(toInstant('2026-10-20', '14:00'))).toBe('martes 20 de octubre · 2:00 p. m.');
+    expect(endSentence('Cita movida al martes 20 de octubre · 2:00 p. m.')).toBe('Cita movida al martes 20 de octubre · 2:00 p. m.');
+    expect(endSentence('Listo')).toBe('Listo.');
   });
 });

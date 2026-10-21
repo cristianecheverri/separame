@@ -6,10 +6,12 @@ import { renderApp } from '../test/renderApp';
 describe('pro panel (mock API)', () => {
   it('shows the agenda of the day like the mockup', async () => {
     await renderApp('/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Hola, Laura. Hoy tienes 6 citas.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Hola, Laura\. Hoy tienes 6 citas\./ })).toBeInTheDocument();
     expect(await screen.findByText('Espacio libre')).toBeInTheDocument();
     expect(screen.getByText('Valentina Osorio')).toBeInTheDocument();
-    expect(screen.getAllByText('Confirmada').length).toBeGreaterThan(0);
+    // One status per card (MP-04): no "Confirmada" pill on plain confirmed appointments.
+    expect(screen.queryByText('Confirmada')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Confirmó asistencia').length).toBeGreaterThan(0);
     expect(screen.getByText('Te quedan 5 días', { selector: 'div' })).toBeInTheDocument();
     expect(await screen.findByText('Lunes 2 nov.')).toBeInTheDocument();
   });
@@ -20,13 +22,15 @@ describe('pro panel (mock API)', () => {
     await user.click(await screen.findByRole('button', { name: 'Cancelar cita de Carlos Mejía' }));
     const dialog = await screen.findByRole('dialog', { name: '¿Cancelar la cita de Carlos Mejía?' });
     await user.click(within(dialog).getByRole('button', { name: 'Sí, cancelar cita' }));
-    expect(await screen.findByRole('heading', { level: 1, name: 'Hola, Laura. Hoy tienes 5 citas.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Hola, Laura\. Hoy tienes 5 citas\./ })).toBeInTheDocument();
   });
 
   it('closes modals with Escape', async () => {
     const user = userEvent.setup();
     await renderApp('/');
-    await user.click(await screen.findByRole('button', { name: 'Nueva cita' }));
+    // The header button (desktop) and the floating one (phones; CSS hides one per breakpoint).
+    expect(await screen.findAllByRole('button', { name: 'Nueva cita' })).toHaveLength(2);
+    await user.click(screen.getAllByRole('button', { name: 'Nueva cita' })[1]);
     expect(await screen.findByRole('dialog', { name: 'Nueva cita' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -35,12 +39,11 @@ describe('pro panel (mock API)', () => {
   it('is read-only when the plan expired', async () => {
     await renderApp('/', { state: 'expired' });
     expect(await screen.findByText('Tu plan venció el 15 de octubre')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { level: 1, name: 'Hoy tienes 3 citas' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Hoy tienes 3 citas$/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Nueva cita' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /Mover cita/ })).not.toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Renovar desde $15.000' })).toBeInTheDocument();
-    // Each badge exists twice (phone and desktop positions; CSS hides one per breakpoint).
-    expect(screen.getAllByText('Recordatorio enviado')).toHaveLength(6);
+    expect(screen.getAllByText('Recordatorio enviado')).toHaveLength(3);
   });
 
   it('toggles a service visibility', async () => {

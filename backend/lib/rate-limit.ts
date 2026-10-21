@@ -20,6 +20,8 @@ export interface RateLimitRule {
 
 export const RATE_RULES = {
   bookingPerIp: { scope: 'book-ip', max: 5, window: 10 },
+  /** Email is optional on public bookings; the phone is always there. */
+  bookingPerPhone: { scope: 'book-phone', max: 5, window: 'day' },
   bookingPerEmail: { scope: 'book-email', max: 5, window: 'day' },
   managePerIp: { scope: 'manage-ip', max: 20, window: 10 },
   paymentNoticePerPro: { scope: 'notice-pro', max: 5, window: 'day' },

@@ -19,6 +19,8 @@ import { WaitlistSection } from './Waitlist';
 
 const AHEAD_DAYS = 90;
 const BACK_DAYS = 90;
+/** Days with appointments rendered at first (and per «Ver más»): keeps long lists light on phones. */
+const DAYS_PER_PAGE = 10;
 type Tab = 'upcoming' | 'past' | 'waitlist';
 const TABS: { key: Tab; label: string }[] = [
   { key: 'upcoming', label: 'Próximas' },
@@ -45,8 +47,12 @@ export function AppointmentsPage() {
   const tabParam = params.get('tab');
   const tab: Tab = tabParam === 'past' || tabParam === 'waitlist' ? tabParam : 'upcoming';
   const unmarkedOnly = tab === 'past' && params.get('filter') === 'unmarked';
-  const setTab = (next: Tab) => setParams(next === 'upcoming' ? {} : { tab: next }, { replace: true });
   const [query, setQuery] = useState('');
+  const [shownDays, setShownDays] = useState(DAYS_PER_PAGE);
+  const setTab = (next: Tab) => {
+    setShownDays(DAYS_PER_PAGE);
+    setParams(next === 'upcoming' ? {} : { tab: next }, { replace: true });
+  };
   const markOutcome = useOutcome();
   const [modal, setModal] = useState<AppointmentModalState>(null);
   const upcoming = useAppointments(today, addDays(today, AHEAD_DAYS), tab === 'upcoming');
@@ -61,6 +67,8 @@ export function AppointmentsPage() {
     .filter((a) => !unmarkedOnly || (a.status === 'confirmed' && !a.outcome));
   const ordered = tab === 'upcoming' ? list : [...list].reverse();
   const groups = groupByDay(ordered);
+  const visibleGroups = groups.slice(0, shownDays);
+  const hiddenDays = groups.length - visibleGroups.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,14 +85,14 @@ export function AppointmentsPage() {
 
       <section className={cx(ui.card, 'gap-4')}>
         <div className="flex flex-wrap gap-3 justify-between items-center">
-          <div className="flex gap-[6px] bg-surface rounded-full p-1" role="group" aria-label="Mostrar">
+          <div className="flex gap-[6px] bg-surface rounded-full p-1 max-w-full overflow-x-auto [scrollbar-width:none]" role="group" aria-label="Mostrar">
             {TABS.map((t) => (
               <button
                 key={t.key}
                 type="button"
                 aria-pressed={tab === t.key}
                 onClick={() => setTab(t.key)}
-                className={cx('hit-44 h-9 px-[14px] rounded-full text-[13px] whitespace-nowrap', tab === t.key ? 'bg-white font-bold text-ink' : 'font-semibold text-ink-2')}
+                className={cx('hit-44 h-9 px-[14px] rounded-full text-[13px] whitespace-nowrap shrink-0', tab === t.key ? 'bg-white font-bold text-ink' : 'font-semibold text-ink-2')}
               >
                 {t.label}
               </button>
@@ -94,7 +102,17 @@ export function AppointmentsPage() {
           <label htmlFor="appt-search" className="h-[46px] w-full sm:w-auto sm:min-w-[260px] rounded-full bg-white border-2 border-line-strong flex items-center gap-2 px-[14px] box-border text-muted focus-within:border-primary">
             <SearchIcon />
             <span className="sr-only">Buscar por nombre</span>
-            <input id="appt-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre" className="border-0 outline-none focus-visible:outline-none text-[14px] grow min-w-0 bg-transparent text-ink" />
+            <input
+              id="appt-search"
+              type="search"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShownDays(DAYS_PER_PAGE);
+              }}
+              placeholder="Buscar por nombre"
+              className="border-0 outline-none focus-visible:outline-none text-[16px] grow min-w-0 bg-transparent text-ink"
+            />
           </label>
           )}
         </div>
@@ -108,7 +126,10 @@ export function AppointmentsPage() {
           </div>
         )}
         {tab === 'waitlist' ? (
-          <WaitlistSection />
+          <WaitlistSection
+            readOnly={readOnly}
+            onSchedule={(entry) => setModal({ kind: 'new', client: entry.client, serviceId: entry.serviceId, date: entry.dates.find((d) => d >= today) })}
+          />
         ) : !source.data ? (
           <div className="flex flex-col gap-[6px]" aria-busy="true" aria-label="Cargando">
             {[0, 1, 2, 3].map((i) => (
@@ -120,7 +141,7 @@ export function AppointmentsPage() {
             {term ? 'Revisa cómo está escrito o busca solo el nombre.' : unmarkedOnly ? 'Ya marcaste la asistencia de todas tus citas pasadas.' : tab === 'upcoming' ? 'Comparte tu enlace para que te empiecen a reservar.' : `Aquí ves las citas de los últimos ${BACK_DAYS} días.`}
           </EmptyState>
         ) : (
-          groups.map(([date, items]) => (
+          visibleGroups.map(([date, items]) => (
             <div key={date} className="flex flex-col gap-[6px]">
               <h2 className="m-0 pt-2 pb-1 flex justify-between items-baseline gap-3 text-[15px] font-bold">
                 <span>
@@ -143,6 +164,11 @@ export function AppointmentsPage() {
               ))}
             </div>
           ))
+        )}
+        {tab !== 'waitlist' && hiddenDays > 0 && (
+          <button type="button" onClick={() => setShownDays((n) => n + DAYS_PER_PAGE)} className={cx(ui.btnOutline, 'self-center mt-1')}>
+            {tab === 'past' ? 'Ver citas anteriores' : 'Ver más citas'} · {plural(hiddenDays, 'día más', 'días más')}
+          </button>
         )}
       </section>
       <AppointmentModals state={modal} onClose={() => setModal(null)} />

@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { Pin } from '../components/icons';
-import { Notice } from '../components/ui';
+import { RevealedNotice } from '../components/ui';
 import { StepTitle, type StepId } from './FlowChrome';
 
 export interface ReviewRow {
@@ -51,7 +51,7 @@ export function StepReview({ rows, address, error, onEdit, captcha, titleRef }: 
           <span>{address}</span>
         </div>
       )}
-      {error && <Notice>{error}</Notice>}
+      {error && <RevealedNotice message={error} />}
       {captcha}
     </section>
   );

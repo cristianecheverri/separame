@@ -19,24 +19,48 @@ const pct = (ratio: number) => `${Math.round(ratio * 100)} %`;
 
 interface TileProps {
   label: string;
+  /** Label on phones, where the tile is half as wide. */
+  shortLabel?: string;
   value: string;
   change: ReturnType<typeof delta>;
   goodWhenUp?: boolean;
   tone?: 'primary' | 'accent' | 'white';
   note?: string;
+  /** Spans both columns on phones and tablets, with the change beside the label. */
+  wide?: boolean;
 }
 
-function Tile({ label, value, change, goodWhenUp = true, tone = 'white', note }: TileProps) {
+/** KPI tile. Phones: 2 columns and the short change ("+61 %") under one caption (proposal MP-08). */
+function Tile({ label, shortLabel, value, change, goodWhenUp = true, tone = 'white', note, wide = false }: TileProps) {
   const dark = tone === 'primary';
   const good = change ? (goodWhenUp ? change.direction > 0 : change.direction < 0) : false;
   const bad = change ? (goodWhenUp ? change.direction < 0 : change.direction > 0) : false;
+  const changeColor = good ? (dark ? 'text-mint' : 'text-primary') : bad ? (dark ? 'text-accent' : 'text-warn-ink') : dark ? 'text-mint' : 'text-muted';
+  const shortChange = <span className={cx('text-[13px] font-bold', changeColor)}>{change ? change.text : 'Sin datos'}</span>;
   return (
-    <div className={cx('rounded-[20px] p-[18px] flex flex-col gap-[10px]', tone === 'primary' ? 'bg-primary text-white' : tone === 'accent' ? 'bg-accent-soft' : 'bg-white')}>
-      <div className="text-[14px] font-semibold">{label}</div>
-      <div className={cx('font-display font-extrabold leading-none whitespace-nowrap', value.length > 8 ? 'text-[26px] sm:text-[28px]' : 'text-[32px] sm:text-[36px]')}>{value}</div>
-      <div className={cx('text-[13px] font-semibold', good ? (dark ? 'text-mint' : 'text-primary') : bad ? (dark ? 'text-accent' : 'text-warn-ink') : dark ? 'text-mint' : 'text-muted')}>
-        {change ? `${change.text} vs. periodo anterior` : 'Sin datos del periodo anterior'}
+    <div
+      className={cx(
+        'rounded-[18px] sm:rounded-[20px] p-[14px] sm:p-[18px] flex flex-col gap-2 sm:gap-[10px] min-w-0',
+        wide && 'col-span-2 lg:col-span-1',
+        tone === 'primary' ? 'bg-primary text-white' : tone === 'accent' ? 'bg-accent-soft' : 'bg-white',
+      )}
+    >
+      <div className="flex justify-between items-baseline gap-2">
+        <div className="text-[13px] sm:text-[14px] font-semibold">
+          {shortLabel ? (
+            <>
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="hidden sm:inline">{label}</span>
+            </>
+          ) : (
+            label
+          )}
+        </div>
+        {wide && <span className="sm:hidden shrink-0">{shortChange}</span>}
       </div>
+      <div className={cx('font-display font-extrabold leading-none whitespace-nowrap text-[28px]', value.length > 8 ? 'sm:text-[28px]' : 'sm:text-[36px]')}>{value}</div>
+      {!wide && <div className="sm:hidden">{shortChange}</div>}
+      <div className={cx('hidden sm:block text-[13px] font-semibold', changeColor)}>{change ? `${change.text} vs. periodo anterior` : 'Sin datos del periodo anterior'}</div>
       {note && <div className={cx('text-[12px] leading-[1.4]', dark ? 'text-mint' : 'text-muted')}>{note}</div>}
     </div>
   );
@@ -115,14 +139,14 @@ export function StatsPage() {
   const p = data?.previous;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       <div className="flex flex-col gap-1">
         <h1 className={ui.h1}>Estadísticas</h1>
         <div className="text-[15px] text-muted">Cómo va tu agenda: citas, ocupación y asistencia.</div>
       </div>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Periodo">
+      <div className="flex flex-nowrap overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:flex-wrap sm:overflow-visible sm:mx-0 sm:px-0 gap-2" role="group" aria-label="Periodo">
         {PERIODS.map((x) => (
-          <Chip key={x.key} selected={period === x.key} onClick={() => setPeriod(x.key)}>
+          <Chip key={x.key} selected={period === x.key} onClick={() => setPeriod(x.key)} className="whitespace-nowrap shrink-0">
             {x.label}
           </Chip>
         ))}
@@ -141,28 +165,33 @@ export function StatsPage() {
           </div>
         )
       ) : (
-        <div className={cx('flex flex-col gap-6 transition-opacity', query.isPlaceholderData && 'opacity-60')} aria-busy={query.isPlaceholderData}>
+        <div className={cx('flex flex-col gap-5 sm:gap-6 transition-opacity', query.isPlaceholderData && 'opacity-60')} aria-busy={query.isPlaceholderData}>
           {s.unmarked > 0 && (
-            <div className="bg-accent-soft rounded-[20px] py-4 px-5 flex flex-wrap gap-3 items-center justify-between">
-              <span className="font-bold text-[15px]">
-                Tienes {s.unmarked === 1 ? '1 cita' : `${s.unmarked} citas`} sin marcar asistencia
+            <div className="bg-accent-soft rounded-[20px] py-[6px] pr-2 pl-4 sm:py-4 sm:px-5 flex sm:flex-wrap gap-[10px] sm:gap-3 items-center justify-between">
+              <span className="font-bold text-[14px] leading-[1.3] sm:text-[15px] sm:leading-normal">
+                <span className="hidden sm:inline">Tienes </span>
+                {s.unmarked === 1 ? '1 cita' : `${s.unmarked} citas`} sin marcar asistencia
               </span>
-              <Link to="/appointments?tab=past&filter=unmarked" className="font-bold text-[14px] underline underline-offset-2 min-h-11 inline-flex items-center">
+              <Link to="/appointments?tab=past&filter=unmarked" className="font-bold text-[14px] underline underline-offset-2 min-h-11 px-2 sm:px-0 whitespace-nowrap inline-flex items-center">
                 Marcar ahora →
               </Link>
             </div>
           )}
-          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-[14px]">
+          <div className="flex flex-col gap-2">
+          <div className="sm:hidden text-[12px] text-muted">Comparado con el periodo anterior</div>
+          <div className="grid grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-[10px] sm:gap-[14px]">
             <Tile label="Citas" value={String(s.appointments)} change={delta(s.appointments, p.appointments, 'count')} tone="primary" />
             <Tile label="Ocupación" value={pct(s.occupancy)} change={delta(s.occupancy, p.occupancy, 'ratio')} tone="accent" />
             <Tile label="Inasistencias" value={pct(s.noShowRate)} change={delta(s.noShowRate, p.noShowRate, 'ratio')} goodWhenUp={false} />
-            <Tile label="Clientes nuevos / recurrentes" value={`${s.newClients} / ${s.returningClients}`} change={delta(s.newClients + s.returningClients, p.newClients + p.returningClients, 'count')} />
+            <Tile label="Clientes nuevos / recurrentes" shortLabel="Nuevos / recurrentes" value={`${s.newClients} / ${s.returningClients}`} change={delta(s.newClients + s.returningClients, p.newClients + p.returningClients, 'count')} />
             <Tile
               label="Ingresos estimados"
               value={formatCop(s.estimatedRevenueCop)}
               change={delta(s.estimatedRevenueCop, p.estimatedRevenueCop, 'count')}
               note="Estimado con tus precios de referencia; Sepárame no cobra a tus clientes."
+              wide
             />
+          </div>
           </div>
           {s.appointments === 0 ? (
             <div className="bg-white rounded-[24px] p-4">

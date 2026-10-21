@@ -100,6 +100,17 @@ describe('other templates', () => {
     expect(n.subject).toBe('Nueva cita · jue 22 oct., 10:00 a. m. · Mariana Gómez');
     expect(n.html).toContain('300 123 4567');
     expect(n.html).toContain('$60.000');
+    expect(n.text).toContain('Celular');
+  });
+
+  it('"Nueva cita" leaves out contact rows the client did not give', () => {
+    const n = proNewBookingEmail({
+      siteUrl: data.siteUrl, pro, client: { name: 'Don Jorge', email: '', phone: '' },
+      serviceName: 'Valoración', durationMin: 30, priceCop: 60000, start: data.start,
+    });
+    expect(n.html).not.toContain('Celular');
+    expect(n.html).not.toContain('Correo');
+    expect(n.text).not.toMatch(/Celular|Correo/);
   });
 
   it('renewal notice links to billing', () => {

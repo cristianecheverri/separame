@@ -116,3 +116,13 @@ function shortWithYear(date: ISODate): string {
 }
 
 export const instantDate = (instant: ISOInstant) => bogotaDate(instant);
+
+/** "martes 20 de octubre · 2:00 p. m." — lowercase, for the middle of a sentence. */
+export function formatWhenInline(instant: ISOInstant): string {
+  return `${formatDayLong(bogotaDate(instant))} · ${formatTime(bogotaTime(instant))}`;
+}
+
+/** Adds the final period unless the text already ends with one ("… 2:00 p. m."). */
+export function endSentence(text: string): string {
+  return /[.!?…]$/.test(text.trim()) ? text.trim() : `${text.trim()}.`;
+}

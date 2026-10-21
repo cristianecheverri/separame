@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DAY_SHORT, formatInstantTime } from '@shared/format';
 import { bogotaTime, jsWeekday, todayBogota, type ISODate } from '@shared/time';
 import { cx } from '../../components/ui/cx';
@@ -9,6 +9,8 @@ import { formatDateNoYearRange } from './slotFormat';
 import { useSlots } from '../../lib/queries';
 
 const WEEKS = 4;
+/** Days of free times the picker loads (other views reuse the same query). */
+export const SLOT_PICKER_DAYS = WEEKS * 7;
 
 interface Props {
   serviceId: string | null;
@@ -22,7 +24,7 @@ interface Props {
 /** Day grid (7 per page) + "Mañana" / "Tarde" slot chips, from GET /me/slots. */
 export function SlotPicker({ serviceId, value, onChange, initialDate, exclude }: Props) {
   const today = todayBogota(now());
-  const slots = useSlots(serviceId, today, WEEKS * 7);
+  const slots = useSlots(serviceId, today, SLOT_PICKER_DAYS);
   const [page, setPage] = useState(() => (initialDate ? Math.min(WEEKS - 1, Math.max(0, Math.floor((Date.parse(initialDate) - Date.parse(today)) / (7 * 86_400_000)))) : 0));
   const [picked, setPicked] = useState<ISODate | null>(initialDate ?? null);
 
@@ -34,6 +36,13 @@ export function SlotPicker({ serviceId, value, onChange, initialDate, exclude }:
   const available = (current?.slots ?? []).filter((s) => s !== exclude);
   const morning = available.filter((s) => bogotaTime(s) < '12:00');
   const afternoon = available.filter((s) => bogotaTime(s) >= '12:00');
+
+  // A preselected time (e.g. the agenda gap that was tapped) that this service can't use is dropped.
+  const loaded = !!slots.data;
+  useEffect(() => {
+    if (!loaded || !value) return;
+    if (value === exclude || !days.some((d) => d.slots.includes(value))) onChange(null);
+  }, [loaded, days, value, exclude, onChange]);
 
   if (!serviceId) {
     return <div className="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center">Elige un servicio para ver las horas libres.</div>;

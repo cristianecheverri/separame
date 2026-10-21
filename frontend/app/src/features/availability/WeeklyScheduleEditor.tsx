@@ -7,7 +7,7 @@ import { PlusIcon } from '../../components/ui/icons';
 import { Modal } from '../../components/ui/Modal';
 import { PillSelect } from '../../components/ui/PillSelect';
 import { Switch } from '../../components/ui/Switch';
-import { DAY_LABELS, nextRange, sortRanges, TIME_STEPS, type ScheduleDraft } from './scheduleModel';
+import { DAY_LABELS, nextRange, sortRanges, timeStepsWith, type ScheduleDraft } from './scheduleModel';
 
 interface Props {
   value: ScheduleDraft;
@@ -23,7 +23,7 @@ interface Editing {
 }
 
 const rangeLabel = (r: TimeRange) => `${formatTime(r.start)} – ${formatTime(r.end)}`;
-const timeOptions = TIME_STEPS.map((t) => ({ value: t, label: formatTime(t) }));
+const timeOptions = (current: string) => timeStepsWith(current).map((t) => ({ value: t, label: formatTime(t) }));
 
 /** "Horario semanal" rows: switch, day, editable range chips, "+". */
 export function WeeklyScheduleEditor({ value, onChange, errors = {}, readOnly }: Props) {
@@ -129,11 +129,11 @@ export function WeeklyScheduleEditor({ value, onChange, errors = {}, readOnly }:
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-[6px]">
             <span className="text-[14px] font-semibold">Desde</span>
-            <PillSelect variant="field" label="Desde" value={draftRange.start} options={timeOptions} onChange={(start) => setDraftRange({ ...draftRange, start })} />
+            <PillSelect variant="field" label="Desde" value={draftRange.start} options={timeOptions(draftRange.start)} onChange={(start) => setDraftRange({ ...draftRange, start })} />
           </div>
           <div className="flex flex-col gap-[6px]">
             <span className="text-[14px] font-semibold">Hasta</span>
-            <PillSelect variant="field" label="Hasta" value={draftRange.end} options={timeOptions} onChange={(end) => setDraftRange({ ...draftRange, end })} />
+            <PillSelect variant="field" label="Hasta" value={draftRange.end} options={timeOptions(draftRange.end)} onChange={(end) => setDraftRange({ ...draftRange, end })} />
           </div>
         </div>
         <div className={cx('text-[13px]', invalid ? 'text-warn-ink font-semibold' : 'text-muted')}>

@@ -56,7 +56,8 @@
   &::after {
     content: "";
     position: absolute;
-    inset: -4px 0;
+    /* At least 44 px tall (and 4 px of slack on taller controls), centered on the control. */
+    inset: min(-4px, calc(50% - 22px)) 0;
   }
 }
 
@@ -70,4 +71,15 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
+}
+
+/* Height of the phone/tablet tab bar (ProShell, < 1024 px), safe area included. Fixed bars,
+   floating buttons and toasts sit above it; 0 where there is no tab bar. */
+:root {
+  --bottom-nav: 0px;
+}
+@media (max-width: 1023.98px) {
+  body:has([data-tab-bar]) {
+    --bottom-nav: calc(68px + env(safe-area-inset-bottom));
+  }
 }

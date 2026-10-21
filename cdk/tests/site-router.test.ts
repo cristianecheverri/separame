@@ -68,6 +68,22 @@ describe('site router (CloudFront Function)', () => {
     expect(uriOf(prod, '/w/logo.png')).toBe('/w/logo.png');
   });
 
+  it('302s referral links /r/<code> to the signup page with the code (other params kept)', () => {
+    const res = route(prod, '/r/laura-perez') as Redirect & { statusCode: number };
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location.value).toBe('/app/signup?ref=laura-perez');
+    const withQuery = route(prod, '/r/Laura-Perez/', 'separame.app', { utm_source: { value: 'whatsapp' } }) as Redirect;
+    expect(withQuery.headers.location.value).toBe('/app/signup?ref=laura-perez&utm_source=whatsapp');
+  });
+
+  it('sends /r, /r/ and malformed referral codes to the plain signup page', () => {
+    for (const uri of ['/r', '/r/', '/r/x', '/r/<script>', '/r/a/b', '/r/-bad-']) {
+      const res = route(prod, uri) as Redirect;
+      expect(res.statusCode, uri).toBe(302);
+      expect(res.headers.location.value, uri).toBe('/app/signup');
+    }
+  });
+
   it('serves the landing page at /', () => {
     expect(uriOf(prod, '/')).toBe('/index.html');
   });

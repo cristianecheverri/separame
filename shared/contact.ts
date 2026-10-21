@@ -22,9 +22,28 @@ export function isValidEmail(value: string): boolean {
   return email.length <= 254 && EMAIL_RE.test(email);
 }
 
-/** Colombian numbers: strips spaces, dashes, parentheses, dots and a leading +57 → 10 digits. */
+/** Colombian numbers: strips spaces, dashes, parentheses, dots and a leading +57 / 0057 / 57 → 10 digits. */
 export function normalizePhone(value: string): string {
-  return value.replace(/[\s\-().]/g, '').replace(/^\+?57(?=\d{10}$)/, '');
+  return value.replace(/[\s\-().]/g, '').replace(/^(?:\+|00)?57(?=\d{10}$)/, '');
+}
+
+/** Max length of the national phone field: room for pasted formats like "(+57) 300 123 4567". */
+export const PHONE_INPUT_MAX_LENGTH = 24;
+
+const EXPLICIT_COUNTRY_CODE_RE = /^\(?(?:\+|00)57\)?[\s\-.]*/;
+const BARE_COUNTRY_CODE_RE = /^\(?57\)?[\s\-.]*/;
+
+/**
+ * Drops a Colombian country code typed or pasted into the national phone field
+ * (which already shows "+57"): "+57 300…", "(+57) 300…", "0057 300…", and a
+ * bare "57" only when 10 digits follow it (no national number starts with 57).
+ */
+export function stripCountryCode(value: string): string {
+  const text = value.trimStart();
+  const explicit = EXPLICIT_COUNTRY_CODE_RE.exec(text);
+  if (explicit) return text.slice(explicit[0].length);
+  if (/^57\d{10}$/.test(text.replace(/[\s\-().]/g, ''))) return text.replace(BARE_COUNTRY_CODE_RE, '');
+  return value;
 }
 
 export function isValidPhone(value: string): boolean {

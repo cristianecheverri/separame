@@ -2,6 +2,7 @@ import { createMigrationSchema, createPriceSchema, updatePriceSchema } from '../
 import { requireAdmin } from '../../lib/auth';
 import { created, createApiHandler, ok, parseBody, pathParam } from '../../lib/http';
 import { cancelMigration, createMigration, listMigrations } from '../../services/migrations';
+import { refreshLandingSafely } from '../../services/landing';
 import { createPrice, listPricesWithUsage, updatePrice } from '../../services/prices';
 
 /** Admin: immutable price versions (+ usage) and scheduled price migrations. */
@@ -14,13 +15,17 @@ export const handler = createApiHandler({
   'POST /admin/prices': async (event) => {
     requireAdmin(event);
     const input = parseBody(event, createPriceSchema);
-    return created({ price: await createPrice(input) });
+    const price = await createPrice(input);
+    await refreshLandingSafely(); // the landing shows the default version's prices
+    return created({ price });
   },
 
   'PATCH /admin/prices/{priceId}': async (event) => {
     requireAdmin(event);
     const input = parseBody(event, updatePriceSchema);
-    return ok({ price: await updatePrice(pathParam(event, 'priceId'), input) });
+    const price = await updatePrice(pathParam(event, 'priceId'), input);
+    await refreshLandingSafely();
+    return ok({ price });
   },
 
   'GET /admin/price-migrations': async (event) => {

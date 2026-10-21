@@ -1,11 +1,10 @@
 import { CONFIRM_ACTION_PARAM } from '../../shared/api';
-import { ROOT_DOMAIN, SITE_PATHS } from '../../shared/infra';
 import type { ISODate, ISOInstant } from '../../shared/time';
 import type { Appointment, Payment, PriceVersion, ProProfile, WaitlistEntry } from '../../shared/types';
 import { env } from '../lib/env';
 import { manageTokenFor } from '../lib/tokens';
-import { googleCalendarUrl, outlookCalendarUrl, type CalendarEvent } from './calendar-links';
-import { buildIcs } from './ics';
+import { googleCalendarUrl, outlookCalendarUrl } from './calendar-links';
+import { clientCalendarEvent, clientIcsFile, manageUrl } from './client-ics';
 import { sendEmail, type CalendarInvite, type SendResult } from './sender';
 import { proCalendarEmail, type ProCalendarKind } from './templates/pro-calendar';
 import { waitlistJoinedEmail, waitlistOfferEmail } from './templates/waitlist';
@@ -15,9 +14,9 @@ import { clientCancelledEmail, proCancelledEmail, type CancelledData } from './t
 import { manualPaymentReceiptEmail } from './templates/manual-payment-receipt';
 import { priceMigrationNoticeEmail } from './templates/price-migration-notice';
 import { proNewBookingEmail } from './templates/pro-new-booking';
+import { referralRewardEmail, type ReferralRewardData } from './templates/referral-reward';
 import { reminderEmail } from './templates/reminder-24h';
 import { renewalNoticeEmail } from './templates/renewal-notice';
-import { whereText } from './templates/common';
 import { noticeAdminEmail, noticeReceivedEmail, noticeRejectedEmail } from './templates/payment-notice';
 import { log } from '../lib/logger';
 
@@ -35,37 +34,12 @@ const DAY_MS = 86_400_000;
  */
 const operatorReplyTo = (): string | undefined => env.adminEmail();
 
-export const manageUrl = (token: string) => `${env.siteUrl()}${SITE_PATHS.manage}${token}`;
+export { manageUrl };
 
 const proInfo = (p: ProProfile) => ({ name: p.name, title: p.title, neighborhood: p.neighborhood, address: p.address, city: p.city, slug: p.slug });
 
-function calendarEvent(appt: Appointment, pro: ProProfile, link: string): CalendarEvent {
-  const location = whereText(pro);
-  return {
-    title: `${appt.serviceName} con ${pro.name}`,
-    start: appt.start,
-    end: appt.end,
-    details: `Cita separada en Sepárame.\nPara cambiarla o cancelarla: ${link}`,
-    location,
-  };
-}
-
 function icsAttachment(appt: Appointment, pro: ProProfile, link: string) {
-  const event = calendarEvent(appt, pro, link);
-  return {
-    filename: `cita-${pro.slug}.ics`,
-    contentType: 'text/calendar; charset=UTF-8; method=PUBLISH',
-    content: buildIcs({
-      uid: `${appt.id}@${ROOT_DOMAIN}`,
-      start: appt.start,
-      end: appt.end,
-      summary: event.title,
-      description: event.details,
-      location: event.location,
-      sequence: Math.floor(new Date(appt.updatedAt).getTime() / 1000),
-      url: link,
-    }),
-  };
+  return { ...clientIcsFile(appt, pro, link), contentType: 'text/calendar; charset=UTF-8; method=PUBLISH' };
 }
 
 /** When the 24 h reminder will go out, or null when it is already too late for one. */
@@ -76,7 +50,7 @@ export function reminderAtFor(start: ISOInstant, now: Date): ISOInstant | null {
 
 async function clientBookingData(appt: Appointment, pro: ProProfile, now: Date): Promise<BookingEmailData & { link: string }> {
   const link = manageUrl(await manageTokenFor(pro.id, appt.id, appt.end));
-  const event = calendarEvent(appt, pro, link);
+  const event = clientCalendarEvent(appt, pro, link);
   return {
     link,
     siteUrl: env.siteUrl(),
@@ -137,7 +111,7 @@ export async function sendProNewBooking(appt: Appointment, pro: ProProfile, invi
   return sendEmail({
     ...proNewBookingEmail({
       siteUrl: env.siteUrl(), pro: proInfo(pro), client: appt.client, serviceName: appt.serviceName,
-      durationMin: appt.durationMin, priceCop: appt.priceCop, start: appt.start,
+      durationMin: appt.durationMin, priceCop: appt.priceCop, priceDisplay: appt.priceDisplay, start: appt.start,
     }),
     to: pro.email,
     replyTo: appt.client.email || undefined,
@@ -191,9 +165,14 @@ export async function sendRenewalNotice(input: { email: string; name: string; ac
   });
 }
 
-export async function sendManualPaymentReceipt(input: { profile: ProProfile; payment: Payment; price: PriceVersion }): Promise<SendResult> {
+export async function sendManualPaymentReceipt(input: {
+  profile: ProProfile; payment: Payment; price: PriceVersion; referralMonths?: number; accessUntil?: ISOInstant;
+}): Promise<SendResult> {
   return sendEmail({
-    ...manualPaymentReceiptEmail({ siteUrl: env.siteUrl(), name: input.profile.name, payment: input.payment, price: input.price }),
+    ...manualPaymentReceiptEmail({
+      siteUrl: env.siteUrl(), name: input.profile.name, payment: input.payment, price: input.price,
+      referralMonths: input.referralMonths, accessUntil: input.accessUntil,
+    }),
     to: input.profile.email,
     replyTo: operatorReplyTo(),
   });
@@ -208,6 +187,16 @@ export async function sendMigrationNotice(input: {
       fromMonthlyCop: input.from.monthlyCop, toMonthlyCop: input.to.monthlyCop,
     }),
     to: input.email,
+    replyTo: operatorReplyTo(),
+  });
+}
+
+/** "¡Ganaste un mes gratis!" to the professional whose referral link brought a paying account. */
+export async function sendReferralReward(input: { profile: ProProfile } & Omit<ReferralRewardData, 'siteUrl' | 'name'>): Promise<SendResult> {
+  const { profile, ...data } = input;
+  return sendEmail({
+    ...referralRewardEmail({ siteUrl: env.siteUrl(), name: profile.name, ...data }),
+    to: profile.email,
     replyTo: operatorReplyTo(),
   });
 }

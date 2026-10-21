@@ -107,6 +107,9 @@ export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailabi
   const step = Math.max(LOCK_UNIT_MIN, ctx.rules.slotStepMin);
 
   const slots: ISOInstant[] = [];
+  // A day whose remaining starts are all inside the notice window is over for
+  // booking ("past"), not full: it must not offer the waitlist.
+  let anyUpcoming = false;
   for (const range of ranges) {
     const startMin = minutesOf(range.start);
     const endMin = minutesOf(range.end);
@@ -114,11 +117,13 @@ export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailabi
       const s = ms(toInstant(date, hhmm(m)));
       const e = s + duration;
       if (s < earliest) continue;
+      anyUpcoming = true;
       if (busy.some(([bs, be]) => overlaps(s, e, bs - buffer, be + buffer))) continue;
       if (dayBlocks.some(([bs, be]) => overlaps(s, e, bs, be))) continue;
       slots.push(new Date(s).toISOString());
     }
   }
+  if (!anyUpcoming) return { ...base, closed: 'past' };
   return { ...base, closed: null, ...(holiday ? { holidayName: holiday.name } : {}), slots };
 }
 

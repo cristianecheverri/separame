@@ -30,13 +30,24 @@ export interface ProProfile {
   updatedAt: ISOInstant;
 }
 
+/**
+ * How a service's price shows on the public page and in emails:
+ * `fixed` = the reference value (`priceCop` > 0), `free` = "Sin costo",
+ * `agreed` = "Precio a convenir", `hidden` = no price at all.
+ * Missing on items saved before the option existed: derived from `priceCop`
+ * (> 0 → `fixed`, otherwise `free`) by `priceDisplayOf` in shared/format.ts.
+ */
+export type PriceDisplay = 'fixed' | 'free' | 'agreed' | 'hidden';
+
 export interface Service {
   id: string;
   name: string;
   /** Multiple of 5 minutes. */
   durationMin: number;
-  /** Reference price in COP; `null` = "Sin costo". Never charged online. */
+  /** Reference price in COP (only with `priceDisplay: 'fixed'`; otherwise `null`). Never charged online. */
   priceCop: number | null;
+  /** Optional for backward compatibility (see PriceDisplay); the API always fills it. */
+  priceDisplay?: PriceDisplay;
   description: string;
   /** Hidden services don't show on the public page but the pro can still book them. */
   visible: boolean;
@@ -88,8 +99,12 @@ export type Actor = 'client' | 'pro' | 'admin' | 'system';
 
 export interface ClientContact {
   name: string;
+  /**
+   * Optional on public bookings and pro-created appointments ('' = no emails to the client:
+   * no confirmation, reminder or attendance request). Required on the waitlist.
+   */
   email: string;
-  /** National number without +57, digits only. */
+  /** National number without +57, digits only. Required on public bookings and the waitlist; may be '' on pro-created appointments. */
   phone: string;
 }
 
@@ -101,6 +116,8 @@ export interface Appointment {
   serviceName: string;
   durationMin: number;
   priceCop: number | null;
+  /** Snapshot of the service's price display (missing on old items: derived from priceCop). */
+  priceDisplay?: PriceDisplay;
   start: ISOInstant;
   end: ISOInstant;
   status: AppointmentStatus;
@@ -120,7 +137,10 @@ export interface Appointment {
   outcomeAt?: ISOInstant;
   /** Monotonic revision (0 on create, +1 on every CALENDAR change: move, cancel): calendar SEQUENCE. Confirm/outcome don't bump it. */
   revision: number;
-  /** Key of the client record (see ClientRecord) this appointment belongs to. */
+  /**
+   * Key of the client record (see ClientRecord) this appointment belongs to;
+   * '' (NO_CLIENT_KEY) when the pro created it with a name only — no record, no client history link.
+   */
   clientKey: string;
 }
 
@@ -128,7 +148,7 @@ export interface Appointment {
 
 /**
  * One record per client of a professional, keyed by `clientKey` (hash of the
- * normalized email, or of the phone when there's no email). Aggregates are
+ * phone, or of the normalized email when there's no phone). Aggregates are
  * maintained from appointment events. Notes are free text for logistics only —
  * the UI warns not to store health data (datos sensibles, Ley 1581).
  */
@@ -249,8 +269,11 @@ export interface PriceVersion {
  */
 export type PaymentMethod = 'transfer' | 'nequi' | 'cash' | 'courtesy' | 'card' | 'pse';
 export type PaymentStatus = 'approved' | 'pending' | 'rejected';
-/** Who created the record: an admin, the professional's "Ya pagué" notice, or a gateway webhook (future). */
-export type PaymentSource = 'admin' | 'pro_notice' | 'gateway';
+/**
+ * Who created the record: an admin, the professional's "Ya pagué" notice, a gateway webhook (future),
+ * or the referral program ("Mes gratis por referido": method `courtesy`, amount 0, one month, `referral` set).
+ */
+export type PaymentSource = 'admin' | 'pro_notice' | 'gateway' | 'referral';
 /** Gateways we may integrate; none is live yet. */
 export type PaymentProvider = 'nequi' | 'wompi' | 'mercadopago';
 
@@ -278,7 +301,39 @@ export interface Payment {
   reviewedBy?: { sub: string; email: string };
   reviewedAt?: ISOInstant;
   rejectReason?: string;
+  /** Set only for `source: 'referral'`: whose first payment earned this free month. */
+  referral?: PaymentReferral;
   createdAt: ISOInstant;
+}
+
+export interface PaymentReferral {
+  referredProId: string;
+  /** Snapshot of the referred professional's display name. */
+  referredName: string;
+  /** accessUntil right before the free month was added ("tu plan pasó del … al …"). */
+  previousUntil: ISOInstant;
+}
+
+// ── Referrals ──────────────────────────────────────────────────────────────
+
+/**
+ * A professional who signed up with someone's referral link, as the referrer sees it:
+ * `trial` = registered, still in the free trial; `no_payment` = the trial ended without a qualifying payment;
+ * `rewarded` = paid ≥ 1 month and the free month was added; `saved` = paid while the referrer was expired:
+ * the month waits for the referrer's next approved payment.
+ */
+export type ReferralState = 'trial' | 'no_payment' | 'rewarded' | 'saved';
+
+export interface Referral {
+  referredProId: string;
+  name: string;
+  title: string;
+  registeredAt: ISOInstant;
+  trialEndsAt: ISOInstant;
+  state: ReferralState;
+  /** Months of the qualifying payment (null until it pays). */
+  paidMonths: number | null;
+  paidAt: ISOInstant | null;
 }
 
 /** How to pay us, shown on the plan screen. Stored as JSON in SSM (`SSM_PARAMS.billingInstructions`). */

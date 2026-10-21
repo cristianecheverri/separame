@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { BookingSummary } from '@shared/api';
-import { eventFromBooking, googleCalendarUrl, icsContent, outlookCalendarUrl } from './calendar';
+import type { DayAvailability } from '@shared/availability';
+import { calendarPlatform, eventFromBooking, googleCalendarUrl, icsContent, outlookCalendarUrl } from './calendar';
 import { manageTokenFromLocation, readEmbeddedData, slugFromLocation } from './bootstrap';
-import { monthLabel, splitSlots } from './slots';
+import { monthLabel, resolveDay, splitSlots, weekOf } from './slots';
 import { formatPhone, fullAddress, normalizePhone, placeLine, telHref } from './text';
-import { fieldsFromApi, isContactFilled, validateContact } from './validation';
+import { fieldsFromApi, isContactFilled, validateContact, contactBlockedLabel } from './validation';
+import { createHttpApi } from './api';
+import { newUuid } from './ids';
+import { timeLabel, whenLabel } from './when';
 
 describe('validateContact', () => {
   const ok = { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '300 123 4567', agree: true };
@@ -59,6 +63,30 @@ describe('slots helpers', () => {
     expect(monthLabel(['2026-10-20', '2026-10-26'])).toBe('Octubre 2026');
     expect(monthLabel(['2026-10-27', '2026-11-02'])).toBe('Octubre – Noviembre 2026');
   });
+
+  it('preselects the first day with free hours; a deep link wins only when it has free hours', () => {
+    const day = (date: string, slots: string[], closed: DayAvailability['closed'] = null): DayAvailability => ({ date, weekday: 'tue', slots, closed });
+    const days = [day('2026-10-20', []), day('2026-10-21', ['x']), day('2026-10-25', [], 'weekly'), day('2026-10-30', ['y'])];
+    expect(resolveDay(days, null)).toBe('2026-10-21');
+    expect(resolveDay(days, null, '2026-10-30')).toBe('2026-10-30');
+    expect(resolveDay(days, null, '2026-10-20')).toBe('2026-10-21');
+    expect(resolveDay(days, '2026-10-20')).toBe('2026-10-20');
+    expect(resolveDay(days, '2026-10-25')).toBe('2026-10-21');
+    expect(resolveDay([day('2026-10-20', [])], null)).toBeNull();
+    expect(weekOf(days, '2026-10-30')).toBe(0);
+    expect(weekOf(days, null)).toBe(0);
+  });
+});
+
+describe('calendar platform', () => {
+  it('tells iPhone, iPad (also with the desktop UA), Android and the rest apart', () => {
+    const nav = (userAgent: string, maxTouchPoints = 0) => ({ userAgent, maxTouchPoints });
+    expect(calendarPlatform(nav('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'))).toBe('iphone');
+    expect(calendarPlatform(nav('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)'))).toBe('ipad');
+    expect(calendarPlatform(nav('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5))).toBe('ipad');
+    expect(calendarPlatform(nav('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'))).toBe('other');
+    expect(calendarPlatform(nav('Mozilla/5.0 (Linux; Android 14; Pixel 8)', 5))).toBe('android');
+  });
 });
 
 describe('calendar links', () => {
@@ -108,5 +136,40 @@ describe('bootstrap', () => {
     expect(slugFromLocation({ pathname: '/_templates/booking.html', search: '?slug=otro' })).toBe('otro');
     expect(manageTokenFromLocation({ pathname: '/c/abc.def' })).toBe('abc.def');
     expect(manageTokenFromLocation({ pathname: '/dra' })).toBeNull();
+  });
+});
+
+describe('booking contact rules (optional email)', () => {
+  const rules = { emailOptional: true };
+  const form = { name: 'Mariana Gómez', email: '', phone: '300 123 4567', agree: true };
+
+  it('accepts an empty email but still validates a typed one', () => {
+    expect(validateContact(form, rules)).toEqual({});
+    expect(validateContact({ ...form, email: 'mariana@' }, rules)).toEqual({ email: 'Revisa tu correo, parece que le falta algo' });
+    expect(validateContact(form)).toHaveProperty('email');
+    expect(isContactFilled(form, rules)).toBe(true);
+    expect(isContactFilled(form)).toBe(false);
+  });
+
+  it('names the missing consent on the locked button', () => {
+    expect(contactBlockedLabel({ ...form, agree: false }, rules)).toBe('Acepta la autorización para seguir');
+    expect(contactBlockedLabel({ ...form, email: '', agree: false })).toBe('Escribe tu correo para seguir');
+    expect(contactBlockedLabel({ ...form, phone: '', agree: false }, rules)).toBe('Escribe tu celular para seguir');
+    expect(contactBlockedLabel({ ...form, name: ' ', agree: true }, rules)).toBe('Escribe tu nombre para seguir');
+  });
+});
+
+describe('misc helpers', () => {
+  it('points the .ics download at the API', () => {
+    expect(createHttpApi('https://api.separame.app').icsUrl('a.b')).toBe('https://api.separame.app/public/appointments/a.b/ics');
+  });
+
+  it('generates RFC 4122 v4 UUIDs (what the API accepts as idempotencyKey)', () => {
+    expect(newUuid()).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
+
+  it('glues times with non-breaking spaces', () => {
+    expect(timeLabel('2026-10-22T13:00:00.000Z')).toBe('8:00\u00a0a.\u00a0m.');
+    expect(whenLabel('2026-10-22T13:00:00.000Z')).toBe('Jueves 22 de octubre · 8:00\u00a0a.\u00a0m.');
   });
 });

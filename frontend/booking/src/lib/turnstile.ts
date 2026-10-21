@@ -11,6 +11,9 @@ export interface TurnstileOptions {
   callback?: (token: string) => void;
   'error-callback'?: () => void;
   'expired-callback'?: () => void;
+  /** The widget is about to show an interactive challenge (visitor must click). */
+  'before-interactive-callback'?: () => void;
+  'after-interactive-callback'?: () => void;
 }
 
 export interface TurnstileApi {

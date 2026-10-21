@@ -28,22 +28,22 @@ export function ProfileFields({ value, onChange, errors, disabled }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field label="Tu nombre, como te verán tus clientes" error={errors.name} className="sm:col-span-2">
-        {(p) => <input {...p} className={ui.input} value={value.name} onChange={set('name')} placeholder="Ej. Dra. Laura Pérez" autoComplete="name" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.name} onChange={set('name')} placeholder="Tu nombre y título" autoComplete="name" disabled={disabled} />}
       </Field>
       <Field label="Profesión o especialidad" error={errors.title}>
-        {(p) => <input {...p} className={ui.input} value={value.title} onChange={set('title')} placeholder="Ej. Odontóloga" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.title} onChange={set('title')} placeholder="Tu profesión o especialidad" disabled={disabled} />}
       </Field>
       <Field label="Ciudad" error={errors.city}>
-        {(p) => <input {...p} className={ui.input} value={value.city} onChange={set('city')} placeholder="Ej. Medellín" autoComplete="address-level2" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.city} onChange={set('city')} placeholder="Ciudad donde atiendes" autoComplete="address-level2" disabled={disabled} />}
       </Field>
       <Field label="Barrio (opcional)" error={errors.neighborhood}>
-        {(p) => <input {...p} className={ui.input} value={value.neighborhood} onChange={set('neighborhood')} placeholder="Ej. El Poblado" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.neighborhood} onChange={set('neighborhood')} placeholder="Barrio del consultorio" disabled={disabled} />}
       </Field>
       <Field label="Celular (opcional)" error={errors.phone} help="Aparece si tu agenda no está disponible.">
-        {(p) => <input {...p} className={ui.input} value={value.phone} onChange={set('phone')} inputMode="tel" placeholder="300 123 4567" autoComplete="tel-national" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.phone} onChange={set('phone')} inputMode="tel" placeholder="Número de celular" autoComplete="tel-national" disabled={disabled} />}
       </Field>
       <Field label="Dirección (opcional)" error={errors.address} help="Déjala vacía si atiendes en línea." className="sm:col-span-2">
-        {(p) => <input {...p} className={ui.input} value={value.address} onChange={set('address')} placeholder="Ej. Calle 10 # 43D-25, consultorio 504" autoComplete="street-address" disabled={disabled} />}
+        {(p) => <input {...p} className={ui.input} value={value.address} onChange={set('address')} placeholder="Dirección del consultorio" autoComplete="street-address" disabled={disabled} />}
       </Field>
     </div>
   );

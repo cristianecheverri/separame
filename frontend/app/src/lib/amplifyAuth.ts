@@ -50,8 +50,9 @@ export function createAmplifyAuth(config: AppConfig): AuthClient {
     async completeNewPassword(password) {
       return stepOf(await confirmSignIn({ challengeResponse: password }));
     },
-    async signUp(email, password) {
-      const out = await signUp({ username: email, password, options: { userAttributes: { email }, autoSignIn: true } });
+    async signUp(email, password, extra) {
+      const clientMetadata = extra?.referralCode ? { referralCode: extra.referralCode } : undefined;
+      const out = await signUp({ username: email, password, options: { userAttributes: { email }, autoSignIn: true, clientMetadata } });
       return out.nextStep.signUpStep === 'CONFIRM_SIGN_UP' ? 'confirm' : 'done';
     },
     async confirmSignUp(email, code) {

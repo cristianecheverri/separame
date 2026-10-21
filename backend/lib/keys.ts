@@ -78,6 +78,21 @@ export const MIGRATION_PK = 'MIGRATION';
 export const MIGRATION_PREFIX = 'MIGRATION#';
 export const migrationKey = (id: string) => ({ PK: MIGRATION_PK, SK: `${MIGRATION_PREFIX}${id}` });
 
+/** Booking idempotency marker: a retried public booking returns the appointment it already created (TTL). */
+export const bookingIdempotencyKey = (proId: string, key: string) => ({ PK: `IDEMP#${proId}#${key}`, SK: 'IDEMP' });
+
 export const emailKey = (key: string) => ({ PK: `EMAIL#${key}`, SK: 'SENT' });
 export const suppressKey = (email: string) => ({ PK: `SUPPRESS#${email.trim().toLowerCase()}`, SK: 'SUPPRESS' });
 export const rateKey = (scope: string, id: string, window: string) => ({ PK: `RATE#${scope}#${id}#${window}`, SK: 'RATE' });
+
+// ── Referrals ──────────────────────────────────────────────────────────────
+
+/** Referral code → professional (uniqueness via conditional put; codes never change). */
+export const refCodeKey = (code: string) => ({ PK: `REFCODE#${code}`, SK: 'REFCODE' });
+/** One record per account that signed up with this professional's link, on the referrer's partition. */
+export const REFERRAL_PREFIX = 'REFERRAL#';
+export const referralKey = (referrerProId: string, referredProId: string) => ({ PK: proPk(referrerProId), SK: `${REFERRAL_PREFIX}${referredProId}` });
+/** One reward per referred account: written (conditionally) in the transaction that grants it. Never expires. */
+export const refRewardKey = (referredProId: string) => ({ PK: `REFREWARD#${referredProId}`, SK: 'REFREWARD' });
+/** Code a sign-up came with (Cognito clientMetadata → pre sign-up trigger), keyed by email hash (TTL). */
+export const refSignupKey = (emailHash: string) => ({ PK: `REFSIGNUP#${emailHash}`, SK: 'REFSIGNUP' });

@@ -15,6 +15,7 @@ import { log } from '../lib/logger';
 import { ownerKey, profileKey, settingsKey, slugKey, subKey, trialKey } from '../lib/keys';
 import { sha256Hex } from '../lib/tokens';
 import { defaultPrice } from './prices';
+import { ensureReferralCode, onboardingReferralOp, resolveOnboardingReferral } from './referrals';
 import { toPublicService } from './services';
 import { loadSubItem, requireWritable, subIndexAttrs, subscriptionStatus, type SubItem } from './subscriptions';
 
@@ -107,6 +108,8 @@ export async function onboard(user: AuthUser, input: OnboardingRequest, now: Dat
 
   const hash = trialHash(user.email);
   const [trialUsed, price] = await Promise.all([getItem(trialKey(hash), true), defaultPrice(now)]);
+  // Referral attribution: only brand-new accounts (no previous trial), never your own email.
+  const referral = await resolveOnboardingReferral({ email: user.email, referralCode: input.referralCode, trialUsed: !!trialUsed });
   const proId = newId(now);
   const at = now.toISOString();
   const trialEndsAt = trialUsed ? at : new Date(now.getTime() + TRIAL_DAYS * DAY_MS).toISOString();
@@ -118,6 +121,7 @@ export async function onboard(user: AuthUser, input: OnboardingRequest, now: Dat
   const sub: SubItem = {
     proId, trialEndsAt, trialStartedAt: at, paidUntil: null, priceVersionId: price.id,
     name: profile.name, slug: profile.slug, title: profile.title, email: profile.email, createdAt: at, updatedAt: at,
+    ...(referral ? { referredBy: { proId: referral.referrerProId, code: referral.code } } : {}),
   };
   const T = table();
   const items: TransactItem[] = [
@@ -130,12 +134,15 @@ export async function onboard(user: AuthUser, input: OnboardingRequest, now: Dat
   if (!trialUsed) {
     items.push({ Put: { TableName: T, Item: { ...trialKey(hash), proId, at }, ConditionExpression: 'attribute_not_exists(PK)' } });
   }
+  if (referral) items.push(onboardingReferralOp(referral, sub));
   try {
     await transactWrite(items);
   } catch (err) {
     slugOrConflict(err, 1, 0);
   }
-  log.info('pro onboarded', { proId, trialGranted: !trialUsed });
+  log.info('pro onboarded', { proId, trialGranted: !trialUsed, referredBy: referral?.referrerProId });
+  // The pro's own referral code, derived from the slug at creation (best effort: GET /me/referrals retries it).
+  await ensureReferralCode(proId, now).catch((err) => log.warn('referral code not created at onboarding', { proId, err }));
   return { profile, subscription: subscriptionStatus(sub, now), publicUrl: publicUrl(profile.slug) };
 }
 

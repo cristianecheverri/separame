@@ -1,6 +1,8 @@
 import { cancelBookingSchema, rescheduleBookingSchema } from '../../../shared/schemas';
 import { ApiError, createApiHandler, ok, parseBody, pathParam, sourceIp } from '../../lib/http';
 import { hitRateLimit, RATE_RULES } from '../../lib/rate-limit';
+import { manageTokenFor } from '../../lib/tokens';
+import { clientIcsFile, manageUrl } from '../../mail/client-ics';
 import {
   bookingSummary, cancelAppointment, canClientChange, confirmAttendance, managedResponse, moveAppointment, resolveManageToken,
   toAppointment,
@@ -13,7 +15,9 @@ import { assertBookable, loadSubscription } from '../../services/subscriptions';
  * account). Changes close CLIENT_CHANGE_CUTOFF_MIN before the start. Cancel
  * works even if the professional's plan expired; reschedule needs an active
  * agenda (it is a new booking). "Sí, voy" (confirm attendance) works until
- * the start, also with an expired plan.
+ * the start, also with an expired plan. The .ics route is a plain download
+ * (the confirmation screen links to it): `data:` URLs fail in iOS Safari and
+ * in-app browsers.
  */
 export const handler = createApiHandler({
   'GET /public/appointments/{token}': async (event) => {
@@ -21,6 +25,23 @@ export const handler = createApiHandler({
     const appt = await resolveManageToken(pathParam(event, 'token'), now);
     const pro = await requireProfile(appt.proId);
     return ok(managedResponse(toAppointment(appt), pro, now));
+  },
+
+  'GET /public/appointments/{token}/ics': async (event) => {
+    const now = new Date();
+    const appt = await resolveManageToken(pathParam(event, 'token'), now);
+    const pro = await requireProfile(appt.proId);
+    const link = manageUrl(await manageTokenFor(pro.id, appt.id, appt.end));
+    const file = clientIcsFile(toAppointment(appt), pro, link);
+    return {
+      statusCode: 200,
+      headers: {
+        'content-type': 'text/calendar; charset=utf-8',
+        'content-disposition': `attachment; filename="${file.filename}"`,
+        'cache-control': 'no-store',
+      },
+      body: file.content,
+    };
   },
 
   'POST /public/appointments/{token}/cancel': async (event) => {

@@ -1,10 +1,11 @@
 import { log } from '../../lib/logger';
 import { sendDueReminders, sendRenewalNotices } from '../../services/jobs';
+import { publishLanding } from '../../services/landing';
 import { processMigrations } from '../../services/migrations';
 
 /**
  * The single recurring job (EventBridge Scheduler, every 10 minutes):
- * 24 h reminders, renewal notices and price migrations. Each step is bounded
+ * 24 h reminders, renewal notices, price migrations and the landing's prices. Each step is bounded
  * and isolated — one failing step doesn't block the others; leftovers run on
  * the next tick.
  */
@@ -27,4 +28,6 @@ export const handler = async (): Promise<void> => {
   await step('reminders', () => sendDueReminders(now, BUDGET.reminders));
   await step('renewals', () => sendRenewalNotices(now, BUDGET.renewals));
   await step('migrations', () => processMigrations(now, BUDGET.migrations));
+  // Two HEAD requests when nothing changed; re-renders / after a deploy or a price change.
+  await step('landing', () => publishLanding({ now }));
 };

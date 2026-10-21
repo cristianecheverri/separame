@@ -4,12 +4,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type ProfileResponse, type UpsertServiceRequest } from '@shared/api';
 import { TRIAL_DAYS } from '@shared/subscription';
 import { DEFAULT_RULES, DEFAULT_SCHEDULE } from '@shared/availability';
-import { formatCop, formatDuration } from '@shared/format';
+import { formatDuration } from '@shared/format';
 import { onboardingSchema, upsertServiceSchema } from '@shared/schemas';
+import { clearReferralCode, storedReferralCode } from '../referrals/storedCode';
 import { slugify } from '@shared/slug';
 import { Wordmark } from '../../components/layout/Wordmark';
 import { downloadQr, QrTile } from '../../components/ShareQr';
-import { Chip } from '../../components/ui/Chip';
 import { cx } from '../../components/ui/cx';
 import { Field } from '../../components/ui/Field';
 import { CloseIcon, CopyIcon } from '../../components/ui/icons';
@@ -25,7 +25,9 @@ import { toDraft, toSchedule, scheduleErrors } from '../availability/scheduleMod
 import { WeeklyScheduleEditor } from '../availability/WeeklyScheduleEditor';
 import { emptyProfile, ProfileFields, type ProfileForm } from '../profile/ProfileFields';
 import { SlugField, slugReady, useSlugCheck } from '../profile/SlugField';
-import { DURATIONS } from '../services/durations';
+import { durationProblem } from '../services/durations';
+import { DurationPicker } from '../services/DurationPicker';
+import { listPriceText } from '../services/PriceDisplayField';
 
 const STEP_KEY = 'separame:onboarding-step';
 const TOTAL = 5;
@@ -142,7 +144,9 @@ export function OnboardingPage() {
     const parsed = onboardingSchema.safeParse({ ...form, phone: form.phone.trim() ? form.phone : null });
     if (!parsed.success) return setErrors({ slug: parsed.error.issues[0]?.message ?? 'Revisa tus datos.' });
     void run(async () => {
-      const res = await api.post<ProfileResponse>(apiPaths.onboarding(), parsed.data);
+      // Referral attribution (features/referrals/storedCode.ts): the server ignores bad or own codes.
+      const res = await api.post<ProfileResponse>(apiPaths.onboarding(), { ...parsed.data, referralCode: storedReferralCode() ?? undefined });
+      clearReferralCode();
       session.set(STEP_KEY, '3');
       setPublicUrl(res.publicUrl);
       await qc.invalidateQueries({ queryKey: keys.me });
@@ -151,6 +155,8 @@ export function OnboardingPage() {
   };
 
   const addService = () => {
+    const durationError = durationProblem(svc.durationMin);
+    if (durationError) return setErrors({ service: durationError });
     const parsed = upsertServiceSchema.safeParse({ name: svc.name, durationMin: svc.durationMin, priceCop: parseCopInput(svc.price), description: '', visible: true });
     if (!parsed.success) return setErrors({ service: parsed.error.issues[0]?.message ?? 'Revisa el servicio.' });
     setErrors({});
@@ -160,6 +166,8 @@ export function OnboardingPage() {
 
   const submitServices = (e: FormEvent) => {
     e.preventDefault();
+    const durationError = svc.name.trim() ? durationProblem(svc.durationMin) : null;
+    if (durationError) return setErrors({ service: durationError });
     const pending = svc.name.trim() ? [...services, { name: svc.name.trim(), durationMin: svc.durationMin, priceCop: parseCopInput(svc.price) }] : services;
     if (pending.length === 0) return setErrors({ service: 'Agrega al menos un servicio.' });
     void run(async () => {
@@ -225,7 +233,7 @@ export function OnboardingPage() {
                   <span className="flex flex-col grow min-w-0">
                     <span className="font-bold text-[15px]">{s.name}</span>
                     <span className="text-[13px] text-muted">
-                      {formatDuration(s.durationMin)} · {formatCop(s.priceCop)}
+                      {formatDuration(s.durationMin)} · {listPriceText(s)}
                     </span>
                   </span>
                   <button type="button" aria-label={`Quitar ${s.name}`} onClick={() => setServices(services.filter((_, j) => j !== i))} className={ui.iconBtn}>
@@ -236,19 +244,8 @@ export function OnboardingPage() {
             </ul>
           )}
           <div className="rounded-[18px] border-2 border-dashed border-line-strong p-4 flex flex-col gap-4">
-            <Field label="Nombre del servicio">{(p) => <input {...p} className={ui.input} value={svc.name} onChange={(e) => setSvc({ ...svc, name: e.target.value })} placeholder="Ej. Valoración" />}</Field>
-            <div className="flex flex-col gap-2" role="group" aria-labelledby="ob-duration">
-              <div id="ob-duration" className={ui.label}>
-                Duración
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {DURATIONS.map((m) => (
-                  <Chip key={m} selected={svc.durationMin === m} onClick={() => setSvc({ ...svc, durationMin: m })}>
-                    {m} min
-                  </Chip>
-                ))}
-              </div>
-            </div>
+            <Field label="Nombre del servicio">{(p) => <input {...p} className={ui.input} value={svc.name} onChange={(e) => setSvc({ ...svc, name: e.target.value })} placeholder="Nombre del servicio" />}</Field>
+            <DurationPicker key={services.length} value={svc.durationMin} onChange={(durationMin) => setSvc({ ...svc, durationMin })} />
             <Field label="Precio de referencia" help="Déjalo vacío para mostrar «Sin costo».">
               {(p) => (
                 <div className="flex gap-2">

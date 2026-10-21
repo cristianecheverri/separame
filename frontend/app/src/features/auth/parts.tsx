@@ -124,7 +124,7 @@ export function EmailField({ value, onChange, autoFocus }: { value: string; onCh
         autoFocus={autoFocus}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="tu@correo.com"
+        placeholder="Tu correo"
         className={ui.input}
       />
     </div>

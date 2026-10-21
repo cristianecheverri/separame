@@ -1,5 +1,5 @@
 import type { PublicProfile } from '@shared/api';
-import { formatCop, formatDuration } from '@shared/format';
+import { formatDuration, formatServicePrice, priceDisplayOf, type PricedItem } from '@shared/format';
 import { joinDot, PRICE_NOTE } from '../lib/text';
 import { StepTitle } from './FlowChrome';
 
@@ -8,12 +8,25 @@ interface Props {
   serviceId: string | null;
   onPick: (serviceId: string) => void;
   titleRef: preact.Ref<HTMLHeadingElement>;
+  titleAs: 'h1' | 'h2';
 }
 
-export function StepService({ profile, serviceId, onPick, titleRef }: Props) {
+/** "$60.000" / "Sin costo" in bold, "Precio a convenir" smaller on two lines, nothing when the pro hides it. */
+function ServicePrice({ service }: { service: PricedItem }) {
+  const text = formatServicePrice(service);
+  if (!text) return null;
+  const agreed = priceDisplayOf(service) === 'agreed';
+  return (
+    <span class={agreed ? 'font-semibold text-[13px] text-ink-2 shrink-0 text-right max-w-[84px] leading-[1.25]' : 'font-bold text-[15px] shrink-0 whitespace-nowrap'}>
+      {text}
+    </span>
+  );
+}
+
+export function StepService({ profile, serviceId, onPick, titleRef, titleAs }: Props) {
   return (
     <section class="flex flex-col gap-3">
-      <StepTitle titleRef={titleRef} class="mb-1">¿Qué necesitas?</StepTitle>
+      <StepTitle titleRef={titleRef} as={titleAs} class="mb-1">¿Qué necesitas?</StepTitle>
       {profile.services.map((service) => {
         const selected = service.id === serviceId;
         return (
@@ -32,9 +45,9 @@ export function StepService({ profile, serviceId, onPick, titleRef }: Props) {
             />
             <span class="flex flex-col gap-[3px] grow min-w-0">
               <span class="font-bold text-[17px]">{service.name}</span>
-              <span class="text-[14px] text-muted">{joinDot(formatDuration(service.durationMin), service.description)}</span>
+              <span class="text-[14px] text-muted line-clamp-2">{joinDot(formatDuration(service.durationMin), service.description)}</span>
             </span>
-            <span class="font-bold text-[15px] shrink-0 whitespace-nowrap">{formatCop(service.priceCop)}</span>
+            <ServicePrice service={service} />
           </button>
         );
       })}

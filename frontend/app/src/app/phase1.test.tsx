@@ -9,8 +9,8 @@ describe('attendance', () => {
   it('shows client confirmation on upcoming appointments', async () => {
     await renderApp('/');
     await screen.findByText('Carlos Mejía');
-    expect(screen.getAllByText('Confirmó').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Sin confirmar').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Confirmó asistencia').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Sin respuesta').length).toBeGreaterThan(0);
   });
 
   it('marks a started appointment and lets you undo', async () => {
@@ -71,9 +71,10 @@ describe('waitlist', () => {
     expect(await screen.findByRole('heading', { name: 'Lista de espera (4)' })).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Ver todas' }));
     expect(await screen.findByRole('button', { name: 'Lista de espera', pressed: true })).toBeInTheDocument();
-    await user.click(screen.getAllByRole('button', { name: 'Quitar' })[0]);
+    await user.click(screen.getAllByRole('button', { name: /^Más acciones para / })[0]);
+    await user.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Quitar de la lista' }));
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Sí, quitar' }));
-    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Quitar' })).toHaveLength(3));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /^Más acciones para / })).toHaveLength(3));
   });
 });
 

@@ -3,7 +3,7 @@ import { DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand,
 import { mockClient } from 'aws-sdk-client-mock';
 import { clientKeyOf } from '../../../shared/clients';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { serviceKey, settingsKey, slugKey, subKey, profileKey } from '../../lib/keys';
+import { apptKey, bookingIdempotencyKey, serviceKey, settingsKey, slugKey, subKey, profileKey } from '../../lib/keys';
 import { verifyManageToken } from '../../lib/tokens';
 import {
   apiEvent, canceledTx, parse, PRO_ID, profile, service, settings, setTestEnv, subItem,
@@ -18,6 +18,7 @@ const ssm = mockClient(SSMClient);
 const NOW = new Date('2026-10-19T13:00:00.000Z');
 
 function mockPro(sub = subItem()) {
+  ddb.on(GetCommand).resolves({});
   ddb.on(GetCommand, { Key: slugKey(profile.slug) }).resolves({ Item: { proId: PRO_ID } });
   ddb.on(GetCommand, { Key: subKey(PRO_ID) }).resolves({ Item: sub });
   ddb.on(GetCommand, { Key: serviceKey(PRO_ID, service.id) }).resolves({ Item: { ...serviceKey(PRO_ID, service.id), ...service } });
@@ -28,7 +29,7 @@ function mockPro(sub = subItem()) {
   ddb.on(TransactWriteCommand).resolves({});
 }
 
-const booking = (start: string) => apiEvent('POST /public/pros/{slug}/bookings', {
+const booking = (start: string, extra: Record<string, unknown> = {}) => apiEvent('POST /public/pros/{slug}/bookings', {
   path: { slug: profile.slug },
   body: {
     serviceId: service.id,
@@ -36,8 +37,12 @@ const booking = (start: string) => apiEvent('POST /public/pros/{slug}/bookings',
     client: { name: 'Mariana Gómez', email: 'Mariana@Correo.com', phone: '300 123 4567' },
     consent: true,
     turnstileToken: 'XXXX.DUMMY.TOKEN',
+    ...extra,
   },
 });
+
+const IDEMPOTENCY_KEY = '3f1c2b9e-6a4d-4f7e-9b1a-2c3d4e5f6a7b';
+const START = '2026-10-21T15:00:00.000Z';
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
@@ -72,7 +77,7 @@ describe('POST /public/pros/{slug}/bookings', () => {
       createdBy: 'client',
       revision: 0,
       clientConfirmation: 'pending',
-      clientKey: clientKeyOf({ email: 'mariana@correo.com', phone: '' }),
+      clientKey: clientKeyOf({ email: '', phone: '3001234567' }),
       client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
     });
     expect(appt.GSI2SK).toBe(`2026-10-20T15:00:00.000Z#${PRO_ID}#${appt.id}`);
@@ -129,5 +134,90 @@ describe('POST /public/pros/{slug}/bookings', () => {
     const res = await handler(booking('2026-10-21T15:00:00.000Z'));
     expect(res.statusCode).toBe(429);
     expect(parse(res).error.code).toBe('rate_limited');
+  });
+
+  it('books with the phone only: no reminder index (no email to send it to), rate limits keyed by phone', async () => {
+    mockPro();
+    const res = await handler(apiEvent('POST /public/pros/{slug}/bookings', {
+      path: { slug: profile.slug },
+      body: {
+        serviceId: service.id, start: START, client: { name: 'Mariana Gómez', phone: '300 123 4567' }, consent: true, turnstileToken: 'XXXX.DUMMY.TOKEN',
+      },
+    }));
+    expect(res.statusCode).toBe(201);
+    const appt = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems![0].Put!.Item!;
+    expect(appt.client).toEqual({ name: 'Mariana Gómez', email: '', phone: '3001234567' });
+    expect(appt.GSI2PK).toBeUndefined();
+    expect(appt.clientKey).toBe(clientKeyOf({ email: '', phone: '3001234567' }));
+    const scopes = ddb.commandCalls(UpdateCommand).map((c) => String(c.args[0].input.Key!.PK).split('#')[1]);
+    expect(scopes).toEqual(['book-ip', 'book-phone']);
+    expect(parse(res).booking.client).toEqual({ name: 'Mariana Gómez', email: '' });
+  });
+
+  describe('idempotency', () => {
+    const storedAppt = (overrides: Record<string, unknown> = {}) => ({
+      ...apptKey(PRO_ID, 'appt-1'), id: 'appt-1', proId: PRO_ID, serviceId: service.id, serviceName: service.name, durationMin: 30,
+      priceCop: service.priceCop, start: START, end: '2026-10-21T15:30:00.000Z', status: 'confirmed',
+      client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' }, createdBy: 'client',
+      createdAt: NOW.toISOString(), updatedAt: NOW.toISOString(), lockBufferMin: 10, ...overrides,
+    });
+
+    it('writes a 24 h marker in the same transaction as the appointment', async () => {
+      mockPro();
+      const res = await handler(booking(START, { idempotencyKey: IDEMPOTENCY_KEY }));
+      expect(res.statusCode).toBe(201);
+      const tx = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems!;
+      expect(tx).toHaveLength(10);
+      const marker = tx[1].Put!;
+      expect(marker.Item).toEqual({
+        ...bookingIdempotencyKey(PRO_ID, IDEMPOTENCY_KEY), apptId: tx[0].Put!.Item!.id, start: START, serviceId: service.id,
+        ttl: NOW.getTime() / 1000 + 86_400,
+      });
+      expect(marker.ConditionExpression).toBe('attribute_not_exists(PK)');
+    });
+
+    it('returns the appointment a lost-response attempt already created instead of slot_taken', async () => {
+      mockPro();
+      ddb.on(GetCommand, { Key: bookingIdempotencyKey(PRO_ID, IDEMPOTENCY_KEY) })
+        .resolves({ Item: { apptId: 'appt-1', start: START, serviceId: service.id } });
+      ddb.on(GetCommand, { Key: apptKey(PRO_ID, 'appt-1') }).resolves({ Item: storedAppt() });
+      // The slot is busy now — with our own appointment.
+      ddb.on(QueryCommand).resolves({ Items: [storedAppt()] });
+      const res = await handler(booking(START, { idempotencyKey: IDEMPOTENCY_KEY }));
+      expect(res.statusCode).toBe(201);
+      expect(parse(res).booking).toMatchObject({ appointmentId: 'appt-1', start: START });
+      expect(verifyManageToken(parse(res).manageToken, 'link-secret', NOW)).toMatchObject({ ok: true, payload: { a: 'appt-1' } });
+      expect(ddb.commandCalls(TransactWriteCommand)).toHaveLength(0);
+    });
+
+    it('recovers when two copies of the same attempt race', async () => {
+      mockPro();
+      const markerKey = bookingIdempotencyKey(PRO_ID, IDEMPOTENCY_KEY);
+      ddb.on(GetCommand, { Key: markerKey })
+        .resolvesOnce({})
+        .resolves({ Item: { apptId: 'appt-1', start: START, serviceId: service.id } });
+      ddb.on(GetCommand, { Key: apptKey(PRO_ID, 'appt-1') }).resolves({ Item: storedAppt() });
+      ddb.on(TransactWriteCommand).rejects(canceledTx(['None', 'ConditionalCheckFailed']));
+      const res = await handler(booking(START, { idempotencyKey: IDEMPOTENCY_KEY }));
+      expect(res.statusCode).toBe(201);
+      expect(parse(res).booking.appointmentId).toBe('appt-1');
+    });
+
+    it('refuses a key reused for another slot', async () => {
+      mockPro();
+      ddb.on(GetCommand, { Key: bookingIdempotencyKey(PRO_ID, IDEMPOTENCY_KEY) })
+        .resolves({ Item: { apptId: 'appt-1', start: '2026-10-21T16:00:00.000Z', serviceId: service.id } });
+      ddb.on(GetCommand, { Key: apptKey(PRO_ID, 'appt-1') }).resolves({ Item: storedAppt({ start: '2026-10-21T16:00:00.000Z' }) });
+      const res = await handler(booking(START, { idempotencyKey: IDEMPOTENCY_KEY }));
+      expect(res.statusCode).toBe(409);
+      expect(parse(res).error.code).toBe('conflict');
+    });
+
+    it('validates the key format', async () => {
+      mockPro();
+      const res = await handler(booking(START, { idempotencyKey: 'not-a-uuid' }));
+      expect(res.statusCode).toBe(400);
+      expect(parse(res).error.fields).toHaveProperty('idempotencyKey');
+    });
   });
 });

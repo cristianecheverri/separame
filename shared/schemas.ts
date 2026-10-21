@@ -26,11 +26,28 @@ const name = (label: string, max = 80) =>
 
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email(CONTACT_MESSAGES.email)).pipe(z.string().max(254));
 
+const emailFormat = z.email();
+/** Optional email: '' (or missing) means none; anything else must be a valid email (same message). */
+export const optionalEmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .refine((email) => email === '' || emailFormat.safeParse(email).success, CONTACT_MESSAGES.email)
+  .pipe(z.string().max(254))
+  .default('');
+
 /** Colombian numbers: 10 digits (mobile 3xx, landline 60x). Same normalization as the booking page (contact.ts). */
 export const phoneSchema = z
   .string()
   .transform(normalizePhone)
   .pipe(z.string().regex(/^\d{10}$/, CONTACT_MESSAGES.phone));
+
+/** Optional phone (pro-created appointments): '' (or missing) means none. */
+export const optionalPhoneSchema = z
+  .string()
+  .transform(normalizePhone)
+  .pipe(z.string().regex(/^(\d{10})?$/, CONTACT_MESSAGES.phone))
+  .default('');
 
 export const slugSchema = z
   .string()
@@ -47,9 +64,17 @@ export const slugSchema = z
     if (problem) ctx.addIssue({ code: 'custom', message: messages[problem] });
   });
 
+/** Waitlist: the email is required (offers can only reach the client by email). */
 export const clientContactSchema = z.object({
   name: name('El nombre'),
   email: emailSchema,
+  phone: phoneSchema,
+});
+
+/** Public booking: the phone is required (the pro calls about the booking); the email is optional ('' = no client emails). */
+export const bookingClientSchema = z.object({
+  name: name('El nombre'),
+  email: optionalEmailSchema,
   phone: phoneSchema,
 });
 
@@ -64,9 +89,10 @@ export const availabilityQuerySchema = z.object({
 export const createBookingSchema = z.object({
   serviceId: z.string().min(1).max(64),
   start: isoInstantSchema,
-  client: clientContactSchema,
+  client: bookingClientSchema,
   consent: z.literal(true, { message: 'Debes autorizar el tratamiento de tus datos' }),
   turnstileToken: z.string().min(1).max(4096),
+  idempotencyKey: z.uuid().optional(),
 });
 
 export const cancelBookingSchema = z.object({
@@ -79,7 +105,7 @@ export const rescheduleBookingSchema = z.object({
 
 // ── Professional ───────────────────────────────────────────────────────────
 
-export const onboardingSchema = z.object({
+export const updateProfileSchema = z.object({
   name: name('El nombre'),
   title: name('La profesión', 60),
   city: name('La ciudad', 60),
@@ -89,17 +115,38 @@ export const onboardingSchema = z.object({
   slug: slugSchema,
 });
 
-export const updateProfileSchema = onboardingSchema;
+/** Onboarding = the profile + an optional referral code (shape-checked in the service; a bad one is ignored, never an error). */
+export const onboardingSchema = updateProfileSchema.extend({
+  referralCode: z.string().trim().toLowerCase().max(80).optional().catch(undefined),
+});
 
 export const slugCheckQuerySchema = z.object({ slug: z.string().max(80) });
 
+const DURATION_RANGE_MESSAGE = 'La duración va de 5 a 480 minutos (8 horas).';
+const DURATION_STEP_MESSAGE = 'La duración va en múltiplos de 5 minutos.';
+
 export const upsertServiceSchema = z.object({
   name: name('El nombre del servicio', 60),
-  durationMin: z.number().int().min(5).max(480).refine((m) => m % 5 === 0, 'La duración va en múltiplos de 5 minutos'),
+  durationMin: z
+    .number({ message: DURATION_RANGE_MESSAGE })
+    .int(DURATION_STEP_MESSAGE)
+    .min(5, DURATION_RANGE_MESSAGE)
+    .max(480, DURATION_RANGE_MESSAGE)
+    .refine((m) => m % 5 === 0, DURATION_STEP_MESSAGE),
   priceCop: z.number().int().min(0).max(100_000_000).nullable(),
+  priceDisplay: z.enum(['fixed', 'free', 'agreed', 'hidden']).optional(),
   description: z.string().trim().max(200).default(''),
   visible: z.boolean().default(true),
-});
+})
+  .refine((s) => s.priceDisplay !== 'fixed' || (s.priceCop !== null && s.priceCop > 0), {
+    message: 'Escribe el valor de referencia',
+    path: ['priceCop'],
+  })
+  // Normalized output: priceDisplay always set (older clients: derived from priceCop) and priceCop only with `fixed`.
+  .transform((s) => {
+    const priceDisplay = s.priceDisplay ?? (s.priceCop ? 'fixed' : 'free');
+    return { ...s, priceDisplay, priceCop: priceDisplay === 'fixed' ? s.priceCop : null };
+  });
 
 const timeRangeSchema = z
   .object({ start: hhmmSchema, end: hhmmSchema })
@@ -147,8 +194,8 @@ export const createAppointmentSchema = z.object({
   start: isoInstantSchema,
   client: z.object({
     name: name('El nombre'),
-    email: z.union([z.literal(''), emailSchema]).default(''),
-    phone: phoneSchema,
+    email: optionalEmailSchema,
+    phone: optionalPhoneSchema,
   }),
 });
 

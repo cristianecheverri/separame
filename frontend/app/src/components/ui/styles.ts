@@ -7,9 +7,9 @@ export const ui = {
   label: 'text-[14px] font-semibold',
   help: 'text-[12px] text-muted',
   input:
-    'h-12 w-full min-w-0 rounded-[14px] border-2 border-line bg-white px-[14px] text-[15px] text-ink outline-none focus-visible:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(11,110,79,0.15)] disabled:bg-surface disabled:text-muted disabled:cursor-not-allowed',
+    'h-12 w-full min-w-0 rounded-[14px] border-2 border-line bg-white px-[14px] text-[16px] text-ink outline-none focus-visible:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(11,110,79,0.15)] disabled:bg-surface disabled:text-muted disabled:cursor-not-allowed',
   textarea:
-    'w-full min-w-0 rounded-[14px] border-2 border-line bg-white px-[14px] py-3 text-[15px] text-ink resize-none outline-none focus-visible:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(11,110,79,0.15)] disabled:bg-surface disabled:cursor-not-allowed',
+    'w-full min-w-0 rounded-[14px] border-2 border-line bg-white px-[14px] py-3 text-[16px] text-ink resize-none outline-none focus-visible:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(11,110,79,0.15)] disabled:bg-surface disabled:cursor-not-allowed',
   prefix: 'h-12 rounded-[14px] bg-surface px-[14px] flex items-center font-semibold text-[15px] shrink-0',
   btnPrimary:
     'h-[46px] px-5 rounded-full bg-primary text-white font-bold text-[14px] inline-flex gap-2 items-center justify-center hover:bg-primary-dark transition-colors disabled:bg-disabled disabled:text-muted disabled:cursor-not-allowed',

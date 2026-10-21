@@ -73,7 +73,7 @@ export function AdminShell() {
           <MenuIcon size={22} />
         </button>
       </header>
-      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} label="Menú de administración" className="bg-ink text-white px-4 py-5 flex flex-col gap-[6px]">
+      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} label="Menú de administración" className="bg-ink text-white px-4 pt-[max(20px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] flex flex-col gap-[6px]">
         <div className="flex items-center justify-between pl-3 pb-4">
           <AdminBrand size={22} />
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú" className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10">

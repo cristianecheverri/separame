@@ -46,6 +46,17 @@ describe('computeStats', () => {
     expect(stats.returningClients).toBe(1); // c1
   });
 
+  it('name-only appointments count as appointments but not as clients', () => {
+    const withNameOnly = computeStats({
+      from: '2026-10-19', to: '2026-10-25', schedule: DEFAULT_SCHEDULE, rules: DEFAULT_RULES, blocks: [], now: NOW,
+      appointments: [...week, appt('a6', '2026-10-23T14:00:00.000Z', { createdBy: 'pro', clientKey: '' })],
+      firstSeen: new Map([['c1', '2026-09-01T00:00:00.000Z'], ['c2', '2026-10-19T12:00:00.000Z']]),
+    });
+    expect(withNameOnly.appointments).toBe(stats.appointments + 1);
+    expect(withNameOnly.newClients).toBe(stats.newClients);
+    expect(withNameOnly.returningClients).toBe(stats.returningClients);
+  });
+
   it('revenue, services, weekdays (Mon = 0) and source', () => {
     expect(stats.estimatedRevenueCop).toBe(50000 + 120000 + 50000);
     expect(stats.byService).toEqual([

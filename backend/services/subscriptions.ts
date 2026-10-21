@@ -32,6 +32,12 @@ export interface SubItem {
   lastPayment?: Pick<Payment, 'method' | 'amountCop' | 'paidAt' | 'status'>;
   /** Id of the "Ya pagué" notice awaiting review (at most one). */
   pendingNoticeId?: string;
+  /** Own immutable referral code (link /r/<code>); set on onboarding, or lazily for older accounts. */
+  referralCode?: string;
+  /** Set when this account signed up with someone's referral link. */
+  referredBy?: { proId: string; code: string };
+  /** When this account's first qualifying payment earned its referrer the free month. */
+  referralRewardedAt?: ISOInstant;
   createdAt: ISOInstant;
   updatedAt: ISOInstant;
 }

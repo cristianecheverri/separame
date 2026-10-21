@@ -7,7 +7,9 @@
  *   state=empty         no free slots in the window (waitlist card)
  *   services=1          profile with a single service (3-step flow)
  *   fail=<code>         first booking/reschedule attempt fails with that code
- *                       (slot_taken, agenda_unavailable, validation, captcha_failed, network)
+ *                       (slot_taken, agenda_unavailable, validation, captcha_failed, network);
+ *                       fail=lost creates the booking but loses the response (network
+ *                       error) — the retry gets the same appointment (idempotency key)
  *   delay=<ms>          artificial latency (default 350)
  * Manage tokens: late (cutoff passed), cancelled, confirmed (attendance already
  * confirmed), invalid (404); any other token is the demo appointment.
@@ -20,6 +22,8 @@ import { CLIENT_CHANGE_CUTOFF_MIN } from '@shared/api';
 import { computeAvailability, type Interval } from '@shared/availability';
 import { addMinutes, bogotaDate, bogotaTime, toInstant } from '@shared/time';
 import { ApiError, type ApiClient } from '../lib/api';
+import { eventFromBooking, icsDataUrl } from '../lib/calendar';
+import { SITE_PATHS } from '@shared/infra';
 import { MOCK_NOW, MOCK_PROFILE, MOCK_RULES, MOCK_SCHEDULE, MOCK_TODAY, mockBusy } from './fixtures';
 
 interface StoredAppointment {
@@ -39,6 +43,7 @@ function summary(profile: PublicProfile, serviceId: string, start: string, clien
     serviceName: service.name,
     durationMin: service.durationMin,
     priceCop: service.priceCop,
+    priceDisplay: service.priceDisplay,
     client,
     pro: {
       slug: profile.slug, name: profile.name, title: profile.title,
@@ -87,6 +92,7 @@ export function createMockApi(params: URLSearchParams): ApiClient {
     }],
   ]);
 
+  const byIdempotencyKey = new Map<string, { booking: BookingSummary; manageToken: string }>();
   const wait = () => new Promise((resolve) => setTimeout(resolve, delayMs));
   const takeFailure = (): void => {
     if (!failure) return;
@@ -129,14 +135,25 @@ export function createMockApi(params: URLSearchParams): ApiClient {
     async createBooking(slug, body: CreateBookingRequest) {
       await wait();
       if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
+      const replayed = body.idempotencyKey ? byIdempotencyKey.get(body.idempotencyKey) : undefined;
+      if (replayed) return replayed;
       if (failure === 'slot_taken') busy.push({ start: body.start, end: addMinutes(body.start, 30) });
-      takeFailure();
+      if (failure !== 'lost') takeFailure();
       const id = `appt-${appointments.size + 1}`;
       const booking = summary({ ...MOCK_PROFILE, slug }, body.serviceId, body.start, { name: body.client.name, email: body.client.email }, id);
       const token = `mock-${id}`;
       appointments.set(token, { booking, canChange: true });
       busy.push({ start: booking.start, end: booking.end });
-      return { booking, manageToken: token };
+      const result = { booking, manageToken: token };
+      if (body.idempotencyKey) byIdempotencyKey.set(body.idempotencyKey, result);
+      if (failure === 'lost') {
+        failure = null;
+        throw new ApiError('network', 'Sin conexión');
+      }
+      return result;
+    },
+    icsUrl(token) {
+      return icsDataUrl(eventFromBooking(find(token).booking, `${location.origin}${SITE_PATHS.manage}${encodeURIComponent(token)}`));
     },
     async getAppointment(token): Promise<ManagedAppointmentResponse> {
       await wait();

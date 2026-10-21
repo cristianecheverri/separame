@@ -12,8 +12,11 @@ export interface AuthClient {
   signIn(email: string, password: string): Promise<SignInStep>;
   /** First sign-in of an invited user (temporary password). */
   completeNewPassword(password: string): Promise<SignInStep>;
-  /** Returns 'confirm' when Cognito emailed a code. */
-  signUp(email: string, password: string): Promise<'confirm' | 'done'>;
+  /**
+   * Returns 'confirm' when Cognito emailed a code. `referralCode` (from /r/<code>) travels as Cognito
+   * clientMetadata: the pre sign-up trigger keeps it for onboarding, even across devices.
+   */
+  signUp(email: string, password: string, options?: { referralCode?: string | null }): Promise<'confirm' | 'done'>;
   /** Returns true when the user can be signed in automatically (`autoSignIn`). */
   confirmSignUp(email: string, code: string): Promise<boolean>;
   autoSignIn(): Promise<SignInStep>;

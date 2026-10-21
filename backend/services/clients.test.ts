@@ -3,17 +3,19 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { clientKeyOf } from '../../shared/clients';
 import { apptKey, clientRecordKey, settingsKey } from '../lib/keys';
 import { conditionalFailure, PRO_ID, setTestEnv } from '../testing/fixtures';
 import type { AppointmentItem } from './appointments';
 import {
-  aggregate, applyToClient, clientDetail, deleteClient, listClients, mergeAppointments, syncClientFromAppointment, type ClientItem,
+  aggregate, applyToClient, clientDetail, CLIENTS_BACKFILL_VERSION, deleteClient, listClients, mergeAppointments, syncClientFromAppointment,
+  type ClientItem,
 } from './clients';
 
 setTestEnv();
 const ddb = mockClient(DynamoDBDocumentClient);
 const NOW = new Date('2026-10-21T15:00:00.000Z');
-const KEY = 'aaaaaaaaaaaaaaaaaaaaaaaa';
+const KEY = clientKeyOf({ email: '', phone: '3001234567' });
 
 const appt = (id: string, start: string, extra: Partial<AppointmentItem> = {}): AppointmentItem => ({
   id, proId: PRO_ID, serviceId: 's', serviceName: 'Valoración', durationMin: 30, priceCop: 60000, start, end: start, status: 'confirmed',
@@ -24,7 +26,7 @@ const appt = (id: string, start: string, extra: Partial<AppointmentItem> = {}): 
 
 const history = [
   appt('a1', '2026-09-10T15:00:00.000Z', { outcome: 'attended' }),
-  appt('a2', '2026-09-20T15:00:00.000Z', { outcome: 'no_show', createdAt: '2026-09-15T00:00:00.000Z', client: { name: 'Mariana G.', email: 'mariana@correo.com', phone: '3009999999' } }),
+  appt('a2', '2026-09-20T15:00:00.000Z', { outcome: 'no_show', createdAt: '2026-09-15T00:00:00.000Z', client: { name: 'Mariana G.', email: 'mariana.g@correo.com', phone: '3001234567' } }),
   appt('a3', '2026-10-01T15:00:00.000Z', { status: 'cancelled' }),
   appt('a4', '2026-11-05T15:00:00.000Z'),
 ];
@@ -47,7 +49,7 @@ describe('aggregates', () => {
     expect(item.nextAppointmentAt).toBe('2026-11-05T15:00:00.000Z');
     expect(item.firstSeenAt).toBe('2026-09-01T00:00:00.000Z');
     // Latest booking's contact wins.
-    expect(item).toMatchObject({ name: 'Mariana G.', phone: '3009999999' });
+    expect(item).toMatchObject({ name: 'Mariana G.', email: 'mariana.g@correo.com' });
   });
 
   it('is idempotent: re-applying the same events changes nothing', () => {
@@ -99,14 +101,15 @@ describe('listClients', () => {
     ddb.on(QueryCommand, { IndexName: 'lsi1-start' }).resolves({ Items: history });
     const records: ClientItem[] = [
       { ...mergeAppointments(undefined, PRO_ID, KEY, history, NOW), updatedAt: '2026-10-20T00:00:00.000Z' },
-      { ...mergeAppointments(undefined, PRO_ID, 'b'.repeat(24), [appt('b1', '2026-10-02T15:00:00.000Z', { clientKey: 'b'.repeat(24), client: { name: 'Óscar Ruiz', email: '', phone: '3105550000' } })], NOW), updatedAt: '2026-10-21T00:00:00.000Z' },
+      { ...mergeAppointments(undefined, PRO_ID, clientKeyOf({ email: '', phone: '3105550000' }), [appt('b1', '2026-10-02T15:00:00.000Z', { clientKey: clientKeyOf({ email: '', phone: '3105550000' }), client: { name: 'Óscar Ruiz', email: '', phone: '3105550000' } })], NOW), updatedAt: '2026-10-21T00:00:00.000Z' },
     ];
     ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': `PRO#${PRO_ID}`, ':p': 'CLIENT#' } }).resolves({ Items: records });
 
     const all = await listClients(PRO_ID, undefined, NOW);
     expect(ddb.commandCalls(PutCommand)).toHaveLength(1); // one client in the history → one record
     const flag = ddb.commandCalls(UpdateCommand).find((c) => c.args[0].input.Key!.SK === settingsKey(PRO_ID).SK)!;
-    expect(flag.args[0].input.UpdateExpression).toBe('SET clientsBackfilledAt = :at');
+    expect(flag.args[0].input.UpdateExpression).toBe('SET clientsBackfilledAt = :at, clientsBackfillVersion = :v');
+    expect(flag.args[0].input.ExpressionAttributeValues).toMatchObject({ ':v': CLIENTS_BACKFILL_VERSION });
     expect(all.map((c) => c.name)).toEqual(['Óscar Ruiz', 'Mariana G.']);
     expect((all[0] as unknown as Record<string, unknown>).appts).toBeUndefined();
 
@@ -114,10 +117,34 @@ describe('listClients', () => {
     expect((await listClients(PRO_ID, '310 555', NOW)).map((c) => c.name)).toEqual(['Óscar Ruiz']);
   });
 
-  it('skips the backfill when SETTINGS is already flagged', async () => {
-    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) }).resolves({ Item: { clientsBackfilledAt: '2026-10-01T00:00:00.000Z' } });
+  it('skips the backfill when SETTINGS is flagged with the current version', async () => {
+    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) })
+      .resolves({ Item: { clientsBackfilledAt: '2026-10-01T00:00:00.000Z', clientsBackfillVersion: CLIENTS_BACKFILL_VERSION } });
     await listClients(PRO_ID, undefined, NOW);
     expect(ddb.commandCalls(QueryCommand).some((c) => c.args[0].input.IndexName)).toBe(false);
+  });
+});
+
+describe('re-keying backfill (v1 email-first keys → phone-first)', () => {
+  it('re-keys appointments and waitlist entries, rebuilds the record, carries notes over and drops the old record', async () => {
+    const oldKey = clientKeyOf({ email: 'mariana@correo.com', phone: '' });
+    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) }).resolves({ Item: { clientsBackfilledAt: '2026-10-01T00:00:00.000Z' } });
+    ddb.on(QueryCommand, { IndexName: 'lsi1-start' }).resolves({ Items: history.map((a) => ({ ...a, clientKey: oldKey })) });
+    ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': `PRO#${PRO_ID}`, ':p': 'WAIT#' } })
+      .resolves({ Items: [{ id: 'w1', clientKey: oldKey, client: { name: 'Mariana', email: 'mariana@correo.com', phone: '3001234567' } }] });
+    const oldRecord = { ...mergeAppointments(undefined, PRO_ID, oldKey, history, NOW), notes: 'Prefiere la mañana' };
+    const newRecord = mergeAppointments(undefined, PRO_ID, KEY, history, NOW);
+    ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': `PRO#${PRO_ID}`, ':p': 'CLIENT#' } }).resolves({ Items: [oldRecord, newRecord] });
+
+    await listClients(PRO_ID, undefined, NOW);
+
+    const updates = ddb.commandCalls(UpdateCommand).map((c) => c.args[0].input);
+    expect(updates.filter((u) => String(u.Key!.SK).startsWith('APPT#')).map((u) => u.ExpressionAttributeValues![':k'])).toEqual([KEY, KEY, KEY, KEY]);
+    expect(updates.find((u) => u.Key!.SK === 'WAIT#w1')!.ExpressionAttributeValues![':k']).toBe(KEY);
+    expect(ddb.commandCalls(PutCommand).map((c) => c.args[0].input.Item!.SK)).toEqual([`CLIENT#${KEY}`]);
+    const notes = updates.find((u) => u.Key!.SK === `CLIENT#${KEY}`)!;
+    expect(notes.ExpressionAttributeValues![':n']).toBe('Prefiere la mañana');
+    expect(ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems![0].Delete!.Key).toEqual(clientRecordKey(PRO_ID, oldKey));
   });
 });
 

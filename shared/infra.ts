@@ -9,18 +9,25 @@
  *  PRO#<proId>                      PROFILE                    ProProfile
  *  PRO#<proId>                      SUB                        subscription (trialEndsAt, paidUntil, priceVersionId, group?,
  *                                                              trialStartedAt, renewalNoticeFor, pendingNoticeId, lastPayment,
+ *                                                              referralCode, referredBy { proId, code }, referralRewardedAt,
  *                                                              and copies of name/slug/title/email so the admin list is one query)
  *                                                              GSI1PK=SUBS  GSI1SK=<graceUntil>#<proId>  (admin list)
- *  PRO#<proId>                      SERVICE#<serviceId>        Service
+ *  PRO#<proId>                      SERVICE#<serviceId>        Service (+ priceDisplay: fixed | free | agreed | hidden; missing = legacy,
+ *                                                              derived from priceCop. Appointments snapshot it too.)
  *  PRO#<proId>                      SETTINGS                   { schedule, rules }
  *  PRO#<proId>                      BLOCK#<blockId>            Block
  *  PRO#<proId>                      APPT#<apptId>              Appointment (+ lockBufferMin, lastChangedBy)
  *                                                              LSI1SK=APPT#<startISO>           (pro calendar by date)
  *                                                              GSI2PK=REMIND#<bogotaDate>  GSI2SK=<remindAtISO>#<proId>#<apptId>
- *                                                              (sparse: only while the 24 h reminder is pending)
+ *                                                              (sparse: only while the 24 h reminder is pending and the client gave an email)
  *  PRO#<proId>                      PAY#<createdAtISO>#<id>    Payment (admin-recorded or "Ya pagué" notice, with audit)
  *                                                              approved only: GSI1PK=PAYMENTS#<YYYY-MM>  GSI1SK=<paidAt>#<proId>#<id>
  *                                                              (monthly revenue in one query)
+ *                                                              source `referral` = "Mes gratis por referido" (courtesy, amount 0, 1 month)
+ *  PRO#<referrerId>                 REFERRAL#<referredProId>   ReferralRecord: an account that signed up with this pro's link
+ *                                                              (state registered | rewarded | saved; name/title snapshot, trialEndsAt,
+ *                                                              paidMonths, paidAt, rewardedAt, appliedAt). `saved` = month waiting for
+ *                                                              the referrer's next approved payment (no counter: these items ARE the pending months)
  *  PRO#<proId>                      CALSYNC                    { token, invitesEnabled, createdAt } — calendar sync settings
  *  PRO#<proId>                      CLIENT#<clientKey>         ClientRecord (aggregates from appointment events + notes)
  *  PRO#<proId>                      WAIT#<entryId>             WaitlistEntry (TTL: last date + 1 day)
@@ -30,21 +37,32 @@
  *  LOCK#<proId>#<bogotaDate>        <HH:mm>                    { apptId } — 5-min double-booking locks (TTL: slot end + 7 days)
  *  OWNER#<cognitoSub>               OWNER                      { proId } — Cognito user → professional
  *  TRIAL#<sha256(email)>            TRIAL                      { proId, at } — one free trial per email
+ *  REFCODE#<code>                   REFCODE                    { proId, createdAt } — referral code → referrer (immutable, conditional put)
+ *  REFREWARD#<referredProId>        REFREWARD                  { referrerProId, paymentId, outcome, at } — one reward per referred
+ *                                                              account, written conditionally in the payment transaction (never expires)
+ *  REFSIGNUP#<sha256(email)>        REFSIGNUP                  { code, at } — referral code a sign-up came with (pre sign-up trigger,
+ *                                                              Cognito clientMetadata), read at onboarding (TTL: 30 days)
  *  PRICE                            PRICE#<priceId>            PriceVersion
  *  MIGRATION                        MIGRATION#<id>             PriceMigration
  *  EMAIL#<key>                      SENT                       email idempotency marker (TTL)
+ *  IDEMP#<proId>#<idempotencyKey>   IDEMP                      { apptId, start, serviceId } — public booking retry marker,
+ *                                                              written in the booking transaction (TTL: 24 h)
  *  SUPPRESS#<email>                 SUPPRESS                   bounced / complained address
  *  RATE#<scope>#<id>#<window>       RATE                       anti-spam counter (TTL)
  *
  *  Internal attributes: CLIENT items keep `appts` (≤ 500 per client; older ones summed into
  *  `archived`), `contactAt` and an optimistic `version`; WAIT items keep `offeredAt`; SETTINGS keeps
- *  `clientsBackfilledAt` (lazy client backfill done). A deleted client's appointments keep
+ *  `clientsBackfilledAt` + `clientsBackfillVersion` (lazy client backfill done). A deleted client's appointments keep
  *  `clientKey = 'deleted'` with the contact scrubbed.
  *
- *  clientKey = first 24 hex chars of sha256(normalized email), or of sha256('tel:' + phone) when
- *  there's no email (helper `clientKeyOf` in shared/clients.ts).
+ *  clientKey = first 24 hex chars of sha256('tel:' + phone), or of sha256(normalized email) when
+ *  there's no phone (helper `clientKeyOf` in shared/clients.ts; phone first because it is required
+ *  on public bookings and the email is optional); '' when the pro created the appointment with a
+ *  name only — such appointments have no CLIENT record (never keyed by name). SETTINGS keeps
+ *  `clientsBackfillVersion`: when it is behind CLIENTS_BACKFILL_VERSION the next clients-page visit
+ *  re-keys appointments/WAIT items and rebuilds the records (notes carried over).
  *
- *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, WAIT (after its last date), and LOCK once its slot is in the
+ *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, IDEMP, REFSIGNUP, WAIT (after its last date), and LOCK once its slot is in the
  *  past (a past slot can never be booked again, so the lock is no longer needed). Appointments,
  *  payments and subscriptions never expire.
  */
@@ -116,6 +134,9 @@ export const SITE_PATHS = {
   notFound: '/404.html',
   /** HTML shell the profile pages are generated from (built by frontend/booking). */
   bookingTemplate: '_templates/booking.html',
+  /** Landing (/) template with price slots; the backend renders it into `landingPage` (see backend/services/landing.ts). */
+  landingTemplate: '_templates/landing.html',
+  landingPage: 'index.html',
   /** Stable (unhashed) booking entry points referenced by every profile page. */
   bookingScript: '/b/booking.js',
   bookingStyles: '/b/booking.css',

@@ -34,6 +34,16 @@ describe('computeDay', () => {
     expect(times(computeDay('2026-10-20', ctx()).slots)[0]).toBe('11:00');
   });
 
+  it('today after the last start (within the notice) is over, not full', () => {
+    const evening = new Date(toInstant('2026-10-20', '16:30'));
+    expect(computeDay('2026-10-20', ctx({ now: evening }))).toMatchObject({ closed: 'past', slots: [] });
+  });
+
+  it('a day whose upcoming starts are all taken stays open (full → waitlist)', () => {
+    const allAfternoon = [{ start: toInstant('2026-10-20', '11:00'), end: toInstant('2026-10-20', '18:00') }];
+    expect(computeDay('2026-10-20', ctx({ busy: allAfternoon }))).toMatchObject({ closed: null, slots: [] });
+  });
+
   it('a 45-min service never overflows the range end', () => {
     const slots = times(computeDay('2026-10-22', ctx({ durationMin: 45 })).slots);
     expect(slots).toContain('11:00');

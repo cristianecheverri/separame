@@ -81,7 +81,7 @@ export function SearchBox({ value, onChange, placeholder, id }: { value: string;
         <path d="M20 20l-3.5-3.5" />
       </svg>
       <span className="sr-only">{placeholder}</span>
-      <input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="border-0 outline-none focus-visible:outline-none text-[14px] grow min-w-0 bg-transparent text-ink" />
+      <input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="border-0 outline-none focus-visible:outline-none text-[16px] grow min-w-0 bg-transparent text-ink" />
     </label>
   );
 }

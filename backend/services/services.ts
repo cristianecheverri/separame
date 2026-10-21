@@ -1,5 +1,6 @@
 import { DeleteCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { PublicService, UpsertServiceRequest } from '../../shared/api';
+import { priceDisplayOf } from '../../shared/format';
 import type { Service } from '../../shared/types';
 import { ddb, getItem, isConditionalFailure, queryAll, stripKeys, table, type Item } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
@@ -15,13 +16,25 @@ import { proPk, SERVICE_PREFIX, serviceKey } from '../lib/keys';
 const MAX_SERVICES = 50;
 
 export function toService(item: Item): Service {
-  const { id, name, durationMin, priceCop, description, visible, order } = stripKeys<Service>(item);
-  return { id, name, durationMin, priceCop: priceCop ?? null, description: description ?? '', visible: visible !== false, order: order ?? 0 };
+  const { id, name, durationMin, priceCop, priceDisplay, description, visible, order } = stripKeys<Service>(item);
+  // Items saved before the price option exist without `priceDisplay`: null/0 keeps showing "Sin costo".
+  const display = priceDisplayOf({ priceCop: priceCop ?? null, priceDisplay });
+  return {
+    id, name, durationMin, priceCop: display === 'fixed' ? (priceCop ?? null) : null, priceDisplay: display,
+    description: description ?? '', visible: visible !== false, order: order ?? 0,
+  };
 }
 
+/** The static /<slug> page and the public API carry the display option, so the booking page shows it without a call. */
 export const toPublicService = (s: Service): PublicService => ({
-  id: s.id, name: s.name, durationMin: s.durationMin, priceCop: s.priceCop, description: s.description,
+  id: s.id, name: s.name, durationMin: s.durationMin, priceCop: s.priceCop, priceDisplay: priceDisplayOf(s), description: s.description,
 });
+
+/** Stored price fields: priceCop only with `fixed` (older clients without priceDisplay: derived). */
+function priceFields(input: Pick<UpsertServiceRequest, 'priceCop' | 'priceDisplay'>): Pick<Service, 'priceCop' | 'priceDisplay'> {
+  const priceDisplay = priceDisplayOf(input);
+  return { priceDisplay, priceCop: priceDisplay === 'fixed' ? input.priceCop : null };
+}
 
 export async function listServices(proId: string, consistent = false): Promise<Service[]> {
   const items = await queryAll({
@@ -50,7 +63,7 @@ export async function createService(proId: string, input: UpsertServiceRequest, 
     id: newId(now),
     name: input.name,
     durationMin: input.durationMin,
-    priceCop: input.priceCop,
+    ...priceFields(input),
     description: input.description ?? '',
     visible: input.visible ?? true,
     order: existing.reduce((max, s) => Math.max(max, s.order), 0) + 1,
@@ -67,11 +80,11 @@ export async function updateService(proId: string, serviceId: string, input: Ups
     const res = await ddb.send(new UpdateCommand({
       TableName: table(),
       Key: serviceKey(proId, serviceId),
-      UpdateExpression: 'SET #n = :n, durationMin = :d, priceCop = :p, description = :desc, visible = :v, updatedAt = :u',
+      UpdateExpression: 'SET #n = :n, durationMin = :d, priceCop = :p, priceDisplay = :pd, description = :desc, visible = :v, updatedAt = :u',
       ConditionExpression: 'attribute_exists(PK)',
       ExpressionAttributeNames: { '#n': 'name' },
       ExpressionAttributeValues: {
-        ':n': input.name, ':d': input.durationMin, ':p': input.priceCop, ':desc': input.description ?? '',
+        ':n': input.name, ':d': input.durationMin, ':p': priceFields(input).priceCop, ':pd': priceFields(input).priceDisplay, ':desc': input.description ?? '',
         ':v': input.visible ?? true, ':u': now.toISOString(),
       },
       ReturnValues: 'ALL_NEW',

@@ -45,6 +45,8 @@ export interface ApiClient {
   confirmAppointment(token: string): Promise<BookingMutationResponse>;
   joinWaitlist(slug: string, body: JoinWaitlistRequest): Promise<JoinWaitlistResponse>;
   leaveWaitlist(token: string): Promise<LeaveWaitlistResponse>;
+  /** Where the confirmation screen's "Descargar archivo .ics" link points (a download, not a fetch). */
+  icsUrl(token: string): string;
 }
 
 const TIMEOUT_MS = 15_000;
@@ -84,6 +86,7 @@ export function createHttpApi(baseUrl: string): ApiClient {
     confirmAppointment: (token) => request(apiPaths.publicConfirm(token), 'POST', {}),
     joinWaitlist: (slug, body) => request(apiPaths.publicWaitlist(slug), 'POST', body),
     leaveWaitlist: (token) => request(apiPaths.publicLeaveWaitlist(token), 'POST', {}),
+    icsUrl: (token) => baseUrl + apiPaths.publicAppointmentIcs(token),
   };
 }
 

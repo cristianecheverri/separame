@@ -11,7 +11,7 @@ import type { Holiday } from './holidays';
 import type { SlugProblem } from './slug';
 import type {
   Appointment, AppointmentOutcome, AvailabilitySettings, Block, ClientConfirmation, ClientContact, ClientRecord, ISODate,
-  ISOInstant, Payment, PaymentInstructions, PaymentMethod, PriceMigration, ProStats, WaitlistEntry, PricePackage, PriceVersion, PriceVersionStatus, ProProfile, Service, SubscriptionState,
+  ISOInstant, Payment, PaymentInstructions, PaymentMethod, PriceDisplay, PriceMigration, ProStats, WaitlistEntry, PricePackage, PriceVersion, PriceVersionStatus, ProProfile, Referral, Service, SubscriptionState,
   SubscriptionStatus, BookingRules, WeeklySchedule,
 } from './types';
 
@@ -67,6 +67,8 @@ export interface PublicService {
   name: string;
   durationMin: number;
   priceCop: number | null;
+  /** Missing in pages generated before the option existed (derive with `priceDisplayOf`). */
+  priceDisplay?: PriceDisplay;
   description: string;
 }
 
@@ -112,6 +114,12 @@ export interface CreateBookingRequest {
   /** Ley 1581 authorization checkbox — must be true. */
   consent: true;
   turnstileToken: string;
+  /**
+   * Random UUID the page generates once per booking attempt (kept with the
+   * draft). A retry with the same key — e.g. after the response was lost —
+   * gets the appointment it already created instead of `slot_taken`.
+   */
+  idempotencyKey?: string;
 }
 
 export interface BookingSummary {
@@ -125,6 +133,7 @@ export interface BookingSummary {
   serviceName: string;
   durationMin: number;
   priceCop: number | null;
+  priceDisplay?: PriceDisplay;
   client: { name: string; email: string };
   pro: {
     slug: string;
@@ -164,6 +173,9 @@ export interface BookingMutationResponse {
   booking: BookingSummary;
 }
 
+// GET /public/appointments/{token}/ics — the client's calendar file as a `text/calendar`
+// attachment (Content-Disposition), linked from the confirmation screen.
+
 /** POST /public/appointments/{token}/confirm — idempotent; allowed until the start. Returns BookingMutationResponse. */
 export const CONFIRM_ACTION_PARAM = 'action=confirm';
 
@@ -193,6 +205,36 @@ export interface LeaveWaitlistResponse {
   pro: { slug: string; name: string };
 }
 
+// ── Public prices (landing) ────────────────────────────────────────────────
+
+/** One package of the active default price version, ready to display. */
+export interface PublicPricePackage {
+  months: number;
+  amountCop: number;
+  /** Monthly equivalent, rounded to the peso ($50.000 / 12 → 4167). */
+  monthlyCop: number;
+  /** Months saved against the version's headline monthly price (0 when none). */
+  freeMonths: number;
+  /** The cheapest per-month multi-month package, when it really is cheaper ("El más conveniente"). */
+  best: boolean;
+}
+
+/** GET /public/prices — no auth, no input; built by `toPublicPrices` (shared/landing.ts). */
+export interface PublicPricesResponse {
+  priceVersionId: string;
+  /** Display name of the version, e.g. "Fundador". */
+  name: string;
+  /** Founder pricing ("Precio fundador"): kept while the professional keeps renewing. */
+  founder: boolean;
+  currency: 'COP';
+  /** Headline "desde $5.000 al mes". */
+  fromMonthlyCop: number;
+  /** Free trial length for new professionals (TRIAL_DAYS). */
+  trialDays: number;
+  /** Multi-month packages by length, a 1-month package (if any) last. */
+  packages: PublicPricePackage[];
+}
+
 // ── Professional ───────────────────────────────────────────────────────────
 
 export interface MeResponse {
@@ -205,7 +247,7 @@ export interface MeResponse {
   publicUrl: string | null;
 }
 
-export interface OnboardingRequest {
+export interface UpdateProfileRequest {
   name: string;
   title: string;
   city: string;
@@ -215,7 +257,14 @@ export interface OnboardingRequest {
   slug: string;
 }
 
-export type UpdateProfileRequest = OnboardingRequest;
+export interface OnboardingRequest extends UpdateProfileRequest {
+  /**
+   * Referral code from /r/<code> (kept by the signup page in localStorage). Optional: when missing,
+   * the code the pre sign-up trigger saved for this email (Cognito clientMetadata) is used. An
+   * invalid code, your own email or an email that already had a trial never fails onboarding: it is ignored.
+   */
+  referralCode?: string;
+}
 
 export interface ProfileResponse {
   profile: ProProfile;
@@ -238,7 +287,10 @@ export interface ServicesResponse {
 export interface UpsertServiceRequest {
   name: string;
   durationMin: number;
+  /** Required (> 0) with `priceDisplay: 'fixed'`; ignored (stored as null) otherwise. */
   priceCop: number | null;
+  /** Optional for older clients: missing → `fixed` when priceCop > 0, else `free`. */
+  priceDisplay?: PriceDisplay;
   description: string;
   visible: boolean;
 }
@@ -422,6 +474,33 @@ export interface PaymentNoticeResponse {
   payment: Payment;
 }
 
+// ── Referrals ──────────────────────────────────────────────────────────────
+
+/** GET /public/referrals/{code} — who invited you ("Te invitó Dra. Laura Pérez"); 404 for unknown codes. */
+export interface PublicReferralResponse {
+  code: string;
+  name: string;
+  initials: string;
+}
+
+/** A professional's referral program summary (panel card, Suscripción section, admin detail). */
+export interface ReferralSummary {
+  code: string;
+  /** https://separame.app/r/<code> */
+  url: string;
+  /** Free months earned in total (applied + saved). */
+  monthsEarned: number;
+  /** Months already added to the plan. */
+  monthsApplied: number;
+  /** Months saved while the plan was expired: added on the next approved payment. */
+  monthsPending: number;
+  /** Newest first. */
+  referrals: Referral[];
+}
+
+/** GET /me/referrals — creates the code on first use for accounts that predate the program. */
+export type ReferralsResponse = ReferralSummary;
+
 // ── Admin ──────────────────────────────────────────────────────────────────
 
 export interface AdminStatsResponse {
@@ -466,6 +545,10 @@ export interface AdminProDetailResponse {
   payments: Payment[];
   upcomingAppointments: number;
   trialStartedAt: ISOInstant;
+  /** Who invited this professional (null = signed up without a referral link). */
+  referredBy: { proId: string; name: string; code: string } | null;
+  /** Their own referral program; `code` is null until they first open it in the panel. */
+  referrals: Omit<ReferralSummary, 'code' | 'url'> & { code: string | null; url: string | null };
 }
 
 /** Methods an admin can record by hand (card/PSE only arrive through a future gateway). */
@@ -553,8 +636,12 @@ export const apiPaths = {
   publicCancel: (token: string) => `/public/appointments/${enc(token)}/cancel`,
   publicReschedule: (token: string) => `/public/appointments/${enc(token)}/reschedule`,
   publicConfirm: (token: string) => `/public/appointments/${enc(token)}/confirm`,
+  /** The client's .ics file (a plain navigation/download, not a fetch). */
+  publicAppointmentIcs: (token: string) => `/public/appointments/${enc(token)}/ics`,
   publicWaitlist: (slug: string) => `/public/pros/${enc(slug)}/waitlist`,
   publicLeaveWaitlist: (token: string) => `/public/waitlist/${enc(token)}/leave`,
+  publicPrices: () => '/public/prices',
+  publicReferral: (code: string) => `/public/referrals/${enc(code)}`,
 
   me: () => '/me',
   onboarding: () => '/me/onboarding',
@@ -585,6 +672,7 @@ export const apiPaths = {
   publicCalendarFeed: (token: string) => `/public/calendar/${enc(token)}.ics`,
   billing: () => '/me/billing',
   paymentNotices: () => '/me/billing/payment-notices',
+  referrals: () => '/me/referrals',
 
   adminStats: () => '/admin/stats',
   adminSubscriptions: (q?: ListSubscriptionsQuery) => `/admin/subscriptions${q ? qs({ ...q }) : ''}`,

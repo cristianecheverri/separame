@@ -29,27 +29,36 @@ function MailIcon() {
   );
 }
 
-/** Llamar / WhatsApp / Correo pill links for a client. */
-export function ContactActions({ client, size = 'md' }: { client: Pick<ClientContact, 'name' | 'email' | 'phone'>; size?: 'sm' | 'md' }) {
+/**
+ * Llamar / WhatsApp / Correo pill links for a client (only the ones it has data for).
+ * `compact` (inside an `@container`) shows icon-only circles while that container is narrower than 380 px.
+ */
+export function ContactActions({ client, size = 'md', compact = false }: { client: Pick<ClientContact, 'name' | 'email' | 'phone'>; size?: 'sm' | 'md'; compact?: boolean }) {
+  const phone = client.phone?.trim();
+  const email = client.email?.trim();
+  if (!phone && !email) return null;
   const cls = cx(
-    'rounded-full border-2 border-line-strong bg-white text-ink hover:text-ink hover:border-ink-2 inline-flex items-center gap-2 font-bold no-underline transition-colors',
+    'rounded-full border-2 border-line-strong bg-white text-ink hover:text-ink hover:border-ink-2 inline-flex items-center justify-center gap-2 font-bold no-underline transition-colors shrink-0',
     size === 'sm' ? 'h-9 px-3 text-[13px] hit-44' : 'h-[46px] px-[18px] text-[14px]',
+    compact && (size === 'sm' ? 'w-9 px-0 gap-0 @min-[380px]:w-auto @min-[380px]:px-3 @min-[380px]:gap-2' : 'w-[46px] px-0 gap-0 @min-[380px]:w-auto @min-[380px]:px-[18px] @min-[380px]:gap-2'),
+    '[&>svg]:shrink-0',
   );
+  const label = (text: string) => <span className={compact ? 'sr-only @min-[380px]:not-sr-only' : undefined}>{text}</span>;
   return (
-    <div className="flex flex-wrap gap-2">
-      {client.phone && (
+    <div className={cx('flex gap-2', compact ? 'flex-nowrap' : 'flex-wrap')}>
+      {phone && (
         <>
-          <a className={cls} href={telHref(client.phone)} aria-label={`Llamar a ${client.name}`}>
-            <PhoneIcon /> Llamar
+          <a className={cls} href={telHref(phone)} aria-label={`Llamar a ${client.name}`}>
+            <PhoneIcon /> {label('Llamar')}
           </a>
-          <a className={cls} href={whatsappHref(client.phone)} target="_blank" rel="noreferrer" aria-label={`Escribir a ${client.name} por WhatsApp`}>
-            <ChatIcon /> WhatsApp
+          <a className={cls} href={whatsappHref(phone)} target="_blank" rel="noreferrer" aria-label={`Escribir a ${client.name} por WhatsApp`}>
+            <ChatIcon /> {label('WhatsApp')}
           </a>
         </>
       )}
-      {client.email && (
-        <a className={cls} href={`mailto:${client.email}`} aria-label={`Escribir un correo a ${client.name}`}>
-          <MailIcon /> Correo
+      {email && (
+        <a className={cls} href={`mailto:${email}`} aria-label={`Escribir un correo a ${client.name}`}>
+          <MailIcon /> {label('Correo')}
         </a>
       )}
     </div>

@@ -4,6 +4,10 @@
 }
 
 @layer base {
+  /* Light-only design: keep form controls, scrollbars and autofill light under a dark OS theme. */
+  :root {
+    color-scheme: light;
+  }
   /* The mockups have no CSS reset: text runs at the browser's `normal` line height. */
   html {
     line-height: normal;

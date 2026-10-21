@@ -1,25 +1,8 @@
 import type { PublicProfile } from '@shared/api';
 import { CalendarX, Check, Phone } from '../components/icons';
-import { Avatar, Frame, MadeWith, OUTLINE_BUTTON, Wordmark } from '../components/ui';
+import { Frame, MadeWith, OUTLINE_BUTTON, Wordmark } from '../components/ui';
+import { ProfileBand } from './FlowChrome';
 import { formatPhone, telHref } from '../lib/text';
-
-/** Green profile band (single-page / unavailable mockups). */
-export function ProfileBand({ profile }: { profile: PublicProfile }) {
-  return (
-    <div class="safe-top bg-primary text-white rounded-b-[28px] shrink-0">
-      <div class="pt-[18px] px-5 pb-7 flex flex-col gap-[22px]">
-        <Wordmark onGreen />
-        <div class="flex gap-3.5 items-center">
-          <Avatar initials={profile.initials} size={64} tone="yellow" />
-          <div class="flex flex-col gap-1 min-w-0">
-            <h1 class="m-0 font-display font-extrabold text-[26px] leading-[1.1] tracking-[-0.5px] break-words">{profile.name}</h1>
-            <div class="text-[15px] text-mint">{[profile.title, profile.city].filter(Boolean).join(' · ')}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /** Subscription expired — never mention payment. */
 export function Unavailable({ profile }: { profile: PublicProfile }) {

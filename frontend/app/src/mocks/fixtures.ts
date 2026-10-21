@@ -32,7 +32,7 @@ export const lauraProfile: ProProfile = {
 export const services: Service[] = [
   { id: 'svc-valoracion', name: 'Valoración', durationMin: 30, priceCop: 60000, description: 'Primera vez', visible: true, order: 0 },
   { id: 'svc-limpieza', name: 'Limpieza dental', durationMin: 45, priceCop: 120000, description: 'Incluye profilaxis', visible: true, order: 1 },
-  { id: 'svc-control', name: 'Control', durationMin: 15, priceCop: null, description: 'Pacientes en tratamiento', visible: true, order: 2 },
+  { id: 'svc-control', name: 'Control', durationMin: 15, priceCop: null, priceDisplay: 'agreed', description: 'Pacientes en tratamiento', visible: true, order: 2 },
   { id: 'svc-blanqueamiento', name: 'Blanqueamiento', durationMin: 60, priceCop: 450000, description: 'Aclara hasta tres tonos', visible: false, order: 3 },
 ];
 
@@ -105,22 +105,26 @@ const CLIENTS = [
 const SVC_CYCLE = ['svc-valoracion', 'svc-control', 'svc-limpieza', 'svc-control', 'svc-valoracion'];
 const TIMES = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
 
+/** Online bookings require the phone; the email is optional, so many clients have none. */
+const withoutEmail = (a: Appointment): Appointment => ({ ...a, client: { ...a.client, email: '' } });
+
 function fill(date: ISODate, count: number, offset: number): Appointment[] {
-  return Array.from({ length: count }, (_, i) =>
-    appt(date, TIMES[i], CLIENTS[(offset + i) % CLIENTS.length], SVC_CYCLE[(offset + i) % SVC_CYCLE.length]),
-  );
+  return Array.from({ length: count }, (_, i) => {
+    const a = appt(date, TIMES[i], CLIENTS[(offset + i) % CLIENTS.length], SVC_CYCLE[(offset + i) % SVC_CYCLE.length]);
+    return (offset + i) % 6 === 5 ? withoutEmail(a) : a;
+  });
 }
 
 export function trialAppointments(): Appointment[] {
   seq = 0;
   return [
     appt(TODAY, '08:00', 'Mariana Gómez', 'svc-valoracion', { clientConfirmation: 'confirmed', outcome: 'attended', outcomeAt: '2026-10-20T13:35:00.000Z' }),
-    appt(TODAY, '08:30', 'Juan Esteban Ruiz', 'svc-control', { createdBy: 'pro', clientConfirmation: 'confirmed' }),
+    withoutEmail(appt(TODAY, '08:30', 'Juan Esteban Ruiz', 'svc-control', { createdBy: 'pro', clientConfirmation: 'pending' })),
     appt(TODAY, '10:00', 'Sofía Castaño', 'svc-limpieza', { createdAt: '2026-10-20T12:10:00.000Z', updatedAt: '2026-10-20T12:10:00.000Z', clientConfirmation: 'pending' }),
     appt(TODAY, '11:00', 'Carlos Mejía', 'svc-valoracion', { clientConfirmation: 'confirmed' }),
     appt(TODAY, '14:00', 'Valentina Osorio', 'svc-control', { status: 'cancelled', cancelledBy: 'client', updatedAt: '2026-10-19T22:00:00.000Z' }),
     appt(TODAY, '15:00', 'Daniela Herrera', 'svc-limpieza', { clientConfirmation: 'confirmed' }),
-    appt(TODAY, '16:00', 'Tomás Rendón', 'svc-control', { createdBy: 'pro', clientConfirmation: 'pending' }),
+    withoutEmail(appt(TODAY, '16:00', 'Tomás Rendón', 'svc-control', { createdBy: 'pro', clientConfirmation: 'pending' })),
     ...fill(addDays(TODAY, 1), 5, 0),
     ...fill(addDays(TODAY, 2), 7, 5),
     ...fill(addDays(TODAY, 3), 3, 12),
@@ -131,6 +135,8 @@ export function trialAppointments(): Appointment[] {
     ...fill(addDays(TODAY, -4), 3, 10),
     ...fill(addDays(TODAY, -6), 2, 2),
     ...history(),
+    // Booked by the pro with a name only (email and phone are optional in the panel): no client record.
+    appt(addDays(TODAY, 1), '17:00', 'Rosa Elena Pérez', 'svc-control', { createdBy: 'pro', client: { name: 'Rosa Elena Pérez', email: '', phone: '' }, clientKey: '' }),
   ].map((a) => {
     if (a.start >= MOCK_NOW || a.status !== 'confirmed') return a;
     const withReminder = { ...a, reminderSentAt: addMinutesIso(a.start, -24 * 60) };

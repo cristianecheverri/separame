@@ -1,14 +1,15 @@
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { ClientDetailResponse } from '../../shared/api';
+import { clientKeyOf, NO_CLIENT_KEY } from '../../shared/clients';
 import type { AppointmentOutcome, AppointmentStatus, ClientRecord, ISOInstant } from '../../shared/types';
 import {
   batchGetAll, ddb, getItem, isConditionalFailure, queryAll, table, transactWrite, type Item,
 } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
-import { apptKey, CLIENT_PREFIX, clientRecordKey, proPk, settingsKey } from '../lib/keys';
+import { apptKey, CLIENT_PREFIX, clientRecordKey, proPk, settingsKey, waitKey } from '../lib/keys';
 import { log } from '../lib/logger';
 import { appointmentItemsBetween, getAppointmentItem, toAppointment, type AppointmentItem } from './appointments';
-import { deleteWaitlistEntriesOf } from './waitlist';
+import { deleteWaitlistEntriesOf, waitItems } from './waitlist';
 
 /**
  * Lightweight client history per professional (`PRO#<id> / CLIENT#<clientKey>`).
@@ -27,6 +28,10 @@ const MAX_REFS = 500;
 /** Scrubbed appointments (client deleted) carry this key and never feed a record. */
 export const DELETED_CLIENT_KEY = 'deleted';
 const DELETED_NAME = 'Cliente eliminado';
+
+/** Scrubbed appointments and name-only ones (pro-created without email/phone) feed no client record. */
+export const hasClientRecord = (appt: Pick<AppointmentItem, 'clientKey'>): boolean =>
+  appt.clientKey !== NO_CLIENT_KEY && appt.clientKey !== DELETED_CLIENT_KEY;
 const RETRIES = 4;
 
 interface ApptRef {
@@ -148,28 +153,112 @@ export async function applyToClient(proId: string, key: string, appts: Appointme
 /** Stream module: refresh the client record from the appointment's CURRENT state. */
 export async function syncClientFromAppointment(proId: string, apptId: string, now: Date = new Date()): Promise<void> {
   const appt = await getAppointmentItem(proId, apptId, true);
-  if (!appt || appt.clientKey === DELETED_CLIENT_KEY) return;
+  if (!appt || !hasClientRecord(appt)) return;
   await applyToClient(proId, appt.clientKey, [appt], now);
 }
 
-/** First visit to the clients page: build records from the whole appointment history (once). */
+/**
+ * Version of the client-record layout. Bump it to re-key and rebuild every
+ * pro's records on their next clients-page visit. v2: phone-first keys.
+ */
+export const CLIENTS_BACKFILL_VERSION = 2;
+
+interface BackfillState {
+  clientsBackfilledAt?: string;
+  clientsBackfillVersion?: number;
+}
+
+/** Stored `clientKey` → the one `clientKeyOf` gives today, for every appointment whose key changed. */
+async function rekeyAppointments(proId: string, appts: AppointmentItem[]): Promise<Map<string, string>> {
+  const renamed = new Map<string, string>();
+  for (const a of appts) {
+    if (a.clientKey === DELETED_CLIENT_KEY) continue;
+    const key = clientKeyOf(a.client);
+    if (key === a.clientKey) continue;
+    if (a.clientKey !== NO_CLIENT_KEY) renamed.set(a.clientKey, key);
+    await ddb.send(new UpdateCommand({
+      TableName: table(),
+      Key: apptKey(proId, a.id),
+      UpdateExpression: 'SET clientKey = :k',
+      ConditionExpression: 'attribute_exists(PK)',
+      ExpressionAttributeValues: { ':k': key },
+    })).catch((err) => {
+      if (!isConditionalFailure(err)) throw err;
+    });
+    a.clientKey = key;
+  }
+  return renamed;
+}
+
+async function rekeyWaitlist(proId: string): Promise<void> {
+  for (const w of await waitItems(proId)) {
+    const key = clientKeyOf(w.client);
+    if (key === w.clientKey) continue;
+    await ddb.send(new UpdateCommand({
+      TableName: table(),
+      Key: waitKey(proId, w.id),
+      UpdateExpression: 'SET clientKey = :k',
+      ConditionExpression: 'attribute_exists(PK)',
+      ExpressionAttributeValues: { ':k': key },
+    })).catch((err) => {
+      if (!isConditionalFailure(err)) throw err;
+    });
+  }
+}
+
+async function setNotes(proId: string, key: string, notes: string): Promise<void> {
+  await ddb.send(new UpdateCommand({
+    TableName: table(),
+    Key: clientRecordKey(proId, key),
+    UpdateExpression: 'SET notes = :n, version = if_not_exists(version, :zero) + :one',
+    ConditionExpression: 'attribute_exists(PK)',
+    ExpressionAttributeValues: { ':n': notes, ':zero': 0, ':one': 1 },
+  }));
+}
+
+/**
+ * First visit to the clients page (and again after a CLIENTS_BACKFILL_VERSION
+ * bump): re-keys appointments and waitlist entries with today's `clientKeyOf`,
+ * builds the records from the whole history, carries the notes of renamed
+ * records over and deletes them. Idempotent and safe to re-run.
+ */
 export async function ensureClientsBackfilled(proId: string, now: Date = new Date()): Promise<void> {
-  const settings = await getItem<{ clientsBackfilledAt?: string }>(settingsKey(proId), true);
-  if (settings?.clientsBackfilledAt) return;
+  const settings = await getItem<BackfillState>(settingsKey(proId), true);
+  if (settings?.clientsBackfilledAt && (settings.clientsBackfillVersion ?? 1) >= CLIENTS_BACKFILL_VERSION) return;
   const all = await appointmentItemsBetween(proId, '0000', '9999');
+  const renamed = await rekeyAppointments(proId, all);
+  await rekeyWaitlist(proId);
+
   const groups = new Map<string, AppointmentItem[]>();
   for (const a of all) {
-    if (a.clientKey === DELETED_CLIENT_KEY) continue;
+    if (!hasClientRecord(a)) continue;
     groups.set(a.clientKey, [...(groups.get(a.clientKey) ?? []), a]);
   }
   for (const [key, appts] of groups) await applyToClient(proId, key, appts, now);
+
+  const records = await queryAll<ClientItem>({
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :p)',
+    ExpressionAttributeValues: { ':pk': proPk(proId), ':p': CLIENT_PREFIX },
+    ConsistentRead: true,
+  }, 20_000);
+  const byKey = new Map(records.map((r) => [r.key, r]));
+  for (const [oldKey, newKey] of renamed) {
+    const old = byKey.get(oldKey);
+    if (!old || groups.has(oldKey)) continue;
+    const target = byKey.get(newKey);
+    const notes = [...new Set([target?.notes ?? '', old.notes ?? ''].map((n) => n.trim()).filter(Boolean))].join('\n\n');
+    if (notes && notes !== (target?.notes ?? '').trim()) await setNotes(proId, newKey, notes);
+    if (target) byKey.set(newKey, { ...target, notes });
+    await transactWrite([{ Delete: { TableName: table(), Key: clientRecordKey(proId, oldKey) } }]);
+  }
+
   await ddb.send(new UpdateCommand({
     TableName: table(),
     Key: settingsKey(proId),
-    UpdateExpression: 'SET clientsBackfilledAt = :at',
-    ExpressionAttributeValues: { ':at': now.toISOString() },
+    UpdateExpression: 'SET clientsBackfilledAt = :at, clientsBackfillVersion = :v',
+    ExpressionAttributeValues: { ':at': now.toISOString(), ':v': CLIENTS_BACKFILL_VERSION },
   }));
-  log.info('clients backfilled', { proId, clients: groups.size, appointments: all.length });
+  log.info('clients backfilled', { proId, clients: groups.size, appointments: all.length, rekeyed: renamed.size });
 }
 
 const normalizeText = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();

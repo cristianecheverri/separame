@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ownerKey, subKey } from '../../lib/keys';
@@ -22,6 +22,24 @@ describe('pro services', () => {
     const res = await handler(apiEvent('POST /me/services', { claims: proClaims, body }));
     expect(res.statusCode).toBe(201);
     expect(parse(res).service).toMatchObject({ name: 'Limpieza', durationMin: 45, order: 1 });
+  });
+
+  it('stores the price display option (value only with "Valor fijo"; older clients derive it)', async () => {
+    ddb.on(GetCommand, { Key: subKey(PRO_ID) }).resolves({ Item: subItem({ trialEndsAt: new Date(Date.now() + 86_400_000).toISOString() }) });
+    const legacy = await handler(apiEvent('POST /me/services', { claims: proClaims, body }));
+    expect(parse(legacy).service).toMatchObject({ priceCop: 90000, priceDisplay: 'fixed' });
+    const agreed = await handler(apiEvent('POST /me/services', { claims: proClaims, body: { ...body, priceDisplay: 'agreed' } }));
+    expect(parse(agreed).service).toMatchObject({ priceCop: null, priceDisplay: 'agreed' });
+    expect(ddb.commandCalls(PutCommand).at(-1)!.args[0].input.Item).toMatchObject({ priceCop: null, priceDisplay: 'agreed' });
+
+    ddb.on(UpdateCommand).resolves({ Attributes: { id: 's1', name: 'Limpieza', durationMin: 45, priceCop: null, priceDisplay: 'hidden', visible: true, order: 1 } });
+    const hidden = await handler(apiEvent('PUT /me/services/{serviceId}', { claims: proClaims, path: { serviceId: 's1' }, body: { ...body, priceDisplay: 'hidden' } }));
+    expect(parse(hidden).service).toMatchObject({ priceCop: null, priceDisplay: 'hidden' });
+    expect(ddb.commandCalls(UpdateCommand)[0].args[0].input.ExpressionAttributeValues).toMatchObject({ ':p': null, ':pd': 'hidden' });
+
+    const missing = await handler(apiEvent('POST /me/services', { claims: proClaims, body: { ...body, priceCop: null, priceDisplay: 'fixed' } }));
+    expect(missing.statusCode).toBe(400);
+    expect(parse(missing).error.fields).toEqual({ priceCop: 'Escribe el valor de referencia' });
   });
 
   it('is read-only once the subscription expired', async () => {

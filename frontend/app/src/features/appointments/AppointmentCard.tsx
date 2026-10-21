@@ -3,7 +3,7 @@ import { formatDuration } from '@shared/format';
 import type { Appointment, AppointmentOutcome } from '@shared/types';
 import type { DayRow } from '../../lib/agenda';
 import { cx } from '../../components/ui/cx';
-import { CheckIcon, CloseIcon, MoveIcon } from '../../components/ui/icons';
+import { CheckIcon, ClockIcon, CloseIcon, MoveIcon } from '../../components/ui/icons';
 import { ui } from '../../components/ui/styles';
 
 interface Props {
@@ -20,12 +20,15 @@ interface Props {
   timeLabel?: React.ReactNode;
   /** 'service' leads with the service (client history), 'client' with the client's name. */
   title?: 'client' | 'service';
+  /** Briefly outlined (picked from the week view). */
+  highlighted?: boolean;
 }
 
-const CARD = 'grow min-w-0 flex flex-wrap gap-x-3 gap-y-2 items-center rounded-[16px] min-h-16 box-border';
+const CARD = 'grow min-w-0 flex gap-2 items-start rounded-[16px] min-h-16 box-border';
 
+/** The status pill shows only when it adds something (proposal MP-04): no pill for a plain confirmed appointment. */
 const KIND = {
-  confirmed: { card: 'bg-primary-soft', name: 'font-bold', badge: 'bg-primary text-white', label: 'Confirmada' },
+  confirmed: { card: 'bg-primary-soft', name: 'font-bold', badge: null, label: null },
   new: { card: 'bg-accent-soft', name: 'font-bold', badge: 'bg-accent text-ink', label: 'Nueva' },
   free: { card: 'bg-white border-2 border-dashed border-line-strong', name: 'font-semibold text-muted', badge: 'bg-surface text-ink-2', label: 'Libre' },
   cancelled: { card: 'bg-surface', name: 'font-semibold text-muted line-through', badge: 'bg-white text-ink-2', label: 'Cancelada' },
@@ -39,11 +42,10 @@ function detailOf(row: DayRow, title: 'client' | 'service'): string {
   return title === 'service' ? lead : `${lead} · ${formatDuration(a.durationMin)}`;
 }
 
-const mini = 'text-[11px] font-bold py-[2px] px-2 rounded-full whitespace-nowrap';
-const pill = 'hit-44 h-9 px-3 rounded-full text-[13px] font-bold inline-flex items-center gap-[6px] whitespace-nowrap transition-colors disabled:opacity-60';
+const pill = 'hit-44 h-10 px-3 rounded-full text-[13px] font-bold inline-flex items-center justify-center gap-[6px] whitespace-nowrap transition-colors disabled:opacity-60';
 
-/** One row of the agenda (pro-agenda-day / pro-expired-read-only), stacked on phones. */
-export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, onOutcome, actions = true, timeLabel, title = 'client' }: Props) {
+/** One row of the agenda (pro-agenda-day / pro-expired-read-only): one status line, actions always top-right. */
+export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, onOutcome, actions = true, timeLabel, title = 'client', highlighted }: Props) {
   const [editing, setEditing] = useState(false);
   const appointment = row.appointment;
   const active = row.kind === 'confirmed' || row.kind === 'new';
@@ -58,8 +60,8 @@ export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, 
   const showOutcomeButtons = canMark && (!outcome || editing);
   const showMoveCancel = actions && active && !started && !readOnly && persisted;
 
-  let badgeLabel: string = kind.label;
-  let badgeClass: string = kind.badge;
+  let badgeLabel: string | null = kind.label;
+  let badgeClass: string | null = kind.badge;
   if (lockedView) {
     badgeLabel = appointment?.reminderSentAt ? 'Recordatorio enviado' : 'Confirmada';
     badgeClass = 'bg-white text-primary';
@@ -67,80 +69,81 @@ export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, 
     badgeLabel = outcome === 'attended' ? 'Asistió' : 'No asistió';
     badgeClass = outcome === 'attended' ? 'bg-white text-primary' : 'bg-warn-soft text-warn-ink';
   }
-  const attendance =
-    active && !started && appointment
-      ? appointment.clientConfirmation === 'confirmed'
-        ? { label: 'Confirmó', className: 'bg-white text-primary' }
-        : { label: 'Sin confirmar', className: 'bg-white/70 text-muted' }
-      : null;
+  /** Did the client answer the "¿Confirmas tu asistencia?" email? None when nobody could be asked (no email). */
+  const attendance = active && !started && appointment ? (appointment.clientConfirmation === 'confirmed' ? 'confirmed' : appointment.client.email ? 'no_answer' : null) : null;
+  const showChange = !!outcome && !editing && canMark;
 
   const mark = (value: AppointmentOutcome | null) => {
     setEditing(false);
     onOutcome?.(appointment!, value);
   };
 
-  const badge = <span className={cx(ui.badge, badgeClass)}>{badgeLabel}</span>;
+  const hasStatus = !!badgeLabel || !!attendance;
   const body = (
-    <>
-      <div className="flex flex-col gap-[3px] grow min-w-0 basis-[160px]">
-        <div className={cx('text-[15px] [overflow-wrap:anywhere]', lockedView ? 'font-bold' : kind.name)}>{name}</div>
-        <div className="text-[13px] text-muted flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span>{detailOf(row, title)}</span>
-          {attendance && <span className={cx(mini, attendance.className)}>{attendance.label}</span>}
-        </div>
-        <div className="sm:hidden pt-1 flex items-center gap-2">
-          {badge}
-          {outcome && !editing && canMark && (
-            <button type="button" className="hit-44 text-[13px] font-bold text-primary underline underline-offset-2" onClick={() => setEditing(true)}>
-              Cambiar
-            </button>
+    <div className="flex flex-col gap-1 grow basis-0 min-w-0">
+      <div className={cx('text-[15px] [overflow-wrap:anywhere]', lockedView ? 'font-bold' : kind.name)}>{name}</div>
+      <div className="text-[13px] text-muted">{detailOf(row, title)}</div>
+      {hasStatus && (
+        <div className="flex flex-wrap items-center gap-2 pt-[2px] min-h-6">
+          {badgeLabel && <span className={cx(ui.badge, 'py-1', badgeClass)}>{badgeLabel}</span>}
+          {attendance === 'confirmed' && (
+            <span className="inline-flex items-center gap-[5px] text-[13px] font-bold text-primary">
+              <CheckIcon size={15} strokeWidth={2.6} /> Confirmó asistencia
+            </span>
+          )}
+          {attendance === 'no_answer' && (
+            <span className="inline-flex items-center gap-[5px] text-[13px] font-semibold text-muted">
+              <ClockIcon size={15} strokeWidth={2.2} /> Sin respuesta
+            </span>
           )}
         </div>
-      </div>
-      <span className="hidden sm:inline-flex items-center gap-2">
-        {badge}
-        {outcome && !editing && canMark && (
-          <button type="button" className="hit-44 text-[13px] font-bold text-primary underline underline-offset-2" onClick={() => setEditing(true)} aria-label={`Cambiar asistencia de ${name}`}>
-            Cambiar
-          </button>
-        )}
-      </span>
-    </>
+      )}
+    </div>
   );
+  const hasActions = showMoveCancel || showOutcomeButtons || showChange;
 
   return (
-    <div className="flex flex-col gap-[6px] sm:flex-row sm:gap-4 sm:items-stretch">
+    <div id={appointment ? `appointment-${appointment.id}` : undefined} className="flex flex-col gap-[6px] sm:flex-row sm:gap-4 sm:items-stretch scroll-mt-20">
       {timeLabel !== '' && <div className="sm:w-[84px] shrink-0 sm:pt-[14px] font-bold text-[13px] sm:text-[14px] text-ink-2">{timeLabel ?? row.time}</div>}
       {row.kind === 'free' && onFree && !readOnly ? (
         <button
           type="button"
           onClick={() => onFree(row)}
           aria-label={`Espacio libre a las ${row.time}: agendar una cita`}
-          className={cx(CARD, kind.card, 'py-[10px] pr-[10px] pl-4 text-left hover:border-primary transition-colors')}
+          className={cx(CARD, kind.card, 'py-3 px-4 text-left hover:border-primary transition-colors')}
         >
           {body}
         </button>
       ) : (
-        <div className={cx(CARD, lockedView ? 'bg-primary-soft py-[10px] px-4' : cx(kind.card, 'py-[10px] pr-[10px] pl-4'))}>
+        <div className={cx(CARD, lockedView ? 'bg-primary-soft' : kind.card, 'py-3 pl-4', hasActions ? 'pr-[6px]' : 'pr-4', highlighted && 'ring-2 ring-primary ring-offset-2 transition-shadow')}>
           {body}
-          {showMoveCancel && (
-            <div className="flex gap-1 shrink-0">
-              <button type="button" aria-label={`Mover cita de ${name}`} className={ui.iconBtn} onClick={() => onMove?.(appointment!)}>
-                <MoveIcon />
-              </button>
-              <button type="button" aria-label={`Cancelar cita de ${name}`} className={ui.iconBtn} onClick={() => onCancel?.(appointment!)}>
-                <CloseIcon />
-              </button>
-            </div>
-          )}
-          {showOutcomeButtons && (
-            <div className="flex gap-2 shrink-0 basis-full sm:basis-auto justify-end" role="group" aria-label={`Asistencia de ${name}`}>
-              <button type="button" className={cx(pill, 'bg-primary text-white hover:bg-primary-dark')} onClick={() => mark('attended')}>
-                <CheckIcon size={13} /> Asistió
-              </button>
-              <button type="button" className={cx(pill, 'bg-white text-ink-2 border-2 border-line-strong hover:border-ink-2')} onClick={() => mark('no_show')}>
-                <CloseIcon size={13} strokeWidth={3} /> No asistió
-              </button>
+          {hasActions && (
+            <div className="flex flex-col items-end gap-[6px] shrink-0">
+              {showMoveCancel && (
+                <div className="flex gap-[2px]">
+                  <button type="button" aria-label={`Mover cita de ${name}`} className={ui.iconBtn} onClick={() => onMove?.(appointment!)}>
+                    <MoveIcon />
+                  </button>
+                  <button type="button" aria-label={`Cancelar cita de ${name}`} className={ui.iconBtn} onClick={() => onCancel?.(appointment!)}>
+                    <CloseIcon />
+                  </button>
+                </div>
+              )}
+              {showOutcomeButtons && (
+                <div className="flex flex-col sm:flex-row gap-[6px] sm:gap-2" role="group" aria-label={`Asistencia de ${name}`}>
+                  <button type="button" className={cx(pill, 'bg-primary text-white hover:bg-primary-dark')} onClick={() => mark('attended')}>
+                    <CheckIcon size={13} /> Asistió
+                  </button>
+                  <button type="button" className={cx(pill, 'bg-white text-ink-2 border-2 border-line-strong hover:border-ink-2')} onClick={() => mark('no_show')}>
+                    <CloseIcon size={13} strokeWidth={3} /> No asistió
+                  </button>
+                </div>
+              )}
+              {showChange && (
+                <button type="button" className="min-h-11 px-[10px] text-[13px] font-bold text-primary underline underline-offset-2" onClick={() => setEditing(true)} aria-label={`Cambiar asistencia de ${name}`}>
+                  Cambiar
+                </button>
+              )}
             </div>
           )}
         </div>

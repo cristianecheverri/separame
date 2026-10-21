@@ -226,4 +226,52 @@ describe('stream-appointments: emails module', () => {
     await handler(streamEvent(appt, { ...appt, status: 'cancelled', cancelledBy: 'pro', lastChangedBy: 'pro', updatedAt: '2026-10-20T01:00:00.000Z' }));
     expect(ses.commandCalls(SendEmailCommand)).toHaveLength(0);
   });
+
+  it('client booked with the phone only: no client email, the pro still gets "Nueva cita"', async () => {
+    const phoneOnly: AppointmentItem = { ...appt, client: { ...appt.client, email: '' } };
+    const res = await handler(streamEvent(undefined, phoneOnly));
+    expect(res.batchItemFailures).toEqual([]);
+    const raws = ses.commandCalls(SendEmailCommand).map(rawOf);
+    expect(raws.map(toOf)).toEqual(['laura@correo.com']);
+    expect(raws[0]).not.toContain('Reply-To: \r\n');
+    expect(emailMarkers()).toEqual(['EMAIL#appt1#pro-new-booking#2026-10-20T00:00:00.000Z']);
+    // Moves and cancellations by the pro email nobody but the pro's own calendar.
+    ses.reset();
+    ses.on(SendEmailCommand).resolves({ MessageId: 'm2' });
+    await handler(streamEvent(phoneOnly, { ...phoneOnly, status: 'cancelled', cancelledBy: 'pro', lastChangedBy: 'pro', revision: 1 }));
+    expect(ses.commandCalls(SendEmailCommand).map(rawOf).map(toOf)).toEqual(['laura@correo.com']);
+  });
+
+  describe('name-only appointment (pro-created, no email and no phone)', () => {
+    const nameOnly: AppointmentItem = {
+      ...appt, client: { name: 'Don Jorge', email: '', phone: '' }, clientKey: '', createdBy: 'pro', lastChangedBy: 'pro',
+    };
+    const clientPuts = () => ddb.commandCalls(PutCommand).filter((c) => String(c.args[0].input.Item!.SK).startsWith('CLIENT#'));
+
+    it('create, move and cancel: no client email, no client record, no failures; the invite has no empty contact lines', async () => {
+      const created = await handler(streamEvent(undefined, nameOnly));
+      expect(created.batchItemFailures).toEqual([]);
+      const moved = { ...nameOnly, start: '2026-10-22T16:00:00.000Z', end: '2026-10-22T16:30:00.000Z', revision: 1, updatedAt: '2026-10-20T01:00:00.000Z' };
+      expect((await handler(streamEvent(nameOnly, moved))).batchItemFailures).toEqual([]);
+      const cancelled = { ...moved, status: 'cancelled' as const, cancelledBy: 'pro' as const, revision: 2, updatedAt: '2026-10-20T02:00:00.000Z' };
+      expect((await handler(streamEvent(moved, cancelled))).batchItemFailures).toEqual([]);
+
+      const raws = ses.commandCalls(SendEmailCommand).map(rawOf);
+      // Only the pro's own-action invitation carriers (added, updated, removed).
+      expect(raws.map(toOf)).toEqual(['laura@correo.com', 'laura@correo.com', 'laura@correo.com']);
+      const ics = calendarPart(raws[0])!.body;
+      expect(ics).toContain('Don Jorge');
+      expect(ics).not.toMatch(/Celular|Correo:/);
+      expect(clientPuts()).toHaveLength(0);
+    });
+
+    it('a cancellation by the system emails the pro only, without an empty phone/email line', async () => {
+      ddb.on(GetCommand, { Key: calSyncKey(PRO_ID) }).resolves({ Item: { token: 't', invitesEnabled: false } });
+      const res = await handler(streamEvent(nameOnly, { ...nameOnly, status: 'cancelled', cancelledBy: 'system', lastChangedBy: 'system', revision: 1 }));
+      expect(res.batchItemFailures).toEqual([]);
+      const calls = ses.commandCalls(SendEmailCommand);
+      expect(calls.map((c) => c.args[0].input.Destination?.ToAddresses?.[0])).toEqual(['laura@correo.com']);
+      expect(calls[0].args[0].input.ReplyToAddresses ?? []).toEqual([]);
+    });
+  });
 });

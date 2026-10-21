@@ -49,6 +49,31 @@ describe('client manage link', () => {
     expect(parse(res)).toMatchObject({ canChange: true, changeDeadline: '2026-10-21T13:00:00.000Z', booking: { appointmentId: 'appt1' } });
   });
 
+  it('GET …/ics downloads the client calendar file', async () => {
+    mockData();
+    const res = await handler(apiEvent('GET /public/appointments/{token}/ics', { path: { token } }));
+    expect(res.statusCode).toBe(200);
+    expect(res.headers).toMatchObject({
+      'content-type': 'text/calendar; charset=utf-8',
+      'content-disposition': 'attachment; filename="cita-dra-laura-perez.ics"',
+      'cache-control': 'no-store',
+    });
+    const body = String(res.body);
+    expect(body).toMatch(/^BEGIN:VCALENDAR\r\n/);
+    expect(body).toContain('METHOD:PUBLISH');
+    expect(body).toContain('UID:appt1@separame.app');
+    expect(body).toContain('DTSTART:20261021T150000Z');
+    expect(body).toContain('SUMMARY:Valoración con Dra. Laura Pérez');
+    expect(body).toContain('URL:https://dev.separame.app/c/');
+    expect(body).toContain('BEGIN:VALARM');
+  });
+
+  it('GET …/ics rejects a forged token with 404', async () => {
+    mockData();
+    const res = await handler(apiEvent('GET /public/appointments/{token}/ics', { path: { token: `${token}x` } }));
+    expect(res.statusCode).toBe(404);
+  });
+
   it('rejects a forged token with 404', async () => {
     mockData();
     const res = await handler(apiEvent('GET /public/appointments/{token}', { path: { token: `${token}x` } }));

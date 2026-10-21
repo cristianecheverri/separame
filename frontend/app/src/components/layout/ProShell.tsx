@@ -3,11 +3,13 @@ import { NavLink, Outlet, useLocation } from 'react-router';
 import { auth } from '../../lib/auth';
 import { usePriceHeadline, usePro } from '../../lib/pro';
 import { cx } from '../ui/cx';
-import { CloseIcon, MenuIcon } from '../ui/icons';
+import { CloseIcon } from '../ui/icons';
 import { InstallListener } from '../install/InstallListener';
 import { Drawer } from './Drawer';
 import { ExpiredBanner } from './ExpiredBanner';
+import { PlanStrip } from './PlanStrip';
 import { SubscriptionCard } from './SubscriptionCard';
+import { TabBar } from './TabBar';
 import { Wordmark } from './Wordmark';
 
 interface NavItem {
@@ -16,10 +18,14 @@ interface NavItem {
   end?: boolean;
 }
 
-const NAV: NavItem[] = [
+/** On phones and tablets the first three are tabs of the TabBar; the rest live in the "Más" sheet. */
+const TAB_NAV: NavItem[] = [
   { to: '/', label: 'Agenda', end: true },
   { to: '/appointments', label: 'Citas' },
   { to: '/clients', label: 'Clientes' },
+];
+
+const MORE_NAV: NavItem[] = [
   { to: '/stats', label: 'Estadísticas' },
   { to: '/services', label: 'Servicios' },
   { to: '/availability', label: 'Disponibilidad' },
@@ -34,10 +40,12 @@ const navLink = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'bg-white text-primary hover:text-primary' : 'text-white hover:text-white hover:bg-white/10',
   );
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+/** Sidebar (desktop) and "Más" sheet (phones: `more` leaves out the tab bar's destinations). */
+function SidebarContent({ onNavigate, more = false }: { onNavigate?: () => void; more?: boolean }) {
   const { me, subscription } = usePro();
   const { monthlyCop } = usePriceHeadline();
-  const items = me.isAdmin ? [...NAV, { to: '/admin', label: 'Administración' }] : NAV;
+  const nav = more ? MORE_NAV : [...TAB_NAV, ...MORE_NAV];
+  const items = me.isAdmin ? [...nav, { to: '/admin', label: 'Administración' }] : nav;
   return (
     <>
       {items.map((item) => (
@@ -45,7 +53,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           {item.label}
         </NavLink>
       ))}
-      <div className="mt-auto pt-4 flex flex-col gap-2">
+      <div className={cx('flex flex-col gap-2', more ? 'pt-[10px]' : 'mt-auto pt-4')}>
         {subscription && <SubscriptionCard subscription={subscription} monthlyCop={monthlyCop} onNavigate={onNavigate} />}
         <button type="button" onClick={() => void auth.signOut()} className="min-h-11 px-3 rounded-[12px] text-left text-[14px] font-semibold text-white/80 hover:text-white hover:bg-white/10">
           Cerrar sesión
@@ -55,13 +63,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-/** Professional panel layout: sidebar ≥ 1024 px, sticky top bar + drawer below. */
+/** Professional panel layout: sidebar ≥ 1024 px; below, a top bar with the wordmark and the bottom TabBar. */
 export function ProShell() {
   const { subscription, readOnly } = usePro();
   const { price, minPackageCop } = usePriceHeadline();
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const showBanner = readOnly && subscription && location.pathname !== '/billing';
+  /** Path where the "Más" sheet was opened: navigating anywhere closes it. */
+  const [moreOpenAt, setMoreOpenAt] = useState<string | null>(null);
+  const moreOpen = moreOpenAt === location.pathname;
+  const closeMore = () => setMoreOpenAt(null);
+  const onBilling = location.pathname === '/billing';
+  const showBanner = readOnly && subscription && !onBilling;
 
   return (
     <div className="min-h-dvh bg-surface lg:flex">
@@ -79,24 +91,24 @@ export function ProShell() {
 
       <header className="on-dark lg:hidden sticky top-0 z-30 h-[60px] bg-primary text-white px-4 flex items-center justify-between">
         <Wordmark size={22} />
-        <button type="button" onClick={() => setMenuOpen(true)} aria-label="Abrir menú" aria-expanded={menuOpen} className="w-11 h-11 -mr-2 rounded-full flex items-center justify-center hover:bg-white/10">
-          <MenuIcon size={22} />
-        </button>
       </header>
-      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} label="Menú principal" className="bg-primary text-white px-4 py-5 flex flex-col gap-[6px]">
-        <div className="flex items-center justify-between pl-3 pb-4">
-          <Wordmark size={22} />
-          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú" className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10">
-            <CloseIcon size={20} />
+      <Drawer open={moreOpen} onClose={closeMore} label="Más opciones" placement="bottom" className="bg-primary text-white px-4 pt-[10px] pb-[18px] flex flex-col gap-[6px]">
+        <span aria-hidden="true" className="self-center w-10 h-1 rounded-full bg-white/40 shrink-0" />
+        <div className="flex items-center justify-between pt-1 pb-[6px] pl-3">
+          <h2 className="m-0 font-display font-extrabold text-[20px]">Más</h2>
+          <button type="button" onClick={closeMore} aria-label="Cerrar" className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10">
+            <CloseIcon size={18} />
           </button>
         </div>
-        <SidebarContent onNavigate={() => setMenuOpen(false)} />
+        <SidebarContent more onNavigate={closeMore} />
       </Drawer>
 
-      <main id="main" tabIndex={-1} className="flex-1 min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 flex flex-col gap-[22px] outline-none">
+      <main id="main" tabIndex={-1} className="flex-1 min-w-0 px-4 pt-5 pb-[calc(var(--bottom-nav)+28px)] sm:px-6 sm:pt-6 lg:px-8 lg:py-7 flex flex-col gap-[22px] outline-none">
+        {!readOnly && subscription && !onBilling && <PlanStrip subscription={subscription} />}
         {showBanner && <ExpiredBanner subscription={subscription} priceName={price?.name ?? null} minPackageCop={minPackageCop} />}
         <Outlet />
       </main>
+      <TabBar moreOpen={moreOpen} onMore={() => setMoreOpenAt(moreOpen ? null : location.pathname)} onNavigate={closeMore} />
       <InstallListener />
     </div>
   );

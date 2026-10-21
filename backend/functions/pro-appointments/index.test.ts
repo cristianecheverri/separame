@@ -1,8 +1,8 @@
-import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apptKey, ownerKey, subKey } from '../../lib/keys';
-import { apiEvent, parse, PRO_ID, proClaims, setTestEnv, SUB_ID, subItem } from '../../testing/fixtures';
+import { apptKey, ownerKey, serviceKey, settingsKey, subKey } from '../../lib/keys';
+import { apiEvent, parse, PRO_ID, proClaims, service, settings, setTestEnv, SUB_ID, subItem } from '../../testing/fixtures';
 import { handler } from './index';
 
 setTestEnv();
@@ -56,5 +56,59 @@ describe('GET /me/appointments', () => {
     expect(a.clientKey).toMatch(/^[0-9a-f]{24}$/);
     expect(a.LSI1SK).toBeUndefined();
     expect(a.lockBufferMin).toBeUndefined();
+  });
+});
+
+describe('name-only appointments (pro-created, no email and no phone)', () => {
+  const create = (client: Record<string, unknown>) =>
+    handler(apiEvent('POST /me/appointments', { claims: proClaims, body: { serviceId: service.id, start: START, client } }));
+
+  beforeEach(() => {
+    vi.setSystemTime(new Date('2026-10-19T13:00:00.000Z'));
+    ddb.on(GetCommand, { Key: subKey(PRO_ID) }).resolves({ Item: subItem() });
+    ddb.on(GetCommand, { Key: serviceKey(PRO_ID, service.id) }).resolves({ Item: { ...serviceKey(PRO_ID, service.id), ...service } });
+    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) }).resolves({ Item: settings });
+    ddb.on(QueryCommand).resolves({ Items: [] });
+    ddb.on(TransactWriteCommand).resolves({});
+  });
+
+  it('accepts a name only and stores empty contact fields with no client key', async () => {
+    const res = await create({ name: 'Don Jorge' });
+    expect(res.statusCode).toBe(201);
+    expect(parse(res).appointment).toMatchObject({ client: { name: 'Don Jorge', email: '', phone: '' }, clientKey: '', createdBy: 'pro' });
+    const item = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems![0].Put!.Item!;
+    expect(item).toMatchObject({ client: { name: 'Don Jorge', email: '', phone: '' }, clientKey: '' });
+    expect((await create({ name: 'Don Jorge', email: '', phone: '' })).statusCode).toBe(201);
+  });
+
+  it('still validates what is given (and the name stays required)', async () => {
+    expect(parse(await create({ name: 'Don Jorge', phone: '300' })).error.fields).toHaveProperty(['client.phone']);
+    expect(parse(await create({ name: 'Don Jorge', email: 'jorge@' })).error.fields).toHaveProperty(['client.email']);
+    expect(parse(await create({ name: '' })).error.fields).toHaveProperty(['client.name']);
+  });
+
+  it('can be moved, cancelled and marked attended like any other appointment', async () => {
+    await create({ name: 'Don Jorge' });
+    const stored = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems![0].Put!.Item!;
+    ddb.on(GetCommand, { Key: apptKey(PRO_ID, stored.id) }).resolves({ Item: stored });
+
+    const moved = await handler(apiEvent('PATCH /me/appointments/{appointmentId}', {
+      claims: proClaims, path: { appointmentId: stored.id }, body: { start: '2026-10-21T16:00:00.000Z' },
+    }));
+    expect(moved.statusCode).toBe(200);
+    expect(parse(moved).appointment).toMatchObject({ start: '2026-10-21T16:00:00.000Z', clientKey: '', revision: 1 });
+
+    const cancelled = await handler(apiEvent('POST /me/appointments/{appointmentId}/cancel', {
+      claims: proClaims, path: { appointmentId: stored.id }, body: {},
+    }));
+    expect(cancelled.statusCode).toBe(200);
+    expect(parse(cancelled).appointment).toMatchObject({ status: 'cancelled', client: { name: 'Don Jorge', email: '', phone: '' } });
+
+    vi.setSystemTime(new Date('2026-10-21T16:00:00.000Z'));
+    const marked = await handler(apiEvent('POST /me/appointments/{appointmentId}/outcome', {
+      claims: proClaims, path: { appointmentId: stored.id }, body: { outcome: 'attended' },
+    }));
+    expect(marked.statusCode).toBe(200);
+    expect(parse(marked).appointment).toMatchObject({ outcome: 'attended', clientKey: '' });
   });
 });

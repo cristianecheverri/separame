@@ -149,6 +149,8 @@ export async function onWaitlistJoined(entry: WaitItem, pro: ProProfile, now: Da
 
 /** A booking by a waiting client on one of their days marks the entry booked. */
 export async function markBookedFor(appt: AppointmentItem, date: ISODate): Promise<number> {
+  // Name-only appointments (pro-created, no email/phone) can't be matched to a waiting client.
+  if (!appt.clientKey) return 0;
   let marked = 0;
   for (const w of (await waitItems(appt.proId)).filter((x) => x.status === 'waiting' && x.clientKey === appt.clientKey && x.dates.includes(date))) {
     try {

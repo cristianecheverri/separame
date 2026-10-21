@@ -18,11 +18,14 @@
  *   2. `/app`                    → 301 `/app/`
  *   3. `/app/…` without a file extension → `/app/index.html` (SPA routes)
  *   4. `/c/…` / `/w/…` without a file extension → `/c/index.html` / `/w/index.html`
- *   5. `/`                       → `/index.html`
- *   6. one segment without a dot, optional trailing slash → `/<slug>/index.html`
- *   7. anything else unchanged (missing objects → /404.html via error responses)
+ *   5. `/r/<code>` (referral link) → 302 `/app/signup?ref=<code>` (other query params kept);
+ *      `/r`, `/r/` or a malformed code → 302 `/app/signup`
+ *   6. `/`                       → `/index.html`
+ *   7. one segment without a dot, optional trailing slash → `/<slug>/index.html`
+ *   8. anything else unchanged (missing objects → /404.html via error responses)
  */
 import { SITE_PATHS } from '../../shared/infra';
+import { REFERRAL_PATH, REFERRAL_QUERY_PARAM } from '../../shared/referrals';
 
 export interface SiteRouterOptions {
   /** Canonical host; when `redirectHosts` is non-empty they 301 here. */
@@ -43,6 +46,9 @@ var TOKEN_PAGES = ${JSON.stringify([
     { prefix: SITE_PATHS.manage, index: SITE_PATHS.manageIndex },
     { prefix: SITE_PATHS.waitlistLeave, index: SITE_PATHS.waitlistLeaveIndex },
   ])};
+var REFERRAL_PREFIX = ${JSON.stringify(REFERRAL_PATH)};
+var SIGNUP_PATH = ${JSON.stringify(`${appPrefix}signup`)};
+var REFERRAL_PARAM = ${JSON.stringify(REFERRAL_QUERY_PARAM)};
 
 function queryString(query) {
   var parts = [];
@@ -62,6 +68,22 @@ function redirect(location) {
     statusDescription: 'Moved Permanently',
     headers: { location: { value: location }, 'cache-control': { value: 'max-age=3600' } }
   };
+}
+
+/** Temporary (302): where a referral link lands may change; browsers must not cache it forever. */
+function found(location) {
+  return {
+    statusCode: 302,
+    statusDescription: 'Found',
+    headers: { location: { value: location }, 'cache-control': { value: 'no-store' } }
+  };
+}
+
+function referralRedirect(uri, query) {
+  var code = uri.substring(REFERRAL_PREFIX.length).replace(/\\/+$/, '').toLowerCase();
+  var rest = queryString(query);
+  if (!/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(code)) return found(SIGNUP_PATH + rest);
+  return found(SIGNUP_PATH + '?' + REFERRAL_PARAM + '=' + code + (rest ? '&' + rest.substring(1) : ''));
 }
 
 function hasExtension(uri) {
@@ -89,6 +111,9 @@ function handler(event) {
       if (!hasExtension(uri)) request.uri = TOKEN_PAGES[i].index;
       return request;
     }
+  }
+  if (uri === REFERRAL_PREFIX.slice(0, -1) || uri.indexOf(REFERRAL_PREFIX) === 0) {
+    return referralRedirect(uri, request.querystring);
   }
   if (uri === '/') {
     request.uri = '/index.html';

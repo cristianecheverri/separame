@@ -235,7 +235,7 @@ function MigrationSection({ prices }: { prices: PriceWithUsage[] }) {
             ))}
           </div>
           <div className="text-[13px] text-muted">{help}</div>
-          {target === 'group' && <input aria-label="Nombre del grupo" className={ui.input} value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Ej. Tutorías" />}
+          {target === 'group' && <input aria-label="Nombre del grupo" className={ui.input} value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Nombre del grupo" />}
           {target === 'pros' && (
             <div className="rounded-[14px] border-2 border-line max-h-[220px] overflow-y-auto p-1">
               {candidates.length === 0 && <div className="text-[13px] text-muted p-3">No hay profesionales en esa versión.</div>}
@@ -384,7 +384,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
     >
       <form id="new-price" onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Nombre">{(p) => <input {...p} className={ui.input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Estándar" />}</Field>
+          <Field label="Nombre">{(p) => <input {...p} className={ui.input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre del precio" />}</Field>
           <Field label="Código" help="Minúsculas, números y guiones.">
             {(p) => (
               <input
@@ -395,7 +395,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
                   setCodeTouched(true);
                   setCode(e.target.value.toLowerCase());
                 }}
-                placeholder="estandar-v1"
+                placeholder="Código del precio"
               />
             )}
           </Field>
@@ -406,7 +406,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
               <div className={ui.prefix} aria-hidden="true">
                 COP $
               </div>
-              <input {...p} inputMode="numeric" className={cx(ui.input, 'grow')} value={monthly} onChange={(e) => setMonthly(formatCopInput(e.target.value))} placeholder="Ej. 7.900" />
+              <input {...p} inputMode="numeric" className={cx(ui.input, 'grow')} value={monthly} onChange={(e) => setMonthly(formatCopInput(e.target.value))} placeholder="Valor mensual" />
             </div>
           )}
         </Field>

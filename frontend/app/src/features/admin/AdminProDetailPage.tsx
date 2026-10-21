@@ -20,13 +20,15 @@ import { now } from '../../lib/clock';
 import { formatCopInput, formatMonthShortYear, formatPhone, parseCopInput } from '../../lib/format';
 import { keys, useAdminPro } from '../../lib/queries';
 import { METHOD_LABEL, paymentDot, paymentTitle, STATUS_LABEL } from '../billing/paymentLabels';
+import { AdminReferralsCard, ReferredByLine } from '../referrals/AdminReferrals';
+import { adminReferralPaymentDetail, isReferralPayment, monthsText } from '../referrals/referralText';
 import { suggestedAmount } from './priceText';
 
 const METHODS: { value: ManualPaymentMethod; label: string; placeholder: string }[] = [
-  { value: 'transfer', label: 'Transferencia', placeholder: 'Ej. Bancolombia, comprobante #482913' },
-  { value: 'nequi', label: 'Nequi directo', placeholder: 'Ej. Nequi al 300 000 0000, ref. M12345' },
-  { value: 'cash', label: 'Efectivo', placeholder: 'Ej. Recibido en persona en Medellín' },
-  { value: 'courtesy', label: 'Cortesía', placeholder: 'Ej. Compensación por falla del 12 oct.' },
+  { value: 'transfer', label: 'Transferencia', placeholder: 'Banco y número de comprobante' },
+  { value: 'nequi', label: 'Nequi directo', placeholder: 'Número de Nequi o referencia del pago' },
+  { value: 'cash', label: 'Efectivo', placeholder: 'Dónde y cómo lo recibiste' },
+  { value: 'courtesy', label: 'Cortesía', placeholder: 'Motivo de la cortesía' },
 ];
 const PERIODS = [
   { months: 3, label: '+3 meses' },
@@ -169,7 +171,8 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
     setNotify(true);
   };
 
-  const doneUntil = done?.result.payment.until ? formatDateShort(bogotaDate(done.result.payment.until)) : '';
+  // The subscription's date (not the payment's): months saved from referrals may have been added after it.
+  const doneUntil = done ? formatDateShort(bogotaDate(done.result.subscription.accessUntil)) : '';
 
   return (
     <>
@@ -181,6 +184,7 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
             <div className="text-[14px] text-muted [overflow-wrap:anywhere]">
               {[`separame.app/${profile.slug}`, profile.email, formatPhone(profile.phone)].filter(Boolean).join(' · ')}
             </div>
+            <ReferredByLine referredBy={data.referredBy} registeredAt={data.trialStartedAt} />
           </div>
         </div>
         <span className={cx('text-[13px] font-bold py-2 px-[14px] rounded-full whitespace-nowrap', badge.className)}>{badge.label}</span>
@@ -348,6 +352,8 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
             ))}
           </section>
 
+          <AdminReferralsCard referrals={data.referrals} />
+
           <section className={cx(ui.card, 'gap-3')}>
             <h2 className={cx(ui.h2sm, 'mb-1')}>Historial de pagos</h2>
             <ul className="m-0 p-0 list-none flex flex-col gap-3">
@@ -376,6 +382,7 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
 }
 
 function HistoryItem({ payment: p }: { payment: Payment }) {
+  if (isReferralPayment(p)) return <ReferralHistoryItem payment={p} />;
   const status = p.status === 'approved' ? '' : ` · ${STATUS_LABEL[p.status].toLowerCase()}`;
   const parts = [formatDateShort(bogotaDate(p.paidAt))];
   if (p.months) parts.push(`${p.months} ${p.months === 1 ? 'mes' : 'meses'}`);
@@ -395,6 +402,22 @@ function HistoryItem({ payment: p }: { payment: Payment }) {
           <span className="font-bold text-[14px] whitespace-nowrap">{p.method === 'courtesy' ? 'Sin cobro' : p.amountCop ? formatCop(p.amountCop) : '—'}</span>
         </div>
         <span className="text-[13px] text-muted [overflow-wrap:anywhere]">{parts.join(' · ')}</span>
+      </div>
+    </li>
+  );
+}
+
+/** "Mes gratis por referido" · "+1 mes" · "2 sep. 2026 · por … · hasta … · automático" (green dot). */
+function ReferralHistoryItem({ payment: p }: { payment: Payment }) {
+  return (
+    <li className="flex gap-3 items-start">
+      <span className="w-[10px] h-[10px] rounded-full shrink-0 mt-[5px] bg-primary" aria-hidden="true" />
+      <div className="flex flex-col gap-[2px] grow min-w-0">
+        <div className="flex justify-between gap-2">
+          <span className="font-bold text-[14px]">Mes gratis por referido</span>
+          <span className="font-bold text-[14px] whitespace-nowrap">+{monthsText(p.months ?? 1)}</span>
+        </div>
+        <span className="text-[13px] text-muted [overflow-wrap:anywhere]">{adminReferralPaymentDetail(p)}</span>
       </div>
     </li>
   );
@@ -436,7 +459,7 @@ function RejectModal({ proId, notice, onClose, onDone }: { proId: string; notice
       }
     >
       <Field label="Motivo" error={error}>
-        {(p) => <textarea {...p} rows={3} maxLength={300} className={ui.textarea} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ej. No encontramos la transferencia en la cuenta" data-autofocus />}
+        {(p) => <textarea {...p} rows={3} maxLength={300} className={ui.textarea} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo del rechazo" data-autofocus />}
       </Field>
     </Modal>
   );

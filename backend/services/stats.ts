@@ -7,7 +7,7 @@ import { validationError } from '../lib/http';
 import { CLIENT_PREFIX, proPk } from '../lib/keys';
 import { appointmentItemsBetween, type AppointmentItem } from './appointments';
 import { getSettings, listBlocks } from './availability';
-import { DELETED_CLIENT_KEY } from './clients';
+import { hasClientRecord } from './clients';
 
 /**
  * Professional statistics for a Bogotá date range, plus the same-length
@@ -62,7 +62,8 @@ export function computeStats(input: StatsInput): ProStats {
     byWeekday[(jsWeekday(bogotaDate(a.start)) + 6) % 7].appointments++;
     if (a.createdBy === 'client') bySource.client++;
     else bySource.pro++;
-    if (a.clientKey !== DELETED_CLIENT_KEY) clients.add(a.clientKey);
+    // Name-only appointments have no client identity: they count as appointments, not as clients.
+    if (hasClientRecord(a)) clients.add(a.clientKey);
   }
 
   let bookable = 0;

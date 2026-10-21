@@ -5,6 +5,8 @@ import preact from '@preact/preset-vite';
 import tailwindcss from '@tailwindcss/vite';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
+import { LANDING_DEFAULT_PRICE, LANDING_SLOT_NAMES, landingSlotsIn, renderLandingPrices, toPublicPrices } from '../../shared/landing';
+import { TRIAL_DAYS } from '../../shared/subscription';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const sharedDir = resolve(root, '../../shared');
@@ -15,6 +17,9 @@ const BOOKING_JS = 'b/booking.js';
 const BOOKING_CSS = 'b/booking.css';
 const HEAD_MARKER = '<!--SEPARAME_HEAD-->';
 const DATA_MARKER = '<!--SEPARAME_DATA-->';
+/** Landing build output and its copy the backend renders real prices into (shared/infra.ts SITE_PATHS). */
+const LANDING_TEMPLATE = '_templates/landing.html';
+const TRIAL_DAYS_TOKEN = '{{trialDays}}';
 /** JS-free pages served at /<name> (reserved slugs in shared/slug.ts). */
 const STATIC_PAGES = ['privacy', 'terms'];
 
@@ -74,8 +79,37 @@ function manageShell(): Plugin {
   };
 }
 
+/**
+ * The landing (/) is static HTML with price slots (shared/landing.ts). At build
+ * time (and in dev) the trial length comes from TRIAL_DAYS and the slots are
+ * filled with the default price version, so the deployed page is complete
+ * without JS. The built page is also emitted as `_templates/landing.html`,
+ * which the backend re-renders with the active prices over `index.html`.
+ */
+function landingPrices(): Plugin {
+  return {
+    name: 'separame-landing-prices',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html, ctx) {
+        if (ctx.path !== '/index.html') return html;
+        const missing = LANDING_SLOT_NAMES.filter((slot) => !landingSlotsIn(html).has(slot));
+        if (missing.length) throw new Error(`landing is missing price slots: ${missing.join(', ')}`);
+        const withTrial = html.split(TRIAL_DAYS_TOKEN).join(String(TRIAL_DAYS));
+        return renderLandingPrices(withTrial, toPublicPrices(LANDING_DEFAULT_PRICE));
+      },
+    },
+    closeBundle() {
+      if (this.environment?.config.command !== 'build') return;
+      const outDir = resolve(root, 'dist');
+      mkdirSync(resolve(outDir, '_templates'), { recursive: true });
+      writeFileSync(resolve(outDir, LANDING_TEMPLATE), readFileSync(resolve(outDir, 'index.html'), 'utf8'));
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [preact(), tailwindcss(), devRoutes(), manageShell()],
+  plugins: [preact(), tailwindcss(), devRoutes(), manageShell(), landingPrices()],
   resolve: {
     alias: { '@shared': sharedDir },
   },

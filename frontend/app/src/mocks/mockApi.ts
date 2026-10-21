@@ -22,6 +22,9 @@ import { endpointHash } from '../lib/push';
 import type { HttpMethod, TransportRequest, TransportResponse } from '../lib/api';
 import { now } from '../lib/clock';
 import * as fx from './fixtures';
+import { adminReferrals, lauraReferrals, luaReferralPayments, PUBLIC_REFERRALS } from './referrals';
+import { referralCodeBase, referralUrl } from '@shared/referrals';
+import type { ReferralsResponse } from '@shared/api';
 
 interface Db {
   isAdmin: boolean;
@@ -47,6 +50,9 @@ interface Db {
 
 const clone = <T,>(v: T): T => structuredClone(v);
 let db: Db;
+/** The signed-in pro's referral summary (mocks/referrals.ts); created on first read after onboarding. */
+let referralsDb: ReferralsResponse | null = null;
+const newestFirst = (list: Payment[]) => [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 let idSeq = 1000;
 const newId = (prefix: string) => `${prefix}-${++idSeq}`;
 
@@ -91,6 +97,11 @@ export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; bi
       devices: [{ endpointHash: 'mac-chrome-demo', deviceLabel: 'Mac · Chrome', createdAt: '2026-10-18T15:00:00.000Z', lastSuccessAt: '2026-10-20T12:10:00.000Z' }],
     },
   };
+  // Referral program (boards referral-*).
+  const laura = lauraReferrals(state);
+  referralsDb = state === 'onboarding' ? null : clone(laura.summary);
+  db.payments = newestFirst([...db.payments, ...clone(laura.payments)]);
+  if (db.details['pro-lua']) db.details['pro-lua'].payments = newestFirst([...db.details['pro-lua'].payments, ...clone(luaReferralPayments)]);
 }
 
 class HttpError extends Error {
@@ -178,6 +189,7 @@ function proDetail(proId: string): AdminProDetailResponse {
     payments: d.payments,
     upcomingAppointments: d.upcoming,
     trialStartedAt: d.trialStartedAt,
+    ...adminReferrals(proId),
   };
 }
 
@@ -232,9 +244,10 @@ function paymentNotice(body: PaymentNoticeRequest) {
   return { payment };
 }
 
+/** Like shared/clients.ts: email, else phone; '' (no client record) for a name-only appointment. */
 function clientKeyOf(c: { email: string; phone: string }): string {
   const id = c.email ? c.email.split('@')[0] : c.phone;
-  return `c-${id.toLowerCase()}`;
+  return id ? `c-${id.toLowerCase()}` : '';
 }
 
 const ms = (iso: string) => new Date(iso).getTime();
@@ -243,7 +256,7 @@ function clientRecords(): ClientRecord[] {
   const t = now().getTime();
   const map = new Map<string, ClientRecord>();
   for (const a of [...db.appointments].sort((x, y) => x.start.localeCompare(y.start))) {
-    if (!a.client.name || a.client.name === 'Cliente eliminado') continue;
+    if (!a.clientKey || !a.client.name || a.client.name === 'Cliente eliminado') continue;
     const r = map.get(a.clientKey) ?? {
       key: a.clientKey, name: a.client.name, email: a.client.email, phone: a.client.phone, firstSeenAt: a.createdAt < a.start ? a.createdAt : a.start,
       lastAppointmentAt: null, nextAppointmentAt: null, totals: { appointments: 0, attended: 0, noShows: 0, cancelled: 0 },
@@ -276,7 +289,7 @@ function computeStats(from: string, to: string): ProStats {
   const noShows = past.filter((a) => a.outcome === 'no_show').length;
   const firstByClient = new Map<string, string>();
   for (const a of db.appointments) if (!firstByClient.has(a.clientKey) || a.start < firstByClient.get(a.clientKey)!) firstByClient.set(a.clientKey, a.start);
-  const clients = new Set(active.map((a) => a.clientKey));
+  const clients = new Set(active.filter((a) => a.clientKey && a.clientKey !== 'deleted').map((a) => a.clientKey));
   const newClients = [...clients].filter((k) => bogotaDate(firstByClient.get(k)!) >= from).length;
   const byService = new Map<string, { serviceId: string; serviceName: string; appointments: number; revenueCop: number }>();
   for (const a of active) {
@@ -430,10 +443,11 @@ on('GET', '/me/slots', (_p, _b, q) => {
   const days = Number(q.get('days') || 14);
   const sub = subscription();
   return {
-    active: sub.canAcceptBookings,
+    active: !sub.readOnly,
     serviceId: service.id,
     from,
-    days: computeAvailability(from, days, { schedule: db.schedule, rules: db.rules, blocks: db.blocks, busy: busyFor(), durationMin: service.durationMin, now: now() }),
+    // Like the backend (pro-appointments): the pro books for clients, so minimum notice doesn't apply.
+    days: computeAvailability(from, days, { schedule: db.schedule, rules: { ...db.rules, minNoticeMin: 0 }, blocks: db.blocks, busy: busyFor(), durationMin: service.durationMin, now: now() }),
   };
 });
 
@@ -527,6 +541,19 @@ on('GET', '/me/billing', () => {
   return { subscription: subscription(), price: stripUsage(priceOf(db.sub.priceVersionId)), payments: db.payments, instructions: fx.instructions };
 });
 on('POST', '/me/billing/payment-notices', (_p, body) => paymentNotice(body as PaymentNoticeRequest));
+on('GET', '/me/referrals', () => {
+  const profile = requireProfile();
+  if (!referralsDb) {
+    const code = referralCodeBase(profile.slug);
+    referralsDb = { code, url: referralUrl(siteUrl, code), monthsEarned: 0, monthsApplied: 0, monthsPending: 0, referrals: [] };
+  }
+  return referralsDb;
+});
+on('GET', '/public/referrals/{code}', ([code]) => {
+  const referral = PUBLIC_REFERRALS[code.toLowerCase()];
+  if (!referral) throw new HttpError(404, 'not_found', 'Este enlace de invitación no existe.');
+  return referral;
+});
 
 // ── Admin ──
 on('GET', '/admin/stats', () => (requireAdmin(), { ...fx.adminStats, pendingNotices: db.rows.filter((r) => r.pendingNotice).length }));

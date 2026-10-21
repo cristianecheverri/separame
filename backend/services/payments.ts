@@ -3,20 +3,23 @@ import type {
 } from '../../shared/api';
 import { GSI1, SSM_PARAMS } from '../../shared/infra';
 import { paymentInstructionsSchema } from '../../shared/schemas';
+import { referralUrl, type ReferralRewardOutcome } from '../../shared/referrals';
 import { extendPaidUntil } from '../../shared/subscription';
 import { addDays, bogotaDate, toInstant, todayBogota, type ISOInstant } from '../../shared/time';
 import type { Payment, PaymentInstructions, SubscriptionStatus } from '../../shared/types';
 import type { AuthUser } from '../lib/auth';
 import { failedConditionIndex, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem } from '../lib/dynamo';
+import { env } from '../lib/env';
 import { ApiError, validationError } from '../lib/http';
 import { newId } from '../lib/ids';
 import { log } from '../lib/logger';
 import { PAY_PREFIX, paymentGsi1Sk, paymentsGsi1Pk, paySk, proPk, subKey } from '../lib/keys';
 import { getOptionalParam } from '../lib/ssm';
-import { sendManualPaymentReceipt, sendNoticeReceived, sendNoticeRejected, sendNoticeToAdmin } from '../mail/notifications';
+import { sendManualPaymentReceipt, sendNoticeReceived, sendNoticeRejected, sendNoticeToAdmin, sendReferralReward } from '../mail/notifications';
 import { hitRateLimit, RATE_RULES } from '../lib/rate-limit';
 import { findPackage, requirePrice } from './prices';
 import { getProfile } from './profiles';
+import { ensureReferralCode, listReferralRecords, planPendingMonths, planReferralCredit } from './referrals';
 import { loadSubItem, subIndexAttrs, subscriptionStatus, type SubItem } from './subscriptions';
 
 /**
@@ -42,6 +45,7 @@ export function toPayment(item: Item): Payment {
     ...(p.reviewedBy ? { reviewedBy: p.reviewedBy } : {}),
     ...(p.reviewedAt ? { reviewedAt: p.reviewedAt } : {}),
     ...(p.rejectReason ? { rejectReason: p.rejectReason } : {}),
+    ...(p.referral ? { referral: p.referral } : {}),
     createdAt: p.createdAt,
   };
 }
@@ -194,12 +198,31 @@ export interface ApplyPaymentInput {
   now: Date;
 }
 
-export async function applyApprovedPayment(input: ApplyPaymentInput): Promise<{ payment: Payment; subscription: SubscriptionStatus }> {
+export interface ApplyPaymentResult {
+  payment: Payment;
+  subscription: SubscriptionStatus;
+  /** "Mes gratis por referido" records of the payer's saved months, applied after this payment. */
+  appliedReferralMonths: Payment[];
+  /** The referrer's reward this payment triggered (first qualifying payment of a referred account). */
+  referralCredit: { referrerProId: string; outcome: ReferralRewardOutcome; payment: Payment | null } | null;
+}
+
+/**
+ * THE single path for every approved payment (admin manual payment, approved "Ya pagué" notice, and
+ * future gateways). One transaction: the payer's subscription (+ any months they saved from referrals
+ * while expired), the payment, and — when this is a referred account's first qualifying payment — the
+ * referrer's free month (or saved month) behind the conditional `REFREWARD#` marker, so retries and
+ * replays never reward twice. Emails go out only after the commit.
+ */
+export async function applyApprovedPayment(input: ApplyPaymentInput): Promise<ApplyPaymentResult> {
+  let skipReferralCredit = false;
   for (let attempt = 0; ; attempt++) {
     const sub = await loadSubItem(input.proId, true);
     if (!sub) throw new ApiError('not_found', 'No encontramos esa suscripción.');
-    const paidUntil = input.paidUntil(sub);
-    const payment = input.payment(paidUntil, sub);
+    const basePaidUntil = input.paidUntil(sub);
+    const payment = input.payment(basePaidUntil, sub);
+    const pending = await planPendingMonths(sub, basePaidUntil, input.now);
+    const paidUntil = pending.paidUntil;
     const next: SubItem = { ...sub, paidUntil, updatedAt: input.now.toISOString() };
     const lastPayment = { method: payment.method, amountCop: payment.amountCop, paidAt: payment.paidAt, status: payment.status };
     const paymentOp: TransactItem = input.approvesNotice
@@ -213,30 +236,87 @@ export async function applyApprovedPayment(input: ApplyPaymentInput): Promise<{ 
         },
       }
       : { Put: { TableName: table(), Item: paymentItem(payment), ConditionExpression: 'attribute_not_exists(PK)' } };
-    try {
-      await transactWrite([
-        {
-          Update: {
-            TableName: table(),
-            Key: subKey(input.proId),
-            UpdateExpression: `SET paidUntil = :pu, #g1sk = :g1sk, lastPayment = :lp, updatedAt = :u${input.approvesNotice ? ' REMOVE pendingNoticeId' : ''}`,
-            ConditionExpression: 'updatedAt = :prev',
-            ExpressionAttributeNames: { '#g1sk': GSI1.sk },
-            ExpressionAttributeValues: {
-              ':pu': paidUntil, ':g1sk': subIndexAttrs(next)[GSI1.sk], ':lp': lastPayment, ':u': next.updatedAt, ':prev': sub.updatedAt,
-            },
+    const ops: TransactItem[] = [
+      {
+        Update: {
+          TableName: table(),
+          Key: subKey(input.proId),
+          UpdateExpression: 'SET paidUntil = :pu, #g1sk = :g1sk, lastPayment = :lp, updatedAt = :u',
+          ConditionExpression: 'updatedAt = :prev',
+          ExpressionAttributeNames: { '#g1sk': GSI1.sk },
+          ExpressionAttributeValues: {
+            ':pu': paidUntil, ':g1sk': subIndexAttrs(next)[GSI1.sk], ':lp': lastPayment, ':u': next.updatedAt, ':prev': sub.updatedAt,
           },
         },
-        paymentOp,
-      ]);
-      return { payment, subscription: subscriptionStatus(next, input.now) };
+      },
+      paymentOp,
+      ...pending.payments.map((p): TransactItem => ({ Put: { TableName: table(), Item: paymentItem(p), ConditionExpression: 'attribute_not_exists(PK)' } })),
+    ];
+    const savedStart = ops.length;
+    ops.push(...pending.ops);
+    const savedEnd = ops.length;
+
+    const credit = skipReferralCredit ? null : await planReferralCredit(sub, payment, input.now, ops.length);
+    if (credit) {
+      ops.push(...credit.ops);
+      if (credit.payment) ops.push({ Put: { TableName: table(), Item: paymentItem(credit.payment), ConditionExpression: 'attribute_not_exists(PK)' } });
+    }
+    const subUpdate = ops[0].Update!;
+    const removes = input.approvesNotice ? ' REMOVE pendingNoticeId' : '';
+    if (credit) {
+      subUpdate.UpdateExpression = `SET paidUntil = :pu, #g1sk = :g1sk, lastPayment = :lp, updatedAt = :u, referralRewardedAt = :rr${removes}`;
+      subUpdate.ExpressionAttributeValues = { ...subUpdate.ExpressionAttributeValues, ':rr': input.now.toISOString() };
+    } else {
+      subUpdate.UpdateExpression = `${subUpdate.UpdateExpression}${removes}`;
+    }
+
+    try {
+      await transactWrite(ops);
     } catch (err) {
       const index = failedConditionIndex(err);
-      // Someone else changed the subscription in between: re-read and retry.
-      if (index === 0 && attempt < CONCURRENCY_RETRIES) continue;
+      const retry = attempt < CONCURRENCY_RETRIES;
+      // Someone else changed a subscription (payer or referrer) or a saved month in between: re-read and retry.
+      if (retry && (index === 0 || (index >= savedStart && index < savedEnd) || (credit && index === credit.referrerSubIndex))) continue;
       if (index === 1 && input.approvesNotice) throw new ApiError('conflict', 'Ese aviso ya fue revisado.');
+      // The reward marker exists: this referred account was already rewarded (replay) — commit without it.
+      if (credit && index === credit.markerIndex && retry) {
+        skipReferralCredit = true;
+        continue;
+      }
       throw err;
     }
+
+    const referralCredit = credit ? { referrerProId: credit.referrer.proId, outcome: credit.outcome, payment: credit.payment } : null;
+    if (credit) {
+      log.info('referral credited', { referredProId: input.proId, referrerProId: credit.referrer.proId, outcome: credit.outcome.kind });
+      await notifyReferralCredit(credit.referrer, sub, payment, credit.outcome);
+    }
+    if (pending.payments.length) log.info('saved referral months applied', { proId: input.proId, months: pending.payments.length });
+    return { payment, subscription: subscriptionStatus(next, input.now), appliedReferralMonths: pending.payments, referralCredit };
+  }
+}
+
+/** "¡Ganaste un mes gratis!" to the referrer (best effort: never undoes the committed payment). */
+async function notifyReferralCredit(referrer: SubItem, referred: SubItem, payment: Payment, outcome: ReferralRewardOutcome): Promise<void> {
+  try {
+    const profile = await getProfile(referrer.proId);
+    if (!profile) return;
+    const code = referrer.referralCode ?? (await ensureReferralCode(referrer.proId));
+    const savedMonths = outcome.kind === 'saved'
+      ? (await listReferralRecords(referrer.proId, true)).filter((r) => r.state === 'saved').length
+      : 0;
+    await sendReferralReward({
+      profile,
+      referred: { name: referred.name, title: referred.title },
+      paidMonths: payment.months ?? 1,
+      paidAt: payment.paidAt,
+      outcome,
+      previousAccessUntil: subscriptionStatus(referrer).accessUntil,
+      savedMonths,
+      referralUrl: referralUrl(env.siteUrl(), code),
+    });
+  } catch (err) {
+    log.error('referral reward email failed', { referrerProId: referrer.proId, err });
   }
 }
 
@@ -288,12 +368,14 @@ export async function recordManualPayment(
   if (input.notify) {
     try {
       const price = await requirePrice(result.subscription.priceVersionId);
-      await sendManualPaymentReceipt({ profile, payment: result.payment, price });
+      await sendManualPaymentReceipt({
+        profile, payment: result.payment, price, referralMonths: result.appliedReferralMonths.length, accessUntil: result.subscription.accessUntil,
+      });
     } catch (err) {
       log.error('manual payment receipt failed', { proId, err });
     }
   }
-  return result;
+  return { payment: result.payment, subscription: result.subscription };
 }
 
 /** Approved payments in a Bogotá month, from the GSI1 bucket. */

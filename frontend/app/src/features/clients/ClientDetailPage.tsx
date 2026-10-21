@@ -77,7 +77,7 @@ function Detail({ data }: { data: ClientDetailResponse }) {
           <div className="w-[60px] h-[60px] rounded-full bg-accent flex items-center justify-center font-display font-extrabold text-[22px] shrink-0">{initials(client.name)}</div>
           <div className="flex flex-col gap-1 min-w-0">
             <h1 className="m-0 font-display font-extrabold text-[26px] sm:text-[32px] leading-[1.15] tracking-[-0.8px] [overflow-wrap:anywhere]">{client.name}</h1>
-            <div className="text-[14px] text-muted [overflow-wrap:anywhere]">{[formatPhone(client.phone), client.email].filter(Boolean).join(' · ')}</div>
+            {(client.phone || client.email) && <div className="text-[14px] text-muted [overflow-wrap:anywhere]">{[formatPhone(client.phone), client.email].filter(Boolean).join(' · ')}</div>}
           </div>
         </div>
         <button
@@ -102,40 +102,43 @@ function Detail({ data }: { data: ClientDetailResponse }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-6 items-start">
-        <section className={cx(ui.card, 'flex-[999_1_460px] min-w-0 gap-[6px]')}>
-          <h2 className={cx(ui.h2, 'pb-[10px]')}>Historial de citas</h2>
-          {appointments.length === 0 ? (
-            <EmptyState title="Sin citas todavía" />
-          ) : (
-            appointments.map((a) => {
-              const date = bogotaDate(a.start);
-              const row = buildDayRows(date, [a], NO_SCHEDULE, { slotStepMin: 30 }, clock, { includeFree: false })[0];
-              return (
-                <AppointmentCard
-                  key={a.id}
-                  row={row}
-                  now={clock}
-                  readOnly={readOnly}
-                  title="service"
-                  onOutcome={markOutcome}
-                  onMove={(appointment) => setModal({ kind: 'move', appointment })}
-                  onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}
-                  timeLabel={
-                    <span className="flex sm:flex-col gap-x-2">
-                      <span>{date.startsWith(year) ? formatDateNoYear(date) : formatDateShort(date)}</span>
-                      <span className="font-semibold text-muted sm:text-[13px]">{formatInstantTime(a.start)}</span>
-                    </span>
-                  }
-                />
-              );
-            })
-          )}
-        </section>
+      {/* Notes come before the history when stacked (phones), and sit on the right when there's room. */}
+      <div className="@container">
+        <div className="grid gap-x-6 gap-y-5 items-start @min-[804px]:grid-cols-[minmax(0,1fr)_320px] @min-[804px]:grid-rows-[auto_1fr]">
+          <div className="min-w-0 @min-[804px]:col-start-2 @min-[804px]:row-start-1">
+            <NotesCard key={client.updatedAt} client={client} readOnly={readOnly} />
+          </div>
+          <section className={cx(ui.card, 'min-w-0 gap-[6px] @min-[804px]:col-start-1 @min-[804px]:row-start-1 @min-[804px]:row-span-2')}>
+            <h2 className={cx(ui.h2, 'pb-[10px]')}>Historial de citas</h2>
+            {appointments.length === 0 ? (
+              <EmptyState title="Sin citas todavía" />
+            ) : (
+              appointments.map((a) => {
+                const date = bogotaDate(a.start);
+                const row = buildDayRows(date, [a], NO_SCHEDULE, { slotStepMin: 30 }, clock, { includeFree: false })[0];
+                return (
+                  <AppointmentCard
+                    key={a.id}
+                    row={row}
+                    now={clock}
+                    readOnly={readOnly}
+                    title="service"
+                    onOutcome={markOutcome}
+                    onMove={(appointment) => setModal({ kind: 'move', appointment })}
+                    onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}
+                    timeLabel={
+                      <span className="flex sm:flex-col gap-x-2">
+                        <span>{date.startsWith(year) ? formatDateNoYear(date) : formatDateShort(date)}</span>
+                        <span className="font-semibold text-muted sm:text-[13px]">{formatInstantTime(a.start)}</span>
+                      </span>
+                    }
+                  />
+                );
+              })
+            )}
+          </section>
 
-        <div className="flex-[1_1_320px] min-w-0 flex flex-col gap-5">
-          <NotesCard key={client.updatedAt} client={client} readOnly={readOnly} />
-          <section className={cx(ui.card, 'gap-3')}>
+          <section className={cx(ui.card, 'min-w-0 gap-3 @min-[804px]:col-start-2 @min-[804px]:row-start-2')}>
             <h2 className={ui.h2sm}>Datos del cliente</h2>
             <div className="text-[14px] text-ink-2">Cliente desde el {formatDateShort(bogotaDate(client.firstSeenAt))}.</div>
             <button type="button" disabled={readOnly} onClick={() => setDeleting(true)} className="self-start min-h-11 font-bold text-[14px] text-warn-ink underline underline-offset-2 disabled:text-muted disabled:cursor-not-allowed">
@@ -188,7 +191,7 @@ function NotesCard({ client, readOnly }: { client: ClientRecord; readOnly: boole
         aria-describedby="notes-warning"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Ej. Prefiere las citas en la mañana. Llega en bicicleta."
+        placeholder="Notas privadas sobre este cliente"
         className={ui.textarea}
       />
       <div className="flex justify-between items-center gap-3">

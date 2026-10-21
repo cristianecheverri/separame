@@ -92,6 +92,7 @@ export class WorkersStack extends cdk.Stack {
     table.grantReadWriteData(jobsTick);
     grantSendEmail(jobsTick, mail);
     grantReadStageParameters(jobsTick, config, this);
+    grantSitePublishing(jobsTick, siteBucket, distribution); // re-renders the landing (/) with the active prices
     new scheduler.Schedule(this, 'JobsTickSchedule', {
       scheduleName: `${config.prefix}-jobs-tick`,
       description: 'Reminders, renewal notices and price migrations',

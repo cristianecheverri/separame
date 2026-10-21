@@ -11,14 +11,16 @@ interface Props {
   resetKey: number;
   onToken: (token: string | null) => void;
   onError: () => void;
+  /** true while Cloudflare shows a challenge the visitor has to click. */
+  onInteractive: (interactive: boolean) => void;
 }
 
-export function TurnstileBox({ siteKey, resetKey, onToken, onError }: Props) {
+export function TurnstileBox({ siteKey, resetKey, onToken, onError, onInteractive }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<{ api: TurnstileApi; id: string } | null>(null);
-  const handlersRef = useRef({ onToken, onError });
+  const handlersRef = useRef({ onToken, onError, onInteractive });
   useEffect(() => {
-    handlersRef.current = { onToken, onError };
+    handlersRef.current = { onToken, onError, onInteractive };
   });
 
   useEffect(() => {
@@ -33,6 +35,8 @@ export function TurnstileBox({ siteKey, resetKey, onToken, onError }: Props) {
           callback: (token) => handlersRef.current.onToken(token),
           'expired-callback': () => handlersRef.current.onToken(null),
           'error-callback': () => handlersRef.current.onError(),
+          'before-interactive-callback': () => handlersRef.current.onInteractive(true),
+          'after-interactive-callback': () => handlersRef.current.onInteractive(false),
         });
         widgetRef.current = { api, id };
       })

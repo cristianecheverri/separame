@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiPaths, type BillingResponse, type PaymentNoticeRequest, type PaymentNoticeResponse } from '@shared/api';
+import { apiPaths, type BillingResponse, type PaymentNoticeRequest, type PaymentNoticeResponse, type ReferralsResponse } from '@shared/api';
 import { formatCop, formatDateNoYear, formatDateShort, formatDayLong } from '@shared/format';
 import { extendPaidUntil, GRACE_DAYS } from '@shared/subscription';
-import { bogotaDate } from '@shared/time';
+import { addMonths, bogotaDate } from '@shared/time';
 import type { Payment, PaymentInstructions, SubscriptionStatus } from '@shared/types';
 import { Chip } from '../../components/ui/Chip';
 import { cx } from '../../components/ui/cx';
@@ -17,6 +17,9 @@ import { now } from '../../lib/clock';
 import { formatDateLong, formatDayMonth } from '../../lib/format';
 import { buildPlans, defaultPlanIndex, type PlanOption } from '../../lib/plans';
 import { keys, useBilling } from '../../lib/queries';
+import { useReferrals } from '../referrals/queries';
+import { ReferralsSection } from '../referrals/ReferralsSection';
+import { isReferralPayment, monthsText, proReferralPaymentRow } from '../referrals/referralText';
 import { isPendingNotice, paymentDot, paymentTitle, STATUS_LABEL } from './paymentLabels';
 
 function headline(sub: SubscriptionStatus): string {
@@ -31,6 +34,18 @@ function headline(sub: SubscriptionStatus): string {
     default:
       return `Tu plan venció el ${formatDayMonth(access)}`;
   }
+}
+
+/** "· incluye 2 meses ganados por referidos" / "· tienes 1 mes guardado por referidos" (referral boards). */
+function referralNote(sub: SubscriptionStatus, referrals: ReferralsResponse | undefined): string {
+  if (!referrals) return '';
+  if (referrals.monthsPending > 0 && (sub.state === 'expired' || sub.state === 'grace')) {
+    return ` · tienes ${monthsText(referrals.monthsPending)} ${referrals.monthsPending === 1 ? 'guardado' : 'guardados'} por referidos`;
+  }
+  if (referrals.monthsApplied > 0 && (sub.state === 'active' || sub.state === 'trial')) {
+    return ` · incluye ${monthsText(referrals.monthsApplied)} ${referrals.monthsApplied === 1 ? 'ganado' : 'ganados'} por referidos`;
+  }
+  return '';
 }
 
 const planName = (months: number | null) => (months === 1 ? 'mes a mes' : months ? `${months} meses` : '');
@@ -139,7 +154,7 @@ function NoticeForm({ plan, instructions, pending }: { plan: PlanOption; instruc
         <label htmlFor="notice-ref" className={ui.label}>
           Referencia o comprobante (opcional)
         </label>
-        <input id="notice-ref" className={ui.input} value={reference} maxLength={200} disabled={pending} onChange={(e) => setReference(e.target.value)} placeholder="Ej. M12345 o los últimos dígitos" />
+        <input id="notice-ref" className={ui.input} value={reference} maxLength={200} disabled={pending} onChange={(e) => setReference(e.target.value)} placeholder="Número de comprobante o referencia" />
       </div>
       <button
         type="submit"
@@ -166,7 +181,10 @@ function PaymentHistory({ payments }: { payments: Payment[] }) {
         <div className="text-[14px] text-muted">Aún no tienes pagos. Cuando pagues, aquí queda el registro.</div>
       ) : (
         <ul className="m-0 p-0 list-none flex flex-col gap-3">
-          {payments.map((p) => (
+          {payments.map((p) =>
+            isReferralPayment(p) ? (
+              <ReferralHistoryItem key={p.id} payment={p} />
+            ) : (
             <li key={p.id} className="flex gap-3 items-start">
               <span className={cx('w-[10px] h-[10px] rounded-full shrink-0 mt-[5px]', paymentDot(p))} aria-hidden="true" />
               <div className="flex flex-col gap-[2px] grow min-w-0">
@@ -184,14 +202,32 @@ function PaymentHistory({ payments }: { payments: Payment[] }) {
                 </span>
               </div>
             </li>
-          ))}
+            ),
+          )}
         </ul>
       )}
     </section>
   );
 }
 
-function Plans({ data }: { data: BillingResponse }) {
+/** "Mes gratis por referido · Nombre" · "+1 mes" (yellow dot). */
+function ReferralHistoryItem({ payment }: { payment: Payment }) {
+  const row = proReferralPaymentRow(payment);
+  return (
+    <li className="flex gap-3 items-start">
+      <span className="w-[10px] h-[10px] rounded-full shrink-0 mt-[5px] bg-accent" aria-hidden="true" />
+      <div className="flex flex-col gap-[2px] grow min-w-0">
+        <div className="flex justify-between gap-2">
+          <span className="font-bold text-[14px]">{row.title}</span>
+          <span className="font-bold text-[14px] whitespace-nowrap">+{monthsText(payment.months ?? 1)}</span>
+        </div>
+        <span className="text-[13px] text-muted">{row.detail}</span>
+      </div>
+    </li>
+  );
+}
+
+function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: number }) {
   const plans = buildPlans(data.price);
   const [selected, setSelected] = useState(() => defaultPlanIndex(plans));
   const plan = plans[selected];
@@ -235,6 +271,14 @@ function Plans({ data }: { data: BillingResponse }) {
               Tu agenda queda activa hasta el
               <br />
               <strong>{until ? formatDateLong(bogotaDate(until)) : ''}</strong>
+              {until && savedMonths > 0 && (
+                <>
+                  {' '}
+                  <span className="text-ink-2">
+                    (+{monthsText(savedMonths)} {savedMonths === 1 ? 'guardado' : 'guardados'}: {formatDayMonth(bogotaDate(addMonths(until, savedMonths)))})
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <h2 className="m-0 font-bold text-[16px] pt-1">Cómo pagar</h2>
@@ -261,13 +305,14 @@ function Plans({ data }: { data: BillingResponse }) {
 /** pro-billing-plans (manual payments: instructions + "Ya pagué" notice). */
 export function BillingPage() {
   const billing = useBilling();
+  const referrals = useReferrals();
   const data = billing.data;
   const pendingNotice = data?.payments.find(isPendingNotice);
 
   return (
     <div className="flex flex-col gap-[22px]">
       <div className="flex flex-col gap-[6px]">
-        <div className="text-[15px] text-muted font-semibold">{data ? headline(data.subscription) : <Skeleton className="h-5 w-72" />}</div>
+        <div className="text-[15px] text-muted font-semibold">{data ? `${headline(data.subscription)}${referralNote(data.subscription, referrals.data)}` : <Skeleton className="h-5 w-72" />}</div>
         <h1 className={ui.h1}>Sigue recibiendo citas sin parar</h1>
       </div>
 
@@ -299,7 +344,8 @@ export function BillingPage() {
               </div>
             </div>
           )}
-          <Plans data={data} />
+          <Plans data={data} savedMonths={referrals.data?.monthsPending ?? 0} />
+          {!referrals.isError && <ReferralsSection data={referrals.data} />}
           <PaymentHistory payments={data.payments} />
         </>
       )}

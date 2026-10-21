@@ -3,20 +3,21 @@
  * Loaded lazily — profile pages never download this chunk.
  */
 import type { ComponentChildren } from 'preact';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import {
   AVAILABILITY_DAYS, CLIENT_CHANGE_CUTOFF_MIN, CONFIRM_ACTION_PARAM, type AvailabilityResponse, type BookingSummary, type ManagedAppointmentResponse,
 } from '@shared/api';
-import { capitalize, DAY_SHORT, formatDayLong, formatInstantTime, formatWhen } from '@shared/format';
+import { capitalize, DAY_SHORT, formatDayLong, formatInstantTime } from '@shared/format';
 import { bogotaDate, jsWeekday } from '@shared/time';
-import { CalendarX, Check, ChevronLeft, ChevronRight, Cross, Phone, Swap } from '../components/icons';
+import { CalendarX, Check, Cross, Phone, Swap } from '../components/icons';
 import {
-  Avatar, DayPill, DISABLED_BUTTON, Frame, Notice, OUTLINE_BUTTON, PageScroll, PRIMARY_BUTTON, SkeletonPills, SkeletonSlots, SlotButton, Wordmark,
+  Avatar, DayPill, DISABLED_BUTTON, Frame, Notice, OUTLINE_BUTTON, PageScroll, PRIMARY_BUTTON, SkeletonPills, SkeletonSlots, SlotGroup, WeekNav, Wordmark,
 } from '../components/ui';
 import { MissingScreen } from '../booking/Unavailable';
 import { ApiError, errorMessage, type ApiClient } from '../lib/api';
-import { chunk, isDayBookable, monthLabel } from '../lib/slots';
+import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, resolveDay, splitSlots, weekOf } from '../lib/slots';
 import { firstName, formatPhone, telHref } from '../lib/text';
+import { timeLabel, whenLabel } from '../lib/when';
 
 type Mode = 'menu' | 'move' | 'cancel' | 'moved' | 'cancelled' | 'too_late' | 'was_cancelled' | 'past' | 'attended';
 
@@ -25,7 +26,6 @@ type LoadState =
   | { status: 'ready'; data: ManagedAppointmentResponse }
   | { status: 'error'; notFound: boolean };
 
-const DAYS_PER_PAGE = 5;
 const PRIMARY_BUTTON_16 = PRIMARY_BUTTON.replace('text-[17px]', 'text-[16px]');
 const DISABLED_BUTTON_16 = DISABLED_BUTTON.replace('text-[17px]', 'text-[16px]');
 const H2 = 'm-0 font-display font-extrabold text-[24px] tracking-[-0.5px] leading-[1.15]';
@@ -33,10 +33,14 @@ const H1_BIG = 'm-0 font-display font-extrabold text-[28px] leading-[1.1] tracki
 const LINK_BUTTON = 'h-11 border-0 bg-transparent font-semibold text-[14px] text-ink-2 rounded-full hover:text-ink';
 const OPTION =
   'flex gap-3.5 items-center w-full min-h-[76px] py-3.5 px-4 rounded-[20px] border-2 border-line bg-white text-ink text-left hover:border-line-strong transition-colors';
-const NAV_BUTTON =
-  'w-11 h-11 rounded-full border-0 bg-surface text-ink flex items-center justify-center hover:bg-line disabled:opacity-40 disabled:cursor-default';
+const SLOT_TAKEN_NOTICE = 'Alguien acaba de separar esa hora. Elige otra, por favor.';
+const UNAVAILABLE_NOTICE = 'En este momento no se puede cambiar el día en línea. Si lo necesitas, puedes cancelar la cita.';
 
-/** `/c/<token>?action=confirm` comes from the reminder email's "Sí, voy" button. */
+/**
+ * `/c/<token>?action=confirm` comes from the reminder email's "Sí, voy" button.
+ * It only highlights and focuses "Confirmar asistencia": acting on page load
+ * would let link scanners that run JavaScript confirm for the client.
+ */
 function wantsConfirm(): boolean {
   return new URLSearchParams(location.search).get('action') === CONFIRM_ACTION_PARAM.split('=')[1];
 }
@@ -54,13 +58,54 @@ function canConfirm(booking: BookingSummary): boolean {
 
 /** "a las 10:00 a. m." / "a la 1:30 p. m." — glued with non-breaking spaces. */
 function atTime(start: string): string {
-  const time = formatInstantTime(start).replace(/ /g, '\u00a0');
+  const time = timeLabel(start);
   return `${time.startsWith('1:') ? 'a la' : 'a las'} ${time}`;
 }
 
 /** Ends a sentence without doubling the period of "a. m.". */
 function sentence(text: string): string {
   return text.endsWith('.') ? text : `${text}.`;
+}
+
+/** "Jue 22 de octubre · 10:00 a. m." */
+function shortWhenLabel(start: string): string {
+  const date = bogotaDate(start);
+  return `${DAY_SHORT[jsWeekday(date)]} ${formatDayLong(date).split(' ').slice(1).join(' ')} · ${timeLabel(start)}`;
+}
+
+/** "jue 22, 10:30 a. m." for the move button. */
+function moveTarget(start: string): string {
+  const date = bogotaDate(start);
+  return `${DAY_SHORT[jsWeekday(date)].toLowerCase()} ${Number(date.slice(8))}, ${formatInstantTime(start)}`;
+}
+
+/** The appointment summary at the top of every manage screen (compact while moving it). */
+function AppointmentCard({ booking, label, cancelled = false, compact = false }: {
+  booking: BookingSummary;
+  label: string;
+  cancelled?: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <div class={`bg-primary-soft flex gap-3 items-center ${compact ? 'rounded-[20px] py-3 px-3.5' : 'rounded-[22px] p-4'}`}>
+      <Avatar initials={booking.pro.initials} size={compact ? 40 : 44} />
+      <div class={`flex flex-col min-w-0 ${compact ? 'gap-px' : 'gap-0.5'}`}>
+        <div class="text-[13px] text-ink-2">{label}</div>
+        <div class={`font-bold ${compact ? 'text-[15px]' : 'text-[16px]'} ${cancelled ? 'line-through text-muted' : ''}`}>
+          {compact ? shortWhenLabel(booking.start) : whenLabel(booking.start)}
+        </div>
+        <div class={`${compact ? 'text-[13px]' : 'text-[14px]'} text-ink-2`}>
+          {booking.serviceName} con {booking.pro.name}
+        </div>
+        {!cancelled && !compact && booking.status === 'confirmed' && booking.clientConfirmation === 'confirmed' && (
+          <span class="mt-1.5 self-start inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-primary text-white text-[13px] font-semibold">
+            <Check size={14} strokeWidth={3} />
+            Asistencia confirmada
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function initialMode(data: ManagedAppointmentResponse): Mode {
@@ -75,29 +120,22 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   const [mode, setModeState] = useState<Mode>('menu');
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [highlightConfirm, setHighlightConfirm] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const autoConfirm = wantsConfirm();
+    const fromReminder = wantsConfirm();
     stripAction();
     api
       .getAppointment(token)
-      .then(async (data) => {
+      .then((data) => {
         if (cancelled) return;
-        let current = data.booking;
-        let next = initialMode(data);
-        if (autoConfirm && current.status === 'confirmed' && new Date(current.start).getTime() > Date.now()) {
-          try {
-            current = current.clientConfirmation === 'confirmed' ? current : (await api.confirmAppointment(token)).booking;
-            next = 'attended';
-          } catch (error) {
-            if (!cancelled) setConfirmError(errorMessage(error));
-          }
-        }
-        if (cancelled) return;
+        const current = data.booking;
+        const alreadyConfirmed = current.status === 'confirmed' && current.clientConfirmation === 'confirmed' && new Date(current.start).getTime() > Date.now();
         setLoad({ status: 'ready', data });
         setBooking(current);
-        setModeState(next);
+        setModeState(fromReminder && alreadyConfirmed ? 'attended' : initialMode(data));
+        setHighlightConfirm(fromReminder && canConfirm(current));
       })
       .catch((error: unknown) => {
         if (!cancelled) setLoad({ status: 'error', notFound: error instanceof ApiError && error.code === 'not_found' });
@@ -174,32 +212,32 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   const proName = booking.pro.name;
   const bookAgain = `/${encodeURIComponent(booking.pro.slug)}`;
 
+  if (mode === 'move') {
+    return (
+      <Frame label="Cambiar día u hora">
+        <MovePanel
+          api={api}
+          token={token}
+          booking={booking}
+          onBack={toMenu}
+          onMoved={(updated) => finish('moved', updated)}
+          onTooLate={() => finish('too_late')}
+        />
+      </Frame>
+    );
+  }
+
   return (
     <Frame label="Cancelar o reprogramar">
       <PageScroll class="py-6 px-5 gap-5">
         <Wordmark />
-        <div class="bg-primary-soft rounded-[22px] p-4 flex gap-3 items-center">
-          <Avatar initials={booking.pro.initials} />
-          <div class="flex flex-col gap-0.5 min-w-0">
-            <div class="text-[13px] text-ink-2">{cardLabel}</div>
-            <div class={`font-bold text-[16px] ${cancelledCard ? 'line-through text-muted' : ''}`}>{formatWhen(booking.start)}</div>
-            <div class="text-[14px] text-ink-2">
-              {booking.serviceName} con {proName}
-            </div>
-            {!cancelledCard && booking.status === 'confirmed' && booking.clientConfirmation === 'confirmed' && (
-              <span class="mt-1.5 self-start inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-primary text-white text-[13px] font-semibold">
-                <Check size={14} strokeWidth={3} />
-                Asistencia confirmada
-              </span>
-            )}
-          </div>
-        </div>
+        <AppointmentCard booking={booking} label={cardLabel} cancelled={cancelledCard} />
 
         {mode === 'menu' && (
           <div class="flex flex-col gap-4 grow fade-in">
             <h1 class={H1_BIG}>Hola, {firstName(booking.client.name)}. ¿Qué quieres hacer con tu cita?</h1>
             {confirmError && <Notice>{confirmError}</Notice>}
-            {canConfirm(booking) && <ConfirmButton busy={confirming} onClick={confirmAttendance} />}
+            {canConfirm(booking) && <ConfirmButton busy={confirming} highlight={highlightConfirm} onClick={confirmAttendance} />}
             <button type="button" class={OPTION} onClick={() => openMode('move')}>
               <span class="w-11 h-11 rounded-[14px] bg-accent-soft flex items-center justify-center shrink-0">
                 <Swap size={20} stroke="#15241D" />
@@ -222,17 +260,6 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
               Puedes hacer cambios hasta {CLIENT_CHANGE_CUTOFF_MIN / 60} horas antes de la cita. No necesitas cuenta: este enlace es solo para ti.
             </div>
           </div>
-        )}
-
-        {mode === 'move' && (
-          <MovePanel
-            api={api}
-            token={token}
-            booking={booking}
-            onBack={toMenu}
-            onMoved={(updated) => finish('moved', updated)}
-            onTooLate={() => finish('too_late')}
-          />
         )}
 
         {mode === 'cancel' && (
@@ -268,7 +295,7 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
             href={bookAgain}
           >
             {confirmError && <Notice>{confirmError}</Notice>}
-            {canConfirm(booking) && <ConfirmButton busy={confirming} onClick={confirmAttendance} />}
+            {canConfirm(booking) && <ConfirmButton busy={confirming} highlight={highlightConfirm} onClick={confirmAttendance} />}
           </ResultPanel>
         )}
         {mode === 'attended' && (
@@ -302,9 +329,20 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   );
 }
 
-function ConfirmButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+/** "Confirmar asistencia"; `highlight` (from the reminder's "Sí, voy") rings and focuses it — one tap still required. */
+function ConfirmButton({ busy, highlight = false, onClick }: { busy: boolean; highlight?: boolean; onClick: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (highlight) ref.current?.focus({ preventScroll: true });
+  }, [highlight]);
   return (
-    <button type="button" onClick={onClick} aria-busy={busy} class={`${PRIMARY_BUTTON_16} gap-2 ${busy ? 'opacity-80 cursor-progress' : ''}`}>
+    <button
+      ref={ref}
+      type="button"
+      onClick={onClick}
+      aria-busy={busy}
+      class={`${PRIMARY_BUTTON_16} gap-2 ${highlight ? 'ring-4 ring-accent ring-offset-2' : ''} ${busy ? 'opacity-80 cursor-progress' : ''}`}
+    >
       <Check size={20} strokeWidth={2.6} />
       {busy ? 'Confirmando…' : 'Confirmar asistencia'}
     </button>
@@ -347,7 +385,7 @@ function ResultPanel({ icon, title, text, href, phone, action, children }: {
       {children}
       <div class="mt-auto flex flex-col gap-2.5 items-center">
         {action ?? (
-          <a href={href} class="font-bold text-[15px]">
+          <a href={href} class="inline-flex items-center min-h-11 px-3 -my-[13px] font-bold text-[15px]">
             Separar otra cita
           </a>
         )}
@@ -356,6 +394,11 @@ function ResultPanel({ icon, title, text, href, phone, action, children }: {
   );
 }
 
+/**
+ * "Cambiar día u hora" with the booking pattern: week rows of day pills, the
+ * hours grouped Mañana / Tarde (the current one dashed) and a fixed footer
+ * that says where the appointment goes ("Mover a jue 22, 10:30 a. m.").
+ */
 function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
   api: ApiClient;
   token: string;
@@ -367,11 +410,13 @@ function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
   const [availability, setAvailability] = useState<AvailabilityResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [page, setPage] = useState(0);
+  /** `null` = the row of the selected day; set once the client browses the weeks. */
+  const [week, setWeek] = useState<number | null>(null);
   const [day, setDay] = useState<string | null>(null);
   const [start, setStart] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const currentDay = bogotaDate(booking.start);
 
   useEffect(() => {
     let cancelled = false;
@@ -396,10 +441,22 @@ function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
     setReloadKey((k) => k + 1);
   }, []);
 
-  const days = (availability?.days ?? []).filter(isDayBookable);
-  const pages = chunk(days, DAYS_PER_PAGE);
-  const current = pages[Math.min(page, Math.max(0, pages.length - 1))] ?? [];
-  const selected = days.find((d) => d.date === day) ?? null;
+  const days = availability?.days ?? [];
+  const weeks = chunk(days, DAYS_PER_WEEK);
+  // The client's pick; else the appointment's own day when it still has free hours; else the first day that does.
+  const selectedDate = resolveDay(days.filter(isDayBookable), day, currentDay);
+  const selected = days.find((d) => d.date === selectedDate) ?? null;
+  const shownWeek = week ?? weekOf(days, selectedDate);
+  const current = weeks[Math.min(shownWeek, Math.max(0, weeks.length - 1))] ?? [];
+  // The current hour (taken by this very appointment) shows dashed among the others on its day.
+  const showCurrent = selected?.date === currentDay;
+  const slots = selected ? (showCurrent && !selected.slots.includes(booking.start) ? [...selected.slots, booking.start].sort() : selected.slots) : [];
+  const { morning, afternoon } = splitSlots(slots);
+
+  const pickDay = (date: string) => {
+    setDay(date);
+    if (start && bogotaDate(start) !== date) setStart(null);
+  };
 
   const confirm = async () => {
     if (!start || saving) return;
@@ -412,11 +469,11 @@ function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
       const code = error instanceof ApiError ? error.code : 'internal';
       if (code === 'too_late') return onTooLate();
       if (code === 'slot_taken') {
-        setNotice('Alguien acaba de separar esa hora. Elige otra, por favor.');
+        setNotice(SLOT_TAKEN_NOTICE);
         setStart(null);
         reload();
       } else if (code === 'agenda_unavailable') {
-        setNotice('En este momento no se puede cambiar el día en línea. Si lo necesitas, puedes cancelar la cita.');
+        setNotice(UNAVAILABLE_NOTICE);
       } else {
         setNotice(errorMessage(error));
       }
@@ -425,104 +482,91 @@ function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
     }
   };
 
-  const newWhen = start
-    ? `${DAY_SHORT[jsWeekday(bogotaDate(start))].toLowerCase()} ${Number(bogotaDate(start).slice(8))}, ${formatInstantTime(start)}`
-    : '';
   const inactive = availability && !availability.active;
+  const anyFree = days.some(isDayBookable);
 
   return (
-    <div class="flex flex-col gap-3.5 grow fade-in">
-      <h1 class={H2} tabIndex={-1}>
-        Elige el nuevo espacio
-      </h1>
-      {notice && <Notice>{notice}</Notice>}
-      {loadError ? (
-        <div class="flex flex-col gap-3">
-          <Notice>{loadError}</Notice>
-          <button type="button" onClick={reload} class="h-11 rounded-full border-2 border-line bg-white font-bold text-[15px] text-ink">
-            Reintentar
-          </button>
-        </div>
-      ) : !availability ? (
-        <>
-          <SkeletonPills count={5} columns={5} />
-          <SkeletonSlots />
-          <span class="sr-only" role="status">Cargando horas libres…</span>
-        </>
-      ) : inactive ? (
-        <Notice>En este momento no se puede cambiar el día en línea. Si lo necesitas, puedes cancelar la cita.</Notice>
-      ) : days.length === 0 ? (
-        <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
-          No quedan horas libres en los próximos días. Vuelve a intentarlo más adelante.
-        </div>
-      ) : (
-        <>
-          {pages.length > 1 && (
-            <div class="flex justify-between items-center gap-2 -mb-1">
-              <span class="text-[14px] font-semibold text-muted">{monthLabel(current.map((d) => d.date))}</span>
-              <div class="flex gap-1">
-                <button type="button" aria-label="Días anteriores" class={NAV_BUTTON} disabled={page <= 0} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft size={16} strokeWidth={2.4} />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Días siguientes"
-                  class={NAV_BUTTON}
-                  disabled={page >= pages.length - 1}
-                  onClick={() => setPage(page + 1)}
-                >
-                  <ChevronRight size={16} strokeWidth={2.4} />
-                </button>
-              </div>
+    <>
+      <main class="scroll-area">
+        <div class="min-h-full safe-top pt-6 px-5 pb-4 flex flex-col gap-3.5 fade-in short:pt-3 short:gap-2.5">
+          <Wordmark />
+          <AppointmentCard booking={booking} label="Tu cita actual" compact />
+          <h1 class="m-0 mt-1 font-display font-extrabold text-[26px] leading-[1.1] tracking-[-0.6px] short:mt-0 short:text-[22px]" tabIndex={-1}>
+            Elige el nuevo espacio
+          </h1>
+          {notice && <Notice>{notice}</Notice>}
+          {loadError ? (
+            <div class="flex flex-col gap-3">
+              <Notice>{loadError}</Notice>
+              <button type="button" onClick={reload} class="h-11 rounded-full border-2 border-line bg-white font-bold text-[15px] text-ink">
+                Reintentar
+              </button>
             </div>
-          )}
-          <div class="grid grid-cols-5 gap-1.5">
-            {current.map((d) => (
-              <DayPill
-                key={d.date}
-                dow={DAY_SHORT[jsWeekday(d.date)]}
-                num={String(Number(d.date.slice(8)))}
-                label={capitalize(formatDayLong(d.date))}
-                selected={d.date === day}
-                disabled={false}
-                onPick={() => {
-                  setDay(d.date);
-                  if (start && bogotaDate(start) !== d.date) setStart(null);
-                }}
-              />
-            ))}
-          </div>
-          {selected ? (
-            <div class="grid grid-cols-3 gap-2 fade-in" key={selected.date}>
-              {selected.slots.map((slot) => (
-                <SlotButton key={slot} label={formatInstantTime(slot)} selected={slot === start} onPick={() => setStart(slot)} />
-              ))}
+          ) : !availability ? (
+            <>
+              <SkeletonPills count={7} columns={7} />
+              <SkeletonSlots />
+              <span class="sr-only" role="status">Cargando horas libres…</span>
+            </>
+          ) : inactive ? (
+            <Notice>{UNAVAILABLE_NOTICE}</Notice>
+          ) : !anyFree ? (
+            <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
+              No quedan horas libres en los próximos días. Vuelve a intentarlo más adelante.
             </div>
           ) : (
-            <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center">Elige un día para ver las horas libres.</div>
+            <>
+              <WeekNav label={monthLabel(current.map((d) => d.date))} week={shownWeek} weeks={weeks.length} onWeek={setWeek} />
+              <div class="grid grid-cols-7 gap-[5px]">
+                {current.map((d) => (
+                  <DayPill
+                    key={d.date}
+                    dow={DAY_SHORT[jsWeekday(d.date)]}
+                    num={String(Number(d.date.slice(8)))}
+                    label={`${capitalize(formatDayLong(d.date))}${isDayBookable(d) ? '' : ', sin horas libres'}`}
+                    selected={d.date === selected?.date}
+                    disabled={!isDayBookable(d)}
+                    compact
+                    onPick={() => pickDay(d.date)}
+                  />
+                ))}
+              </div>
+              {selected ? (
+                <div class="flex flex-col gap-3 fade-in" key={selected.date}>
+                  <SlotGroup title="Mañana" slots={morning} start={start} onPickSlot={setStart} format={formatInstantTime} current={showCurrent ? booking.start : undefined} compact />
+                  <SlotGroup title="Tarde" slots={afternoon} start={start} onPickSlot={setStart} format={formatInstantTime} current={showCurrent ? booking.start : undefined} compact />
+                  {showCurrent && <div class="-mt-1 text-[12px] text-muted">La hora con borde punteado es tu cita actual.</div>}
+                </div>
+              ) : (
+                <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center">Elige un día para ver las horas libres.</div>
+              )}
+            </>
           )}
-        </>
-      )}
-      <div class="mt-auto flex flex-col gap-2.5">
-        {start ? (
-          <button
-            type="button"
-            onClick={confirm}
-            aria-busy={saving}
-            class={`${PRIMARY_BUTTON_16} ${saving ? 'opacity-80 cursor-progress' : ''}`}
-          >
-            {saving ? 'Moviendo tu cita…' : `Mover a ${newWhen}`}
+        </div>
+      </main>
+      <footer class="shrink-0 border-t border-line bg-white safe-bottom">
+        {/* Short screens: "Volver" beside the button instead of under it. */}
+        <div class="px-4 pt-3 pb-4 flex flex-col gap-1.5 short:flex-row-reverse short:items-center short:gap-2 short:pt-2 short:pb-2">
+          {start ? (
+            <button
+              type="button"
+              onClick={confirm}
+              aria-busy={saving}
+              class={`${PRIMARY_BUTTON_16} short:h-[46px] short:grow short:w-auto ${saving ? 'opacity-80 cursor-progress' : ''}`}
+            >
+              {saving ? 'Moviendo tu cita…' : `Mover a ${moveTarget(start)}`}
+            </button>
+          ) : (
+            <button type="button" disabled class={`${DISABLED_BUTTON_16} short:h-[46px] short:grow short:w-auto`}>
+              Elige la nueva hora
+            </button>
+          )}
+          <button type="button" onClick={onBack} class={`${LINK_BUTTON} short:px-4 short:shrink-0`}>
+            Volver
           </button>
-        ) : (
-          <button type="button" disabled class={DISABLED_BUTTON_16}>
-            Elige día y hora
-          </button>
-        )}
-        <button type="button" onClick={onBack} class={LINK_BUTTON}>
-          Volver
-        </button>
-      </div>
-    </div>
+        </div>
+      </footer>
+    </>
   );
 }
 
@@ -570,7 +614,7 @@ function CancelPanel({ api, token, proName, onMove, onCancelled, onTooLate }: {
           id="a-reason"
           rows={3}
           maxLength={300}
-          placeholder="Ej. Me salió un viaje"
+          placeholder="Escribe aquí el motivo"
           value={reason}
           onInput={(e) => setReason((e.currentTarget as HTMLTextAreaElement).value)}
           class="field h-auto py-3 text-[15px] resize-none leading-[normal]"

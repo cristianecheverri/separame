@@ -14,6 +14,7 @@ import { activeAppointments, upcomingDays } from '../../lib/agenda';
 import { formatWeekdayDay, plural } from '../../lib/format';
 import { bogotaDate } from '@shared/time';
 
+/** "Comparte tu agenda": QR to download. */
 export function ShareCard({ url, slug }: { url: string; slug: string }) {
   return (
     <section className={cx(ui.card, 'gap-[14px]')}>
@@ -73,7 +74,7 @@ export function UpcomingCard({ today, appointments, schedule, rules }: UpcomingP
   );
 }
 
-/** "Mañana sale el recordatorio por correo a tus 5 pacientes del miércoles." */
+/** "Mañana sale el recordatorio por correo a tus 5 clientes del miércoles." */
 export function ReminderNote({ today, appointments }: { today: ISODate; appointments: Appointment[] | undefined }) {
   if (!appointments) return null;
   const tomorrow = addDays(today, 1);
@@ -83,8 +84,8 @@ export function ReminderNote({ today, appointments }: { today: ISODate; appointm
     count === 0
       ? 'Los recordatorios salen solos por correo 24 horas antes de cada cita.'
       : count === 1
-        ? `Mañana sale el recordatorio por correo a tu paciente del ${weekday}.`
-        : `Mañana sale el recordatorio por correo a tus ${count} pacientes del ${weekday}.`;
+        ? `Mañana sale el recordatorio por correo a tu cliente del ${weekday}.`
+        : `Mañana sale el recordatorio por correo a tus ${count} clientes del ${weekday}.`;
   return (
     <section className="bg-accent-soft rounded-[24px] py-[18px] px-[18px] sm:px-[22px] flex gap-3 items-start text-[14px] leading-[1.45]">
       <BellIcon size={20} className="shrink-0 mt-[1px]" />

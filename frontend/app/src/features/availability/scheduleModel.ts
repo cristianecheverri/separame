@@ -52,5 +52,14 @@ export function nextRange(ranges: TimeRange[]): TimeRange | null {
   return { start: hhmm(start), end: hhmm(Math.min(start + 120, 23 * 60 + 55)) };
 }
 
-/** Every 5-minute step of the day: 00:00 … 23:55. */
-export const TIME_STEPS: string[] = Array.from({ length: (24 * 60) / 5 }, (_, i) => hhmm(i * 5));
+const FIRST_STEP_MIN = 5 * 60;
+const LAST_STEP_MIN = 23 * 60;
+const STEP_MIN = 15;
+
+/** Times offered in the pickers: every 15 minutes, 5:00 a. m. … 11:00 p. m. */
+export const TIME_STEPS: string[] = Array.from({ length: (LAST_STEP_MIN - FIRST_STEP_MIN) / STEP_MIN + 1 }, (_, i) => hhmm(FIRST_STEP_MIN + i * STEP_MIN));
+
+/** TIME_STEPS plus `current` when it isn't one of them (a saved 6:10 or 11:30 p. m. stays selectable). */
+export function timeStepsWith(current: string): string[] {
+  return TIME_STEPS.includes(current) ? TIME_STEPS : [...TIME_STEPS, current].sort((a, b) => minutesOf(a) - minutesOf(b));
+}

@@ -3,29 +3,36 @@
  * (3 steps when the professional offers a single service), then the
  * confirmation screen. Each step is a history entry (the browser back button
  * steps back), the half-filled form survives a reload (sessionStorage) and
- * `?service=<id>&date=<YYYY-MM-DD>` deep-links into "Día y hora".
+ * `?service=<id>&date=<YYYY-MM-DD>` deep-links into "Día y hora" (the date is
+ * only used when it has free hours; otherwise, as always, the first day with
+ * free hours comes preselected). The email is optional here; the phone is not.
+ * "Recordar mis datos" keeps name / phone / email in this browser for next time.
  */
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile, type PublicService } from '@shared/api';
 import { normalizeEmail } from '@shared/contact';
-import { capitalize, formatCop, formatDayLong, formatDayShort, formatDuration, formatInstantTime, MONTH_SHORT } from '@shared/format';
+import { capitalize, formatDayLong, formatDayShort, formatDuration, formatInstantTime, formatServicePrice, MONTH_SHORT } from '@shared/format';
 import { bogotaDate } from '@shared/time';
 import { Frame, DISABLED_BUTTON, LegalLinks, PRIMARY_BUTTON } from '../components/ui';
 import { ApiError, errorMessage } from '../lib/api';
 import type { Runtime } from '../lib/bootstrap';
-import { loadJson, removeKey, saveJson } from '../lib/storage';
+import { loadJson, loadSavedContact, removeKey, saveContact, saveJson } from '../lib/storage';
+import { newUuid } from '../lib/ids';
 import { formatPhone, fullAddress, joinDot, normalizePhone } from '../lib/text';
+import { useShortScreen } from '../lib/media';
+import { isDayBookable, resolveDay } from '../lib/slots';
+import { timeLabel } from '../lib/when';
 import {
-  CONTACT_FIELDS, fieldsFromApi, isContactFilled, validateContact, validateField,
-  type ContactErrors, type ContactField, type ContactForm,
+  CONTACT_FIELDS, contactBlockedLabel, fieldsFromApi, isContactFilled, validateContact, validateField,
+  type ContactErrors, type ContactField, type ContactForm, type ContactRules,
 } from '../lib/validation';
 import { Confirmed } from './Confirmed';
-import { FlowFooter, FlowHeader, type SelectionChip, type StepId } from './FlowChrome';
+import { FlowFooter, FlowHeader, FlowIntro, type SelectionChip, type StepId } from './FlowChrome';
 import { FIELD_IDS, StepDetails } from './StepDetails';
 import { StepReview, type ReviewRow } from './StepReview';
 import { StepService } from './StepService';
 import { StepWhen, type AvailabilityState } from './StepWhen';
-import { useCaptcha } from './useCaptcha';
+import { CaptchaHint, useCaptcha } from './useCaptcha';
 import { MissingScreen, Unavailable } from './Unavailable';
 import { WaitlistScreen } from './WaitlistScreen';
 
@@ -33,6 +40,10 @@ interface Draft extends ContactForm {
   serviceId: string | null;
   day: string | null;
   start: string | null;
+  /** UUID of this booking attempt (new for every picked slot): a retry after a lost response gets the same appointment. */
+  idempotencyKey?: string | null;
+  /** "Recordar mis datos en este celular". */
+  remember?: boolean;
 }
 
 interface HistoryState {
@@ -41,12 +52,16 @@ interface HistoryState {
 }
 
 const ALL_STEPS: StepId[] = ['service', 'when', 'details', 'review'];
-const EMPTY_DRAFT: Draft = { serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false };
-const BLOCKED_LABELS: Record<Exclude<StepId, 'review'>, string> = {
+const EMPTY_DRAFT: Draft = {
+  serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false, idempotencyKey: null, remember: false,
+};
+/** The phone is what the pro needs; the email only brings the confirmation and the reminder. */
+const CONTACT_RULES: ContactRules = { emailOptional: true };
+const BLOCKED_LABELS = {
   service: 'Elige un servicio',
   when: 'Elige día y hora',
-  details: 'Completa tus datos',
-};
+  hour: 'Elige una hora',
+} as const;
 const SLOT_TAKEN_NOTICE = 'Alguien acaba de separar esa hora. Elige otra, por favor.';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -70,7 +85,7 @@ function stepsFor(profile: PublicProfile | null): StepId[] {
 function maxStep(draft: Draft): StepId {
   if (!draft.serviceId) return 'service';
   if (!draft.start) return 'when';
-  if (Object.keys(validateContact(draft)).length > 0) return 'details';
+  if (Object.keys(validateContact(draft, CONTACT_RULES)).length > 0) return 'details';
   return 'review';
 }
 
@@ -81,10 +96,27 @@ function clampStep(wanted: unknown, draft: Draft, steps: StepId[]): StepId {
   return steps.includes(clamped) ? clamped : steps[0];
 }
 
-/** Restored draft + single-service preselection + `?service=&date=` deep link. */
-function initialDraft(key: string, profile: PublicProfile | null): { draft: Draft; deepLinked: boolean } {
-  let draft: Draft = { ...EMPTY_DRAFT, ...loadJson<Partial<Draft>>(key) };
-  if (!profile) return { draft, deepLinked: false };
+interface Boot {
+  draft: Draft;
+  deepLinked: boolean;
+  /** Deep-linked date, used only if it has free hours once availability arrives. */
+  date: string | null;
+  /** Name / phone / email came from this browser's saved data. */
+  prefilled: boolean;
+}
+
+/** An untouched contact gets the data saved with "Recordar mis datos". */
+function withSavedContact(draft: Draft): { draft: Draft; prefilled: boolean } {
+  const saved = draft.name || draft.phone || draft.email ? null : loadSavedContact();
+  return saved ? { draft: { ...draft, ...saved, remember: true }, prefilled: true } : { draft, prefilled: false };
+}
+
+/** Restored draft + saved contact + single-service preselection + `?service=&date=` deep link. */
+function initialDraft(key: string, profile: PublicProfile | null): Boot {
+  const restored = withSavedContact({ ...EMPTY_DRAFT, ...loadJson<Partial<Draft>>(key) });
+  let draft = restored.draft;
+  const boot = (deepLinked: boolean, date: string | null = null): Boot => ({ draft, deepLinked, date, prefilled: restored.prefilled });
+  if (!profile) return boot(false);
   const known = (id: string | null) => Boolean(id && profile.services.some((s) => s.id === id));
   if (!known(draft.serviceId)) draft = { ...draft, serviceId: null, day: null, start: null };
   if (profile.services.length === 1 && !draft.serviceId) draft = { ...draft, serviceId: profile.services[0].id };
@@ -92,10 +124,10 @@ function initialDraft(key: string, profile: PublicProfile | null): { draft: Draf
   const params = new URLSearchParams(location.search);
   const serviceParam = params.get('service');
   const dateParam = params.get('date');
-  if (!known(serviceParam)) return { draft, deepLinked: false };
+  if (!known(serviceParam)) return boot(false);
   const date = dateParam && DATE_RE.test(dateParam) ? dateParam : null;
-  if (serviceParam !== draft.serviceId || date) draft = { ...draft, serviceId: serviceParam, day: date, start: null };
-  return { draft, deepLinked: true };
+  if (serviceParam !== draft.serviceId || date) draft = { ...draft, serviceId: serviceParam, day: null, start: null };
+  return boot(true, date);
 }
 
 /** Drops `service`/`date` from the URL once applied so a reload keeps the client's own progress. */
@@ -114,7 +146,7 @@ function whenChip(start: string): string {
 }
 
 function serviceChip(service: PublicService): string {
-  return joinDot(service.name, formatDuration(service.durationMin), formatCop(service.priceCop));
+  return joinDot(service.name, formatDuration(service.durationMin), formatServicePrice(service));
 }
 
 export function BookingApp({ slug, initialProfile, runtime }: Props) {
@@ -135,10 +167,13 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   const [waitlistOpen, setWaitlistOpen] = useState(() => historyState().sep === 'waitlist');
   const [availability, setAvailability] = useState<Record<string, AvailabilityState>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
+  const [prefilled, setPrefilled] = useState(boot.prefilled);
+  const [wantedDate, setWantedDate] = useState(boot.date);
   const [slotNotice, setSlotNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const captcha = useCaptcha(turnstileSiteKey);
+  const shortScreen = useShortScreen();
 
   const depthRef = useRef<number>(historyState().d ?? 0);
   const inflightRef = useRef(new Set<string>());
@@ -161,8 +196,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       .then((res) => {
         if (cancelled) return;
         const next = initialDraft(draftKey, res.profile);
+        setWantedDate(next.date);
         setProfile(res.profile);
         setDraft(next.draft);
+        setPrefilled((was) => was || next.prefilled);
         setStep(next.deepLinked ? 'when' : clampStep(historyState().sep, next.draft, stepsFor(res.profile)));
         if (!res.active) setScreen('unavailable');
       })
@@ -203,6 +240,22 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   useEffect(() => {
     if (wantedService && !availability[wantedService]) fetchAvailability(wantedService);
   }, [wantedService, availability, fetchAvailability]);
+
+  // The first day with free hours comes preselected (or the deep-linked one, if it has free hours);
+  // a closed / out-of-window day (stale draft) never stays selected. Resolved during render so the
+  // hours paint together with the days; the effect then stores it in the draft.
+  const selectedServiceAvailability = draft.serviceId ? availability[draft.serviceId] : undefined;
+  const availableDays = selectedServiceAvailability?.status === 'ready' ? selectedServiceAvailability.data.days : null;
+  const day = availableDays ? resolveDay(availableDays, draft.day, wantedDate) : draft.day;
+  useEffect(() => {
+    if (!availableDays) return;
+    setWantedDate(null);
+    // Re-resolved from the latest draft: a day the client tapped before this ran must win.
+    setDraft((d) => {
+      const next = resolveDay(availableDays, d.day, wantedDate);
+      return next === d.day ? d : { ...d, day: next, start: d.start && bogotaDate(d.start) === next ? d.start : null };
+    });
+  }, [availableDays, wantedDate, draft.day]);
 
   const refreshAvailability = (serviceId: string) =>
     setAvailability((all) => {
@@ -302,21 +355,35 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
 
   const pickSlot = (start: string) => {
     setSlotNotice(null);
-    setDraft((d) => ({ ...d, start, day: bogotaDate(start) }));
+    setDraft((d) => ({ ...d, start, day: bogotaDate(start), idempotencyKey: d.start === start && d.idempotencyKey ? d.idempotencyKey : newUuid() }));
   };
 
   const changeField = (field: ContactField, value: string | boolean) => {
     const next = { ...draft, [field]: value };
     setDraft(next);
-    if (errors[field]) setErrors((e) => ({ ...e, [field]: validateField(field, next) }));
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: validateField(field, next, CONTACT_RULES) }));
   };
 
-  const canNext = step === 'service' ? Boolean(service) : step === 'when' ? Boolean(draft.start) : isContactFilled(draft);
+  /** On blur, a typed field is checked right away (an empty one waits for "Siguiente"). */
+  const blurField = (field: ContactField) => {
+    const value = draft[field];
+    if (typeof value !== 'string' || (!value.trim() && !errors[field])) return;
+    setErrors((e) => ({ ...e, [field]: validateField(field, draft, CONTACT_RULES) }));
+  };
+
+  const canNext = step === 'service' ? Boolean(service) : step === 'when' ? Boolean(draft.start) : isContactFilled(draft, CONTACT_RULES);
+  const dayHasHours = Boolean(availableDays?.some((d) => d.date === day && isDayBookable(d)));
+  const blockedLabel =
+    step === 'service'
+      ? BLOCKED_LABELS.service
+      : step === 'when'
+        ? BLOCKED_LABELS[dayHasHours ? 'hour' : 'when']
+        : contactBlockedLabel(draft, CONTACT_RULES);
 
   const next = () => {
     if (!canNext) return;
     if (step === 'details') {
-      const found = validateContact(draft);
+      const found = validateContact(draft, CONTACT_RULES);
       setErrors(found);
       const first = CONTACT_FIELDS.find((f) => found[f]);
       if (first) {
@@ -332,6 +399,8 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     if (!service || !draft.start) return;
     setSubmitting(true);
     setSubmitError(null);
+    const idempotencyKey = draft.idempotencyKey ?? newUuid();
+    if (!draft.idempotencyKey) setDraft((d) => ({ ...d, idempotencyKey }));
     try {
       const result = await api.createBooking(apiSlug, {
         serviceId: service.id,
@@ -339,9 +408,11 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         client: { name: draft.name.trim(), email: normalizeEmail(draft.email), phone: normalizePhone(draft.phone) },
         consent: true,
         turnstileToken: token,
+        idempotencyKey,
       });
       saveJson(doneKey, result);
       removeKey(draftKey);
+      saveContact(draft.remember ? { name: draft.name.trim(), phone: formatPhone(normalizePhone(draft.phone)), email: normalizeEmail(draft.email) } : null);
       history.replaceState({ sep: 'done', d: depthRef.current } satisfies HistoryState, '');
       setDraft(EMPTY_DRAFT);
       setDone(result);
@@ -396,7 +467,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   }
   if (!profile) return <LoadingFrame />;
   if (screen === 'unavailable') return <Unavailable profile={profile} />;
-  if (done) return <Confirmed result={done} />;
+  if (done) return <Confirmed result={done} icsUrl={api.icsUrl(done.manageToken)} />;
 
   const serviceAvailability = service ? availability[service.id] : undefined;
   if (waitlistOpen && service && serviceAvailability?.status === 'ready') {
@@ -407,7 +478,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         profile={profile}
         service={service}
         days={serviceAvailability.data.days}
-        initialDate={draft.day}
+        initialDate={day}
         form={draft}
         errors={errors}
         onChange={changeField}
@@ -433,13 +504,13 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     {
       label: 'Servicio',
       value: service ? joinDot(service.name, formatDuration(service.durationMin)) : '—',
-      sub: service ? formatCop(service.priceCop) : '',
+      sub: service ? formatServicePrice(service) : '',
       step: singleService ? null : 'service',
     },
     {
       label: 'Cuándo',
       value: draft.start ? capitalize(formatDayLong(bogotaDate(draft.start))) : '—',
-      sub: draft.start ? formatInstantTime(draft.start) : '',
+      sub: draft.start ? timeLabel(draft.start) : '',
       step: 'when',
     },
     {
@@ -452,17 +523,24 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   ];
 
   const busy = submitting || captcha.waiting;
+  // First step: the green profile band, except on short screens (landscape), which keep the compact row.
+  const intro = stepIndex === 0 && !shortScreen;
+  const titleAs = intro ? 'h2' : 'h1';
+  const progress = { index: stepIndex, total: steps.length, step, chips, onChip: go };
   return (
     <Frame label={`Separar cita con ${profile.name}`}>
-      <FlowHeader profile={profile} index={stepIndex} total={steps.length} step={step} chips={chips} onChip={go} onBack={back} />
+      {!intro && <FlowHeader {...progress} profile={profile} onBack={back} />}
       <main ref={scrollerRef} class="scroll-area">
-        <div class="min-h-full pt-[22px] px-5 pb-4 flex flex-col fade-in" key={step}>
-          {step === 'service' && <StepService profile={profile} serviceId={draft.serviceId} onPick={pickService} titleRef={titleRef} />}
+        {intro && <FlowIntro {...progress} profile={profile} />}
+        <div class={`min-h-full px-5 pb-4 flex flex-col fade-in short:pt-3 ${intro ? 'pt-[18px]' : 'pt-[22px]'}`} key={step}>
+          {step === 'service' && (
+            <StepService profile={profile} serviceId={draft.serviceId} onPick={pickService} titleRef={titleRef} titleAs={titleAs} />
+          )}
           {step === 'when' && (
             <StepWhen
               key={serviceAvailability?.status ?? 'idle'}
               availability={serviceAvailability}
-              day={draft.day}
+              day={day}
               start={draft.start}
               notice={slotNotice}
               onPickDay={pickDay}
@@ -470,9 +548,21 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
               onRetry={() => service && refreshAvailability(service.id)}
               onWaitlist={openWaitlist}
               titleRef={titleRef}
+              titleAs={titleAs}
             />
           )}
-          {step === 'details' && <StepDetails form={draft} errors={errors} onChange={changeField} titleRef={titleRef} />}
+          {step === 'details' && (
+            <StepDetails
+              form={draft}
+              errors={errors}
+              onChange={changeField}
+              onBlur={blurField}
+              remember={Boolean(draft.remember)}
+              onRemember={(remember) => setDraft((d) => ({ ...d, remember }))}
+              prefilled={prefilled && Boolean(draft.remember)}
+              titleRef={titleRef}
+            />
+          )}
           {step === 'review' && (
             <StepReview
               rows={reviewRows}
@@ -487,9 +577,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         </div>
       </main>
       <FlowFooter>
+        {step === 'review' && captcha.needsInteraction && <CaptchaHint />}
         {step !== 'review' ? (
           <button type="button" onClick={next} disabled={!canNext} class={canNext ? PRIMARY_BUTTON : DISABLED_BUTTON}>
-            {canNext ? 'Siguiente' : BLOCKED_LABELS[step]}
+            {canNext ? 'Siguiente' : blockedLabel}
           </button>
         ) : (
           <button
@@ -507,21 +598,20 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   );
 }
 
+/** Profile not embedded in the page (rare): the step-1 band shape while it loads. */
 function LoadingFrame() {
   return (
     <Frame label="Cargando agenda">
-      <div class="safe-top border-b border-line px-4 py-3.5 flex flex-col gap-3.5" aria-hidden="true">
-        <div class="flex items-center gap-2.5 min-h-11">
-          <div class="skeleton w-11 h-11 rounded-full" />
-          <div class="flex flex-col gap-1.5 grow">
-            <div class="skeleton h-3.5 w-36 rounded-full" />
-            <div class="skeleton h-3 w-48 rounded-full" />
+      <div class="safe-top bg-primary rounded-b-[28px] shrink-0" aria-hidden="true">
+        <div class="pt-[18px] px-5 pb-6 flex flex-col gap-[18px] short:py-3">
+          <div class="h-7 w-28 rounded-full bg-white/14" />
+          <div class="flex items-center gap-3.5">
+            <div class="w-16 h-16 rounded-full bg-white/14 short:w-9 short:h-9" />
+            <div class="flex flex-col gap-2 grow">
+              <div class="h-6 w-44 rounded-full bg-white/14" />
+              <div class="h-4 w-32 rounded-full bg-white/14" />
+            </div>
           </div>
-        </div>
-        <div class="grid grid-cols-4 gap-1.5">
-          {[0, 1, 2, 3].map((i) => (
-            <span key={i} class="block h-1.5 rounded-full bg-line" />
-          ))}
         </div>
       </div>
       <div class="p-5 flex flex-col gap-3" aria-hidden="true">
@@ -534,4 +624,3 @@ function LoadingFrame() {
     </Frame>
   );
 }
-

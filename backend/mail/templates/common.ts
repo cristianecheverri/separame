@@ -32,6 +32,14 @@ export function dayAndTime(instant: ISOInstant): string {
 
 export const firstName = (name: string): string => name.trim().split(/\s+/)[0] ?? name;
 
+const HONORIFICS = new Set(['dr', 'dra', 'dr.', 'dra.', 'psic', 'psic.', 'lic', 'lic.', 'ing', 'ing.', 'abg', 'abg.', 'prof', 'prof.']);
+
+/** "Dra. Laura Pérez" → "Laura" (the mockups' "Hola, Laura."); falls back to the first word. */
+export function greetingName(name: string): string {
+  const words = name.trim().split(/\s+/);
+  return words.find((w) => !HONORIFICS.has(w.toLowerCase())) ?? words[0] ?? name;
+}
+
 /**
  * "Cra. 43A #1-50, consultorio 302, El Poblado, Medellín" — address,
  * neighborhood and city, skipping parts the address already spells out.

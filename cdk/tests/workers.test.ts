@@ -34,6 +34,16 @@ describe('WorkersStack', () => {
     ]);
   });
 
+  it('lets stream-publish and jobs-tick (landing prices) publish to the site and invalidate it', () => {
+    const publishers = resourcesOf(template, 'AWS::IAM::Policy')
+      .filter(([, r]) => JSON.stringify(r.Properties.PolicyDocument).includes('cloudfront:CreateInvalidation'))
+      .map(([id]) => id)
+      .sort();
+    expect(publishers).toHaveLength(2);
+    expect(publishers[0]).toMatch(/^JobsTick/);
+    expect(publishers[1]).toMatch(/^StreamPublish/);
+  });
+
   it('runs jobs-tick every 10 minutes through EventBridge Scheduler', () => {
     template.hasResourceProperties('AWS::Scheduler::Schedule', {
       Name: 'separame-dev-jobs-tick',

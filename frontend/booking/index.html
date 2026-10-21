@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="es-CO">
+<html lang="es-CO" class="motion-safe:scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
     <title>Sepárame · Tu agenda de citas en línea</title>
     <meta
       name="description"
-      content="Tu agenda en línea, lista para que te separen citas. Reservas sin llamadas, recordatorios automáticos y hecho para Colombia. Prueba gratis 10 días."
+      content="Tus clientes separan cita desde un enlace: sin app, sin crear cuenta y sin llamadas. Recordatorios automáticos, cero citas dobles y hecho para Colombia. Prueba gratis {{trialDays}} días."
     />
     <meta name="theme-color" content="#0B6E4F" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -14,108 +15,496 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Sepárame" />
     <meta property="og:title" content="Sepárame · Tu agenda de citas en línea" />
-    <meta property="og:description" content="Tus clientes separan cita desde un enlace, sin llamadas. Prueba gratis 10 días." />
+    <meta property="og:description" content="Tus clientes separan cita desde un enlace, sin llamadas. Prueba gratis {{trialDays}} días." />
     <meta property="og:url" content="https://separame.app/" />
     <meta property="og:image" content="https://separame.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="es_CO" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sepárame · Tu agenda de citas en línea" />
+    <meta name="twitter:description" content="Tus clientes separan cita desde un enlace, sin llamadas. Prueba gratis {{trialDays}} días." />
+    <meta name="twitter:image" content="https://separame.app/og.png" />
+    <!-- Above-the-fold faces: headline, body, labels and buttons. -->
+    <link rel="preload" href="./src/fonts/bricolage-grotesque-latin-800-opsz.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/landing.css" />
+    <!--price:jsonld--><script type="application/ld+json">{}</script><!--/price:jsonld-->
   </head>
   <body class="bg-white text-ink font-sans">
-    <header class="bg-primary text-white rounded-b-[28px] pt-[env(safe-area-inset-top)]">
-      <div class="max-w-[1040px] mx-auto px-5 sm:px-8">
-        <div class="flex items-center justify-between gap-4 min-h-[72px]">
-          <a href="/" class="font-display font-extrabold text-[24px] tracking-[-0.5px] text-white no-underline hover:text-white" aria-label="Sepárame, inicio">sepárame<span class="text-accent">.</span></a>
-          <a href="/app/login" class="inline-flex items-center h-11 px-4 rounded-full bg-white/15 text-white font-semibold text-[15px] no-underline hover:bg-white/25 hover:text-white">Entrar</a>
-        </div>
-        <div class="grid md:grid-cols-[1.15fr_0.85fr] gap-10 items-center pt-8 pb-12 md:pt-12 md:pb-20">
-          <div class="flex flex-col gap-5 items-start">
-            <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] font-semibold text-mint">
-              <span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span>
-              Para profesionales en Colombia
-            </span>
-            <h1 class="m-0 font-display font-extrabold text-[38px] xs:text-[42px] md:text-[54px] leading-[1.03] tracking-[-1px]">
-              Tu agenda en línea, lista para que te separen citas.
-            </h1>
-            <p class="m-0 text-[17px] md:text-[19px] leading-[1.5] text-mint max-w-[520px]">
-              Comparte tu enlace por WhatsApp o Instagram y tus clientes eligen servicio, día y hora. Sin llamadas, sin crear cuenta, sin enredos.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pt-1">
-              <a href="/app/signup" class="h-14 px-7 rounded-full bg-accent text-ink font-bold text-[17px] inline-flex items-center justify-center no-underline hover:bg-[#ffd666] hover:text-ink">Crear mi agenda gratis</a>
-              <a href="/app/login" class="h-14 px-7 rounded-full border-2 border-white/40 text-white font-bold text-[17px] inline-flex items-center justify-center no-underline hover:border-white hover:text-white">Ya tengo cuenta</a>
-            </div>
-            <p class="m-0 text-[14px] font-semibold text-mint">Prueba gratis 10 días · desde $5.000/mes</p>
+    <div class="overflow-x-clip">
+      <header class="bg-primary text-white rounded-b-[32px] md:rounded-b-[48px] pt-[env(safe-area-inset-top)]">
+        <div class="max-w-[1160px] mx-auto px-5 md:px-10">
+          <div class="flex flex-wrap items-center justify-between gap-4 min-h-16 md:min-h-20">
+            <a href="/" aria-label="Sepárame, inicio" class="font-display font-extrabold text-[24px] tracking-[-0.5px] text-white no-underline hover:text-white">sepárame<span class="text-accent">.</span></a>
+            <nav aria-label="Principal" class="flex flex-wrap items-center gap-1.5">
+              <a href="#como-funciona" class="hidden md:flex min-h-11 px-3.5 items-center text-white font-semibold text-[15px] no-underline hover:text-mint">Cómo funciona</a>
+              <a href="#precios" class="hidden md:flex min-h-11 px-3.5 items-center text-white font-semibold text-[15px] no-underline hover:text-mint">Precios</a>
+              <a href="#preguntas" class="hidden md:flex min-h-11 px-3.5 items-center text-white font-semibold text-[15px] no-underline hover:text-mint">Preguntas</a>
+              <a href="/app/login" class="flex h-11 px-4 md:px-[18px] md:ml-1.5 items-center rounded-full bg-white/15 text-white font-semibold text-[15px] no-underline transition-colors hover:bg-white/25 hover:text-white">Entrar</a>
+            </nav>
           </div>
 
-          <div class="hidden md:block" aria-hidden="true">
-            <div class="bg-white text-ink rounded-[24px] p-5 flex flex-col gap-4 shadow-[0_24px_60px_rgb(8_76_55/0.35)] max-w-[360px] ml-auto rotate-[1.5deg]">
-              <div class="flex items-center gap-2.5">
-                <div class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center font-display font-extrabold text-[16px]">LP</div>
-                <div class="flex flex-col gap-px">
-                  <div class="font-bold text-[15px]">Dra. Laura Pérez</div>
-                  <div class="text-[13px] text-muted">Odontóloga · Medellín</div>
+          <div class="flex flex-wrap items-center gap-9 md:gap-12 pt-5 pb-10 md:pt-10 md:pb-20">
+            <div class="flex-[1_1_460px] min-w-0 flex flex-col items-start gap-[18px] md:gap-[22px]">
+              <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] font-semibold text-mint"><span class="w-2 h-2 rounded-full bg-accent" aria-hidden="true"></span>Para profesionales en Colombia</span>
+              <h1 class="m-0 font-display font-extrabold text-[40px] md:text-[60px] leading-[1.02] tracking-[-1px] md:tracking-[-1.6px]">Tus clientes separan cita desde un enlace.</h1>
+              <p class="m-0 max-w-[540px] text-[17px] md:text-[20px] leading-[1.5] text-mint">Sin app, sin crear cuenta y sin llamadas. Compartes tu enlace por WhatsApp o Instagram y ellos eligen servicio, día y hora. Tú recibes la cita, ellos el recordatorio.</p>
+              <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                <a href="/app/signup" class="h-14 px-7 rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
+                <a href="#como-funciona" class="h-14 px-7 rounded-full border-2 border-white/40 text-white flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:border-white hover:text-white">Ver cómo funciona</a>
+              </div>
+              <p class="m-0 text-[14px] font-semibold text-mint">Sin tarjeta · Después, desde <!--price:from-->$5.000<!--/price:from--> al mes</p>
+              <ul class="m-0 p-0 list-none flex flex-col md:flex-row flex-wrap gap-2.5 md:gap-[22px] pt-1 md:pt-2.5 text-[14px] font-semibold text-mint">
+                <li class="inline-flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Tus clientes no instalan nada</li>
+                <li class="inline-flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Cero citas dobles</li>
+                <li class="inline-flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Festivos de Colombia incluidos</li>
+              </ul>
+            </div>
+
+            <!-- Illustration: the booking page on a phone (HTML/CSS, no images). -->
+            <div class="flex-[1_1_380px] min-w-0 flex justify-center relative py-2 md:py-2.5" aria-hidden="true">
+              <div class="w-[260px] md:w-[320px] shrink-0 rounded-[46px] bg-ink p-2.5 shadow-[0_30px_70px_rgb(8_76_55/0.45)]">
+                <div class="relative w-[240px] h-[491px] md:w-[300px] md:h-[615px] overflow-hidden rounded-[36px] bg-white text-ink flex flex-col">
+                  <div class="absolute top-2 left-1/2 -ml-11 w-[88px] h-6 rounded-full bg-ink"></div>
+                  <div class="flex flex-col gap-2.5 px-3.5 pt-10 pb-2.5 border-b border-line">
+                    <div class="flex items-center gap-2">
+                      <span class="w-[34px] h-[34px] shrink-0 rounded-full bg-primary text-white flex items-center justify-center font-display font-extrabold text-[13px]">TC</span>
+                      <span class="flex flex-col min-w-0"><span class="font-bold text-[13px]">Tu consultorio</span><span class="text-[11px] text-muted">Odontología · Medellín</span></span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1"><span class="h-[5px] rounded-full bg-primary"></span><span class="h-[5px] rounded-full bg-primary"></span><span class="h-[5px] rounded-full bg-line"></span><span class="h-[5px] rounded-full bg-line"></span></div>
+                    <div class="text-[11px] font-semibold text-muted">Paso 2 de 4 · Día y hora</div>
+                  </div>
+                  <div class="grow flex flex-col gap-2.5 p-3.5">
+                    <div class="font-display font-extrabold text-[21px] tracking-[-0.4px] leading-[1.1]">¿Cuándo te sirve?</div>
+                    <div class="grid grid-cols-5 gap-[5px] text-center">
+                      <span class="flex flex-col items-center gap-px py-1.5 rounded-xl border-2 border-line"><span class="text-[10px] font-semibold">Mié</span><span class="text-[15px] font-bold">21</span></span>
+                      <span class="flex flex-col items-center gap-px py-1.5 rounded-xl border-2 border-primary bg-primary text-white"><span class="text-[10px] font-semibold">Jue</span><span class="text-[15px] font-bold">22</span></span>
+                      <span class="flex flex-col items-center gap-px py-1.5 rounded-xl border-2 border-line"><span class="text-[10px] font-semibold">Vie</span><span class="text-[15px] font-bold">23</span></span>
+                      <span class="flex flex-col items-center gap-px py-1.5 rounded-xl border-2 border-line"><span class="text-[10px] font-semibold">Sáb</span><span class="text-[15px] font-bold">24</span></span>
+                      <span class="flex flex-col items-center gap-px py-1.5 rounded-xl border-2 border-surface bg-surface text-faint"><span class="text-[10px] font-semibold">Dom</span><span class="text-[15px] font-bold">25</span></span>
+                    </div>
+                    <div class="text-[11px] font-semibold text-muted">Mañana</div>
+                    <div class="grid grid-cols-3 gap-1.5 text-[12px] font-semibold">
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">8:00 a. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">8:30 a. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">9:30 a. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-accent bg-accent flex items-center justify-center">10:00 a. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">10:30 a. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">11:30 a. m.</span>
+                    </div>
+                    <div class="text-[11px] font-semibold text-muted">Tarde</div>
+                    <div class="grid grid-cols-3 gap-1.5 text-[12px] font-semibold">
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">2:00 p. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">2:30 p. m.</span>
+                      <span class="h-[34px] rounded-full border-2 border-line flex items-center justify-center">4:00 p. m.</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-2 px-3 pt-2.5 pb-4 border-t border-line">
+                    <div class="flex items-center gap-1.5 text-[11px] text-ink-2"><span class="w-[7px] h-[7px] shrink-0 rounded-full bg-accent"></span>Valoración · Jue 22, 10:00 a. m.</div>
+                    <div class="h-11 rounded-full bg-primary text-white flex items-center justify-center font-bold text-[15px]">Siguiente</div>
+                  </div>
                 </div>
               </div>
-              <div class="font-display font-extrabold text-[22px] tracking-[-0.4px]">¿Cuándo te sirve?</div>
-              <div class="grid grid-cols-5 gap-1.5">
-                <div class="flex flex-col items-center py-2 rounded-[14px] border-2 border-line"><span class="text-[12px] font-semibold">Mié</span><span class="text-[17px] font-bold">21</span></div>
-                <div class="flex flex-col items-center py-2 rounded-[14px] border-2 border-primary bg-primary text-white"><span class="text-[12px] font-semibold">Jue</span><span class="text-[17px] font-bold">22</span></div>
-                <div class="flex flex-col items-center py-2 rounded-[14px] border-2 border-line"><span class="text-[12px] font-semibold">Vie</span><span class="text-[17px] font-bold">23</span></div>
-                <div class="flex flex-col items-center py-2 rounded-[14px] border-2 border-line"><span class="text-[12px] font-semibold">Sáb</span><span class="text-[17px] font-bold">24</span></div>
-                <div class="flex flex-col items-center py-2 rounded-[14px] border-2 border-surface bg-surface text-faint"><span class="text-[12px] font-semibold">Dom</span><span class="text-[17px] font-bold">25</span></div>
+              <div class="absolute left-0 bottom-[70px] md:bottom-[120px] flex items-center gap-2.5 rounded-[18px] bg-white text-ink px-3.5 py-3 shadow-[0_14px_34px_rgb(8_76_55/0.28)]">
+                <span class="w-[34px] h-[34px] shrink-0 rounded-full bg-primary flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                <span class="flex flex-col gap-px"><span class="font-bold text-[14px]">Cita confirmada</span><span class="text-[12px] text-muted">Mariana · Jue 22, 10:00 a. m.</span></span>
               </div>
-              <div class="grid grid-cols-3 gap-2 text-[14px] font-semibold">
-                <span class="rounded-full border-2 border-line py-2 text-center">8:30 a. m.</span>
-                <span class="rounded-full border-2 border-accent bg-accent py-2 text-center">10:00 a. m.</span>
-                <span class="rounded-full border-2 border-line py-2 text-center">2:30 p. m.</span>
+              <div class="absolute right-0 top-[120px] md:top-[90px] flex items-center gap-2.5 rounded-[18px] bg-white text-ink px-3.5 py-3 shadow-[0_14px_34px_rgb(8_76_55/0.28)]">
+                <span class="w-[34px] h-[34px] shrink-0 rounded-full bg-accent flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+                <span class="flex flex-col gap-px"><span class="font-bold text-[14px]">Recordatorio enviado</span><span class="text-[12px] text-muted">Mañana a las 10:00 a. m.</span></span>
               </div>
-              <div class="h-12 rounded-full bg-primary text-white font-bold text-[16px] flex items-center justify-center">Separar mi cita</div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <main class="max-w-[1040px] mx-auto px-5 sm:px-8 py-12 md:py-16 flex flex-col gap-10">
-      <section class="flex flex-col gap-6" aria-labelledby="benefits-title">
-        <h2 id="benefits-title" class="m-0 font-display font-extrabold text-[28px] md:text-[34px] leading-[1.1] tracking-[-0.6px]">Menos mensajes, más citas.</h2>
-        <div class="grid gap-4 md:grid-cols-3">
-          <article class="rounded-[20px] border-2 border-line p-5 flex flex-col gap-3">
-            <span class="w-11 h-11 rounded-[14px] bg-accent-soft flex items-center justify-center" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path><path d="M8.5 15l2.5 2.5 4.5-4.5"></path></svg>
-            </span>
-            <h3 class="m-0 font-bold text-[17px]">Reservas sin llamadas</h3>
-            <p class="m-0 text-[15px] text-ink-2 leading-[1.45]">Tus clientes separan a cualquier hora desde tu enlace, sin crear cuenta. Nunca dos citas a la misma hora.</p>
-          </article>
-          <article class="rounded-[20px] border-2 border-line p-5 flex flex-col gap-3">
-            <span class="w-11 h-11 rounded-[14px] bg-primary-soft flex items-center justify-center" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
-            </span>
-            <h3 class="m-0 font-bold text-[17px]">Recordatorios automáticos</h3>
-            <p class="m-0 text-[15px] text-ink-2 leading-[1.45]">Confirmación al correo con archivo para el calendario y un recordatorio un día antes. Menos citas perdidas.</p>
-          </article>
-          <article class="rounded-[20px] border-2 border-line p-5 flex flex-col gap-3">
-            <span class="w-11 h-11 rounded-[14px] bg-surface flex items-center justify-center" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-            </span>
-            <h3 class="m-0 font-bold text-[17px]">Hecho para Colombia</h3>
-            <p class="m-0 text-[15px] text-ink-2 leading-[1.45]">Precios en pesos, pagas tu plan por Nequi o transferencia, y los festivos colombianos ya vienen en tu calendario.</p>
-          </article>
-        </div>
-      </section>
+      <main>
+        <section aria-labelledby="pros-title" class="bg-surface px-5 py-12 md:px-10 md:py-24">
+          <div class="max-w-[1160px] mx-auto flex flex-col gap-6 md:gap-9">
+            <div class="lp-head">
+              <span class="lp-kicker">Para cualquier profesional</span>
+              <h2 id="pros-title" class="lp-h2">Tu página de citas, con tu nombre y tus servicios.</h2>
+              <p class="lp-lead">Consultorios, estudios, barberías, oficinas o a domicilio: cada profesional tiene su enlace con sus servicios, duraciones y precios de referencia.</p>
+            </div>
+            <div class="lp-rail pro-rail" role="region" aria-label="Ejemplos de páginas de citas" tabindex="0">
+              <article class="pro-card" aria-label="Ejemplo: consultorio de odontología">
+                <div class="pro-head"><span class="pro-avatar bg-primary text-white" aria-hidden="true">TC</span><span class="pro-who"><span class="pro-name">Tu consultorio</span><span class="pro-sub">Odontología · Medellín</span></span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Valoración</span><span class="svc-duration">30 min</span></span><span class="svc-price">$60.000</span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Limpieza dental</span><span class="svc-duration">45 min</span></span><span class="svc-price">$120.000</span></div>
+                <span class="pro-cta" aria-hidden="true">Separar cita</span>
+                <span class="pro-link"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56645D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span>separame.app/tu-consultorio</span></span>
+              </article>
+              <article class="pro-card" aria-label="Ejemplo: consulta de psicología">
+                <div class="pro-head"><span class="pro-avatar bg-accent text-ink" aria-hidden="true">TE</span><span class="pro-who"><span class="pro-name">Tu espacio</span><span class="pro-sub">Psicología · Bogotá</span></span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Primera sesión</span><span class="svc-duration">50 min</span></span><span class="svc-price">$120.000</span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Sesión virtual</span><span class="svc-duration">50 min</span></span><span class="svc-price">$100.000</span></div>
+                <span class="pro-cta" aria-hidden="true">Separar cita</span>
+                <span class="pro-link"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56645D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span>separame.app/tu-espacio</span></span>
+              </article>
+              <article class="pro-card" aria-label="Ejemplo: barbería">
+                <div class="pro-head"><span class="pro-avatar bg-ink text-white" aria-hidden="true">EP</span><span class="pro-who"><span class="pro-name">Barbería El Parche</span><span class="pro-sub">Barbería · Cali</span></span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Corte clásico</span><span class="svc-duration">40 min</span></span><span class="svc-price">$25.000</span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Corte y barba</span><span class="svc-duration">60 min</span></span><span class="svc-price">$35.000</span></div>
+                <span class="pro-cta" aria-hidden="true">Separar cita</span>
+                <span class="pro-link"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56645D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span>separame.app/barberia-el-parche</span></span>
+              </article>
+              <article class="pro-card" aria-label="Ejemplo: entrenamiento personal">
+                <div class="pro-head"><span class="pro-avatar bg-warn-soft text-warn-ink" aria-hidden="true">EC</span><span class="pro-who"><span class="pro-name">Entrena conmigo</span><span class="pro-sub">Entrenador personal · Envigado</span></span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Entrenamiento</span><span class="svc-duration">60 min</span></span><span class="svc-price">$50.000</span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Valoración física</span><span class="svc-duration">30 min</span></span><span class="svc-price">Sin costo</span></div>
+                <span class="pro-cta" aria-hidden="true">Separar cita</span>
+                <span class="pro-link"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56645D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span>separame.app/entrena-conmigo</span></span>
+              </article>
+              <article class="pro-card" aria-label="Ejemplo: oficina de abogados">
+                <div class="pro-head"><span class="pro-avatar bg-primary-soft text-primary" aria-hidden="true">TO</span><span class="pro-who"><span class="pro-name">Tu oficina</span><span class="pro-sub">Abogada de familia · Bogotá</span></span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Consulta inicial</span><span class="svc-duration">45 min</span></span><span class="svc-price">$90.000</span></div>
+                <div class="svc-row"><span class="pro-who"><span class="svc-name">Revisión de documentos</span><span class="svc-duration">30 min</span></span><span class="svc-price">$70.000</span></div>
+                <span class="pro-cta" aria-hidden="true">Separar cita</span>
+                <span class="pro-link"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56645D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span>separame.app/tu-oficina</span></span>
+              </article>
+            </div>
+          </div>
+        </section>
 
-      <section class="bg-primary-soft rounded-[24px] p-6 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5" aria-labelledby="cta-title">
-        <div class="flex flex-col gap-2">
-          <h2 id="cta-title" class="m-0 font-display font-extrabold text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.5px]">Tu enlace listo en minutos.</h2>
-          <p class="m-0 text-[15px] text-ink-2">Prueba gratis 10 días · desde $5.000/mes</p>
-        </div>
-        <a href="/app/signup" class="h-14 px-7 rounded-full bg-primary text-white font-bold text-[17px] inline-flex items-center justify-center no-underline hover:bg-primary-dark hover:text-white shrink-0">Crear mi agenda gratis</a>
-      </section>
-    </main>
+        <section aria-labelledby="features-title" class="px-5 py-12 md:px-10 md:py-26">
+          <div class="max-w-[1160px] mx-auto flex flex-col gap-6 md:gap-10">
+            <div class="lp-head">
+              <span class="lp-kicker">Así se ve funcionando</span>
+              <h2 id="features-title" class="lp-h2">Todo lo que pasa después de que te separan una cita.</h2>
+              <p class="lp-lead">Lo hace Sepárame solo, sin que escribas un mensaje. Estos son ejemplos reales de lo que reciben tú y tus clientes.</p>
+            </div>
+            <div class="lp-rail feat-rail pt-0!" role="region" aria-label="Lo que reciben tú y tus clientes" tabindex="0">
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Confirmación al instante, con su calendario</h3>
+                  <p class="feat-body">Tu cliente recibe un correo con los datos de la cita, botones para Google Calendar y Outlook, y un enlace para cancelar o reprogramar sin llamarte.</p>
+                </div>
+                <div class="feat-art" aria-hidden="true">
+                  <div class="mock-card">
+                    <div class="text-[11px] text-muted">De: Sepárame · Para: tu cliente</div>
+                    <div class="mock-title leading-[1.15]">¡Listo, Mariana! Tu cita quedó separada.</div>
+                    <div class="rounded-[14px] bg-primary-soft px-3 py-1.5 text-[13px]">
+                      <div class="flex justify-between gap-2.5 py-[5px]"><span class="text-muted">Con</span><span class="font-bold text-right">Tu consultorio</span></div>
+                      <div class="flex justify-between gap-2.5 py-[5px]"><span class="text-muted">Servicio</span><span class="font-bold text-right">Valoración · 30 min</span></div>
+                      <div class="flex justify-between gap-2.5 py-[5px]"><span class="text-muted">Cuándo</span><span class="font-bold text-right">Jue 22 oct., 10:00 a. m.</span></div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-[13px] font-bold">
+                      <span class="h-[38px] px-3.5 rounded-full border-[1.5px] border-line bg-white inline-flex items-center gap-2 whitespace-nowrap"><svg width="20" height="20" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="5" fill="#fff"/><path d="M11 6h26a5 5 0 0 1 5 5v1H6v-1a5 5 0 0 1 5-5z" fill="#4285F4"/><rect x="36" y="11" width="6" height="25" fill="#4285F4"/><path d="M6 11h6v25H6z" fill="#FBBC04"/><path d="M6 36h30v6H11a5 5 0 0 1-5-5z" fill="#34A853"/><path d="M36 36h6l-6 6z" fill="#EA4335"/><text x="24" y="31.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="15" fill="#4285F4">31</text></svg>Google Calendar</span>
+                      <span class="h-[38px] px-3.5 rounded-full border-[1.5px] border-line bg-white inline-flex items-center gap-2 whitespace-nowrap"><svg width="20" height="20" viewBox="0 0 48 48"><rect x="17" y="10" width="25" height="28" rx="3.5" fill="#28A8EA"/><path d="M17 17l12.5 9L42 17" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><rect x="6" y="13" width="22" height="22" rx="3.5" fill="#0A64AD"/><ellipse cx="17" cy="24" rx="5.4" ry="6.6" fill="none" stroke="#fff" stroke-width="3"/></svg>Outlook</span>
+                    </div>
+                    <span class="text-[13px] font-bold text-primary underline">Cancelar o reprogramar</span>
+                  </div>
+                </div>
+              </article>
 
-    <footer class="max-w-[1040px] mx-auto px-5 sm:px-8 pb-[calc(32px+env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-2 sm:justify-between text-[13px] text-muted">
-      <span><span class="font-display font-extrabold text-primary">sepárame.</span> · Hecho en Colombia</span>
-      <span><a href="/app/login">Entrar</a> · <a href="/privacy">Privacidad</a> · <a href="/terms">Términos</a> · <a href="mailto:soporte@separame.app">soporte@separame.app</a></span>
-    </footer>
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Tu agenda del día, en el celular</h3>
+                  <p class="feat-body">Ves quién viene, quién confirmó y marcas asistencia con un toque. Instala el panel como una app y recibe un aviso con cada cita nueva.</p>
+                </div>
+                <div class="feat-art feat-art-yellow" aria-hidden="true">
+                  <div class="rounded-[18px] bg-surface overflow-hidden shadow-[0_10px_30px_rgb(21_36_29/0.08)]">
+                    <div class="h-10 bg-primary px-3.5 flex items-center justify-between"><span class="font-display font-extrabold text-[16px] tracking-[-0.5px] text-white">sepárame<span class="text-accent">.</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></div>
+                    <div class="p-3 flex flex-col gap-2">
+                      <div class="text-[11px] text-muted font-semibold">Martes 20 de octubre</div>
+                      <div class="font-display font-extrabold text-[17px] tracking-[-0.3px]">¡Hola! Hoy tienes 6 citas.</div>
+                      <div class="rounded-[14px] bg-white p-2.5 flex flex-col gap-1.5">
+                        <div class="flex gap-2 items-stretch">
+                          <span class="w-[54px] shrink-0 pt-2.5 text-[11px] font-bold text-ink-2">8:00 a. m.</span>
+                          <div class="grow min-w-0 rounded-xl bg-primary-soft px-2.5 py-2 flex gap-1.5 items-center">
+                            <span class="grow min-w-0 flex flex-col gap-px"><span class="font-bold text-[13px]">Mariana</span><span class="text-[11px] text-muted whitespace-nowrap">Valoración · 30 min</span></span>
+                            <span class="text-[10px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap bg-white text-primary">Asistió</span>
+                          </div>
+                        </div>
+                        <div class="flex gap-2 items-stretch">
+                          <span class="w-[54px] shrink-0 pt-2.5 text-[11px] font-bold text-ink-2">10:00 a. m.</span>
+                          <div class="grow min-w-0 rounded-xl bg-accent-soft px-2.5 py-2 flex gap-1.5 items-center">
+                            <span class="grow min-w-0 flex flex-col gap-px"><span class="font-bold text-[13px]">Sofía</span><span class="text-[11px] text-muted whitespace-nowrap">Limpieza · 45 min<span class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white text-ink-2">Sin confirmar</span></span></span>
+                            <span class="text-[10px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap bg-accent text-ink">Nueva</span>
+                          </div>
+                        </div>
+                        <div class="flex gap-2 items-stretch">
+                          <span class="w-[54px] shrink-0 pt-2.5 text-[11px] font-bold text-ink-2">11:00 a. m.</span>
+                          <div class="grow min-w-0 rounded-xl bg-primary-soft px-2.5 py-2 flex gap-1.5 items-center">
+                            <span class="grow min-w-0 flex flex-col gap-px"><span class="font-bold text-[13px]">Carlos</span><span class="text-[11px] text-muted whitespace-nowrap">Control · 15 min<span class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white text-primary">Confirmó</span></span></span>
+                            <span class="text-[10px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap bg-primary text-white">Confirmada</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Recordatorio con «Sí, voy»</h3>
+                  <p class="feat-body">Un día antes le llega un recordatorio con botón para confirmar asistencia. Si no puede ir, cancela o cambia y el cupo queda libre.</p>
+                </div>
+                <div class="feat-art" aria-hidden="true">
+                  <div class="flex flex-col gap-2.5">
+                    <div class="mock-card">
+                      <div class="text-[11px] text-muted">Un día antes · al correo de tu cliente</div>
+                      <div class="mock-title">¿Confirmas tu asistencia?</div>
+                      <div class="text-[13px] leading-[1.45] text-ink-2">Hola, Mariana. Tu cita es mañana a las 10:00 a. m. Cuéntanos si vas para que te esperen.</div>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="h-10 px-5 rounded-full bg-primary text-white inline-flex items-center font-bold text-[14px]">Sí, voy</span>
+                        <span class="h-10 px-3.5 rounded-full border-2 border-line inline-flex items-center font-bold text-[13px]">Necesito cancelar o cambiar</span>
+                      </div>
+                    </div>
+                    <div class="rounded-2xl bg-primary-soft px-3.5 py-3 flex gap-2.5 items-center text-[13px] font-bold">
+                      <span class="w-7 h-7 shrink-0 rounded-full bg-primary flex items-center justify-center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                      En tu agenda: Mariana · Confirmó
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Lista de espera que llena los huecos</h3>
+                  <p class="feat-body">Si un día está lleno, tu cliente se anota. Cuando alguien cancela, le avisamos para que tome el cupo.</p>
+                </div>
+                <div class="feat-art feat-art-yellow" aria-hidden="true">
+                  <div class="flex flex-col gap-2.5">
+                    <div class="rounded-2xl bg-white px-3.5 py-3 flex gap-2.5 items-center border-2 border-dashed border-line-strong">
+                      <svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                      <span class="grow flex flex-col gap-px"><span class="font-bold text-[14px]">¿No encuentras hora?</span><span class="text-[12px] text-muted">Te avisamos si se libera un cupo</span></span>
+                    </div>
+                    <div class="mock-card">
+                      <div class="text-[11px] text-muted">Cuando alguien cancela</div>
+                      <div class="mock-title">¡Se liberó un cupo!</div>
+                      <div class="text-[13px] text-ink-2">Hay espacio el jueves 22 de octubre:</div>
+                      <div class="flex flex-wrap gap-1.5 text-[12px] font-semibold">
+                        <span class="h-[34px] px-3 rounded-full border-2 border-line inline-flex items-center">10:00 a. m.</span>
+                        <span class="h-[34px] px-3 rounded-full border-2 border-line inline-flex items-center">10:30 a. m.</span>
+                        <span class="h-[34px] px-3 rounded-full border-2 border-line inline-flex items-center">3:00 p. m.</span>
+                      </div>
+                      <span class="h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-[14px]">Separar mi cita</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Tus citas en tu calendario de siempre</h3>
+                  <p class="feat-body">Recibe cada cita como invitación o suscribe tu calendario: funciona con Google Calendar, Outlook y el iPhone.</p>
+                </div>
+                <div class="feat-art" aria-hidden="true">
+                  <div class="mock-card gap-3.5!">
+                    <div class="flex justify-between items-center gap-2.5">
+                      <span class="flex flex-col gap-0.5"><span class="font-bold text-[14px]">Invitaciones por correo</span><span class="text-[12px] text-muted">Cada cita llega sola a tu calendario</span></span>
+                      <span class="relative w-[46px] h-7 shrink-0 rounded-full bg-primary"><span class="absolute right-[3px] top-[3px] w-[22px] h-[22px] rounded-full bg-white"></span></span>
+                    </div>
+                    <div class="h-px bg-line"></div>
+                    <div class="font-bold text-[14px]">Calendario suscrito</div>
+                    <div class="grid grid-cols-3 gap-2 text-[12px] font-bold text-center">
+                      <span class="flex flex-col items-center gap-1.5"><svg width="36" height="36" viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="5" fill="#fff"/><path d="M11 6h26a5 5 0 0 1 5 5v1H6v-1a5 5 0 0 1 5-5z" fill="#4285F4"/><rect x="36" y="11" width="6" height="25" fill="#4285F4"/><path d="M6 11h6v25H6z" fill="#FBBC04"/><path d="M6 36h30v6H11a5 5 0 0 1-5-5z" fill="#34A853"/><path d="M36 36h6l-6 6z" fill="#EA4335"/><text x="24" y="31.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="15" fill="#4285F4">31</text></svg>Google Calendar</span>
+                      <span class="flex flex-col items-center gap-1.5"><svg width="36" height="36" viewBox="0 0 48 48"><rect x="17" y="10" width="25" height="28" rx="3.5" fill="#28A8EA"/><path d="M17 17l12.5 9L42 17" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><rect x="6" y="13" width="22" height="22" rx="3.5" fill="#0A64AD"/><ellipse cx="17" cy="24" rx="5.4" ry="6.6" fill="none" stroke="#fff" stroke-width="3"/></svg>Outlook</span>
+                      <span class="flex flex-col items-center gap-1.5"><span class="w-9 h-9 rounded-[10px] bg-surface flex items-center justify-center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>Apple / iPhone</span>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                      <span class="grow min-w-0 h-[38px] rounded-xl bg-surface px-3 flex items-center text-[12px] text-ink-2 overflow-hidden whitespace-nowrap">webcal://api.separame.app/…/calendar.ics</span>
+                      <span class="h-[38px] px-3.5 rounded-full border-2 border-line flex items-center font-bold text-[13px]">Copiar</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="feat">
+                <div class="feat-text">
+                  <h3 class="feat-title">Mira cómo va tu agenda</h3>
+                  <p class="feat-body">Citas, ocupación, inasistencias, clientes nuevos y los días con más movimiento, por mes o por periodo.</p>
+                </div>
+                <div class="feat-art feat-art-yellow" aria-hidden="true">
+                  <div class="flex flex-col gap-2.5">
+                    <div class="grid grid-cols-2 gap-2.5">
+                      <div class="rounded-2xl bg-primary text-white p-3.5 flex flex-col gap-1.5"><span class="text-[12px] font-semibold">Citas</span><span class="font-display font-extrabold text-[30px] leading-none">66</span><span class="text-[11px] font-bold text-mint">+61 % vs. mes pasado</span></div>
+                      <div class="rounded-2xl bg-white p-3.5 flex flex-col gap-1.5"><span class="text-[12px] font-semibold">Ingresos estimados</span><span class="font-display font-extrabold text-[22px] leading-[1.1]">$3.000.000</span><span class="text-[11px] font-bold text-primary">+56 %</span></div>
+                    </div>
+                    <div class="rounded-2xl bg-white p-3.5 flex flex-col gap-2">
+                      <span class="text-[12px] font-bold">Días con más citas</span>
+                      <div class="grid grid-cols-7 gap-1.5 items-end text-[11px] font-semibold text-muted">
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[65px] rounded-md bg-[#BFD9CD]"></span>L</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[45px] rounded-md bg-[#BFD9CD]"></span>M</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[70px] rounded-md bg-primary"></span>M</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[65px] rounded-md bg-[#BFD9CD]"></span>J</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[55px] rounded-md bg-[#BFD9CD]"></span>V</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-[30px] rounded-md bg-[#BFD9CD]"></span>S</span>
+                        <span class="flex flex-col items-center justify-end gap-1 h-[92px]"><span class="w-full max-w-[22px] h-1 rounded-md bg-[#BFD9CD]"></span>D</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <p class="md:hidden -mt-3 text-[13px] font-semibold text-muted" aria-hidden="true">Desliza para ver más →</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="why-title" class="px-3 md:px-6">
+          <div class="max-w-[1232px] mx-auto bg-ink rounded-[28px] md:rounded-[40px] px-5 pt-9 pb-6 md:px-12 md:py-[72px] flex flex-col gap-4 md:gap-9">
+            <div class="flex flex-col gap-2.5">
+              <span class="lp-kicker text-accent!">Por qué Sepárame</span>
+              <h2 id="why-title" class="lp-h2 text-white">Menos mensajes, menos huecos, más citas.</h2>
+            </div>
+            <div class="why-list">
+              <div class="why-item">
+                <span class="why-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+                <div class="why-text"><h3>Hecho para Colombia</h3><p>Precios en pesos, festivos colombianos ya cargados y todo en español de aquí, con tuteo.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon why-icon-green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>
+                <div class="why-text"><h3>Tus clientes no instalan nada</h3><p>Abren tu enlace, eligen y listo. Sin app y sin crear cuenta.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M9 14h6M9 17h3"/></svg></span>
+                <div class="why-text"><h3>Cero citas dobles</h3><p>Cada horario se separa una sola vez, aunque dos personas reserven al mismo tiempo.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon why-icon-green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8.5 15l2.5 2.5 4.5-4.5"/></svg></span>
+                <div class="why-text"><h3>Menos inasistencias</h3><p>Recordatorio un día antes con botón para confirmar asistencia. Sabes quién viene.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <div class="why-text"><h3>Cupos que se vuelven a llenar</h3><p>Si alguien cancela, la lista de espera avisa a quien quería ese día.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon why-icon-green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"/><path d="M20 20v-4h-4"/></svg></span>
+                <div class="why-text"><h3>Con tu calendario de siempre</h3><p>Google Calendar, Outlook o el calendario del iPhone.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+                <div class="why-text"><h3>Tu panel en el celular</h3><p>Instálalo en tu pantalla de inicio y recibe un aviso con cada cita nueva.</p></div>
+              </div>
+              <div class="why-item">
+                <span class="why-icon why-icon-green" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg></span>
+                <div class="why-text"><h3>Precio bajo, datos protegidos</h3><p>Desde <!--price:from-->$5.000<!--/price:from--> al mes. Los datos de tus clientes se tratan según la Ley 1581 de 2012.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="como-funciona" aria-labelledby="how-title" class="px-5 py-12 md:px-10 md:pt-26 md:pb-24">
+          <div class="max-w-[1160px] mx-auto flex flex-col gap-6 md:gap-9">
+            <div class="lp-head">
+              <span class="lp-kicker">Cómo funciona</span>
+              <h2 id="how-title" class="lp-h2">Tu enlace listo en tres pasos.</h2>
+              <p class="lp-lead">En minutos, desde el celular o el computador.</p>
+            </div>
+            <ol class="steps">
+              <li class="step">
+                <span class="step-number" aria-hidden="true">1</span>
+                <h3>Crea tu cuenta</h3>
+                <p>Con tu correo y una contraseña. Tienes {{trialDays}} días gratis, sin tarjeta.</p>
+              </li>
+              <li class="step">
+                <span class="step-number" aria-hidden="true">2</span>
+                <h3>Configura servicios y horario</h3>
+                <p>Duración y precio de referencia de cada servicio, tu horario semanal, descansos y días libres.</p>
+              </li>
+              <li class="step">
+                <span class="step-number" aria-hidden="true">3</span>
+                <h3>Comparte tu enlace</h3>
+                <p>Ponlo en tu WhatsApp, tu Instagram o en un QR en la puerta. Las citas empiezan a llegar.</p>
+                <div class="flex flex-wrap gap-2 pt-1" aria-hidden="true">
+                  <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>separame.app/tu-nombre</span>
+                  <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4A8 8 0 1 1 20 11.5z"/></svg>WhatsApp</span>
+                  <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="0.6"/></svg>Instagram</span>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <section id="precios" aria-labelledby="price-title" class="bg-surface px-5 py-12 md:px-10 md:py-26">
+          <div class="max-w-[1160px] mx-auto flex flex-col gap-[22px] md:gap-8">
+            <div class="lp-head md:items-center md:text-center">
+              <span class="lp-kicker">Precios</span>
+              <h2 id="price-title" class="lp-h2">Prueba gratis {{trialDays}} días. Después, desde <!--price:from-->$5.000<!--/price:from--> al mes.</h2>
+              <p class="lp-lead">Sin tarjeta para empezar. Eliges un paquete, pagas por Nequi o transferencia y no hay cobros automáticos.</p>
+            </div>
+            <!--price:founder--><div class="rounded-[20px] bg-accent px-5 py-4 flex gap-3 items-center">
+              <span class="w-10 h-10 shrink-0 rounded-xl bg-ink flex items-center justify-center" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></span>
+              <span class="flex flex-col gap-0.5"><span class="font-extrabold text-[16px]">Precio fundador: <!--price:from-->$5.000<!--/price:from--> al mes</span><span class="text-[14px]">Lo conservas mientras sigas renovando, aunque el precio suba para los nuevos.</span></span>
+            </div><!--/price:founder-->
+            <div class="plans"><!--price:plans--><!--/price:plans--></div>
+            <div class="rounded-3xl bg-white p-5 md:px-[30px] md:py-[26px] flex flex-col gap-3.5">
+              <h3 class="m-0 text-[17px] font-bold">Todo incluido en cualquier paquete</h3>
+              <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-x-6 gap-y-3 text-[15px] leading-[1.4]">
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Tu página de reservas con tu propio enlace y QR</span></li>
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Confirmación y recordatorio por correo, con «Sí, voy»</span></li>
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Lista de espera y cero citas dobles</span></li>
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Sincronización con Google Calendar, Outlook y iPhone</span></li>
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Clientes, historial y estadísticas</span></li>
+                <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Panel instalable en el celular con avisos</span></li>
+              </ul>
+            </div>
+            <p class="m-0 text-[14px] text-ink-2 md:text-center">Precios en pesos colombianos. ¿Trabajas con más profesionales? <a href="/app/signup" class="font-bold underline">Solicita el plan para equipos</a></p>
+          </div>
+        </section>
+
+        <section id="preguntas" aria-labelledby="faq-title" class="px-5 py-12 md:px-10 md:py-26">
+          <div class="max-w-[1160px] mx-auto flex flex-wrap items-start gap-[22px] md:gap-12">
+            <div class="flex-[1_1_300px] min-w-0">
+              <div class="lp-head">
+                <span class="lp-kicker">Preguntas frecuentes</span>
+                <h2 id="faq-title" class="lp-h2">Lo que suelen preguntarnos.</h2>
+                <p class="lp-lead">Si te queda otra duda, la resolvemos cuando crees tu cuenta.</p>
+              </div>
+            </div>
+            <div class="flex-[999_1_520px] min-w-0 flex flex-col gap-2.5">
+              <details class="faq" open>
+                <summary>¿Mis clientes tienen que descargar algo o crear una cuenta?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>No. Abren tu enlace desde el celular o el computador, eligen servicio, día y hora, escriben su nombre, correo y celular, y listo.</p>
+              </details>
+              <details class="faq">
+                <summary>¿Necesito tarjeta para la prueba gratis?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>No. Tienes {{trialDays}} días con todo funcionando. Si te gusta, eliges un paquete y pagas por Nequi o transferencia.</p>
+              </details>
+              <details class="faq">
+                <summary>¿Qué pasa si no renuevo a tiempo?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>Tienes unos días de gracia. Después tu página dice «Agenda no disponible temporalmente» y nadie puede reservar, pero las citas ya agendadas siguen en pie, con su recordatorio.</p>
+              </details>
+              <details class="faq">
+                <summary>¿Puedo ver mis citas en Google Calendar o en el iPhone?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>Sí. Puedes recibir cada cita como invitación por correo o suscribir tu calendario en Google Calendar, Outlook o el iPhone.</p>
+              </details>
+              <details class="faq">
+                <summary>¿Los recordatorios llegan por WhatsApp?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>Por ahora llegan por correo: la confirmación al separar y un recordatorio un día antes, con botón para confirmar asistencia.</p>
+              </details>
+              <details class="faq">
+                <summary>¿Qué pasa con los datos de mis clientes?<span class="faq-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="faq-plus" d="M12 5v14"/><path d="M5 12h14"/></svg></span></summary>
+                <p>Solo pedimos lo necesario para la cita y se tratan según la Ley 1581 de 2012. Tu cliente autoriza el tratamiento al reservar y puede pedir que se borren.</p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="cta-title" class="px-3 pb-10 md:px-6 md:pb-[72px]">
+          <div class="max-w-[1232px] mx-auto bg-primary text-white rounded-[28px] md:rounded-[40px] px-5 py-9 md:px-14 md:py-16 flex flex-wrap items-center justify-between gap-6">
+            <div class="flex-[1_1_420px] min-w-0 flex flex-col gap-2.5">
+              <h2 id="cta-title" class="m-0 font-display font-extrabold text-[30px] md:text-[46px] leading-[1.05] tracking-[-0.6px] md:tracking-[-1.2px]">Tu enlace de citas, listo hoy.</h2>
+              <p class="m-0 text-[16px] md:text-[18px] text-mint">Prueba gratis {{trialDays}} días, sin tarjeta. Después, desde <!--price:from-->$5.000<!--/price:from--> al mes.</p>
+            </div>
+            <a href="/app/signup" class="w-full md:w-auto h-[58px] px-[30px] rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="max-w-[1160px] mx-auto px-5 md:px-10 pb-[calc(32px+env(safe-area-inset-bottom))] md:pb-[calc(40px+env(safe-area-inset-bottom))] flex flex-wrap items-center justify-between gap-3 text-[14px] text-muted">
+        <span><span class="font-display font-extrabold text-[18px] tracking-[-0.5px] text-primary">sepárame<span class="text-accent-deep">.</span></span> · Hecho en Colombia</span>
+        <nav aria-label="Enlaces legales" class="flex flex-wrap gap-1">
+          <a href="/app/login" class="min-h-11 px-2.5 flex items-center underline">Entrar</a>
+          <a href="/privacy" class="min-h-11 px-2.5 flex items-center underline">Privacidad</a>
+          <a href="/terms" class="min-h-11 px-2.5 flex items-center underline">Términos</a>
+        </nav>
+      </footer>
+    </div>
   </body>
 </html>

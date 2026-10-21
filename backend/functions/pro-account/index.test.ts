@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ownerKey, slugKey, trialKey } from '../../lib/keys';
+import { ownerKey, refCodeKey, slugKey, subKey, trialKey } from '../../lib/keys';
 import { trialHash } from '../../services/profiles';
 import { DEFAULT_PRICE_SEEDS } from '../../services/prices';
 import { apiEvent, canceledTx, parse, proClaims, setTestEnv, SUB_ID } from '../../testing/fixtures';
@@ -48,6 +48,26 @@ describe('POST /me/onboarding', () => {
     expect(items).toHaveLength(5);
     expect(items[3].Put!.Item!.trialEndsAt).toBe(NOW.toISOString());
     expect(parse(res).subscription.state).toBe('grace');
+  });
+
+  it('attributes a referral code: referredBy on the subscription + the referrer’s record, in the same transaction', async () => {
+    ddb.on(GetCommand, { Key: refCodeKey('laura-perez') }).resolves({ Item: { proId: 'referrer1' } });
+    ddb.on(GetCommand, { Key: subKey('referrer1') }).resolves({ Item: { proId: 'referrer1', email: 'otra@correo.com', name: 'Dra. Laura Pérez' } });
+    const res = await handler(apiEvent('POST /me/onboarding', { claims: proClaims, body: { ...body, slug: 'nuevo-pro', referralCode: 'laura-perez' } }));
+    expect(res.statusCode).toBe(201);
+    const items = txItems();
+    expect(items).toHaveLength(7);
+    expect(items[3].Put!.Item).toMatchObject({ referredBy: { proId: 'referrer1', code: 'laura-perez' } });
+    expect(items[6].Put!).toMatchObject({ Item: { PK: 'PRO#referrer1', state: 'registered', name: 'Dra. Laura Pérez' }, ConditionExpression: 'attribute_not_exists(PK)' });
+  });
+
+  it('ignores a referral code that belongs to the same email (no self-referrals) without failing', async () => {
+    ddb.on(GetCommand, { Key: refCodeKey('laura-perez') }).resolves({ Item: { proId: 'referrer1' } });
+    ddb.on(GetCommand, { Key: subKey('referrer1') }).resolves({ Item: { proId: 'referrer1', email: 'laura@correo.com', name: 'Dra. Laura Pérez' } });
+    const res = await handler(apiEvent('POST /me/onboarding', { claims: proClaims, body: { ...body, referralCode: 'laura-perez' } }));
+    expect(res.statusCode).toBe(201);
+    expect(txItems()).toHaveLength(6);
+    expect(txItems()[3].Put!.Item!.referredBy).toBeUndefined();
   });
 
   it('maps a taken slug to 409 slug_taken', async () => {

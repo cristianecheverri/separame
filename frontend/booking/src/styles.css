@@ -10,10 +10,15 @@
 @source not './test';
 @source not './mock';
 
+/* Landscape phones (≈ 375–430 px tall): compact header/footer so the steps keep room to scroll. */
+@custom-variant short (@media (max-height: 520px));
+
 @layer components {
   /*
    * Phone: the frame IS the viewport (100dvh, fallback 100vh) and only the
-   * middle region scrolls. ≥ 640 px: the same frame becomes a centered card.
+   * middle region scrolls. ≥ 640 px wide AND ≥ 700 px tall: the same frame
+   * becomes a centered card. Wide but short (a phone in landscape): a
+   * full-height centered column, no card chrome eating the height.
    */
   .app-stage {
     min-height: 100vh;
@@ -35,7 +40,13 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  @media (min-width: 640px) {
+  @media (min-width: 640px) and (max-height: 699.98px) {
+    .app-frame {
+      max-width: 460px;
+      margin: 0 auto;
+    }
+  }
+  @media (min-width: 640px) and (min-height: 700px) {
     body {
       background: var(--color-surface);
     }
@@ -77,6 +88,11 @@
     background: #ffffff;
     transition: border-color 120ms ease, box-shadow 120ms ease;
   }
+  @media (max-height: 520px) {
+    .field {
+      height: 46px;
+    }
+  }
   .field::placeholder {
     color: #8a968f;
   }
@@ -106,6 +122,14 @@
   .skeleton {
     background: var(--color-surface);
     animation: pulse 1.4s ease-in-out infinite;
+  }
+}
+
+/* Horizontally scrolling rows (selection chips on short screens) without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 

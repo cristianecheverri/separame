@@ -59,7 +59,7 @@ export function buildSeparame(app: cdk.App, account = process.env.CDK_DEFAULT_AC
 
   const mail = new MailStack(app, id('Mail'), { env, config, table: data.table });
 
-  const auth = new AuthStack(app, id('Auth'), { env, config });
+  const auth = new AuthStack(app, id('Auth'), { env, config, table: data.table });
   // Cognito sends through the SES identity + configuration set, which are
   // referenced by name (no token), so the order must be explicit.
   auth.addStackDependency(mail);

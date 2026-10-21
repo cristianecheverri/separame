@@ -94,3 +94,41 @@ export const AlertIcon = make(
     <path d="M12 8v5M12 16.5v.01" />
   </>,
 );
+export const CalendarIcon = make(
+  <>
+    <rect x="3" y="5" width="18" height="16" rx="3" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+  </>,
+);
+export const ListIcon = make(<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />);
+export const UsersIcon = make(
+  <>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+    <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" />
+  </>,
+);
+export const MoreIcon = make(<path d="M5 12h.01M12 12h.01M19 12h.01" />, { strokeWidth: 3 });
+export const ShareIcon = make(
+  <>
+    <path d="M12 3v12" />
+    <path d="M7 8l5-5 5 5" />
+    <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+  </>,
+);
+export const ClockIcon = make(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </>,
+);
+/** Filled "⋯" (row menus). */
+export function DotsIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+      <circle cx="5" cy="12" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="19" cy="12" r="1.8" />
+    </svg>
+  );
+}

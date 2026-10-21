@@ -33,3 +33,20 @@ export function splitSlots(slots: string[]): { morning: string[]; afternoon: str
   for (const slot of slots) (bogotaTime(slot) < '12:00' ? morning : afternoon).push(slot);
   return { morning, afternoon };
 }
+
+/** Index of the 7-day row that holds `date` (0 when it isn't in the window). */
+export function weekOf(days: DayAvailability[], date: string | null): number {
+  const index = date ? days.findIndex((d) => d.date === date) : -1;
+  return index >= 0 ? Math.floor(index / DAYS_PER_WEEK) : 0;
+}
+
+/**
+ * Day shown in "Día y hora": the client's open pick stays (even a full day,
+ * which leads to the waitlist); otherwise the wanted date (deep link) when it
+ * has free hours, else the first day with free hours, so the hours show at once.
+ */
+export function resolveDay(days: DayAvailability[], current: string | null, wanted: string | null = null): string | null {
+  if (current && days.some((d) => d.date === current && d.closed === null)) return current;
+  const pick = (wanted ? days.find((d) => d.date === wanted && isDayBookable(d)) : undefined) ?? days.find(isDayBookable);
+  return pick?.date ?? null;
+}

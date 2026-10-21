@@ -25,14 +25,15 @@ const fn = (name: string, description: string, extra: Partial<FunctionDef> = {})
 });
 
 export const API_FUNCTIONS = {
-  publicPro: fn('public-pro', 'Public profile and availability of a professional'),
+  publicPro: fn('public-pro', 'Public profile and availability of a professional; who a referral code belongs to'),
   publicBooking: fn('public-booking', 'Client creates a booking (atomic slot locks)'),
-  publicAppointment: fn('public-appointment', 'Client views, cancels or reschedules via signed link'),
+  publicPrices: fn('public-prices', 'Active price version for the landing: packages, monthly equivalents, trial days'),
+  publicAppointment: fn('public-appointment', 'Client views, cancels, reschedules or downloads the .ics via signed link'),
   proAccount: fn('pro-account', 'Current professional: me, onboarding, profile, slug check'),
   proServices: fn('pro-services', 'Professional services CRUD'),
   proAvailability: fn('pro-availability', 'Weekly schedule, booking rules and blocked days'),
   proAppointments: fn('pro-appointments', 'Professional calendar: list, create, move, cancel'),
-  proBilling: fn('pro-billing', 'Plans, payment instructions, history and "Ya pagué" notices'),
+  proBilling: fn('pro-billing', 'Plans, payment instructions, history, "Ya pagué" notices and referrals'),
   calendarSync: fn('calendar-sync', 'Calendar subscription feed (.ics) for the pro and calendar-invite settings'),
   waitlist: fn('waitlist', 'Waitlist: clients join/leave; the pro lists and removes entries'),
   proClients: fn('pro-clients', 'Client history per professional: list, detail, notes, delete'),
@@ -55,7 +56,7 @@ export const BACKGROUND_FUNCTIONS = {
   streamAppointments: fn('stream-appointments', 'DynamoDB stream: appointment events → emails, client history, waitlist offers, web push', { timeoutSec: 60 }),
   streamPublish: fn('stream-publish', 'DynamoDB stream: regenerate the static /<slug> page on profile/service changes', { timeoutSec: 60 }),
   sesFeedback: fn('ses-feedback', 'SES bounces/complaints via SNS: suppress the address'),
-  cognitoPreSignUp: fn('cognito-pre-signup', 'Cognito: reject disposable email domains'),
+  cognitoPreSignUp: fn('cognito-pre-signup', 'Cognito: reject disposable email domains; remember the referral code of the sign-up'),
   cognitoCustomMessage: fn('cognito-custom-message', 'Cognito: branded sign-in code email'),
 } as const;
 
@@ -77,6 +78,7 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/public/pros/{slug}/availability', fn: 'publicPro', auth: 'public' },
   { method: 'POST', path: '/public/pros/{slug}/bookings', fn: 'publicBooking', auth: 'public', throttle: 'booking' },
   { method: 'GET', path: '/public/appointments/{token}', fn: 'publicAppointment', auth: 'public' },
+  { method: 'GET', path: '/public/appointments/{token}/ics', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/appointments/{token}/cancel', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/appointments/{token}/reschedule', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/appointments/{token}/confirm', fn: 'publicAppointment', auth: 'public' },
@@ -84,6 +86,10 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/public/waitlist/{token}/leave', fn: 'waitlist', auth: 'public' },
   // Secret-URL calendar feed that Google/Outlook/Apple poll: /public/calendar/<token>.ics
   { method: 'GET', path: '/public/calendar/{file}', fn: 'calendarSync', auth: 'public' },
+  // Landing pricing (the static landing is also regenerated with it; see backend/services/landing.ts)
+  { method: 'GET', path: '/public/prices', fn: 'publicPrices', auth: 'public' },
+  // Referral link owner for the signup page ("Te invitó …")
+  { method: 'GET', path: '/public/referrals/{code}', fn: 'publicPro', auth: 'public' },
 
   // Professional — Cognito JWT
   { method: 'GET', path: '/me', fn: 'proAccount', auth: 'pro' },
@@ -129,6 +135,7 @@ export const ROUTES: RouteDef[] = [
 
   { method: 'GET', path: '/me/billing', fn: 'proBilling', auth: 'pro' },
   { method: 'POST', path: '/me/billing/payment-notices', fn: 'proBilling', auth: 'pro' },
+  { method: 'GET', path: '/me/referrals', fn: 'proBilling', auth: 'pro' },
 
   // Admin — Cognito JWT + `admin` group (checked in the handler)
   { method: 'GET', path: '/admin/stats', fn: 'adminSubscriptions', auth: 'admin' },

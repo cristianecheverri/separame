@@ -3,9 +3,9 @@ import type { AvailabilityResponse } from '@shared/api';
 import type { DayAvailability } from '@shared/availability';
 import { capitalize, DAY_SHORT, formatDayLong, formatDayShort, formatInstantTime } from '@shared/format';
 import { jsWeekday } from '@shared/time';
-import { Bell, ChevronLeft, ChevronRight } from '../components/icons';
-import { DayPill, Notice, SkeletonPills, SkeletonSlots, SlotButton } from '../components/ui';
-import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, splitSlots } from '../lib/slots';
+import { Bell, ChevronRight } from '../components/icons';
+import { DayPill, FullDot, Notice, SkeletonPills, SkeletonSlots, SlotGroup, WeekNav } from '../components/ui';
+import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, splitSlots, weekOf } from '../lib/slots';
 import { StepTitle } from './FlowChrome';
 
 export type AvailabilityState =
@@ -23,16 +23,32 @@ interface Props {
   onRetry: () => void;
   onWaitlist: () => void;
   titleRef: preact.Ref<HTMLHeadingElement>;
+  titleAs: 'h1' | 'h2';
 }
 
-const NAV_BUTTON =
-  'w-11 h-11 rounded-full border-0 bg-surface text-ink flex items-center justify-center hover:bg-line disabled:opacity-40 disabled:cursor-default disabled:hover:bg-surface';
-
+/** Screen-reader label: a closed day ("no hay atención") must not sound like a full one ("sin horas libres"). */
 function dayLabel(day: DayAvailability): string {
   const base = capitalize(formatDayLong(day.date));
   if (day.closed === 'holiday') return `${base}, festivo`;
-  if (!isDayBookable(day)) return `${base}, sin horas libres`;
+  if (day.closed !== null) return `${base}, no hay atención`;
+  if (!isDayBookable(day)) return `${base}, lleno`;
   return base;
+}
+
+const isFull = (day: DayAvailability) => day.closed === null && day.slots.length === 0;
+
+/** "Lleno = te avisamos si se libera" under the day pills when the week has a full day. */
+function FullLegend() {
+  return (
+    <div class="flex gap-2 items-center text-[13px] text-ink-2 -mt-1">
+      <span aria-hidden="true" class="relative w-[18px] h-[18px] rounded-md border-2 border-dashed border-radio shrink-0">
+        <FullDot class="top-0.5 right-0.5 w-[5px] h-[5px]" />
+      </span>
+      <span>
+        <strong class="font-bold text-ink">Lleno</strong> = te avisamos si se libera
+      </span>
+    </div>
+  );
 }
 
 /** Entry point to the waitlist when the client can't find a free hour. */
@@ -55,25 +71,12 @@ export function WaitlistCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function SlotGroup({ title, slots, start, onPickSlot }: { title: string; slots: string[]; start: string | null; onPickSlot: (s: string) => void }) {
-  if (slots.length === 0) return null;
-  return (
-    <>
-      <div class="text-[14px] font-semibold text-muted">{title}</div>
-      <div class="grid grid-cols-3 gap-2">
-        {slots.map((slot) => (
-          <SlotButton key={slot} label={formatInstantTime(slot)} selected={slot === start} onPick={() => onPickSlot(slot)} />
-        ))}
-      </div>
-    </>
-  );
-}
-
-export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, onWaitlist, titleRef }: Props) {
+export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, onWaitlist, titleRef, titleAs }: Props) {
   const days = availability?.status === 'ready' ? availability.data.days : [];
   const weeks = chunk(days, DAYS_PER_WEEK);
-  const selectedIndex = day ? days.findIndex((d) => d.date === day) : -1;
-  const [week, setWeek] = useState(() => (selectedIndex >= 0 ? Math.floor(selectedIndex / DAYS_PER_WEEK) : 0));
+  // Only open days can be selected: a closed one (deep link, stale draft) never shows the waitlist.
+  const selectedIndex = day ? days.findIndex((d) => d.date === day && d.closed === null) : -1;
+  const [week, setWeek] = useState(() => weekOf(days, selectedIndex >= 0 ? day : null));
   const current = weeks[Math.min(week, Math.max(0, weeks.length - 1))] ?? [];
   const selectedDay = selectedIndex >= 0 ? days[selectedIndex] : null;
   const holidays = current.filter((d) => d.holidayName);
@@ -83,25 +86,9 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
 
   return (
     <section class="flex flex-col gap-3.5">
-      <StepTitle titleRef={titleRef}>¿Cuándo te sirve?</StepTitle>
+      <StepTitle titleRef={titleRef} as={titleAs}>¿Cuándo te sirve?</StepTitle>
       {notice && <Notice>{notice}</Notice>}
-      <div class="flex justify-between items-center gap-2">
-        <span class="text-[14px] font-semibold text-muted">{monthLabel(current.map((d) => d.date))}</span>
-        <div class="flex gap-1">
-          <button type="button" aria-label="Semana anterior" class={NAV_BUTTON} disabled={week <= 0} onClick={() => setWeek(week - 1)}>
-            <ChevronLeft size={16} strokeWidth={2.4} />
-          </button>
-          <button
-            type="button"
-            aria-label="Semana siguiente"
-            class={NAV_BUTTON}
-            disabled={week >= weeks.length - 1}
-            onClick={() => setWeek(week + 1)}
-          >
-            <ChevronRight size={16} strokeWidth={2.4} />
-          </button>
-        </div>
-      </div>
+      <WeekNav label={monthLabel(current.map((d) => d.date))} week={week} weeks={weeks.length} onWeek={setWeek} />
 
       {availability?.status === 'error' ? (
         <div class="flex flex-col gap-3">
@@ -125,12 +112,14 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
               label={dayLabel(d)}
               selected={d.date === day}
               disabled={d.closed !== null}
-              full={d.closed === null && d.slots.length === 0}
+              full={isFull(d)}
               onPick={() => onPickDay(d.date)}
             />
           ))}
         </div>
       )}
+
+      {!loading && current.some(isFull) && <FullLegend />}
 
       {holidays.length > 0 && (
         <div class="text-[13px] text-muted -mt-1">
@@ -138,7 +127,7 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
         </div>
       )}
 
-      {loading && day ? (
+      {loading ? (
         <SkeletonSlots />
       ) : nothingFree && !(selectedDay && selectedDay.slots.length > 0) ? (
         <>
@@ -149,9 +138,10 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
         </>
       ) : selectedDay ? (
         selectedDay.slots.length > 0 ? (
-          <div class="flex flex-col gap-2.5 fade-in" key={selectedDay.date}>
-            <SlotGroup title="Mañana" slots={splitSlots(selectedDay.slots).morning} start={start} onPickSlot={onPickSlot} />
-            <SlotGroup title="Tarde" slots={splitSlots(selectedDay.slots).afternoon} start={start} onPickSlot={onPickSlot} />
+          <div class="flex flex-col gap-3.5 fade-in" key={selectedDay.date}>
+            <div class="mt-1 text-[15px] font-bold">{capitalize(formatDayLong(selectedDay.date))}</div>
+            <SlotGroup title="Mañana" slots={splitSlots(selectedDay.slots).morning} start={start} onPickSlot={onPickSlot} format={formatInstantTime} />
+            <SlotGroup title="Tarde" slots={splitSlots(selectedDay.slots).afternoon} start={start} onPickSlot={onPickSlot} format={formatInstantTime} />
           </div>
         ) : (
           <>

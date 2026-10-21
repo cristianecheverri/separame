@@ -47,6 +47,16 @@ describe('ApiStack', () => {
     }
   });
 
+  it('wires the referral routes: the public code lookup (no auth) and the pro summary (JWT)', () => {
+    const routes = resourcesOf(template, 'AWS::ApiGatewayV2::Route').map(([, r]) => r.Properties);
+    const lookup = routes.find((p) => p.RouteKey === 'GET /public/referrals/{code}');
+    const mine = routes.find((p) => p.RouteKey === 'GET /me/referrals');
+    expect(lookup?.AuthorizationType ?? 'NONE').toBe('NONE');
+    expect(mine?.AuthorizationType).toBe('JWT');
+    expect(ROUTES.find((r) => r.path === '/public/referrals/{code}')?.fn).toBe('publicPro');
+    expect(ROUTES.find((r) => r.path === '/me/referrals')?.fn).toBe('proBilling');
+  });
+
   it('uses a Cognito JWT authorizer with the web client as audience', () => {
     template.hasResourceProperties('AWS::ApiGatewayV2::Authorizer', {
       AuthorizerType: 'JWT',
@@ -91,13 +101,15 @@ describe('ApiStack', () => {
     });
   });
 
-  it('lets only pro-account write the site bucket and invalidate the distribution', () => {
+  it('lets only pro-account and admin-prices write the site bucket and invalidate the distribution', () => {
     const policies = resourcesOf(template, 'AWS::IAM::Policy');
     const publishers = policies
       .filter(([, r]) => JSON.stringify(r.Properties.PolicyDocument).includes('cloudfront:CreateInvalidation'))
-      .map(([id]) => id);
-    expect(publishers).toHaveLength(1);
-    expect(publishers[0]).toMatch(/^ProAccount/);
+      .map(([id]) => id)
+      .sort();
+    expect(publishers).toHaveLength(2);
+    expect(publishers[0]).toMatch(/^AdminPrices/);
+    expect(publishers[1]).toMatch(/^ProAccount/);
     const adminPolicy = policies.find(([id]) => id.startsWith('AdminSubscriptions'))!;
     expect(JSON.stringify(adminPolicy[1].Properties.PolicyDocument)).toContain('cognito-idp:AdminGetUser');
   });

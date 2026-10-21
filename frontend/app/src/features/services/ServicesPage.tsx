@@ -1,10 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type ServiceResponse, type ServicesResponse, type UpsertServiceRequest } from '@shared/api';
-import { formatCop } from '@shared/format';
+import { priceDisplayOf } from '@shared/format';
 import { upsertServiceSchema } from '@shared/schemas';
-import type { Service } from '@shared/types';
-import { Chip } from '../../components/ui/Chip';
+import type { PriceDisplay, Service } from '@shared/types';
 import { cx } from '../../components/ui/cx';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Field } from '../../components/ui/Field';
@@ -16,22 +15,27 @@ import { Switch } from '../../components/ui/Switch';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
 import { formatCopInput, parseCopInput } from '../../lib/format';
+import { listPriceText, PriceDisplayField } from './PriceDisplayField';
 import { usePro } from '../../lib/pro';
 import { keys, useServices } from '../../lib/queries';
 
-import { DURATIONS } from './durations';
+import { durationProblem } from './durations';
+import { DurationPicker } from './DurationPicker';
+import { focusFirstError } from '../../lib/focusError';
 
 interface FormState {
   name: string;
   durationMin: number;
+  priceDisplay: PriceDisplay;
   price: string;
   description: string;
 }
 
-const EMPTY: FormState = { name: '', durationMin: 30, price: '', description: '' };
+const EMPTY: FormState = { name: '', durationMin: 30, priceDisplay: 'fixed', price: '', description: '' };
 const toForm = (s: Service): FormState => ({
   name: s.name,
   durationMin: s.durationMin,
+  priceDisplay: priceDisplayOf(s),
   price: s.priceCop ? formatCopInput(String(s.priceCop)) : '',
   description: s.description,
 });
@@ -50,7 +54,7 @@ function useServiceMutations() {
   const toggle = useMutation({
     mutationFn: (service: Service) =>
       api.put<ServiceResponse>(apiPaths.service(service.id), {
-        name: service.name, durationMin: service.durationMin, priceCop: service.priceCop, description: service.description, visible: !service.visible,
+        name: service.name, durationMin: service.durationMin, priceCop: service.priceCop, priceDisplay: priceDisplayOf(service), description: service.description, visible: !service.visible,
       }),
     onMutate: async (service) => {
       await qc.cancelQueries({ queryKey: keys.services });
@@ -129,7 +133,7 @@ export function ServicesPage() {
                   <span className="flex flex-col gap-[3px] min-w-0">
                     <span className={cx('font-bold text-[16px] [overflow-wrap:anywhere]', !s.visible && 'text-muted')}>{s.name}</span>
                     <span className="text-[14px] text-muted">
-                      {formatCop(s.priceCop)}
+                      {listPriceText(s)}
                       {note && ` · ${note}`}
                     </span>
                   </span>
@@ -230,57 +234,46 @@ function ServiceEditor({ service, readOnly, saving, onSave, onDelete }: EditorPr
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    const target = e.currentTarget as HTMLFormElement;
+    const durationError = durationProblem(form.durationMin);
     const parsed = upsertServiceSchema.safeParse({
       name: form.name,
       durationMin: form.durationMin,
-      priceCop: parseCopInput(form.price),
+      priceCop: form.priceDisplay === 'fixed' ? parseCopInput(form.price) : null,
+      priceDisplay: form.priceDisplay,
       description: form.description,
       visible: service?.visible ?? true,
     });
-    if (!parsed.success) {
+    if (!parsed.success || durationError) {
       const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[String(issue.path[0])] ??= issue.message;
+      if (durationError) next.durationMin = durationError;
+      for (const issue of parsed.success ? [] : parsed.error.issues) next[String(issue.path[0])] ??= issue.message;
       setErrors(next);
+      focusFirstError(target);
       return;
     }
     setErrors({});
     onSave(service?.id ?? null, parsed.data, isNew);
   };
 
-  const durations = DURATIONS.includes(form.durationMin) ? DURATIONS : [...DURATIONS, form.durationMin].sort((a, b) => a - b);
-
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       <fieldset disabled={readOnly} className="contents">
         <Field label="Nombre" error={errors.name}>
-          {(p) => <input {...p} type="text" className={ui.input} value={form.name} placeholder="Ej. Valoración" onChange={(e) => setForm({ ...form, name: e.target.value })} />}
+          {(p) => <input {...p} type="text" className={ui.input} value={form.name} placeholder="Nombre del servicio" onChange={(e) => setForm({ ...form, name: e.target.value })} />}
         </Field>
-        <div className="flex flex-col gap-2" role="group" aria-labelledby="svc-duration">
-          <div id="svc-duration" className={ui.label}>
-            Duración
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {durations.map((m) => (
-              <Chip key={m} selected={form.durationMin === m} onClick={() => setForm({ ...form, durationMin: m })} disabled={readOnly}>
-                {m} min
-              </Chip>
-            ))}
-          </div>
-          {errors.durationMin && <div className="text-[13px] font-semibold text-warn-ink">{errors.durationMin}</div>}
-        </div>
-        <Field label="Precio de referencia" error={errors.priceCop} help="Déjalo vacío para mostrar «Sin costo». No se cobra en línea.">
-          {(p) => (
-            <div className="flex gap-2">
-              <div className={ui.prefix} aria-hidden="true">
-                COP $
-              </div>
-              <input {...p} type="text" inputMode="numeric" className={cx(ui.input, 'grow')} placeholder="Sin costo" value={form.price} onChange={(e) => setForm({ ...form, price: formatCopInput(e.target.value) })} />
-            </div>
-          )}
-        </Field>
+        <DurationPicker value={form.durationMin} onChange={(durationMin) => setForm({ ...form, durationMin })} error={errors.durationMin} disabled={readOnly} />
+        <PriceDisplayField
+          display={form.priceDisplay}
+          price={form.price}
+          onChange={({ display, price }) => setForm({ ...form, priceDisplay: display, price })}
+          error={errors.priceCop}
+          disabled={readOnly}
+          preview={{ name: form.name, durationMin: form.durationMin, description: form.description }}
+        />
         <Field label="Descripción corta (opcional)" error={errors.description}>
           {(p) => (
-            <textarea {...p} rows={2} maxLength={200} className={ui.textarea} placeholder="Ej. Revisión general y plan de tratamiento" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <textarea {...p} rows={2} maxLength={200} className={ui.textarea} placeholder="Descripción del servicio" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           )}
         </Field>
       </fieldset>

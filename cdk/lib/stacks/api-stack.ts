@@ -33,8 +33,8 @@ export const DEFAULT_THROTTLE = { rateLimit: 50, burstLimit: 100 } as const;
 /** Routes that create or change bookings. */
 export const BOOKING_THROTTLE = { rateLimit: 5, burstLimit: 10 } as const;
 
-/** API functions that write or delete static pages on the site bucket. */
-const SITE_PUBLISHERS: readonly ApiFunctionKey[] = ['proAccount'];
+/** API functions that write or delete static pages on the site bucket (old slug pages; the landing's prices). */
+const SITE_PUBLISHERS: readonly ApiFunctionKey[] = ['proAccount', 'adminPrices'];
 
 /**
  * The HTTP API at `api.<site>`: one small NodejsFunction per entry of

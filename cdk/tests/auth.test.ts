@@ -48,6 +48,16 @@ describe('AuthStack', () => {
     }
   });
 
+  it('lets the pre sign-up trigger only PutItem on the table (referral code of the sign-up)', () => {
+    const fn = resourcesOf(template, 'AWS::Lambda::Function').find(([, f]) => f.Properties.FunctionName === 'separame-dev-cognito-pre-signup')!;
+    expect(JSON.stringify(fn[1].Properties.Environment)).toContain('TABLE_NAME');
+    const policies = resourcesOf(template, 'AWS::IAM::Policy').map(([, p]) => JSON.stringify(p.Properties));
+    const triggerPolicy = policies.find((p) => p.includes('dynamodb:'));
+    expect(triggerPolicy).toBeDefined();
+    expect(triggerPolicy).toContain('"dynamodb:PutItem"');
+    expect(triggerPolicy).not.toMatch(/dynamodb:(GetItem|Query|DeleteItem|UpdateItem|Scan|\*)/);
+  });
+
   it('has a secretless SRP-only client with revocation and 1 h / 30 d tokens', () => {
     template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
       GenerateSecret: false,

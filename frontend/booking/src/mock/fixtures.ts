@@ -23,7 +23,8 @@ export const MOCK_PROFILE: PublicProfile = {
   services: [
     { id: 'valoracion', name: 'Valoración', durationMin: 30, priceCop: 60000, description: 'Primera vez' },
     { id: 'limpieza', name: 'Limpieza dental', durationMin: 45, priceCop: 120000, description: 'Incluye profilaxis' },
-    { id: 'control', name: 'Control', durationMin: 15, priceCop: null, description: 'En tratamiento' },
+    { id: 'control', name: 'Control', durationMin: 15, priceCop: null, priceDisplay: 'agreed', description: 'En tratamiento' },
+    { id: 'urgencia', name: 'Urgencia', durationMin: 30, priceCop: null, priceDisplay: 'hidden', description: 'Dolor o molestia' },
   ],
 };
 
@@ -49,5 +50,8 @@ export function mockBusy(days = 31): Interval[] {
       busy.push({ start, end: new Date(new Date(start).getTime() + 30 * 60_000).toISOString() });
     }
   }
+  // Friday 23 is fully booked: a real "Lleno" day that leads to the waitlist.
+  const fullDay = addDays(MOCK_TODAY, 3);
+  busy.push({ start: toInstant(fullDay, '07:00'), end: toInstant(fullDay, '19:00') });
   return busy;
 }

@@ -12,9 +12,9 @@ interface PillSelectProps<T extends string | number> {
 }
 
 const VARIANT = {
-  rule: 'h-11 rounded-[12px] border-2 border-line bg-white pl-[14px] pr-[32px] text-[14px] whitespace-nowrap',
-  field: 'h-12 rounded-[14px] border-2 border-line bg-white pl-[14px] pr-[38px] text-[15px]',
-  fieldSelected: 'h-12 rounded-[14px] border-2 border-primary bg-primary-soft pl-[14px] pr-[38px] text-[15px]',
+  rule: 'h-11 rounded-[12px] border-2 border-line bg-white pl-[14px] pr-[32px] text-[16px] whitespace-nowrap',
+  field: 'h-12 rounded-[14px] border-2 border-line bg-white pl-[14px] pr-[38px] text-[16px]',
+  fieldSelected: 'h-12 rounded-[14px] border-2 border-primary bg-primary-soft pl-[14px] pr-[38px] text-[16px]',
 } as const;
 
 /**

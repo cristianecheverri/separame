@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useBlocker } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type AvailabilitySettingsResponse, type BlockResponse, type PutAvailabilityRequest } from '@shared/api';
@@ -15,12 +15,13 @@ import { ui } from '../../components/ui/styles';
 import { Switch } from '../../components/ui/Switch';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
+import { focusFirstError } from '../../lib/focusError';
 import { now } from '../../lib/clock';
 import { formatBlockRange, formatDayShortMonth, isFullDayBlock } from '../../lib/format';
 import { usePro } from '../../lib/pro';
 import { keys, useAvailability } from '../../lib/queries';
 import { formatTime } from '@shared/format';
-import { scheduleErrors, TIME_STEPS, toDraft, toSchedule, type ScheduleDraft } from './scheduleModel';
+import { scheduleErrors, timeStepsWith, toDraft, toSchedule, type ScheduleDraft } from './scheduleModel';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 
 const withCurrent = (options: { value: number; label: string }[], value: number, label: (v: number) => string) =>
@@ -87,11 +88,23 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
     onError: (error) => toast.error(errorMessage(error)),
   });
 
+  const refreshBlocks = () => {
+    void qc.invalidateQueries({ queryKey: keys.availability });
+    void qc.invalidateQueries({ queryKey: keys.slotsAll });
+  };
+  const restoreBlock = useMutation({
+    mutationFn: (block: Block) => api.post<BlockResponse>(apiPaths.blocks(), { label: block.label, start: block.start, end: block.end }),
+    onSuccess: (_res, block) => {
+      refreshBlocks();
+      toast.success(`Volviste a bloquear «${block.label}».`);
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
   const removeBlock = useMutation({
-    mutationFn: (id: string) => api.del(apiPaths.block(id)),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.availability });
-      void qc.invalidateQueries({ queryKey: keys.slotsAll });
+    mutationFn: (block: Block) => api.del(apiPaths.block(block.id)),
+    onSuccess: (_res, block) => {
+      refreshBlocks();
+      toast.show(`Quitaste «${block.label}». Ya se puede reservar en esas fechas.`, 'success', { label: 'Deshacer', onClick: () => restoreBlock.mutate(block) });
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -191,14 +204,14 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
             </div>
             {blocks.length === 0 && <div className="text-[13px] text-muted">Vacaciones, congresos o días libres: nadie podrá reservar en esas fechas.</div>}
             {blocks.map((b) => (
-              <BlockItem key={b.id} block={b} readOnly={readOnly} onRemove={() => removeBlock.mutate(b.id)} />
+              <BlockItem key={b.id} block={b} readOnly={readOnly} onRemove={() => removeBlock.mutate(b)} />
             ))}
           </section>
         </div>
       </div>
 
       {dirty && !readOnly && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-line px-4 py-3 flex items-center justify-between gap-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <div className="lg:hidden fixed bottom-[var(--bottom-nav)] inset-x-0 z-20 bg-white border-t border-line px-4 py-3 flex items-center justify-between gap-3 pb-[max(12px,calc(env(safe-area-inset-bottom)-var(--bottom-nav)))]">
           <span className="text-[14px] font-bold text-warn-ink">Cambios sin guardar</span>
           {saveButton}
         </div>
@@ -255,7 +268,12 @@ function BlockModal({ onClose }: { onClose: () => void }) {
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('12:00');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setErrorState] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const setError = (message: string | null) => {
+    setErrorState(message);
+    if (message) focusFirstError(formRef.current);
+  };
 
   const create = useMutation({
     mutationFn: (body: { label: string; start: string; end: string }) => api.post<BlockResponse>(apiPaths.blocks(), body),
@@ -281,7 +299,7 @@ function BlockModal({ onClose }: { onClose: () => void }) {
     create.mutate(parsed.data);
   };
 
-  const timeOptions = TIME_STEPS.map((t) => ({ value: t, label: formatTime(t) }));
+  const timeOptions = (current: string) => timeStepsWith(current).map((t) => ({ value: t, label: formatTime(t) }));
   return (
     <Modal
       open
@@ -299,8 +317,8 @@ function BlockModal({ onClose }: { onClose: () => void }) {
         </>
       }
     >
-      <form id="block-form" onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <Field label="Nombre">{(p) => <input {...p} className={ui.input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ej. Vacaciones" />}</Field>
+      <form id="block-form" ref={formRef} onSubmit={submit} className="flex flex-col gap-4" noValidate>
+        <Field label="Nombre">{(p) => <input {...p} className={ui.input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Nombre del bloqueo" />}</Field>
         <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
           <Field label="Desde">{(p) => <input {...p} type="date" min={today} className={ui.input} value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
           <Field label="Hasta">{(p) => <input {...p} type="date" min={from} className={ui.input} value={to} onChange={(e) => setTo(e.target.value)} />}</Field>
@@ -313,11 +331,11 @@ function BlockModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-[6px]">
               <span className={ui.label}>Hora inicial</span>
-              <PillSelect variant="field" label="Hora inicial" value={startTime} options={timeOptions} onChange={setStartTime} />
+              <PillSelect variant="field" label="Hora inicial" value={startTime} options={timeOptions(startTime)} onChange={setStartTime} />
             </div>
             <div className="flex flex-col gap-[6px]">
               <span className={ui.label}>Hora final</span>
-              <PillSelect variant="field" label="Hora final" value={endTime} options={timeOptions} onChange={setEndTime} />
+              <PillSelect variant="field" label="Hora final" value={endTime} options={timeOptions(endTime)} onChange={setEndTime} />
             </div>
           </div>
         )}

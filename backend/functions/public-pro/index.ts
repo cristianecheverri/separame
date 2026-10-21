@@ -3,9 +3,10 @@ import { ApiError, createApiHandler, ok, parseQuery, pathParam, type ApiEvent } 
 import { availabilityFor } from '../../services/availability';
 import { getProfile, proIdBySlug, toPublicProfile } from '../../services/profiles';
 import { listServices, requireService } from '../../services/services';
+import { publicReferral } from '../../services/referrals';
 import { loadSubscription } from '../../services/subscriptions';
 
-/** Public profile + availability of a professional (no auth). */
+/** Public profile + availability of a professional, and who a referral code belongs to (no auth). */
 
 async function resolvePro(event: ApiEvent) {
   const slug = pathParam(event, 'slug').toLowerCase();
@@ -35,4 +36,6 @@ export const handler = createApiHandler({
       proId, service, from: query.from, days: query.days, active: sub.status.canAcceptBookings, now,
     }));
   },
+
+  'GET /public/referrals/{code}': async (event) => ok(await publicReferral(pathParam(event, 'code'))),
 });

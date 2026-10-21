@@ -10,10 +10,17 @@ interface DrawerProps {
   label: string;
   className: string;
   children: ReactNode;
+  /** 'left': off-canvas panel. 'bottom': sheet that rises above the tab bar, which stays visible and usable. */
+  placement?: 'left' | 'bottom';
 }
 
+const PLACEMENT = {
+  left: { root: 'fixed inset-0 z-50 lg:hidden', panel: 'absolute inset-y-0 left-0 w-[280px] max-w-[86vw]' },
+  bottom: { root: 'fixed inset-x-0 top-0 bottom-[var(--bottom-nav)] z-40 lg:hidden', panel: 'absolute inset-x-0 bottom-0 max-h-[calc(100%-16px)] rounded-t-[28px]' },
+} as const;
+
 /** Off-canvas navigation for phones and tablets: focus trap, Esc, scroll lock. */
-export function Drawer({ open, onClose, label, className, children }: DrawerProps) {
+export function Drawer({ open, onClose, label, className, children, placement = 'left' }: DrawerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -50,9 +57,9 @@ export function Drawer({ open, onClose, label, className, children }: DrawerProp
 
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className={PLACEMENT[placement].root}>
       <div className="absolute inset-0 bg-[rgba(21,36,29,0.45)]" onClick={onClose} aria-hidden="true" />
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={label} className={cx('on-dark absolute inset-y-0 left-0 w-[280px] max-w-[86vw] overflow-y-auto', className)}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={label} className={cx('on-dark overflow-y-auto overscroll-contain', PLACEMENT[placement].panel, className)}>
         {children}
       </div>
     </div>,

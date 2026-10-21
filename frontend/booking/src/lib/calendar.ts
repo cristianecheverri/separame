@@ -1,6 +1,9 @@
 /**
  * "Add to calendar" without OAuth: Google Calendar and Outlook template links
- * plus a downloadable .ics, all generated in the browser from the booking.
+ * generated in the browser from the booking. The .ics download is served by
+ * the API (GET /public/appointments/{token}/ics) because `data:` URLs fail in
+ * iOS Safari and in-app browsers; `icsContent`/`icsDataUrl` remain for the
+ * dev-only mock.
  */
 import type { BookingSummary } from '@shared/api';
 import { formatDuration } from '@shared/format';
@@ -96,4 +99,18 @@ export function icsContent(event: CalendarEvent, now: Date = new Date()): string
 
 export function icsDataUrl(event: CalendarEvent): string {
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent(event))}`;
+}
+
+export type CalendarPlatform = 'iphone' | 'ipad' | 'android' | 'other';
+
+/**
+ * Which calendar the confirmation offers first. iPadOS reports a desktop
+ * Safari UA ("Macintosh"), so a touch screen tells it apart from a Mac.
+ */
+export function calendarPlatform(nav: Pick<Navigator, 'userAgent' | 'maxTouchPoints'> | undefined = globalThis.navigator): CalendarPlatform {
+  const ua = nav?.userAgent ?? '';
+  if (/iPhone|iPod/.test(ua)) return 'iphone';
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && (nav?.maxTouchPoints ?? 0) > 1)) return 'ipad';
+  if (/Android/.test(ua)) return 'android';
+  return 'other';
 }

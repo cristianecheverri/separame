@@ -5,7 +5,7 @@ import type {
 import { CLIENT_CHANGE_CUTOFF_MIN } from '../../shared/api';
 import { isSlotBookable, lockUnits } from '../../shared/availability';
 import { clientKeyOf } from '../../shared/clients';
-import { initials } from '../../shared/format';
+import { initials, priceDisplayOf } from '../../shared/format';
 import { GSI2, LSI1 } from '../../shared/infra';
 import { addDays, addMinutes, bogotaDate, toInstant, type ISODate, type ISOInstant } from '../../shared/time';
 import type { Actor, Appointment, AppointmentOutcome, ClientContact, ProProfile, Service } from '../../shared/types';
@@ -15,7 +15,7 @@ import {
 } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
 import { newId } from '../lib/ids';
-import { apptKey, apptStartSk, lockKey, proPk, remindPk, remindSk } from '../lib/keys';
+import { apptKey, apptStartSk, bookingIdempotencyKey, lockKey, proPk, remindPk, remindSk } from '../lib/keys';
 import { log } from '../lib/logger';
 import { linkSecret, manageTokenFor, verifyManageToken } from '../lib/tokens';
 import { loadContext } from './availability';
@@ -65,7 +65,8 @@ export function toAppointment(item: Item): Appointment {
   const a = normalizeAppointment(item);
   return {
     id: a.id, proId: a.proId, serviceId: a.serviceId, serviceName: a.serviceName, durationMin: a.durationMin,
-    priceCop: a.priceCop ?? null, start: a.start, end: a.end, status: a.status, client: a.client,
+    priceCop: a.priceCop ?? null, ...(a.priceDisplay ? { priceDisplay: a.priceDisplay } : {}),
+    start: a.start, end: a.end, status: a.status, client: a.client,
     createdBy: a.createdBy, createdAt: a.createdAt, updatedAt: a.updatedAt,
     ...(a.cancelledBy ? { cancelledBy: a.cancelledBy } : {}),
     ...(a.cancelReason ? { cancelReason: a.cancelReason } : {}),
@@ -79,8 +80,14 @@ export function toAppointment(item: Item): Appointment {
   };
 }
 
-/** GSI2 attributes for the pending 24 h reminder, or null when start − 24 h already passed. */
-export function reminderAttrs(proId: string, apptId: string, start: ISOInstant, now: Date): Record<string, string> | null {
+/**
+ * GSI2 attributes for the pending 24 h reminder, or null when start − 24 h
+ * already passed or the client left no email (nothing to send it to).
+ */
+export function reminderAttrs(
+  proId: string, apptId: string, start: ISOInstant, now: Date, client: Pick<ClientContact, 'email'>,
+): Record<string, string> | null {
+  if (!client.email) return null;
   const remindAtMs = new Date(start).getTime() - REMINDER_LEAD_MS;
   if (remindAtMs <= now.getTime()) return null;
   const remindAt = new Date(remindAtMs).toISOString();
@@ -98,6 +105,7 @@ export function bookingSummary(appt: Appointment, pro: ProProfile): BookingSumma
     serviceName: appt.serviceName,
     durationMin: appt.durationMin,
     priceCop: appt.priceCop,
+    priceDisplay: priceDisplayOf(appt),
     client: { name: appt.client.name, email: appt.client.email },
     pro: {
       slug: pro.slug, name: pro.name, title: pro.title, city: pro.city, neighborhood: pro.neighborhood,
@@ -237,12 +245,55 @@ export interface CreateAppointmentInput {
   now: Date;
   /** Pro bookings skip `minNoticeMin` (same slot rules otherwise). */
   ignoreMinNotice?: boolean;
+  /** Client-generated UUID of a public booking attempt (see `CreateBookingRequest.idempotencyKey`). */
+  idempotencyKey?: string;
 }
 
-/** Validates the slot against fresh (consistent) data and writes appointment + locks atomically. */
+/** Idempotency markers only need to outlive the client's retries. */
+const IDEMPOTENCY_TTL_MS = DAY_MS;
+
+interface IdempotencyMarker {
+  apptId: string;
+  start: ISOInstant;
+  serviceId: string;
+}
+
+/**
+ * The appointment an earlier attempt with the same idempotency key created, or
+ * undefined when there was none. A key reused for a different slot or service
+ * is a client bug: refuse it rather than hand back the wrong appointment.
+ */
+async function replayedAppointment(proId: string, key: string, start: ISOInstant, serviceId: string): Promise<AppointmentItem | undefined> {
+  const marker = await getItem<IdempotencyMarker>(bookingIdempotencyKey(proId, key), true);
+  if (!marker) return undefined;
+  const appt = await getAppointmentItem(proId, marker.apptId, true);
+  if (!appt || marker.start !== start || marker.serviceId !== serviceId || appt.status !== 'confirmed') {
+    throw new ApiError('conflict', 'Esta reserva ya se intentó con otros datos. Recarga la página e inténtalo de nuevo.');
+  }
+  log.info('booking replayed', { proId, appointmentId: appt.id });
+  return appt;
+}
+
+const idempotencyPut = (proId: string, key: string, marker: IdempotencyMarker, now: Date): TransactItem => ({
+  Put: {
+    TableName: table(),
+    Item: { ...bookingIdempotencyKey(proId, key), ...marker, ttl: Math.floor((now.getTime() + IDEMPOTENCY_TTL_MS) / 1000) },
+    ConditionExpression: 'attribute_not_exists(PK)',
+  },
+});
+
+/**
+ * Validates the slot against fresh (consistent) data and writes appointment + locks atomically.
+ * With an idempotency key, a retry of a booking that already went through returns that same
+ * appointment (the marker is written in the same transaction, so it exists iff the appointment does).
+ */
 export async function createAppointment(input: CreateAppointmentInput): Promise<AppointmentItem> {
-  const { proId, service, now } = input;
+  const { proId, service, now, idempotencyKey } = input;
   const start = normalize(input.start);
+  if (idempotencyKey) {
+    const replayed = await replayedAppointment(proId, idempotencyKey, start, service.id);
+    if (replayed) return replayed;
+  }
   const ctx = await loadContext({
     proId, durationMin: service.durationMin, from: bogotaDate(start), days: 1, now,
     ignoreMinNotice: input.ignoreMinNotice, consistent: true,
@@ -253,6 +304,7 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   const id = newId(now);
   const appt: AppointmentItem = {
     id, proId, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin, priceCop: service.priceCop,
+    priceDisplay: priceDisplayOf(service),
     start, end: addMinutes(start, service.durationMin), status: 'confirmed', client: input.client,
     createdBy: input.createdBy, createdAt: at, updatedAt: at, lockBufferMin: ctx.rules.bufferMin, lastChangedBy: input.createdBy,
     revision: 0,
@@ -263,16 +315,25 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
     ...apptKey(proId, id),
     ...appt,
     [LSI1.sk]: apptStartSk(start),
-    ...(reminderAttrs(proId, id, start, now) ?? {}),
+    ...(reminderAttrs(proId, id, start, now, input.client) ?? {}),
   };
-  await writeWithLocks({
-    proId,
-    apptId: id,
-    main: [{ Put: { TableName: table(), Item: item, ConditionExpression: 'attribute_not_exists(PK)' } }],
-    acquire: lockUnits(start, service.durationMin, ctx.rules.bufferMin),
-    release: [],
-    lockTtl: lockTtlFor(start, service.durationMin, ctx.rules.bufferMin),
-  });
+  const main: TransactItem[] = [{ Put: { TableName: table(), Item: item, ConditionExpression: 'attribute_not_exists(PK)' } }];
+  if (idempotencyKey) main.push(idempotencyPut(proId, idempotencyKey, { apptId: id, start, serviceId: service.id }, now));
+  try {
+    await writeWithLocks({
+      proId,
+      apptId: id,
+      main,
+      acquire: lockUnits(start, service.durationMin, ctx.rules.bufferMin),
+      release: [],
+      lockTtl: lockTtlFor(start, service.durationMin, ctx.rules.bufferMin),
+    });
+  } catch (err) {
+    // Two copies of the same attempt raced: the loser fails on the marker or the locks.
+    const replayed = idempotencyKey ? await replayedAppointment(proId, idempotencyKey, start, service.id) : undefined;
+    if (replayed) return replayed;
+    throw err;
+  }
   log.info('appointment created', { proId, appointmentId: id, createdBy: input.createdBy });
   return appt;
 }
@@ -300,7 +361,7 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
 
   const end = addMinutes(start, appt.durationMin);
   const at = now.toISOString();
-  const reminder = reminderAttrs(appt.proId, appt.id, start, now);
+  const reminder = reminderAttrs(appt.proId, appt.id, start, now, appt.client);
   const { acquire, release } = lockDiff(
     lockUnits(appt.start, appt.durationMin, appt.lockBufferMin ?? ctx.rules.bufferMin),
     lockUnits(start, appt.durationMin, ctx.rules.bufferMin),

@@ -41,7 +41,7 @@ describe('upcoming days', () => {
   it('lists the next three working days and the next holiday', () => {
     const days = upcomingDays(TODAY, trialAppointments(), schedule, true);
     expect(days).toEqual([
-      { date: '2026-10-21', count: 5 },
+      { date: '2026-10-21', count: 6 },
       { date: '2026-10-22', count: 7 },
       { date: '2026-10-23', count: 3 },
       { date: '2026-11-02', count: null, holidayName: 'Todos los Santos' },

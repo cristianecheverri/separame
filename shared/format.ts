@@ -4,6 +4,7 @@
  * as the mockups: "Jueves 22 de octubre", "10:00 a. m.", "12:00 m.", "$60.000".
  */
 import { bogotaDate, bogotaTime, jsWeekday, type HHmm, type ISODate, type ISOInstant } from './time';
+import type { PriceDisplay } from './types';
 
 export const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 export const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -79,6 +80,36 @@ export function formatCop(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || amount === 0) return 'Sin costo';
   const digits = Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return `$${digits}`;
+}
+
+/** Anything that carries a service price: Service, PublicService, Appointment, BookingSummary. */
+export interface PricedItem {
+  priceCop: number | null;
+  priceDisplay?: PriceDisplay;
+}
+
+/** The price display option, deriving it for items saved before it existed (null or 0 → "Sin costo"). */
+export function priceDisplayOf(item: PricedItem): PriceDisplay {
+  if (item.priceDisplay === 'fixed') return item.priceCop ? 'fixed' : 'free';
+  if (item.priceDisplay) return item.priceDisplay;
+  return item.priceCop ? 'fixed' : 'free';
+}
+
+/** Copy for the price display options (panel editor, booking page, emails). */
+export const PRICE_DISPLAY_TEXT = {
+  free: 'Sin costo',
+  agreed: 'Precio a convenir',
+} as const;
+
+/**
+ * A service price as the client sees it: "$60.000", "Sin costo", "Precio a convenir",
+ * or '' when the professional chose not to show it (callers then omit the price entirely).
+ */
+export function formatServicePrice(item: PricedItem): string {
+  const display = priceDisplayOf(item);
+  if (display === 'fixed') return formatCop(item.priceCop);
+  if (display === 'hidden') return '';
+  return PRICE_DISPLAY_TEXT[display];
 }
 
 /** "30 min", "1 h", "1 h 30 min". */
