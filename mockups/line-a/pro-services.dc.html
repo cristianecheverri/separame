@@ -14,7 +14,7 @@ body{margin:0}
 a{color:#0B6E4F}a:hover{color:#084C37}
 </style>
 </helmet>
-<div style="min-height: 860px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+<div style="min-height: 1060px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
 
   <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
     <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
@@ -88,17 +88,37 @@ a{color:#0B6E4F}a:hover{color:#084C37}
             </div>
           </sc-if>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 6px">
-          <label for="svc-price" style="font-size: 14px; font-weight: 600">Precio de referencia</label>
-          <div style="display: flex; gap: 8px">
-            <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 15px">COP $</div>
-            <input id="svc-price" type="text" inputmode="numeric" placeholder="{{sel.priceRaw}}" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+        <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+          <legend style="font-size: 14px; font-weight: 600; padding: 0 0 8px">Precio en tu página</legend>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{priceModes}}" as="m" hint-placeholder-count="4">
+              <button onClick="{{m.pick}}" aria-pressed="{{m.selected}}" style="{{m.style}}">{{m.label}}</button>
+            </sc-for>
           </div>
-          <div style="font-size: 12px; color: #56645D">Déjalo vacío para mostrar «Sin costo». No se cobra en línea.</div>
-        </div>
+          <sc-if value="{{isFixed}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px">
+              <label for="svc-price" style="font-size: 13px; font-weight: 600; color: #3E4C45">Valor de referencia</label>
+              <div style="display: flex; gap: 8px">
+                <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 15px">COP $</div>
+                <input id="svc-price" type="text" inputmode="numeric" placeholder="Valor en pesos" style="height: 48px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+              </div>
+            </div>
+          </sc-if>
+          <div style="font-size: 12px; color: #56645D">{{modeHelp}}</div>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; font-weight: 700; color: #3E4C45">Así se ve en tu página</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+              <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                <span style="font-weight: 700; font-size: 15px">{{sel.name}}</span>
+                <span style="font-size: 13px; color: #56645D">{{sel.mins}} min · {{sel.note}}</span>
+              </span>
+              <span style="font-weight: 700; font-size: 14px; white-space: nowrap">{{previewPrice}}</span>
+            </div>
+          </div>
+        </fieldset>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-desc" style="font-size: 14px; font-weight: 600">Descripción corta (opcional)</label>
-          <textarea id="svc-desc" rows="2" placeholder="Qué incluye el servicio" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+          <textarea id="svc-desc" rows="2" placeholder="Descripción del servicio" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
         </div>
         <div style="display: flex; gap: 10px; padding-top: 4px">
           <button style="flex-grow: 1; height: 48px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Guardar cambios</button>
@@ -109,16 +129,19 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1060}}'>
 class Component extends DCLogic {
   renderVals() {
     const base = [
       { name: 'Valoración', mins: 30, priceRaw: '60.000', note: 'Primera vez' },
       { name: 'Limpieza dental', mins: 45, priceRaw: '120.000', note: 'Incluye profilaxis' },
-      { name: 'Control', mins: 15, priceRaw: '', note: 'Pacientes en tratamiento' },
-      { name: 'Blanqueamiento', mins: 60, priceRaw: '450.000', note: 'Oculto en la página' }
+      { name: 'Control', mins: 15, priceRaw: '', note: 'Pacientes en tratamiento', mode: 2 },
+      { name: 'Blanqueamiento', mins: 60, priceRaw: '450.000', note: 'Oculto en la página', mode: 3 }
     ];
-    const st = Object.assign({ sel: 0, hidden: { 3: true }, dur: null }, this.state || {});
+    const st = Object.assign({ sel: 2, hidden: { 3: true }, dur: null, modes: {} }, this.state || {});
+    const modeOf = (i) => st.modes[i] != null ? st.modes[i] : (base[i].mode != null ? base[i].mode : (base[i].priceRaw ? 0 : 1));
+    const priceText = (i) => { const m = modeOf(i); return m === 0 ? '$' + (base[i].priceRaw || '60.000') : ['', 'Sin costo', 'Precio a convenir', ''][m]; };
+    const curMode = modeOf(st.sel);
     const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Suscripción'];
     const hrefs = ['pro-agenda-day.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'pro-services.dc.html', 'pro-availability.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'pro-billing-plans.dc.html'];
     const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
@@ -128,12 +151,12 @@ class Component extends DCLogic {
     const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
     return {
       nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 4 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
-      sel: Object.assign({}, sel, { priceRaw: sel.priceRaw || 'Sin costo' }),
+      sel,
       services: base.map((s, i) => {
         const visible = !st.hidden[i];
         return {
           name: s.name, mins: s.mins, note: visible ? s.note : 'Oculto en la página',
-          price: s.priceRaw ? '$' + s.priceRaw : 'Sin costo',
+          price: priceText(i) || 'Sin precio visible',
           visible,
           cardStyle: card + (st.sel === i ? 'border-color:#0B6E4F;' : 'border-color:#FFFFFF;'),
           nameStyle: 'font-weight:700;font-size:16px;' + (visible ? '' : 'color:#56645D;'),
@@ -143,6 +166,14 @@ class Component extends DCLogic {
           knobStyle: 'width:26px;height:26px;border-radius:999px;background:#FFFFFF;display:block;'
         };
       }),
+      priceModes: ['Valor fijo', 'Sin costo', 'Precio a convenir', 'No mostrar'].map((label, i) => ({
+        label, selected: curMode === i,
+        pick: () => { const m = Object.assign({}, st.modes); m[st.sel] = i; this.setState({ modes: m }); },
+        style: chip + (curMode === i ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      })),
+      isFixed: curMode === 0,
+      modeHelp: ['Es un precio de referencia: no se cobra en línea.', 'Tu página dice «Sin costo».', 'Tu página dice «Precio a convenir»: lo acuerdas en la cita.', 'Tu página no muestra ningún precio para este servicio.'][curMode],
+      previewPrice: priceText(st.sel),
       durations: [15, 20, 30, 45, 50, 60, 90, 120, 180, 240].map((m) => ({
         label: m + ' min', selected: curDur === m,
         pick: () => this.setState({ dur: m }),

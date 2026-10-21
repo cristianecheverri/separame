@@ -91,23 +91,23 @@
     },
     "A-Profesional.dc.html": {
       "expand": "fill",
-      "h": 1500,
+      "h": 1800,
       "is_interactive": true,
       "page": "linea-a",
-      "title": "Profesional — Agenda del día",
+      "title": "Profesional — Agenda del día (escritorio)",
       "w": 1280,
       "x": 0,
-      "y": 3680
+      "y": 3664
     },
     "A-Servicios.dc.html": {
       "expand": "fill",
-      "h": 960,
+      "h": 1060,
       "is_interactive": true,
       "page": "linea-a",
-      "title": "Profesional — Servicios",
+      "title": "Profesional — Servicios (duración y precio en tu página)",
       "w": 1280,
       "x": 1360,
-      "y": 3680
+      "y": 3664
     },
     "A-Disponibilidad.dc.html": {
       "expand": "fill",
@@ -117,17 +117,17 @@
       "title": "Profesional — Disponibilidad",
       "w": 1280,
       "x": 2720,
-      "y": 3680
+      "y": 3664
     },
     "A-Plan.dc.html": {
       "expand": "fill",
-      "h": 1200,
+      "h": 1880,
       "is_interactive": true,
       "page": "linea-a",
-      "title": "Profesional — Suscripción (cómo pagar · Ya pagué)",
+      "title": "Profesional — Suscripción (cómo pagar, Ya pagué y referidos)",
       "w": 1280,
       "x": 4080,
-      "y": 3680
+      "y": 3664
     },
     "A-Vencida.dc.html": {
       "expand": "fill",
@@ -137,7 +137,7 @@
       "title": "Profesional — Plan vencido (solo lectura)",
       "w": 1280,
       "x": 5440,
-      "y": 3680
+      "y": 3664
     },
     "A-Admin.dc.html": {
       "expand": "fill",
@@ -147,17 +147,17 @@
       "title": "Admin — Suscripciones",
       "w": 1280,
       "x": 0,
-      "y": 5620
+      "y": 6074
     },
     "A-Admin-Profesional.dc.html": {
       "expand": "fill",
-      "h": 1130,
+      "h": 1230,
       "is_interactive": true,
       "page": "linea-a",
-      "title": "Admin — Detalle, aviso de pago y pago manual",
+      "title": "Admin — Detalle, aviso de pago, referidos y pago manual",
       "w": 1280,
       "x": 1360,
-      "y": 5620
+      "y": 6074
     },
     "A-Admin-Precios.dc.html": {
       "expand": "fill",
@@ -167,7 +167,7 @@
       "title": "Admin — Precios y migraciones",
       "w": 1280,
       "x": 2720,
-      "y": 5620
+      "y": 6074
     },
     "B-Reserva.dc.html": {
       "h": 1640,
@@ -247,12 +247,12 @@
     },
     "pro-billing-pending.dc.html": {
       "expand": "fill",
-      "h": 1290,
+      "h": 1970,
       "page": "linea-a",
       "title": "Profesional — Suscripción con aviso de pago en revisión",
       "w": 1280,
       "x": 6800,
-      "y": 3680
+      "y": 3664
     },
     "admin-overview.dc.html": {
       "expand": "fill",
@@ -261,7 +261,7 @@
       "title": "Admin — Resumen",
       "w": 1280,
       "x": 4080,
-      "y": 5620,
+      "y": 6074,
       "is_interactive": true
     },
     "client-booking-single-service.dc.html": {
@@ -271,7 +271,7 @@
       "title": "Cliente — Reserva con un solo servicio (3 pasos, interactivo)",
       "w": 390,
       "x": 0,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-booking-single-service-at-step-2.dc.html": {
@@ -281,7 +281,7 @@
       "title": "Cliente — Un solo servicio · 2 · Tus datos",
       "w": 390,
       "x": 470,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-booking-single-service-at-step-3.dc.html": {
@@ -291,7 +291,7 @@
       "title": "Cliente — Un solo servicio · 3 · Confirmar",
       "w": 390,
       "x": 940,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-waitlist-full-day.dc.html": {
@@ -301,7 +301,7 @@
       "title": "Cliente — Día lleno · ¿No encuentras hora?",
       "w": 390,
       "x": 1410,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-waitlist-join.dc.html": {
@@ -311,7 +311,7 @@
       "title": "Cliente — Lista de espera · elegir días y datos",
       "w": 390,
       "x": 1880,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-waitlist-joined.dc.html": {
@@ -321,7 +321,7 @@
       "title": "Cliente — Lista de espera · listo",
       "w": 390,
       "x": 2350,
-      "y": 7190
+      "y": 7744
     },
     "client-manage-confirm-attendance.dc.html": {
       "h": 844,
@@ -330,7 +330,7 @@
       "title": "Cliente — Gestionar cita · Confirmar asistencia",
       "w": 390,
       "x": 2820,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-manage-attendance-confirmed.dc.html": {
@@ -340,7 +340,7 @@
       "title": "Cliente — ¡Gracias! Confirmaste tu asistencia",
       "w": 390,
       "x": 3290,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "client-waitlist-leave.dc.html": {
@@ -350,7 +350,7 @@
       "title": "Cliente — ¿Salir de la lista de espera? (/w/)",
       "w": 390,
       "x": 3760,
-      "y": 7190
+      "y": 7744
     },
     "email-reminder-confirm-attendance.dc.html": {
       "h": 940,
@@ -358,7 +358,7 @@
       "title": "Correo — Recordatorio · ¿Confirmas tu asistencia?",
       "w": 594,
       "x": 0,
-      "y": 8610
+      "y": 9164
     },
     "email-waitlist-joined.dc.html": {
       "h": 900,
@@ -366,7 +366,7 @@
       "title": "Correo — Lista de espera · Te avisaremos",
       "w": 594,
       "x": 674,
-      "y": 8610
+      "y": 9164
     },
     "email-waitlist-offer.dc.html": {
       "h": 940,
@@ -374,7 +374,7 @@
       "title": "Correo — Lista de espera · Se liberó un cupo",
       "w": 594,
       "x": 1348,
-      "y": 8610
+      "y": 9164
     },
     "email-pro-calendar-invite.dc.html": {
       "h": 720,
@@ -382,7 +382,7 @@
       "title": "Correo — Invitación al calendario del profesional",
       "w": 594,
       "x": 2022,
-      "y": 8610
+      "y": 9164
     },
     "pro-appointments-waitlist.dc.html": {
       "expand": "fill",
@@ -391,7 +391,7 @@
       "title": "Profesional — Citas · Lista de espera",
       "w": 1280,
       "x": 0,
-      "y": 9990,
+      "y": 10544,
       "is_interactive": true
     },
     "pro-clients.dc.html": {
@@ -401,7 +401,7 @@
       "title": "Profesional — Clientes",
       "w": 1280,
       "x": 1360,
-      "y": 9990
+      "y": 10544
     },
     "pro-client-detail.dc.html": {
       "expand": "fill",
@@ -410,7 +410,7 @@
       "title": "Profesional — Detalle del cliente",
       "w": 1280,
       "x": 2720,
-      "y": 9990
+      "y": 10544
     },
     "pro-stats.dc.html": {
       "expand": "fill",
@@ -419,7 +419,7 @@
       "title": "Profesional — Estadísticas",
       "w": 1280,
       "x": 4080,
-      "y": 9990,
+      "y": 10544,
       "is_interactive": true
     },
     "pro-calendar-sync.dc.html": {
@@ -429,7 +429,7 @@
       "title": "Profesional — Tu calendario y avisos",
       "w": 1280,
       "x": 5440,
-      "y": 9990,
+      "y": 10544,
       "is_interactive": true
     },
     "pro-public-profile.dc.html": {
@@ -439,47 +439,47 @@
       "title": "Profesional — Perfil público",
       "w": 1280,
       "x": 6800,
-      "y": 9990,
+      "y": 10544,
       "is_interactive": true
     },
     "pro-agenda-phone.dc.html": {
-      "h": 2860,
+      "h": 3020,
       "page": "linea-a",
       "radius": 28,
       "title": "Profesional (celular) — Agenda del día",
       "w": 390,
       "x": 0,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "pro-clients-phone.dc.html": {
-      "h": 1640,
+      "h": 1708,
       "page": "linea-a",
       "radius": 28,
       "title": "Profesional (celular) — Clientes",
       "w": 390,
       "x": 470,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "pro-stats-phone.dc.html": {
-      "h": 1720,
+      "h": 1400,
       "page": "linea-a",
       "radius": 28,
       "title": "Profesional (celular) — Estadísticas",
       "w": 390,
       "x": 940,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "pro-calendar-sync-phone.dc.html": {
-      "h": 1460,
+      "h": 1528,
       "page": "linea-a",
       "radius": 28,
       "title": "Profesional (celular) — Tu calendario y avisos",
       "w": 390,
       "x": 1410,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "pro-ios-install-sheet-phone.dc.html": {
@@ -489,7 +489,7 @@
       "title": "Profesional (celular) — Instalar en iPhone",
       "w": 390,
       "x": 1880,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "account-login.dc.html": {
@@ -499,7 +499,7 @@
       "title": "Cuenta — Entrar",
       "w": 1280,
       "x": 0,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "account-signup.dc.html": {
@@ -509,7 +509,7 @@
       "title": "Cuenta — Crear cuenta",
       "w": 1280,
       "x": 1360,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "account-signup-confirm-code.dc.html": {
@@ -519,7 +519,7 @@
       "title": "Cuenta — Confirma tu correo (código)",
       "w": 1280,
       "x": 2720,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "account-forgot-password.dc.html": {
@@ -529,7 +529,7 @@
       "title": "Cuenta — Recuperar contraseña",
       "w": 1280,
       "x": 4080,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "account-new-password.dc.html": {
@@ -539,7 +539,7 @@
       "title": "Cuenta — Crear contraseña (primer ingreso)",
       "w": 1280,
       "x": 5440,
-      "y": 14870
+      "y": 15544
     },
     "onboarding-step-1.dc.html": {
       "expand": "fill",
@@ -548,7 +548,7 @@
       "title": "Onboarding — Paso 1 · Tu perfil",
       "w": 1280,
       "x": 6800,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "onboarding-done.dc.html": {
@@ -558,27 +558,27 @@
       "title": "Onboarding — ¡Listo!",
       "w": 1280,
       "x": 8160,
-      "y": 14870,
+      "y": 15544,
       "is_interactive": true
     },
     "client-booking-confirmed-no-email.dc.html": {
-      "h": 900,
+      "h": 960,
       "page": "linea-a",
       "radius": 28,
       "title": "Cliente — Cita confirmada sin correo (guarda el enlace)",
       "w": 390,
       "x": 4230,
-      "y": 7190,
+      "y": 7744,
       "is_interactive": true
     },
     "pro-agenda-phone-grace.dc.html": {
-      "h": 2920,
+      "h": 3080,
       "page": "linea-a",
       "radius": 28,
       "title": "Profesional (celular) — Agenda en periodo de gracia",
       "w": 390,
       "x": 2350,
-      "y": 11470,
+      "y": 12024,
       "is_interactive": true
     },
     "landing-desktop.dc.html": {
@@ -1079,7 +1079,7 @@
       "title": "Cliente — Saliste de la lista de espera",
       "w": 390,
       "x": 4700,
-      "y": 7190
+      "y": 7744
     },
     "client-booking-steps-captcha-hint.dc.html": {
       "h": 844,
@@ -1088,7 +1088,114 @@
       "title": "Por pasos — 4 · Confirmar con aviso «Confirma que eres una persona ↑»",
       "w": 390,
       "x": 5170,
-      "y": 7190,
+      "y": 7744,
+      "is_interactive": true
+    },
+    "client-booking-returning.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Cliente — Tus datos · cliente que vuelve (datos guardados)",
+      "w": 390,
+      "x": 5640,
+      "y": 7744,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "client-booking-landscape.dc.html": {
+      "h": 390,
+      "page": "linea-a",
+      "title": "Cliente — Reserva en horizontal · Tus datos",
+      "w": 844,
+      "x": 6110,
+      "y": 7744,
+      "radius": 28
+    },
+    "client-booking-confirmed-android.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Cliente — Cita confirmada (Android o computador)",
+      "w": 390,
+      "x": 7034,
+      "y": 7744,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "client-manage-move.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Cliente — Mover la cita (elige el nuevo espacio)",
+      "w": 390,
+      "x": 7504,
+      "y": 7744,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "email-referral-month-earned.dc.html": {
+      "h": 880,
+      "page": "linea-a",
+      "title": "Correo — ¡Ganaste un mes gratis! (referidos)",
+      "w": 594,
+      "x": 2696,
+      "y": 9164
+    },
+    "pro-more-sheet-phone.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Profesional (celular) — Menú «Más»",
+      "w": 390,
+      "x": 2820,
+      "y": 12024,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "pro-new-appointment-phone.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Profesional (celular) — Nueva cita (buscar cliente)",
+      "w": 390,
+      "x": 3290,
+      "y": 12024,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "pro-waitlist-phone.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "title": "Profesional (celular) — Citas · Lista de espera",
+      "w": 390,
+      "x": 3760,
+      "y": 12024,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "account-signup-invited.dc.html": {
+      "h": 860,
+      "page": "linea-a",
+      "title": "Cuenta — Crear cuenta con invitación («Te invitó…»)",
+      "w": 1280,
+      "x": 9520,
+      "y": 15544,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "site-landing-desktop.dc.html": {
+      "h": 6500,
+      "page": "linea-a",
+      "title": "Landing — escritorio",
+      "w": 1280,
+      "x": 0,
+      "y": 16844,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "site-landing-phone.dc.html": {
+      "h": 7200,
+      "page": "linea-a",
+      "title": "Landing — celular",
+      "w": 375,
+      "x": 1360,
+      "y": 16844,
+      "radius": 28,
       "is_interactive": true
     }
   },
@@ -1115,7 +1222,7 @@
       "kind": "title1",
       "maxW": 1800,
       "page": "linea-a",
-      "text": "Cliente — reserva por pasos (propuesta)",
+      "text": "Cliente — reserva por pasos (la implementada)",
       "w": 240,
       "x": 0,
       "y": 2080
@@ -1127,7 +1234,7 @@
       "text": "Profesional — su panel con cuenta",
       "w": 240,
       "x": 0,
-      "y": 3380
+      "y": 3364
     },
     "rowAdmin": {
       "kind": "title1",
@@ -1136,7 +1243,7 @@
       "text": "Admin — suscripciones, precios y pagos",
       "w": 240,
       "x": 0,
-      "y": 5320
+      "y": 5774
     },
     "titleB": {
       "kind": "title1",
@@ -1158,21 +1265,21 @@
     },
     "rowClienteNew": {
       "kind": "title1",
-      "maxW": 5560,
+      "maxW": 7894,
       "page": "linea-a",
       "text": "Cliente — novedades: un solo servicio, lista de espera y confirmar asistencia",
       "w": 240,
       "x": 0,
-      "y": 6890
+      "y": 7444
     },
     "rowCorreos": {
       "kind": "title1",
-      "maxW": 2616,
+      "maxW": 3290,
       "page": "linea-a",
       "text": "Correos — recordatorio, lista de espera y calendario",
       "w": 240,
       "x": 0,
-      "y": 8310
+      "y": 8864
     },
     "rowProNew": {
       "kind": "title1",
@@ -1181,25 +1288,25 @@
       "text": "Profesional — novedades: citas, clientes, estadísticas, calendario y perfil",
       "w": 240,
       "x": 0,
-      "y": 9690
+      "y": 10244
     },
     "rowProPhone": {
       "kind": "title1",
-      "maxW": 2740,
+      "maxW": 4150,
       "page": "linea-a",
       "text": "Profesional — el panel en el celular",
       "w": 240,
       "x": 0,
-      "y": 11170
+      "y": 11724
     },
     "rowCuenta": {
       "kind": "title1",
-      "maxW": 9440,
+      "maxW": 10800,
       "page": "linea-a",
       "text": "Cuenta y onboarding",
       "w": 240,
       "x": 0,
-      "y": 14570
+      "y": 15244
     },
     "pLanding": {
       "kind": "title1",
@@ -1380,6 +1487,15 @@
       "w": 240,
       "x": 0,
       "y": 32247
+    },
+    "rowLanding": {
+      "kind": "title1",
+      "maxW": 1735,
+      "page": "linea-a",
+      "text": "Landing — separame.app (implementada)",
+      "w": 240,
+      "x": 0,
+      "y": 16544
     }
   },
   "order": [
@@ -1496,7 +1612,18 @@
     "referral-email-month-earned.dc.html",
     "referral-admin-pro-detail.dc.html",
     "client-waitlist-left.dc.html",
-    "client-booking-steps-captcha-hint.dc.html"
+    "client-booking-steps-captcha-hint.dc.html",
+    "client-booking-returning.dc.html",
+    "client-booking-landscape.dc.html",
+    "client-booking-confirmed-android.dc.html",
+    "client-manage-move.dc.html",
+    "email-referral-month-earned.dc.html",
+    "pro-more-sheet-phone.dc.html",
+    "pro-new-appointment-phone.dc.html",
+    "pro-waitlist-phone.dc.html",
+    "account-signup-invited.dc.html",
+    "site-landing-desktop.dc.html",
+    "site-landing-phone.dc.html"
   ],
   "pages": [
     {

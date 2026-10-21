@@ -28,26 +28,30 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 
 | Archivo | Pantalla | Nombre original |
 |---|---|---|
-| `client-booking-steps.dc.html` | Reserva por pasos (servicio → día y hora → datos → confirmar). **Es la implementada.** En «Tus datos»: Nombre, Celular (obligatorio) y Correo (opcional) | `Pasos` |
+| `client-booking-steps.dc.html` | Reserva por pasos. **Es la implementada.** Paso 1 con la banda verde del perfil; chips de la selección arriba; día con horas preseleccionado, día lleno con borde punteado y leyenda; «Tus datos» con «Recordar mis datos» y botón que dice qué falta; «Precio a convenir» / sin precio. Tweaks `step`, `returning`, `captchaHint` | `Pasos` |
 | `client-booking-steps-captcha-hint.dc.html` | Paso 4 con la verificación y el aviso «Confirma que eres una persona ↑» (importa `client-booking-steps`) | `client-booking-steps-captcha-hint` |
+| `client-booking-returning.dc.html` | «Tus datos» de un cliente que vuelve: datos guardados y aviso «Usamos los datos que guardaste en este celular.» | `client-booking-returning` |
+| `client-booking-landscape.dc.html` | Reserva en horizontal (844×390): encabezado compacto, chips en una fila, nombre y celular lado a lado | `client-booking-landscape` |
 | `client-booking-steps-at-step-{2,3,4}.dc.html` | El mismo flujo abierto en el paso 2, 3 y 4 (importa `client-booking-steps`) | `Pasos-2/3/4` |
 | `client-booking-single-page.dc.html` | Reserva en una sola página (referencia del encabezado del perfil) | `Main` |
-| `client-booking-confirmed.dc.html` | Cita confirmada | `A-Confirmada` |
+| `client-booking-confirmed.dc.html` | Cita confirmada: calendario del celular primero (tweak `platform`: iPhone / iPad / Android o computador) y «Cancelar o reprogramar» como botón; tweak `noEmail` | `A-Confirmada` |
+| `client-booking-confirmed-android.dc.html` | Cita confirmada en Android o computador: «Agregar a Google Calendar», Outlook y «Archivo .ics» (importa `client-booking-confirmed`) | `client-booking-confirmed-android` |
 | `client-booking-confirmed-no-email.dc.html` | Cita confirmada sin correo: aviso «No te enviaremos correos» con el enlace para gestionar la cita y «Copiar» | `client-booking-confirmed-no-email` |
-| `client-manage-appointment.dc.html` | Cancelar o reprogramar (enlace del correo) | `A-Gestionar` |
+| `client-manage-appointment.dc.html` | Cancelar o reprogramar (enlace del correo); mover con «Tu cita actual», Mañana/Tarde y pie fijo; tweak `step` | `A-Gestionar` |
+| `client-manage-move.dc.html` | Mover la cita: «Elige el nuevo espacio» (importa `client-manage-appointment`) | `client-manage-move` |
 | `client-agenda-unavailable.dc.html` | Agenda no disponible (suscripción vencida) | `A-NoDisponible` |
 | `email-booking-confirmed.dc.html` | Correo de confirmación (botones de calendario en píldora blanca con logos de Google Calendar y Outlook) | `A-Correo` |
-| `pro-agenda-day.dc.html` | Panel del profesional: agenda del día (instalar app, Confirmó/Sin confirmar, Asistió/No asistió, lista de espera, tarjeta de calendario y avisos) | `A-Profesional` |
-| `pro-services.dc.html` | Servicios (selector de duración con chips y «Otra») | `A-Servicios` |
+| `pro-agenda-day.dc.html` | Agenda del día en escritorio: un solo estado por cita («✓ Confirmó asistencia» / «◷ Sin respuesta»), «Copiar mi enlace», tarjetas laterales (instalar, compartir, «Invita y gana un mes», próximos días, lista de espera, calendario) | `A-Profesional` |
+| `pro-services.dc.html` | Servicios: selector de duración y «Precio en tu página» (Valor fijo / Sin costo / Precio a convenir / No mostrar) con vista previa | `A-Servicios` |
 | `pro-availability.dc.html` | Disponibilidad (quitar bloqueo con aviso «Deshacer») | `A-Disponibilidad` |
-| `pro-billing-plans.dc.html` | Suscripción: paquetes, "Cómo pagar" (copiar datos, Nequi/Transferencia, referencia, "Ya pagué · avisar") e historial; tweak `state` para el aviso en revisión | `A-Plan` |
+| `pro-billing-plans.dc.html` | Suscripción: paquetes, «Cómo pagar» con «Ya pagué · avisar», sección «Referidos» e historial; tweaks `state` (aviso en revisión) y `referrals` | `A-Plan` |
 | `pro-billing-pending.dc.html` | Suscripción con aviso de pago en revisión (importa `pro-billing-plans`) | `pro-billing-pending` |
 | `pro-expired-read-only.dc.html` | Panel en solo lectura (plan vencido) | `A-Vencida` |
 | `admin-subscriptions.dc.html` | Admin: suscripciones | `A-Admin` |
-| `admin-pro-detail-manual-payment.dc.html` | Admin: detalle del profesional, aviso de pago (Aprobar / Rechazar) y pago manual | `A-Admin-Profesional` |
+| `admin-pro-detail-manual-payment.dc.html` | Admin: detalle del profesional, «Referido por…», «Sus referidos», aviso de pago (Aprobar / Rechazar) y pago manual | `A-Admin-Profesional` |
 | `admin-prices.dc.html` | Admin: precios y migraciones | `A-Admin-Precios` |
 | `admin-overview.dc.html` | Admin: resumen (indicadores, avisos por revisar, por atender, últimos pagos) | `admin-overview` |
-| `client-booking-single-service.dc.html` | Reserva cuando hay un solo servicio: 3 pasos con la fila de chips de la selección (interactivo, tweak `step`) | `client-booking-single-service` |
+| `client-booking-single-service.dc.html` | Reserva cuando hay un solo servicio: 3 pasos con banda verde, chips y los mismos cambios de la reserva por pasos (tweak `step`) | `client-booking-single-service` |
 | `client-booking-single-service-at-step-{2,3}.dc.html` | El mismo flujo abierto en "Tus datos" y "Confirmar" (importa `client-booking-single-service`) | `client-booking-single-service-at-step-2/3` |
 | `client-waitlist-full-day.dc.html` | Día lleno: tarjeta "¿No encuentras hora?" | `client-waitlist-full-day` |
 | `client-waitlist-join.dc.html` | Lista de espera: solo días llenos en filas de 7 días (semanas sin días llenos se omiten); Nombre, Celular y Correo (aquí sí obligatorio) | `client-waitlist-join` |
@@ -60,30 +64,37 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `email-waitlist-joined.dc.html` | Correo de lista de espera: "Te avisaremos…" | `email-waitlist-joined` |
 | `email-waitlist-offer.dc.html` | Correo de lista de espera: "Se liberó un cupo" | `email-waitlist-offer` |
 | `email-pro-calendar-invite.dc.html` | Correo corto al profesional con la invitación de calendario (tweak: agregada / actualizada / quitada) | `email-pro-calendar-invite` |
+| `email-referral-month-earned.dc.html` | Correo «¡Ganaste un mes gratis!» al profesional que refirió (tweak: plan vencido → mes guardado) | `email-referral-month-earned` |
 | `pro-appointments-waitlist.dc.html` | Citas: Próximas, Pasadas (con «Ver más citas» / «Ver citas anteriores») y la pestaña "Lista de espera" | `pro-appointments-waitlist` |
 | `pro-clients.dc.html` | Clientes: lista | `pro-clients` |
 | `pro-client-detail.dc.html` | Detalle del cliente: contacto, totales, notas (aviso Ley 1581) e historial | `pro-client-detail` |
 | `pro-stats.dc.html` | Estadísticas por periodo | `pro-stats` |
 | `pro-calendar-sync.dc.html` | Tu calendario: invitaciones por correo con Avisos (push) debajo, calendario suscrito y la nota a lo ancho | `pro-calendar-sync` |
 | `pro-public-profile.dc.html` | Perfil público | `pro-public-profile` |
-| `pro-agenda-phone.dc.html` | Agenda del día en el celular | `pro-agenda-phone` |
+| `pro-agenda-phone.dc.html` | Agenda en el celular: barra inferior Agenda · Citas · Clientes · Más, saludo compacto con «Compartir», botón flotante «+», tarjetas con un solo estado y tarjeta de referidos | `pro-agenda-phone` |
 | `pro-agenda-phone-grace.dc.html` | Agenda en el celular en periodo de gracia, con la franja «Renueva antes del 21 oct. · Renovar ›» | `pro-agenda-phone-grace` |
 | `pro-clients-phone.dc.html` | Clientes en el celular | `pro-clients-phone` |
-| `pro-stats-phone.dc.html` | Estadísticas en el celular | `pro-stats-phone` |
+| `pro-stats-phone.dc.html` | Estadísticas en el celular: 2 columnas, chips de periodo deslizables y barra inferior | `pro-stats-phone` |
 | `pro-calendar-sync-phone.dc.html` | Tu calendario y avisos en el celular (invitaciones → avisos → calendario suscrito → nota) | `pro-calendar-sync-phone` |
 | `pro-ios-install-sheet-phone.dc.html` | Hoja "Instalar en iPhone" sobre la agenda | `pro-ios-install-sheet-phone` |
+| `pro-more-sheet-phone.dc.html` | Menú «Más» del celular (hoja verde con el resto de secciones, plan y «Cerrar sesión») | `pro-more-sheet-phone` |
+| `pro-new-appointment-phone.dc.html` | Nueva cita en el celular: buscar cliente con sugerencias, servicio preseleccionado y resumen de la hora (tweak `picked`) | `pro-new-appointment-phone` |
+| `pro-waitlist-phone.dc.html` | Citas · Lista de espera en el celular, con «Agendar» y menú ⋯ | `pro-waitlist-phone` |
 | `account-login.dc.html` | Entrar | `account-login` |
 | `account-signup.dc.html` | Crear cuenta | `account-signup` |
+| `account-signup-invited.dc.html` | Crear cuenta desde un enlace de referido: «Te invitó Dra. Laura Pérez» | `account-signup-invited` |
 | `account-signup-confirm-code.dc.html` | Crear cuenta: confirmar el código del correo | `account-signup-confirm-code` |
 | `account-forgot-password.dc.html` | Recuperar contraseña (pedir código y crear la nueva; tweak `step`) | `account-forgot-password` |
 | `account-new-password.dc.html` | Crear contraseña en el primer ingreso (cuenta creada por el admin) | `account-new-password` |
 | `onboarding-step-1.dc.html` | Onboarding: paso 1 de 5 (tu perfil) | `onboarding-step-1` |
 | `onboarding-done.dc.html` | Onboarding: "¡Listo!" | `onboarding-done` |
+| `landing-desktop.dc.html` | Landing de separame.app en escritorio (la implementada; en el lienzo, `site-landing-desktop`) | `site-landing-desktop` |
+| `landing-phone.dc.html` | Landing de separame.app en el celular (en el lienzo, `site-landing-phone`) | `site-landing-phone` |
 
 ## Propuestas (por aprobar)
 
 Página «Propuestas (por aprobar)» del lienzo. Cada fila del lienzo lleva su estado (**APROBADA** / **RECHAZADA**). Las aprobadas
-se están implementando y pasan a la línea A cuando el código esté listo; hasta entonces **no son la fuente de verdad**:
+ya están implementadas y pasaron a la línea A (esa es la fuente de verdad); esta página queda como registro histórico:
 cada propuesta trae su «Antes» (estado actual implementado) y su «Después». Mismo nombre en el lienzo y en el repo.
 Los enlaces a pantallas de la línea A apuntan a `../line-a/`.
 

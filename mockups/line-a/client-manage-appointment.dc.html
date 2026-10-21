@@ -14,7 +14,8 @@ body{margin:0}
 a{color:#0B6E4F}a:hover{color:#084C37}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; padding: 24px 20px; gap: 20px">
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; box-sizing: border-box; padding: 24px 20px; display: flex; flex-direction: column; gap: 20px">
   <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
 
   <div style="background: #EAF5F0; border-radius: 22px; padding: 16px; display: flex; gap: 12px; align-items: center">
@@ -22,7 +23,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     <div style="display: flex; flex-direction: column; gap: 2px">
       <div style="font-size: 13px; color: #3E4C45">{{cardLabel}}</div>
       <div style="{{cardWhenStyle}}">{{cardWhen}}</div>
-      <div style="font-size: 14px; color: #3E4C45">Valoración con la Dra. Laura Pérez</div>
+      <div style="font-size: 14px; color: #3E4C45">Valoración con Dra. Laura Pérez</div>
     </div>
   </div>
 
@@ -42,24 +43,39 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   </sc-if>
 
   <sc-if value="{{isMove}}" hint-placeholder-val="{{ false }}">
-    <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
-      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">Elige el nuevo espacio</h1>
-      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
-        <sc-for list="{{days}}" as="d" hint-placeholder-count="5">
-          <button onClick="{{d.pick}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; letter-spacing: -0.6px">Elige el nuevo espacio</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+        <div style="display: flex; gap: 4px">
+          <button aria-label="Semana anterior" disabled style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #B9C4BE; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <button aria-label="Semana siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+          <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
             <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
-            <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+            <span style="font-size: 17px; font-weight: 700">{{d.num}}</span>
           </button>
         </sc-for>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-        <sc-for list="{{slots}}" as="t" hint-placeholder-count="6">
-          <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
-        </sc-for>
-      </div>
-      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
-        <button onClick="{{confirmMove}}" style="height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Mover a {{newWhen}}</button>
-        <button onClick="{{goMenu}}" style="height: 44px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 14px; color: #3E4C45; cursor: pointer">Volver</button>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 14px; font-weight: 600; color: #56645D">Mañana</div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{morning}}" as="t" hint-placeholder-count="6">
+            <button onClick="{{t.pick}}" disabled="{{t.disabled}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+          </sc-for>
+        </div>
+        <div style="font-size: 14px; font-weight: 600; color: #56645D; padding-top: 4px">Tarde</div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{afternoon}}" as="t" hint-placeholder-count="6">
+            <button onClick="{{t.pick}}" disabled="{{t.disabled}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{showCurrentNote}}" hint-placeholder-val="{{ true }}">
+          <div style="font-size: 12px; color: #56645D">La hora con borde punteado es tu cita actual.</div>
+        </sc-if>
       </div>
     </div>
   </sc-if>
@@ -67,10 +83,10 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   <sc-if value="{{isCancel}}" hint-placeholder-val="{{ false }}">
     <div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
       <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">¿Seguro que quieres cancelar?</h1>
-      <div style="font-size: 15px; color: #3E4C45; line-height: 1.45">El espacio queda libre para otra persona. Si quieres, cuéntale a la Dra. Laura por qué.</div>
+      <div style="font-size: 15px; color: #3E4C45; line-height: 1.45">El espacio queda libre para otra persona. Si quieres, cuéntale a Dra. Laura Pérez por qué.</div>
       <div style="display: flex; flex-direction: column; gap: 6px">
         <label for="a-reason" style="font-size: 14px; font-weight: 600">Motivo (opcional)</label>
-        <textarea id="a-reason" rows="3" placeholder="Cuéntanos el motivo" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
+        <textarea id="a-reason" rows="3" placeholder="Escribe aquí el motivo" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 15px; color: #15241D; resize: none"></textarea>
       </div>
       <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
         <button onClick="{{confirmCancel}}" style="height: 56px; border-radius: 999px; border: 2px solid #15241D; background: #FFFFFF; color: #15241D; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Sí, cancelar la cita</button>
@@ -91,21 +107,46 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     </div>
   </sc-if>
 </div>
+<sc-if value="{{isMove}}" hint-placeholder-val="{{ false }}">
+  <footer style="padding: 12px 16px 16px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 6px; background: #FFFFFF">
+    <button onClick="{{confirmMove}}" disabled="{{cantMove}}" style="{{moveStyle}}">{{moveLabel}}</button>
+    <button onClick="{{goMenu}}" style="height: 44px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 14px; color: #3E4C45; cursor: pointer">Volver</button>
+  </footer>
+</sc-if>
+</div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["menu","move","cancel"],"default":"menu"},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
-    const st = Object.assign({ mode: 'menu', day: 2, slot: 1 }, this.state || {});
-    const days = [['Mié', '21', 'miércoles 21'], ['Jue', '22', 'jueves 22'], ['Vie', '23', 'viernes 23'], ['Sáb', '24', 'sábado 24'], ['Lun', '26', 'lunes 26']];
-    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '2:00 p. m.', '3:00 p. m.', '4:30 p. m.'];
-    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;cursor:pointer;border:2px solid;';
-    const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:15px;min-height:46px;cursor:pointer;border:2px solid;';
-    const newWhen = days[st.day][0].toLowerCase() + ' ' + days[st.day][1] + ', ' + labels[st.slot];
+    const st = Object.assign({ mode: this.props.step || 'menu', day: 2, slot: 4 }, this.state || {});
+    const days = [
+      { dow: 'Mar', num: '20', off: true },
+      { dow: 'Mié', num: '21', short: 'mié 21', long: 'Miércoles 21' },
+      { dow: 'Jue', num: '22', short: 'jue 22', long: 'Jueves 22' },
+      { dow: 'Vie', num: '23', short: 'vie 23', long: 'Viernes 23' },
+      { dow: 'Sáb', num: '24', short: 'sáb 24', long: 'Sábado 24' },
+      { dow: 'Dom', num: '25', off: true },
+      { dow: 'Lun', num: '26', short: 'lun 26', long: 'Lunes 26' }
+    ];
+    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '10:00 a. m.', '10:30 a. m.', '11:30 a. m.', '2:00 p. m.', '2:30 p. m.', '3:00 p. m.', '4:00 p. m.', '4:30 p. m.', '5:30 p. m.'];
+    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;border-radius:14px;font:inherit;min-height:58px;border:2px solid;';
+    const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:14px;min-height:44px;border:2px solid;padding:0;';
+    const isCurrent = (i) => st.day === 2 && i === 3;
+    const slot = (i) => {
+      const current = isCurrent(i);
+      const selected = st.slot === i && !current;
+      let style = slotBase;
+      if (current) style += 'background:#F3F6F4;border-style:dashed;border-color:#8A968F;color:#3E4C45;cursor:default;';
+      else if (selected) style += 'background:#FFC93C;border-color:#FFC93C;color:#15241D;cursor:pointer;';
+      else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
+      return { label: labels[i], selected, disabled: current, style, pick: current ? undefined : () => this.setState({ slot: i }) };
+    };
+    const valid = st.slot != null && !isCurrent(st.slot);
     const moved = st.mode === 'moved';
     const cancelled = st.mode === 'cancelled';
-    let cardLabel = 'Tu cita';
+    let cardLabel = st.mode === 'move' ? 'Tu cita actual' : 'Tu cita';
     let cardWhen = 'Jueves 22 de octubre · 10:00 a. m.';
-    if (moved) { cardLabel = 'Tu nueva cita'; cardWhen = days[st.day][2].replace(/^./, (c) => c.toUpperCase()) + ' de octubre · ' + labels[st.slot]; }
+    if (moved && valid) { cardLabel = 'Tu nueva cita'; cardWhen = days[st.day].long + ' de octubre · ' + labels[st.slot]; }
     if (cancelled) cardLabel = 'Cita cancelada';
     return {
       isMenu: st.mode === 'menu',
@@ -117,22 +158,27 @@ class Component extends DCLogic {
       goMenu: () => this.setState({ mode: 'menu' }),
       goMove: () => this.setState({ mode: 'move' }),
       goCancel: () => this.setState({ mode: 'cancel' }),
-      confirmMove: () => this.setState({ mode: 'moved' }),
+      confirmMove: () => { if (valid) this.setState({ mode: 'moved' }); },
       confirmCancel: () => this.setState({ mode: 'cancelled' }),
-      reset: () => this.setState({ mode: 'menu', day: 2, slot: 1 }),
-      newWhen,
+      reset: () => this.setState({ mode: 'menu', day: 2, slot: 4 }),
       doneTitle: moved ? 'Listo, tu cita cambió.' : 'Tu cita quedó cancelada.',
       doneText: moved
         ? 'Te enviamos un correo con la nueva fecha y el archivo para tu calendario. El recordatorio se movió también.'
-        : 'Le avisamos a la Dra. Laura Pérez y no te llegarán más recordatorios de esta cita.',
+        : 'Le avisamos a Dra. Laura Pérez y no te llegarán más recordatorios de esta cita.',
       days: days.map((d, i) => {
         const selected = st.day === i;
-        return { dow: d[0], num: d[1], selected, pick: () => this.setState({ day: i }), style: dayBase + (selected ? 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
+        let style = dayBase;
+        if (d.off) style += 'background:#F3F6F4;border-color:#F3F6F4;color:#5E6C65;cursor:default;';
+        else if (selected) style += 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;cursor:pointer;';
+        else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
+        return { dow: d.dow, num: d.num, selected, disabled: !!d.off, style, pick: d.off ? undefined : () => this.setState({ day: i, slot: null }) };
       }),
-      slots: labels.map((label, i) => {
-        const selected = st.slot === i;
-        return { label, selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
-      })
+      morning: [0, 1, 2, 3, 4, 5].map(slot),
+      afternoon: [6, 7, 8, 9, 10, 11].map(slot),
+      showCurrentNote: st.day === 2,
+      cantMove: !valid,
+      moveLabel: valid ? 'Mover a ' + days[st.day].short + ', ' + labels[st.slot] : 'Elige la nueva hora',
+      moveStyle: 'height:56px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:16px;' + (valid ? 'background:#0B6E4F;color:#FFFFFF;cursor:pointer;' : 'background:#DCE3DF;color:#56645D;cursor:not-allowed;')
     };
   }
 }

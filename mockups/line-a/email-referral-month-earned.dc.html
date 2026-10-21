@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Correo: ganaste un mes gratis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 594px; min-height: 880px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', Arial, sans-serif; color: #15241D; display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 28px">
+  <div style="background: #FFFFFF; border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #3E4C45">
+    <div><strong style="color: #15241D">De:</strong> Sepárame &lt;citas@separame.app&gt;</div>
+    <div><strong style="color: #15241D">Para:</strong> laura.perez@correo.com</div>
+    <div><strong style="color: #15241D">Asunto:</strong> ¡Ganaste un mes gratis! · {{subjectTail}}</div>
+  </div>
+
+  <div style="background: #FFFFFF; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column">
+    <div style="background: #0B6E4F; color: #FFFFFF; padding: 26px 32px; display: flex; flex-direction: column; gap: 18px">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></div>
+      <div style="display: flex; align-items: center; gap: 14px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.1; letter-spacing: -0.8px">¡Ganaste un mes gratis!</h1>
+      </div>
+    </div>
+
+    <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+      <div style="font-size: 15px; line-height: 1.5; color: #3E4C45">Hola, Laura. Andrés Restrepo se registró con tu enlace y pagó su primer plan. Gracias por recomendar Sepárame: {{intro}}</div>
+
+      <div style="background: #EAF5F0; border-radius: 18px; padding: 6px 20px">
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Invitaste a</span><strong style="text-align: right">Andrés Restrepo · Abogado</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">Pagó</span><strong style="text-align: right">Plan 3 meses · 14 oct. 2026</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #CFE3DA; font-size: 15px"><span style="color: #3E4C45">{{beforeLabel}}</span><strong style="text-align: right">{{beforeValue}}</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 15px"><span style="color: #3E4C45">{{afterLabel}}</span><strong style="text-align: right; color: #0B6E4F">{{afterValue}}</strong></div>
+      </div>
+
+      <sc-if value="{{expired}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFF4D1; border-radius: 18px; padding: 16px 18px; font-size: 14px; line-height: 1.5; color: #15241D"><strong>Guardamos tu mes: se aplica en tu próximo pago.</strong> Cuando renueves, lo sumamos al final del plan que elijas.</div>
+      </sc-if>
+
+      <div style="display: flex">
+        <a href="pro-billing-plans.dc.html" style="height: 50px; padding: 0 24px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; font-weight: 700; font-size: 15px; text-decoration: none">Ver mi suscripción</a>
+      </div>
+
+      <div style="border-top: 1px solid #E3E8E5; padding-top: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5; color: #3E4C45">
+        <span>Sigue invitando: por cada profesional que pague su primer plan con tu enlace, ganas otro mes.</span>
+        <a href="#" style="font-weight: 700">separame.app/r/laura-perez</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size: 12px; color: #56645D; line-height: 1.5; padding: 0 8px; display: flex; flex-direction: column; gap: 6px">
+    <span>Recibes este correo porque tienes una cuenta en separame.app. Tratamos tus datos según la Ley 1581 de 2012. <a href="#">Política de privacidad</a> · <a href="#">Borrar mis datos</a></span>
+    <span>Sepárame · Medellín, Colombia</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["Plan vigente","Plan vencido"],"default":"Plan vigente"},"$preview":{"width":594,"height":880}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const expired = (this.props.variant ?? 'Plan vigente') === 'Plan vencido';
+    return expired ? {
+      expired: true,
+      subjectTail: 'Lo guardamos para tu próximo pago',
+      intro: 'te ganaste 1 mes gratis.',
+      beforeLabel: 'Tu plan',
+      beforeValue: 'Venció el 18 oct. 2026',
+      afterLabel: 'Meses guardados',
+      afterValue: '1 mes'
+    } : {
+      expired: false,
+      subjectTail: 'Tu plan ahora vence el 25 feb. 2027',
+      intro: 'sumamos 1 mes al final de tu periodo actual.',
+      beforeLabel: 'Vencía',
+      beforeValue: '25 ene. 2027',
+      afterLabel: 'Tu plan ahora vence el',
+      afterValue: '25 feb. 2027'
+    };
+  }
+}
+</script>
+</body>
+</html>

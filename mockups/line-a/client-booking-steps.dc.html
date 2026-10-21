@@ -15,118 +15,166 @@ body{margin:0}
 </helmet>
 <div style="width: 390px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
 
-  <header style="padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E3E8E5">
-    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
-      <sc-if value="{{showBack}}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+    <header style="display: flex; flex-direction: column">
+      <div style="background: #0B6E4F; color: #FFFFFF; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 16px; border-radius: 0 0 28px 28px">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></div>
+        <div style="display: flex; gap: 14px; align-items: center">
+          <div style="width: 64px; height: 64px; border-radius: 999px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; flex-shrink: 0">LP</div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 25px; line-height: 1.1; letter-spacing: -0.5px">Dra. Laura Pérez</h1>
+            <div style="font-size: 15px; color: #D5EDE3">Odontóloga · Medellín</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: #D5EDE3; line-height: 1.4">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <span>Cra. 43A #1-50, consultorio 302 · El Poblado</span>
+        </div>
+        <a href="#" style="align-self: flex-start; height: 44px; padding: 0 18px; border-radius: 999px; background: rgba(255,255,255,0.16); color: #FFFFFF; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg>
+          Llamar · 604 444 1234
+        </a>
+      </div>
+      <div style="padding: 18px 20px 0; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="4">
+            <span style="{{b.style}}"></span>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso 1 de 4 · Servicio</div>
+      </div>
+    </header>
+  </sc-if>
+
+  <sc-if value="{{notFirst}}" hint-placeholder-val="{{ false }}">
+    <header style="padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E3E8E5">
+      <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
         <button onClick="{{back}}" aria-label="Paso anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
-      </sc-if>
-      <sc-if value="{{showAvatar}}" hint-placeholder-val="{{ true }}">
-        <div style="width: 44px; height: 44px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; flex-shrink: 0">LP</div>
-      </sc-if>
-      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
-        <div style="font-weight: 700; font-size: 15px">Dra. Laura Pérez</div>
-        <div style="font-size: 13px; color: #56645D">Odontóloga · El Poblado, Medellín</div>
+        <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+          <div style="font-weight: 700; font-size: 15px">Dra. Laura Pérez</div>
+          <div style="font-size: 13px; color: #56645D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Odontóloga · El Poblado, Medellín</div>
+        </div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
       </div>
-      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 8px">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
-        <sc-for list="{{bars}}" as="b" hint-placeholder-count="4">
-          <span style="{{b.style}}"></span>
-        </sc-for>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="4">
+            <span style="{{b.style}}"></span>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso {{step}} de 4 · {{stepName}}</div>
+        <sc-if value="{{hasChips}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; gap: 8px; margin-top: 4px; min-width: 0">
+            <sc-for list="{{chips}}" as="c" hint-placeholder-count="2">
+              <span style="{{c.style}}">{{c.label}}</span>
+            </sc-for>
+          </div>
+        </sc-if>
       </div>
-      <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso {{step}} de 4 · {{stepName}}</div>
-    </div>
-  </header>
+    </header>
+  </sc-if>
 
   <div style="flex-grow: 1; min-height: 0; padding: 22px 20px 16px; display: flex; flex-direction: column">
 
     <sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
-      <section style="display: flex; flex-direction: column; gap: 12px">
-        <h1 style="margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Qué necesitas?</h1>
-        <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0 0 4px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Qué necesitas?</h2>
+        <sc-for list="{{services}}" as="s" hint-placeholder-count="4">
           <button onClick="{{s.pick}}" aria-pressed="{{s.selected}}" style="{{s.cardStyle}}">
             <span style="{{s.dotStyle}}"></span>
-            <span style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+            <span style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
               <span style="font-weight: 700; font-size: 17px">{{s.name}}</span>
               <span style="font-size: 14px; color: #56645D; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{s.dur}} · {{s.desc}}</span>
             </span>
-            <span style="font-weight: 700; font-size: 15px">{{s.price}}</span>
+            <span style="{{s.priceStyle}}">{{s.price}}</span>
           </button>
         </sc-for>
-        <div style="font-size: 13px; color: #56645D">Precios de referencia. El valor final lo confirma la profesional.</div>
+        <div style="font-size: 13px; color: #56645D">Precios de referencia. El valor final se confirma en la cita.</div>
       </section>
     </sc-if>
 
     <sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
-      <section style="display: flex; flex-direction: column; gap: 14px">
-        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Cuándo te sirve?</h1>
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Cuándo te sirve?</h2>
         <div style="display: flex; justify-content: space-between; align-items: center">
           <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
           <div style="display: flex; gap: 4px">
-            <button aria-label="Semana anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+            <button aria-label="Semana anterior" disabled style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #B9C4BE; display: flex; align-items: center; justify-content: center; opacity: 0.6; cursor: default"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
             <button aria-label="Semana siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px">
           <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
-            <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
+            <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" aria-label="{{d.aria}}" style="{{d.style}}">
+              <sc-if value="{{d.full}}" hint-placeholder-val="{{ false }}">
+                <span aria-hidden="true" style="position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 999px; background: #E8A33D"></span>
+              </sc-if>
               <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
               <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
             </button>
           </sc-for>
         </div>
-        <sc-if value="{{hasDay}}" hint-placeholder-val="{{ true }}">
-          <div style="display: flex; flex-direction: column; gap: 10px">
-            <div style="font-size: 14px; font-weight: 600; color: #56645D">Mañana</div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-              <sc-for list="{{morning}}" as="t" hint-placeholder-count="6">
-                <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
-              </sc-for>
-            </div>
-            <div style="font-size: 14px; font-weight: 600; color: #56645D">Tarde</div>
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-              <sc-for list="{{afternoon}}" as="t" hint-placeholder-count="6">
-                <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
-              </sc-for>
-            </div>
+        <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #3E4C45">
+          <span aria-hidden="true" style="position: relative; width: 18px; height: 18px; box-sizing: border-box; border-radius: 6px; border: 2px dashed #B9C4BE; flex-shrink: 0"><span style="position: absolute; top: 3px; left: 3px; width: 6px; height: 6px; border-radius: 999px; background: #E8A33D"></span></span>
+          <span><strong style="color: #15241D">Lleno</strong> = te avisamos si se libera</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 2px">
+          <div style="font-size: 15px; font-weight: 700">{{dayLong}}</div>
+          <div style="font-size: 14px; font-weight: 600; color: #56645D">Mañana</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{morning}}" as="t" hint-placeholder-count="6">
+              <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
           </div>
-        </sc-if>
-        <sc-if value="{{noDay}}" hint-placeholder-val="{{ false }}">
-          <div style="background: #F3F6F4; border-radius: 18px; padding: 18px; font-size: 14px; color: #3E4C45; text-align: center">Elige un día para ver las horas libres.</div>
-        </sc-if>
+          <div style="font-size: 14px; font-weight: 600; color: #56645D">Tarde</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{afternoon}}" as="t" hint-placeholder-count="6">
+              <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+        </div>
       </section>
     </sc-if>
 
     <sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
-      <section style="display: flex; flex-direction: column; gap: 14px">
-        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿A nombre de quién?</h1>
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿A nombre de quién?</h2>
+        <sc-if value="{{returning}}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="background: #EAF5F0; border-radius: 16px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+            <span>Usamos los datos que guardaste en este celular.</span>
+          </div>
+        </sc-if>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="p-name" style="font-size: 14px; font-weight: 600">Nombre completo</label>
-          <input id="p-name" type="text" autocomplete="name" placeholder="Tu nombre y apellido" value="{{name}}" onChange="{{onName}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+          <input id="p-name" type="text" autocomplete="name" placeholder="Tu nombre y apellido" value="{{name}}" onChange="{{onName}}" style="height: 50px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="p-phone" style="font-size: 14px; font-weight: 600">Celular</label>
           <div style="display: flex; gap: 8px">
-            <div style="height: 52px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px">+57</div>
-            <input id="p-phone" type="tel" autocomplete="tel-national" placeholder="Tu número de celular" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+            <div style="height: 50px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px">+57</div>
+            <input id="p-phone" type="tel" autocomplete="tel-national" placeholder="Tu número de celular" value="{{phone}}" onChange="{{onPhone}}" style="height: 50px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
           </div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="p-mail" style="font-size: 14px; font-weight: 600">Correo <span style="font-weight: 400; color: #56645D">(opcional)</span></label>
-          <input id="p-mail" type="email" autocomplete="email" placeholder="Tu correo electrónico" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+          <input id="p-mail" type="email" autocomplete="email" placeholder="Tu correo electrónico" value="{{email}}" onChange="{{onEmail}}" style="height: 50px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
           <span style="font-size: 12px; color: #56645D">Si lo escribes, te enviamos la confirmación y el recordatorio.</span>
         </div>
         <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
           <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
           <span>Autorizo el tratamiento de mis datos personales para gestionar esta cita, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
         </label>
+        <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
+          <input type="checkbox" checked="{{remember}}" onChange="{{toggleRemember}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+          <span style="display: flex; flex-direction: column; gap: 2px"><span><strong style="color: #15241D; font-weight: 600">Recordar mis datos en este celular</strong> (opcional)</span><span>La próxima vez no tendrás que escribirlos. Solo quedan en este celular.</span></span>
+        </label>
       </section>
     </sc-if>
 
     <sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
       <section style="display: flex; flex-direction: column; gap: 14px">
-        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Todo bien?</h1>
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Todo bien?</h2>
         <div style="background: #EAF5F0; border-radius: 22px; padding: 6px 16px">
           <sc-for list="{{review}}" as="r" hint-placeholder-count="3">
             <div style="{{r.rowStyle}}">
@@ -156,12 +204,6 @@ body{margin:0}
   </div>
 
   <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF">
-    <sc-if value="{{hasSummary}}" hint-placeholder-val="{{ false }}">
-      <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #3E4C45">
-        <span style="width: 8px; height: 8px; border-radius: 999px; background: #FFC93C; flex-shrink: 0"></span>
-        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{summary}}</span>
-      </div>
-    </sc-if>
     <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}">
       <button onClick="{{next}}" disabled="{{cantNext}}" style="{{nextStyle}}">{{nextLabel}}</button>
     </sc-if>
@@ -175,30 +217,34 @@ body{margin:0}
   </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["1","2","3","4"],"default":"1"},"captchaHint":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["1","2","3","4"],"default":"1"},"captchaHint":{"editor":"boolean","default":false},"returning":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const init = Math.min(4, Math.max(1, Number(this.props.step || 1)));
+    const returning = !!this.props.returning;
     const pre = init >= 2;
-    const filled = init >= 3;
+    const picked = init >= 3;
+    const filled = init >= 4 || returning;
     const st = Object.assign({
       step: init,
       service: pre ? 0 : null,
-      day: pre ? 2 : null,
-      slot: pre ? 3 : null,
+      day: picked ? 2 : 1,
+      slot: picked ? 3 : null,
       name: filled ? 'Mariana Gómez' : '',
       email: filled ? 'mariana@correo.com' : '',
       phone: filled ? '300 123 4567' : '',
-      agree: filled
+      agree: init >= 4,
+      remember: returning
     }, this.state || {});
 
     const services = [
-      { name: 'Valoración', dur: '30 min', desc: 'Primera vez', price: '$60.000' },
-      { name: 'Limpieza dental', dur: '45 min', desc: 'Incluye profilaxis', price: '$120.000' },
-      { name: 'Control', dur: '15 min', desc: 'En tratamiento', price: 'Sin costo' }
+      { name: 'Valoración', dur: '30 min', desc: 'Primera vez', price: '$60.000', kind: 'fixed' },
+      { name: 'Limpieza dental', dur: '45 min', desc: 'Incluye profilaxis', price: '$120.000', kind: 'fixed' },
+      { name: 'Control', dur: '15 min', desc: 'En tratamiento', price: 'Precio a convenir', kind: 'agree' },
+      { name: 'Urgencia', dur: '30 min', desc: 'Dolor o molestia', price: '', kind: 'hidden' }
     ];
     const days = [
-      { dow: 'Mar', num: '20', off: true, long: 'Martes 20 de octubre' },
+      { dow: 'Mar', num: '20', full: true, long: 'Martes 20 de octubre' },
       { dow: 'Mié', num: '21', long: 'Miércoles 21 de octubre' },
       { dow: 'Jue', num: '22', long: 'Jueves 22 de octubre' },
       { dow: 'Vie', num: '23', long: 'Viernes 23 de octubre' },
@@ -209,47 +255,45 @@ class Component extends DCLogic {
     const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '10:00 a. m.', '10:30 a. m.', '11:30 a. m.', '2:00 p. m.', '2:30 p. m.', '3:00 p. m.', '4:00 p. m.', '4:30 p. m.', '5:30 p. m.'];
     const names = ['Servicio', 'Día y hora', 'Tus datos', 'Confirmar'];
 
-    const cardBase = 'display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;border-radius:20px;font:inherit;color:inherit;cursor:pointer;min-height:84px;box-sizing:border-box;';
-    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;border:2px solid;';
+    const cardBase = 'display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;border-radius:20px;font:inherit;color:inherit;cursor:pointer;min-height:80px;box-sizing:border-box;';
+    const dayBase = 'position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;border:2px solid;box-sizing:border-box;';
     const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:15px;min-height:46px;cursor:pointer;border:2px solid;';
+    const chipBase = 'height:32px;padding:0 12px;border-radius:999px;background:#EAF5F0;color:#0B6E4F;font-size:14px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%;';
 
-    const valid = {
-      1: st.service != null,
-      2: st.day != null && st.slot != null,
-      3: !!(st.name.trim() && st.phone.trim() && st.agree),
-      4: true
-    };
+    let missing = '';
+    if (!st.name.trim()) missing = 'Escribe tu nombre para seguir';
+    else if (!st.phone.trim()) missing = 'Escribe tu celular para seguir';
+    else if (!st.agree) missing = 'Acepta la autorización para seguir';
+    const valid = { 1: st.service != null, 2: st.slot != null, 3: !missing, 4: true };
     const canNext = valid[st.step];
     const svc = st.service != null ? services[st.service] : null;
-    const when = st.day != null && st.slot != null ? days[st.day].long + ' · ' + labels[st.slot] : '';
-
-    let summary = '';
-    if (st.step === 2 && svc) summary = svc.name + ' · ' + svc.dur;
-    if (st.step === 3 && svc && when) summary = svc.name + ' · ' + days[st.day].dow + ' ' + days[st.day].num + ', ' + labels[st.slot];
-
     const go = (n) => this.setState({ step: n });
     const slotItem = (i) => {
       const selected = st.slot === i;
       return { label: labels[i], selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;') };
     };
+    const svcChip = svc ? svc.name + ' · ' + svc.dur + (svc.kind === 'fixed' ? ' · ' + svc.price : '') : '';
+    const whenChip = st.slot != null ? days[st.day].dow + ' ' + days[st.day].num + ' oct · ' + labels[st.slot] : '';
+    const chips = [];
+    if (st.step === 2 && svc) chips.push({ label: svcChip, style: chipBase + 'flex-shrink:0;' });
+    if (st.step === 3) { chips.push({ label: svcChip, style: chipBase + 'flex-shrink:1;' }); chips.push({ label: whenChip, style: chipBase + 'flex-shrink:0;' }); }
 
     return {
       step: st.step,
       stepName: names[st.step - 1],
       is1: st.step === 1, is2: st.step === 2, is3: st.step === 3, is4: st.step === 4,
-      // Turnstile asked for a click while submitting: the widget shows under the address and the footer says so.
+      notFirst: st.step > 1,
+      hasChips: chips.length > 0,
+      chips,
+      returning,
       showCaptcha: st.step === 4 && !!this.props.captchaHint,
       submitReady: st.step === 4 && !this.props.captchaHint,
       notLast: st.step < 4,
-      showBack: st.step > 1,
-      showAvatar: st.step === 1,
       back: () => go(st.step - 1),
       next: () => { if (canNext) go(st.step + 1); },
       cantNext: !canNext,
-      nextLabel: canNext ? 'Siguiente' : ['Elige un servicio', 'Elige día y hora', 'Completa tus datos'][st.step - 1],
+      nextLabel: canNext ? 'Siguiente' : ['Elige un servicio', 'Elige una hora', missing][st.step - 1],
       nextStyle: 'height:56px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:17px;' + (canNext ? 'background:#0B6E4F;color:#FFFFFF;cursor:pointer;' : 'background:#DCE3DF;color:#56645D;cursor:not-allowed;'),
-      hasSummary: !!summary,
-      summary,
       bars: names.map((n, i) => ({ style: 'height:6px;border-radius:999px;display:block;background:' + (i < st.step ? '#0B6E4F' : '#E3E8E5') + ';' })),
 
       services: services.map((s, i) => {
@@ -258,33 +302,36 @@ class Component extends DCLogic {
           selected,
           pick: () => this.setState({ service: i }),
           cardStyle: cardBase + (selected ? 'border:2px solid #0B6E4F;background:#EAF5F0;' : 'border:2px solid #E3E8E5;background:#FFFFFF;'),
-          dotStyle: 'width:22px;height:22px;border-radius:999px;flex-shrink:0;box-sizing:border-box;' + (selected ? 'border:7px solid #0B6E4F;background:#FFFFFF;' : 'border:2px solid #B9C4BE;background:#FFFFFF;')
+          dotStyle: 'width:22px;height:22px;border-radius:999px;flex-shrink:0;box-sizing:border-box;' + (selected ? 'border:7px solid #0B6E4F;background:#FFFFFF;' : 'border:2px solid #B9C4BE;background:#FFFFFF;'),
+          priceStyle: s.kind === 'agree' ? 'font-size:13px;font-weight:600;color:#3E4C45;text-align:right;max-width:76px;line-height:1.25;flex-shrink:0;' : 'font-weight:700;font-size:15px;flex-shrink:0;'
         });
       }),
 
       days: days.map((d, i) => {
-        const selected = st.day === i;
+        const selected = st.day === i && !d.full && !d.off;
         let style = dayBase;
         if (d.off) style += 'background:#F3F6F4;border-color:#F3F6F4;color:#5E6C65;cursor:default;';
+        else if (d.full) style += 'background:#FFFFFF;border-color:#B9C4BE;border-style:dashed;color:#3E4C45;cursor:pointer;';
         else if (selected) style += 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;cursor:pointer;';
         else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
-        return { dow: d.dow, num: d.num, selected, disabled: !!d.off, style, pick: d.off ? undefined : () => this.setState({ day: i }) };
+        const aria = d.long + (d.full ? ', lleno' : d.off ? ', cerrado' : '');
+        return { dow: d.dow, num: d.num, full: !!d.full, selected, aria, disabled: !!d.off, style, pick: d.off || d.full ? undefined : () => this.setState({ day: i, slot: null }) };
       }),
-      hasDay: st.day != null,
-      noDay: st.day == null,
+      dayLong: days[st.day].long,
       morning: [0, 1, 2, 3, 4, 5].map(slotItem),
       afternoon: [6, 7, 8, 9, 10, 11].map(slotItem),
 
-      name: st.name, email: st.email, phone: st.phone, agree: st.agree,
+      name: st.name, email: st.email, phone: st.phone, agree: st.agree, remember: st.remember,
       onName: (e) => this.setState({ name: e.target.value }),
       onEmail: (e) => this.setState({ email: e.target.value }),
       onPhone: (e) => this.setState({ phone: e.target.value }),
       toggleAgree: () => this.setState({ agree: !st.agree }),
+      toggleRemember: () => this.setState({ remember: !st.remember }),
 
       review: [
         { label: 'Servicio', value: svc ? svc.name + ' · ' + svc.dur : '—', sub: svc ? svc.price : '', edit: () => go(1) },
-        { label: 'Cuándo', value: st.day != null ? days[st.day].long : '—', sub: st.slot != null ? labels[st.slot] : '', edit: () => go(2) },
-        { label: 'A nombre de', value: st.name || '—', sub: [st.phone ? '+57 ' + st.phone : '', st.email.trim()].filter(Boolean).join(' · '), edit: () => go(3) }
+        { label: 'Cuándo', value: days[st.day].long, sub: st.slot != null ? labels[st.slot] : '', edit: () => go(2) },
+        { label: 'A nombre de', value: st.name || '—', sub: [st.email.trim(), st.phone ? '+57 ' + st.phone : ''].filter(Boolean).join(' · '), edit: () => go(3) }
       ].map((r, i) => Object.assign(r, { rowStyle: 'display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;' + (i > 0 ? 'border-top:1px solid #CFE3DA;' : '') }))
     };
   }
