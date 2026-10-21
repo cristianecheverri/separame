@@ -101,7 +101,7 @@
     },
     "A-Servicios.dc.html": {
       "expand": "fill",
-      "h": 860,
+      "h": 960,
       "is_interactive": true,
       "page": "linea-a",
       "title": "Profesional — Servicios",
@@ -499,7 +499,7 @@
       "title": "Cuenta — Entrar",
       "w": 1280,
       "x": 0,
-      "y": 14770,
+      "y": 14870,
       "is_interactive": true
     },
     "account-signup.dc.html": {
@@ -509,7 +509,7 @@
       "title": "Cuenta — Crear cuenta",
       "w": 1280,
       "x": 1360,
-      "y": 14770,
+      "y": 14870,
       "is_interactive": true
     },
     "account-signup-confirm-code.dc.html": {
@@ -519,7 +519,7 @@
       "title": "Cuenta — Confirma tu correo (código)",
       "w": 1280,
       "x": 2720,
-      "y": 14770,
+      "y": 14870,
       "is_interactive": true
     },
     "account-forgot-password.dc.html": {
@@ -529,7 +529,7 @@
       "title": "Cuenta — Recuperar contraseña",
       "w": 1280,
       "x": 4080,
-      "y": 14770,
+      "y": 14870,
       "is_interactive": true
     },
     "account-new-password.dc.html": {
@@ -539,7 +539,7 @@
       "title": "Cuenta — Crear contraseña (primer ingreso)",
       "w": 1280,
       "x": 5440,
-      "y": 14770
+      "y": 14870
     },
     "onboarding-step-1.dc.html": {
       "expand": "fill",
@@ -548,7 +548,7 @@
       "title": "Onboarding — Paso 1 · Tu perfil",
       "w": 1280,
       "x": 6800,
-      "y": 14770,
+      "y": 14870,
       "is_interactive": true
     },
     "onboarding-done.dc.html": {
@@ -558,7 +558,518 @@
       "title": "Onboarding — ¡Listo!",
       "w": 1280,
       "x": 8160,
-      "y": 14770,
+      "y": 14870,
+      "is_interactive": true
+    },
+    "client-booking-confirmed-no-email.dc.html": {
+      "h": 900,
+      "page": "linea-a",
+      "radius": 28,
+      "title": "Cliente — Cita confirmada sin correo (guarda el enlace)",
+      "w": 390,
+      "x": 4230,
+      "y": 7190,
+      "is_interactive": true
+    },
+    "pro-agenda-phone-grace.dc.html": {
+      "h": 2920,
+      "page": "linea-a",
+      "radius": 28,
+      "title": "Profesional (celular) — Agenda en periodo de gracia",
+      "w": 390,
+      "x": 2350,
+      "y": 11470,
+      "is_interactive": true
+    },
+    "landing-desktop.dc.html": {
+      "h": 6700,
+      "page": "propuestas",
+      "title": "Landing — escritorio (1280)",
+      "w": 1280,
+      "x": 0,
+      "y": 300,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "landing-phone.dc.html": {
+      "h": 7700,
+      "page": "propuestas",
+      "title": "Landing — celular (375)",
+      "w": 375,
+      "x": 1360,
+      "y": 300,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-m1-footer-status-before.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-1 · Antes (chips arriba)",
+      "w": 320,
+      "x": 0,
+      "y": 8440,
+      "radius": 28
+    },
+    "proposal-m1-footer-status-after.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-1 · Después · resumen en el pie",
+      "w": 320,
+      "x": 400,
+      "y": 8440,
+      "radius": 28
+    },
+    "proposal-m1-footer-status-after-error.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-1 · Después · error",
+      "w": 320,
+      "x": 800,
+      "y": 8440,
+      "radius": 28
+    },
+    "proposal-m1-footer-status-after-verifying.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-1 · Después · verificando",
+      "w": 320,
+      "x": 1200,
+      "y": 8440,
+      "radius": 28
+    },
+    "proposal-m2-m3-day-slots-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-2/M-3 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 9448,
+      "radius": 28
+    },
+    "proposal-m2-m3-day-slots-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-2/M-3 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 9448,
+      "radius": 28
+    },
+    "proposal-m4-profile-header-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-4 · Antes · paso 1",
+      "w": 375,
+      "x": 0,
+      "y": 10732,
+      "radius": 28
+    },
+    "proposal-m4-profile-header-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-4 · Después · paso 1",
+      "w": 375,
+      "x": 455,
+      "y": 10732,
+      "radius": 28
+    },
+    "proposal-m4-profile-header-before-step-2-320.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-4 · Antes · paso 2 a 320 px",
+      "w": 320,
+      "x": 910,
+      "y": 10732,
+      "radius": 28
+    },
+    "proposal-m4-profile-header-after-step-2-320.dc.html": {
+      "h": 568,
+      "page": "propuestas",
+      "title": "M-4 · Después · paso 2 a 320 px",
+      "w": 320,
+      "x": 1310,
+      "y": 10732,
+      "radius": 28
+    },
+    "proposal-m5-details-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-5 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 12016,
+      "radius": 28
+    },
+    "proposal-m5-details-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-5 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 12016,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-m5-details-after-returning.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-5 · Después · cliente que vuelve",
+      "w": 375,
+      "x": 910,
+      "y": 12016,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-field-contrast-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "Contraste · Antes (#E3E8E5)",
+      "w": 375,
+      "x": 0,
+      "y": 13300,
+      "radius": 28
+    },
+    "proposal-field-contrast-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "Contraste · Después (#8A968F)",
+      "w": 375,
+      "x": 455,
+      "y": 13300,
+      "radius": 28
+    },
+    "proposal-m6-landscape-before.dc.html": {
+      "h": 375,
+      "page": "propuestas",
+      "title": "M-6 · Antes (667×375)",
+      "w": 667,
+      "x": 0,
+      "y": 14584,
+      "radius": 28
+    },
+    "proposal-m6-landscape-after.dc.html": {
+      "h": 375,
+      "page": "propuestas",
+      "title": "M-6 · Después (667×375)",
+      "w": 667,
+      "x": 747,
+      "y": 14584,
+      "radius": 28
+    },
+    "proposal-m7-confirmation-calendar-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-7 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 15399,
+      "radius": 28
+    },
+    "proposal-m7-confirmation-calendar-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-7 · Después (iPhone; tweak Android)",
+      "w": 375,
+      "x": 455,
+      "y": 15399,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-m8-move-appointment-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-8 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 16683,
+      "radius": 28
+    },
+    "proposal-m8-move-appointment-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "M-8 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 16683,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-price-option-editor-before.dc.html": {
+      "h": 900,
+      "page": "propuestas",
+      "title": "Precio · Antes · editor del servicio",
+      "w": 1280,
+      "x": 0,
+      "y": 17967,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "proposal-price-option-editor-after.dc.html": {
+      "h": 900,
+      "page": "propuestas",
+      "title": "Precio · Después · editor del servicio",
+      "w": 1280,
+      "x": 1360,
+      "y": 17967,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "proposal-price-option-booking-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "Precio · Antes · paso 1",
+      "w": 375,
+      "x": 0,
+      "y": 19307,
+      "radius": 28
+    },
+    "proposal-price-option-booking-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "Precio · Después · paso 1",
+      "w": 375,
+      "x": 455,
+      "y": 19307,
+      "radius": 28
+    },
+    "proposal-mp01-tab-bar-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-01 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 20591,
+      "radius": 28
+    },
+    "proposal-mp01-tab-bar-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-01 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 20591,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp01-tab-bar-after-more-sheet.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-01 · Después · «Más» abierto",
+      "w": 375,
+      "x": 910,
+      "y": 20591,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp02-mp03-compact-header-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-02/03 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 21875,
+      "radius": 28
+    },
+    "proposal-mp02-mp03-compact-header-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-02/03 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 21875,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp04-appointment-status-before.dc.html": {
+      "h": 960,
+      "page": "propuestas",
+      "title": "MP-04 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 23159,
+      "radius": 28
+    },
+    "proposal-mp04-appointment-status-after.dc.html": {
+      "h": 960,
+      "page": "propuestas",
+      "title": "MP-04 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 23159,
+      "radius": 28
+    },
+    "proposal-mp05-new-appointment-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-05 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 24559,
+      "radius": 28
+    },
+    "proposal-mp05-new-appointment-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-05 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 24559,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp06-waitlist-before.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-06 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 25843,
+      "radius": 28
+    },
+    "proposal-mp06-waitlist-after.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-06 · Después",
+      "w": 375,
+      "x": 455,
+      "y": 25843,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp06-waitlist-after-menu.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "MP-06 · Después · menú ⋯",
+      "w": 375,
+      "x": 910,
+      "y": 25843,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp07-native-share-before.dc.html": {
+      "h": 520,
+      "page": "propuestas",
+      "title": "MP-07 · Antes",
+      "w": 375,
+      "x": 0,
+      "y": 27127,
+      "radius": 28
+    },
+    "proposal-mp07-native-share-after.dc.html": {
+      "h": 520,
+      "page": "propuestas",
+      "title": "MP-07 · Después · hoja de compartir",
+      "w": 375,
+      "x": 455,
+      "y": 27127,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp07-native-share-after-fallback.dc.html": {
+      "h": 520,
+      "page": "propuestas",
+      "title": "MP-07 · Después · sin hoja (copiar)",
+      "w": 375,
+      "x": 910,
+      "y": 27127,
+      "radius": 28
+    },
+    "proposal-mp08-stats-two-columns-before.dc.html": {
+      "h": 1700,
+      "page": "propuestas",
+      "title": "MP-08 · Antes (360)",
+      "w": 360,
+      "x": 0,
+      "y": 28087,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-mp08-stats-two-columns-after.dc.html": {
+      "h": 1700,
+      "page": "propuestas",
+      "title": "MP-08 · Después (360)",
+      "w": 360,
+      "x": 440,
+      "y": 28087,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "referral-agenda-card-desktop.dc.html": {
+      "h": 1660,
+      "page": "propuestas",
+      "title": "Referidos · Tarjeta en la agenda (escritorio)",
+      "w": 1280,
+      "x": 0,
+      "y": 30227,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "referral-agenda-card-phone.dc.html": {
+      "h": 960,
+      "page": "propuestas",
+      "title": "Referidos · Tarjeta en la agenda (celular)",
+      "w": 375,
+      "x": 1360,
+      "y": 30227,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "referral-billing-section-desktop.dc.html": {
+      "h": 1880,
+      "page": "propuestas",
+      "title": "Referidos · Sección en Suscripción (escritorio)",
+      "w": 1280,
+      "x": 1815,
+      "y": 30227,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "referral-billing-section-phone.dc.html": {
+      "h": 1220,
+      "page": "propuestas",
+      "title": "Referidos · Sección en Suscripción (celular, plan vencido)",
+      "w": 375,
+      "x": 3175,
+      "y": 30227,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "referral-signup-invited-desktop.dc.html": {
+      "h": 860,
+      "page": "propuestas",
+      "title": "Referidos · Registro «Te invitó» (escritorio)",
+      "w": 1280,
+      "x": 0,
+      "y": 32547,
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "referral-signup-invited-phone.dc.html": {
+      "h": 844,
+      "page": "propuestas",
+      "title": "Referidos · Registro «Te invitó» (celular)",
+      "w": 375,
+      "x": 1360,
+      "y": 32547,
+      "radius": 28,
+      "is_interactive": true
+    },
+    "referral-email-month-earned.dc.html": {
+      "h": 880,
+      "page": "propuestas",
+      "title": "Referidos · Correo «¡Ganaste un mes gratis!»",
+      "w": 594,
+      "x": 1815,
+      "y": 32547
+    },
+    "referral-admin-pro-detail.dc.html": {
+      "h": 1180,
+      "page": "propuestas",
+      "title": "Referidos · Admin: detalle con referidos",
+      "w": 1280,
+      "x": 2489,
+      "y": 32547,
+      "expand": "fill",
       "is_interactive": true
     }
   },
@@ -628,7 +1139,7 @@
     },
     "rowClienteNew": {
       "kind": "title1",
-      "maxW": 4150,
+      "maxW": 4620,
       "page": "linea-a",
       "text": "Cliente — novedades: un solo servicio, lista de espera y confirmar asistencia",
       "w": 240,
@@ -655,7 +1166,7 @@
     },
     "rowProPhone": {
       "kind": "title1",
-      "maxW": 2270,
+      "maxW": 2740,
       "page": "linea-a",
       "text": "Profesional — el panel en el celular",
       "w": 240,
@@ -669,7 +1180,187 @@
       "text": "Cuenta y onboarding",
       "w": 240,
       "x": 0,
-      "y": 14470
+      "y": 14570
+    },
+    "pLanding": {
+      "kind": "title1",
+      "maxW": 1735,
+      "page": "propuestas",
+      "text": "Landing · La puerta de entrada: qué es, cómo se ve funcionando y cuánto cuesta",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "pM1": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-1 · El resumen baja al pie: más espacio para el formulario en 320 px",
+      "w": 240,
+      "x": 0,
+      "y": 8140
+    },
+    "pM2": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-2 y M-3 · Horas visibles al entrar y día lleno distinto de cerrado",
+      "w": 240,
+      "x": 0,
+      "y": 9148
+    },
+    "pM4": {
+      "kind": "title1",
+      "maxW": 1630,
+      "page": "propuestas",
+      "text": "M-4 · Perfil completo al llegar: quién es, dónde queda y cómo llamar",
+      "w": 240,
+      "x": 0,
+      "y": 10432
+    },
+    "pM5": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-5 · El botón dice qué falta y recuerda tus datos para la próxima",
+      "w": 240,
+      "x": 0,
+      "y": 11716
+    },
+    "pContrast": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "Contraste · Bordes de campo visibles (#8A968F, WCAG 3:1)",
+      "w": 240,
+      "x": 0,
+      "y": 13000
+    },
+    "pM6": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-6 · En horizontal o pantallas bajas se ve el formulario, no solo el título",
+      "w": 240,
+      "x": 0,
+      "y": 14284
+    },
+    "pM7": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-7 · El calendario del celular primero: agendar con un toque",
+      "w": 240,
+      "x": 0,
+      "y": 15099
+    },
+    "pM8": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "M-8 · Mover la cita como al reservar: horas por Mañana/Tarde y botón fijo",
+      "w": 240,
+      "x": 0,
+      "y": 16383
+    },
+    "pPriceEditor": {
+      "kind": "title1",
+      "maxW": 2640,
+      "page": "propuestas",
+      "text": "Precio · «Precio a convenir» u ocultarlo en vez de «Sin costo»",
+      "w": 240,
+      "x": 0,
+      "y": 17667
+    },
+    "pPriceBooking": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "Precio · Así lo ve el cliente en el paso 1",
+      "w": 240,
+      "x": 0,
+      "y": 19007
+    },
+    "pMP01": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-01 · Barra inferior: Citas y Clientes a un toque, en la zona del pulgar",
+      "w": 240,
+      "x": 0,
+      "y": 20291
+    },
+    "pMP02": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-02 y MP-03 · Agenda primero y «Nueva cita» siempre al alcance del pulgar",
+      "w": 240,
+      "x": 0,
+      "y": 21575
+    },
+    "pMP04": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-04 · Un solo estado por cita: se lee de un vistazo, sin contradicciones",
+      "w": 240,
+      "x": 0,
+      "y": 22859
+    },
+    "pMP05": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-05 · Nueva cita: busca al cliente y llega con hora y servicio listos",
+      "w": 240,
+      "x": 0,
+      "y": 24259
+    },
+    "pMP06": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-06 · Lista de espera accionable: «Agendar» en un toque y menú ⋯",
+      "w": 240,
+      "x": 0,
+      "y": 25543
+    },
+    "pMP07": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-07 · Compartir el enlace con la hoja del celular, no solo copiarlo",
+      "w": 240,
+      "x": 0,
+      "y": 26827
+    },
+    "pMP08": {
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "propuestas",
+      "text": "MP-08 · Estadísticas en 2 columnas: el resumen cabe en una pantalla",
+      "w": 240,
+      "x": 0,
+      "y": 27787
+    },
+    "pRefPanel": {
+      "kind": "title1",
+      "maxW": 3550,
+      "page": "propuestas",
+      "text": "Referidos — panel · Invita a un colega y gana un mes gratis",
+      "w": 240,
+      "x": 0,
+      "y": 29927
+    },
+    "pRefOther": {
+      "kind": "title1",
+      "maxW": 3769,
+      "page": "propuestas",
+      "text": "Referidos · Registro con invitación, correo del mes ganado y vista admin",
+      "w": 240,
+      "x": 0,
+      "y": 32247
     }
   },
   "order": [
@@ -730,7 +1421,61 @@
     "account-forgot-password.dc.html",
     "account-new-password.dc.html",
     "onboarding-step-1.dc.html",
-    "onboarding-done.dc.html"
+    "onboarding-done.dc.html",
+    "client-booking-confirmed-no-email.dc.html",
+    "pro-agenda-phone-grace.dc.html",
+    "landing-desktop.dc.html",
+    "landing-phone.dc.html",
+    "proposal-m1-footer-status-before.dc.html",
+    "proposal-m1-footer-status-after.dc.html",
+    "proposal-m1-footer-status-after-error.dc.html",
+    "proposal-m1-footer-status-after-verifying.dc.html",
+    "proposal-m2-m3-day-slots-before.dc.html",
+    "proposal-m2-m3-day-slots-after.dc.html",
+    "proposal-m4-profile-header-before.dc.html",
+    "proposal-m4-profile-header-after.dc.html",
+    "proposal-m4-profile-header-before-step-2-320.dc.html",
+    "proposal-m4-profile-header-after-step-2-320.dc.html",
+    "proposal-m5-details-before.dc.html",
+    "proposal-m5-details-after.dc.html",
+    "proposal-m5-details-after-returning.dc.html",
+    "proposal-field-contrast-before.dc.html",
+    "proposal-field-contrast-after.dc.html",
+    "proposal-m6-landscape-before.dc.html",
+    "proposal-m6-landscape-after.dc.html",
+    "proposal-m7-confirmation-calendar-before.dc.html",
+    "proposal-m7-confirmation-calendar-after.dc.html",
+    "proposal-m8-move-appointment-before.dc.html",
+    "proposal-m8-move-appointment-after.dc.html",
+    "proposal-price-option-editor-before.dc.html",
+    "proposal-price-option-editor-after.dc.html",
+    "proposal-price-option-booking-before.dc.html",
+    "proposal-price-option-booking-after.dc.html",
+    "proposal-mp01-tab-bar-before.dc.html",
+    "proposal-mp01-tab-bar-after.dc.html",
+    "proposal-mp01-tab-bar-after-more-sheet.dc.html",
+    "proposal-mp02-mp03-compact-header-before.dc.html",
+    "proposal-mp02-mp03-compact-header-after.dc.html",
+    "proposal-mp04-appointment-status-before.dc.html",
+    "proposal-mp04-appointment-status-after.dc.html",
+    "proposal-mp05-new-appointment-before.dc.html",
+    "proposal-mp05-new-appointment-after.dc.html",
+    "proposal-mp06-waitlist-before.dc.html",
+    "proposal-mp06-waitlist-after.dc.html",
+    "proposal-mp06-waitlist-after-menu.dc.html",
+    "proposal-mp07-native-share-before.dc.html",
+    "proposal-mp07-native-share-after.dc.html",
+    "proposal-mp07-native-share-after-fallback.dc.html",
+    "proposal-mp08-stats-two-columns-before.dc.html",
+    "proposal-mp08-stats-two-columns-after.dc.html",
+    "referral-agenda-card-desktop.dc.html",
+    "referral-agenda-card-phone.dc.html",
+    "referral-billing-section-desktop.dc.html",
+    "referral-billing-section-phone.dc.html",
+    "referral-signup-invited-desktop.dc.html",
+    "referral-signup-invited-phone.dc.html",
+    "referral-email-month-earned.dc.html",
+    "referral-admin-pro-detail.dc.html"
   ],
   "pages": [
     {
@@ -740,6 +1485,10 @@
     {
       "id": "exploracion",
       "name": "Exploración (B y C)"
+    },
+    {
+      "id": "propuestas",
+      "name": "Propuestas (por aprobar)"
     }
   ],
   "title": "Sepárame — Mockups"

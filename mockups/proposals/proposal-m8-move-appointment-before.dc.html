@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M-8 antes · Mover la cita</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; padding: 28px 20px 20px; gap: 18px; overflow: hidden">
+  <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></div>
+
+  <div style="background: #EAF5F0; border-radius: 22px; padding: 16px; display: flex; gap: 14px; align-items: center">
+    <div style="width: 44px; height: 44px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; flex-shrink: 0">LP</div>
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+      <div style="font-size: 13px; color: #3E4C45">Tu cita</div>
+      <div style="font-weight: 700; font-size: 16px; line-height: 1.25">Jueves 22 de octubre · 10:00 a. m.</div>
+      <div style="font-size: 14px; color: #3E4C45">Valoración con Dra. Laura Pérez</div>
+    </div>
+  </div>
+
+  <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; letter-spacing: -0.6px">Elige el nuevo espacio</h1>
+
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+    <div style="display: flex; gap: 4px">
+      <button aria-label="Semana anterior" disabled style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #B9C4BE; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      <button aria-label="Semana siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="5">
+      <button aria-pressed="{{d.selected}}" style="{{d.style}}">
+        <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
+        <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{slots}}" as="t" hint-placeholder-count="12">
+      <button aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+    </sc-for>
+  </div>
+
+  <button style="height: 56px; flex-shrink: 0; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Mover a jue 22, 9:30 a. m.</button>
+  <button style="height: 44px; flex-shrink: 0; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 14px; color: #3E4C45; cursor: pointer">Volver</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;border-radius:14px;font:inherit;min-height:60px;border:2px solid;cursor:pointer;';
+    const slotBase = 'border-radius:999px;font:inherit;font-weight:600;font-size:14px;min-height:44px;cursor:pointer;border:2px solid;padding:0;';
+    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '10:00 a. m.', '10:30 a. m.', '11:30 a. m.', '2:00 p. m.', '2:30 p. m.', '3:00 p. m.', '4:00 p. m.', '4:30 p. m.', '5:30 p. m.'];
+    return {
+      days: [['Mié', '21'], ['Jue', '22'], ['Vie', '23'], ['Sáb', '24'], ['Lun', '26']].map((d, i) => ({
+        dow: d[0], num: d[1], selected: i === 1,
+        style: dayBase + (i === 1 ? 'background:#0B6E4F;border-color:#0B6E4F;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      })),
+      slots: labels.map((l, i) => ({
+        label: l, selected: i === 2,
+        style: slotBase + (i === 2 ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

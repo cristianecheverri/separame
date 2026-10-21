@@ -64,6 +64,18 @@ PLAN PARA EQUIPOS (decidido el 21-oct-2026, se implementa después de la fase 1)
   - Página del consultorio con paso "¿Con quién?" ("Cualquiera
     disponible" incluido) y además el enlace propio de cada profesional.
 
+REFERIDOS (decidido el 21-oct-2026)
+  - Cada profesional tiene un enlace de registro propio para compartir.
+  - Si alguien se registra con ese enlace y paga AL MENOS UN MES (pago
+    aprobado, no basta la prueba gratis), quien lo refirió gana UN MES
+    GRATIS que se suma al final de su periodo actual.
+  - Solo gana quien refirió; el referido no recibe nada extra.
+  - Un solo premio por cuenta referida (el primer pago que califica).
+  - Si quien refirió está vencido, el mes queda guardado y se aplica en su
+    siguiente pago (un mes gratis no reactiva una agenda vencida).
+  - Sin autorreferidos: el referido debe ser una cuenta nueva (correo
+    verificado distinto y sin prueba previa); el admin ve quién refirió a quién.
+
 DESPUÉS (algunas como extras de pago)
   - Recordatorios por WhatsApp (NO por ahora; cada mensaje tiene costo).
   - Sincronización con Google Calendar (requiere revisión de Google,

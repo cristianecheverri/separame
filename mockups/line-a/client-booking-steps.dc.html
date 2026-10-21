@@ -106,16 +106,16 @@ body{margin:0}
           <input id="p-name" type="text" autocomplete="name" placeholder="Ej. Mariana Gómez" value="{{name}}" onChange="{{onName}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px">
-          <label for="p-mail" style="font-size: 14px; font-weight: 600">Correo</label>
-          <input id="p-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
-          <span style="font-size: 12px; color: #56645D">Aquí te llega la confirmación y el recordatorio.</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="p-phone" style="font-size: 14px; font-weight: 600">Celular</label>
           <div style="display: flex; gap: 8px">
             <div style="height: 52px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px">+57</div>
             <input id="p-phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
           </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="p-mail" style="font-size: 14px; font-weight: 600">Correo <span style="font-weight: 400; color: #56645D">(opcional)</span></label>
+          <input id="p-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+          <span style="font-size: 12px; color: #56645D">Si lo escribes, te enviamos la confirmación y el recordatorio.</span>
         </div>
         <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
           <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
@@ -204,7 +204,7 @@ class Component extends DCLogic {
     const valid = {
       1: st.service != null,
       2: st.day != null && st.slot != null,
-      3: !!(st.name.trim() && st.email.trim() && st.phone.trim() && st.agree),
+      3: !!(st.name.trim() && st.phone.trim() && st.agree),
       4: true
     };
     const canNext = valid[st.step];
@@ -269,7 +269,7 @@ class Component extends DCLogic {
       review: [
         { label: 'Servicio', value: svc ? svc.name + ' · ' + svc.dur : '—', sub: svc ? svc.price : '', edit: () => go(1) },
         { label: 'Cuándo', value: st.day != null ? days[st.day].long : '—', sub: st.slot != null ? labels[st.slot] : '', edit: () => go(2) },
-        { label: 'A nombre de', value: st.name || '—', sub: st.email + (st.phone ? ' · +57 ' + st.phone : ''), edit: () => go(3) }
+        { label: 'A nombre de', value: st.name || '—', sub: [st.phone ? '+57 ' + st.phone : '', st.email.trim()].filter(Boolean).join(' · '), edit: () => go(3) }
       ].map((r, i) => Object.assign(r, { rowStyle: 'display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;' + (i > 0 ? 'border-top:1px solid #CFE3DA;' : '') }))
     };
   }

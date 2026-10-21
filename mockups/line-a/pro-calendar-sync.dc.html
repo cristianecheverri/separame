@@ -38,17 +38,52 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     </div>
 
     <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
-      <section style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
-          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Invitaciones por correo</h2>
-          <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: #FFC93C; color: #15241D">Al instante</span>
-        </div>
-        <div style="display: flex; gap: 16px; align-items: flex-start; justify-content: space-between">
-          <p style="margin: 0; font-size: 14px; color: #3E4C45; line-height: 1.45">Cada cita nueva, movida o cancelada te llega como invitación y se agrega sola a tu calendario principal.</p>
-          <button onClick="{{toggleInvites}}" aria-pressed="{{invites}}" aria-label="Recibir invitaciones por correo" style="{{invitesTrack}}"><span style="display: block; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF"></span></button>
-        </div>
-        <div style="font-size: 13px; color: #56645D; line-height: 1.45">La primera vez, Gmail puede pedirte que confirmes la invitación.</div>
-      </section>
+      <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Invitaciones por correo</h2>
+            <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: #FFC93C; color: #15241D">Al instante</span>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: flex-start; justify-content: space-between">
+            <p style="margin: 0; font-size: 14px; color: #3E4C45; line-height: 1.45">Cada cita nueva, movida o cancelada te llega como invitación y se agrega sola a tu calendario principal.</p>
+            <button onClick="{{toggleInvites}}" aria-pressed="{{invites}}" aria-label="Recibir invitaciones por correo" style="{{invitesTrack}}"><span style="display: block; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF"></span></button>
+          </div>
+          <div style="font-size: 13px; color: #56645D; line-height: 1.45">La primera vez, Gmail puede pedirte que confirmes la invitación.</div>
+        </section>
+
+        <section id="avisos" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Avisos en este celular</h2>
+            <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: #FFC93C; color: #15241D">Al instante</span>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: flex-start; justify-content: space-between">
+            <p style="margin: 0; font-size: 14px; color: #3E4C45; line-height: 1.45">Recibe un aviso en este celular cuando te separen, muevan o cancelen una cita, aunque no tengas Sepárame abierto.</p>
+            <button onClick="{{togglePush}}" aria-pressed="{{push}}" aria-label="Avisos en este celular" style="{{pushTrack}}"><span style="display: block; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF"></span></button>
+          </div>
+          <sc-if value="{{push}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <button style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
+                Probar aviso
+              </button>
+              <button onClick="{{togglePush}}" style="min-height: 44px; padding: 0 8px; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #3E4C45; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Desactivar en este celular</button>
+            </div>
+          </sc-if>
+          <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #E3E8E5; padding-top: 12px">
+            <div style="font-size: 13px; font-weight: 700; color: #56645D">Tus dispositivos con avisos</div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px">
+              <span style="font-weight: 600; display: flex; align-items: center; gap: 8px">Mac · Chrome</span>
+              <span style="color: #56645D; font-size: 13px">Último aviso: 20 oct. 2026</span>
+            </div>
+            <sc-if value="{{push}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px">
+                <span style="font-weight: 600; display: flex; align-items: center; gap: 8px">iPhone · Safari <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F">Este celular</span></span>
+                <span style="color: #56645D; font-size: 13px">Agregado el 21 oct. 2026</span>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+      </div>
 
       <section style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
@@ -91,39 +126,6 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     <section style="background: #FFF4D1; border-radius: 24px; padding: 18px 22px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
       <span>Si usas las dos opciones verás cada cita dos veces (una en tu calendario principal y otra en el suscrito). Puedes ocultar uno de los dos en tu calendario.</span>
-    </section>
-
-    <section id="avisos" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
-      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
-        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Avisos en este celular</h2>
-        <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: #FFC93C; color: #15241D">Al instante</span>
-      </div>
-      <div style="display: flex; gap: 16px; align-items: flex-start; justify-content: space-between">
-        <p style="margin: 0; font-size: 14px; color: #3E4C45; line-height: 1.45">Recibe un aviso en este celular cuando te separen, muevan o cancelen una cita, aunque no tengas Sepárame abierto.</p>
-        <button onClick="{{togglePush}}" aria-pressed="{{push}}" aria-label="Avisos en este celular" style="{{pushTrack}}"><span style="display: block; width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF"></span></button>
-      </div>
-      <sc-if value="{{push}}" hint-placeholder-val="{{ false }}">
-        <div style="display: flex; flex-wrap: wrap; gap: 8px">
-          <button style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
-            Probar aviso
-          </button>
-          <button onClick="{{togglePush}}" style="min-height: 44px; padding: 0 8px; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #3E4C45; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Desactivar en este celular</button>
-        </div>
-      </sc-if>
-      <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #E3E8E5; padding-top: 12px">
-        <div style="font-size: 13px; font-weight: 700; color: #56645D">Tus dispositivos con avisos</div>
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px">
-          <span style="font-weight: 600; display: flex; align-items: center; gap: 8px">Mac · Chrome</span>
-          <span style="color: #56645D; font-size: 13px">Último aviso: 20 oct. 2026</span>
-        </div>
-        <sc-if value="{{push}}" hint-placeholder-val="{{ false }}">
-          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 14px">
-            <span style="font-weight: 600; display: flex; align-items: center; gap: 8px">iPhone · Safari <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F">Este celular</span></span>
-            <span style="color: #56645D; font-size: 13px">Agregado el 21 oct. 2026</span>
-          </div>
-        </sc-if>
-      </div>
     </section>
   </main>
 </div>

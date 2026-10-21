@@ -38,7 +38,11 @@ y rediseños van primero al lienzo para que el usuario los apruebe antes de impl
 ## Producto
 
 **Cliente final (sin cuenta):** abre el enlace, elige servicio, día y hora, escribe
-nombre, correo y teléfono, acepta la autorización de datos y listo. Recibe un correo
+nombre, **celular (obligatorio**: el profesional puede llamarlo por la reserva) y correo
+(**opcional**), acepta la autorización de datos y listo. **Sin correo no se le envía nada**
+(ni confirmación ni recordatorios); la pantalla final igual ofrece agregar la cita al
+calendario y muestra el enlace para cancelar o cambiar. La lista de espera sí pide correo
+(es el único canal para avisar del cupo). Con correo, recibe un correo
 de confirmación con un archivo `.ics`, botones "Agregar a Google Calendar" y
 "Agregar a Outlook" (enlaces de plantilla, **sin OAuth**) y un enlace para cancelar o
 reprogramar sin cuenta (token firmado).
@@ -46,7 +50,9 @@ reprogramar sin cuenta (token firmado).
 **Profesional (con cuenta):** perfil público, servicios con duración y precio de
 referencia, disponibilidad (horario semanal, excepciones y festivos colombianos,
 margen entre citas, anticipación mínima, ventana máxima de reserva) y un panel para
-ver, crear, mover y cancelar citas.
+ver, crear, mover y cancelar citas. Cuando el profesional agenda una cita desde el panel,
+solo el **nombre** del cliente es obligatorio (correo y celular opcionales; sin correo no
+se le envía nada al cliente, y sin correo ni celular no hay ficha de cliente).
 
 **Funciones de la primera versión:** lo anterior, más el recordatorio por correo 24 h
 antes, cero citas dobles (reserva atómica del horario) y anti-spam en la página
@@ -86,6 +92,15 @@ equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
 - **Reserva**: página del consultorio `separame.app/<slug-del-consultorio>` con un primer paso
   "¿Con quién?" (incluye "Cualquiera disponible") **y** cada profesional conserva su enlace.
 - **Plan superior con anticipo al reservar**: depende de la pasarela (respuesta de Nequi).
+
+## Referidos (decidido el 21-oct-2026)
+- Cada profesional tiene un **enlace de registro propio**. Si alguien se registra con él y
+  **paga al menos un mes** (pago aprobado; la prueba gratis no cuenta), quien lo refirió gana
+  **un mes gratis** que se suma al final de su periodo actual. **Solo gana quien refirió.**
+- Un premio por cuenta referida (el primer pago que califica), auditado como un pago
+  `courtesy`. Si quien refirió está vencido, el mes queda guardado y se aplica en su
+  siguiente pago (no reactiva una agenda vencida). Sin autorreferidos: cuenta nueva con
+  correo verificado distinto; el admin ve quién refirió a quién.
 
 ## Precios (configurables, con precio congelado)
 - Meta inicial: desde **$5.000 COP/mes** (valor dinámico, se configura desde el panel de admin). "Precio fundador" para los primeros.

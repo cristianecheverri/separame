@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>MP-02 y MP-03 después — agenda primero</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column">
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center; justify-content: space-between">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+    
+  </header>
+  <main style="box-sizing: border-box; padding: 16px 16px 96px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.2; letter-spacing: -0.5px">Hola, Laura · 6 citas hoy</h1>
+      <button aria-label="Compartir mi enlace" style="height: 44px; padding: 0 14px; flex-shrink: 0; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 6px; align-items: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg> Compartir</button>
+    </div>
+    <section style="flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 10px">
+        <div style="display: flex; align-items: center; gap: 2px; min-width: 0">
+          <button aria-label="Día anterior" style="width: 44px; height: 44px; margin-left: -10px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 17px; white-space: nowrap">Mar 20 oct.</h2>
+          <button aria-label="Día siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+        </div>
+        <div role="group" aria-label="Vista" style="display: flex; gap: 6px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+            <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 13px; color: #15241D; cursor: pointer">Día</button>
+            <button aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 13px; color: #3E4C45; cursor: pointer">Semana</button>
+          </div>
+      </div>
+      <sc-for list="{{appts}}" as="a" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="font-weight: 700; font-size: 13px; color: #3E4C45">{{a.time}}</div>
+          <div style="{{a.cardStyle}}">
+            <div style="display: flex; flex-direction: column; gap: 3px; flex: 1 1 160px; min-width: 0">
+              <div style="{{a.nameStyle}}">{{a.name}}</div>
+              <div style="font-size: 13px; color: #56645D; display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 4px">
+                <span>{{a.detail}}</span>
+                <sc-if value="{{a.hasAttendance}}" hint-placeholder-val="{{ false }}">
+                  <span style="{{a.attendanceStyle}}">{{a.attendance}}</span>
+                </sc-if>
+              </div>
+              <div style="padding-top: 4px; display: flex; align-items: center; gap: 8px">
+                <span style="{{a.badgeStyle}}">{{a.badge}}</span>
+                <sc-if value="{{a.showChange}}" hint-placeholder-val="{{ false }}">
+                  <button style="height: 32px; padding: 0; border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Cambiar</button>
+                </sc-if>
+              </div>
+            </div>
+            <sc-if value="{{a.moveCancel}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 4px; flex-shrink: 0">
+                <button aria-label="Mover cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+                <button aria-label="Cancelar cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+              </div>
+            </sc-if>
+            <sc-if value="{{a.outcomeButtons}}" hint-placeholder-val="{{ false }}">
+              <div role="group" aria-label="Asistencia de {{a.name}}" style="display: flex; gap: 8px; flex-basis: 100%; justify-content: flex-end">
+                <button style="height: 36px; padding: 0 12px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg> Asistió</button>
+                <button style="height: 36px; padding: 0 12px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; color: #3E4C45; font: inherit; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg> No asistió</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+    <section aria-label="Instalar la app" style="flex-shrink: 0; background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-wrap: wrap; column-gap: 14px; row-gap: 12px; align-items: center">
+      <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink: 0"><rect width="64" height="64" rx="16" fill="#0B6E4F"></rect><path d="M40.5 22.5c-1.9-2.6-5-4-8.7-4-5.4 0-9.1 2.9-9.1 7.1 0 4.1 3.2 5.8 8.2 6.9 4 .9 5.3 1.6 5.3 3.2 0 1.7-1.7 2.8-4.4 2.8-3 0-5.3-1.3-6.8-3.6l-4.5 3.3c2.3 3.5 6.2 5.4 11.1 5.4 6.2 0 10.4-3.1 10.4-7.8 0-4.3-3.1-6-8.6-7.2-3.6-.8-4.8-1.4-4.8-2.8 0-1.3 1.4-2.2 3.5-2.2 2.2 0 3.9.9 5 2.5z" fill="#FFFFFF"></path><circle cx="46" cy="44" r="4.2" fill="#FFC93C"></circle></svg>
+      <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px">
+        <span style="font-weight: 700; font-size: 16px">Instala Sepárame en tu celular</span>
+        <span style="font-size: 14px; color: #56645D; line-height: 1.4">Ábrela como una app, con su ícono, y recibe avisos de tus citas.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-left: auto">
+        <button style="height: 44px; padding: 0 12px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #3E4C45; cursor: pointer">Ahora no</button>
+        <a href="../line-a/pro-ios-install-sheet-phone.dc.html" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; font-weight: 700; font-size: 14px; display: flex; align-items: center; text-decoration: none">Instalar</a>
+      </div>
+    </section>
+  </main>
+  <button aria-label="Nueva cita" style="position: absolute; right: 16px; bottom: 84px; width: 56px; height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(11,110,79,0.35); cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center">
+    <a href="proposal-mp01-tab-bar-after.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+      <span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Agenda</span>
+    </a>
+    <a href="../line-a/pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span>
+    </a>
+    <a href="../line-a/pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span>
+    </a>
+    <a href="proposal-mp01-tab-bar-after-more-sheet.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const card = 'flex-grow:1;min-width:0;display:flex;flex-wrap:wrap;column-gap:12px;row-gap:8px;align-items:center;padding:10px 10px 10px 16px;border-radius:16px;min-height:64px;box-sizing:border-box;';
+    const badge = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const mini = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;';
+    const kinds = {
+      ok: { card: card + 'background:#EAF5F0;', name: 'font-weight:700;font-size:15px;', badge: badge + 'background:#0B6E4F;color:#FFFFFF;', label: 'Confirmada' },
+      fresh: { card: card + 'background:#FFF4D1;', name: 'font-weight:700;font-size:15px;', badge: badge + 'background:#FFC93C;color:#15241D;', label: 'Nueva' },
+      free: { card: card + 'background:#FFFFFF;border:2px dashed #CFDAD4;', name: 'font-weight:600;font-size:15px;color:#56645D;', badge: badge + 'background:#F3F6F4;color:#3E4C45;', label: 'Libre' },
+      off: { card: card + 'background:#F3F6F4;', name: 'font-weight:600;font-size:15px;color:#56645D;text-decoration:line-through;', badge: badge + 'background:#FFFFFF;color:#3E4C45;', label: 'Cancelada' }
+    };
+    const rows = [
+      { time: '8:00 a. m.', name: 'Mariana Gómez', detail: 'Valoración · 30 min', k: 'ok', outcome: 'attended' },
+      { time: '8:30 a. m.', name: 'Juan Esteban Ruiz', detail: 'Control · 15 min', k: 'ok', past: true },
+      { time: '9:30 a. m.', name: 'Espacio libre', detail: '30 min disponibles', k: 'free' },
+      { time: '10:00 a. m.', name: 'Sofía Castaño', detail: 'Limpieza dental · 45 min', k: 'fresh', confirmed: false },
+      { time: '11:00 a. m.', name: 'Carlos Mejía', detail: 'Valoración · 30 min', k: 'ok', confirmed: true },
+      { time: '2:00 p. m.', name: 'Valentina Osorio', detail: 'Control · canceló desde el correo', k: 'off' },
+      { time: '3:00 p. m.', name: 'Daniela Herrera', detail: 'Limpieza dental · 45 min', k: 'ok', confirmed: true },
+      { time: '4:00 p. m.', name: 'Tomás Rendón', detail: 'Control · 15 min', k: 'ok', confirmed: false }
+    ];
+    const appts = rows.map((r) => {
+      const k = kinds[r.k];
+      const active = r.k === 'ok' || r.k === 'fresh';
+      const done = !!r.outcome;
+      return {
+        time: r.time, name: r.name, detail: r.detail,
+        cardStyle: k.card, nameStyle: k.name,
+        badge: done ? 'Asistió' : k.label,
+        badgeStyle: done ? badge + 'background:#FFFFFF;color:#0B6E4F;' : k.badge,
+        hasAttendance: active && !r.past && !done,
+        attendance: r.confirmed ? 'Confirmó' : 'Sin confirmar',
+        attendanceStyle: mini + (r.confirmed ? 'background:#FFFFFF;color:#0B6E4F;' : 'background:rgba(255,255,255,0.7);color:#56645D;'),
+        showChange: done,
+        moveCancel: active && !r.past && !done,
+        outcomeButtons: active && !!r.past
+      };
+    });
+    return { appts };
+  }
+}
+</script>
+</body>
+</html>

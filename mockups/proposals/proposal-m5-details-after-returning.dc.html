@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M-5 después — cliente que vuelve</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E3E8E5; flex-shrink: 0">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+      <button aria-label="Paso anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Dra. Laura Pérez</div>
+        <div style="font-size: 13px; color: #56645D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Odontóloga · El Poblado, Medellín</div>
+      </div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F; flex-shrink: 0">sepárame<span style="color: #E0A800">.</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+        <span style="display: block; height: 6px; border-radius: 999px; background: #0B6E4F"></span>
+        <span style="display: block; height: 6px; border-radius: 999px; background: #0B6E4F"></span>
+        <span style="display: block; height: 6px; border-radius: 999px; background: #0B6E4F"></span>
+        <span style="display: block; height: 6px; border-radius: 999px; background: #E3E8E5"></span>
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso 3 de 4 · Tus datos</div>
+      <div role="list" aria-label="Lo que elegiste" style="display: flex; gap: 6px; min-width: 0">
+        <span role="listitem" style="display: flex; min-width: 0; flex-shrink: 1"><button aria-label="Cambiar servicio: Valoración · 30 min · $60.000" style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #EAF5F0; color: #084C37; font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; min-width: 0; max-width: 100%"><span style="overflow: hidden; text-overflow: ellipsis">Valoración · 30 min · $60.000</span></button></span>
+        <span role="listitem" style="display: flex; flex-shrink: 0"><button aria-label="Cambiar día y hora: Jue 22 oct · 10:00 a. m." style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #EAF5F0; color: #084C37; font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer">Jue 22 oct · 10:00 a. m.</button></span>
+      </div>
+    </div>
+  </header>
+  <div style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 22px 20px 16px">
+    <section style="display: flex; flex-direction: column; gap: 14px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿A nombre de quién?</h1>
+      <div style="background: #EAF5F0; border-radius: 16px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; justify-content: space-between; font-size: 14px; line-height: 1.4">
+        <span style="display: flex; gap: 8px; align-items: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Usamos los datos que guardaste en este celular.</span></span>
+        <button onClick="{{forget}}" style="min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #0B6E4F; text-decoration: underline; cursor: pointer">Olvidar mis datos</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-name" style="font-size: 14px; font-weight: 600">Nombre completo</label>
+        <input id="p-name" type="text" autocomplete="name" placeholder="Ej. Mariana Gómez" value="{{name}}" onChange="{{onName}}" style="height: 52px; box-sizing: border-box; width: 100%; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-phone" style="font-size: 14px; font-weight: 600">Celular</label>
+        <div style="display: flex; gap: 8px">
+          <div aria-hidden="true" style="height: 52px; border-radius: 14px; background: #F3F6F4; padding: 0 14px; display: flex; align-items: center; font-weight: 600; font-size: 16px; flex-shrink: 0">+57</div>
+          <input id="p-phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; box-sizing: border-box; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-mail" style="font-size: 14px; font-weight: 600">Correo <span style="font-weight: 400; color: #56645D">(opcional)</span></label>
+        <input id="p-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; box-sizing: border-box; width: 100%; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+        <span style="font-size: 12px; color: #56645D">Si lo escribes, te enviamos la confirmación y el recordatorio.</span>
+      </div>
+      <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
+        <input id="p-agree" type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+        <span>Autorizo el tratamiento de mis datos personales para gestionar esta cita, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
+      </label>
+      <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
+        <input id="p-remember" type="checkbox" checked="{{remember}}" onChange="{{toggleRemember}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600; color: #15241D">Recordar mis datos en este celular <span style="font-weight: 500; color: #56645D">(opcional)</span></span><span>La próxima vez no tendrás que escribirlos. Solo quedan en este celular.</span></span>
+      </label>
+    </section>
+  </div>
+  <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF; flex-shrink: 0">
+    <button onClick="{{next}}" disabled="{{cantNext}}" style="{{nextStyle}}">{{nextLabel}}</button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({
+      name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '300 123 4567',
+      agree: false, remember: true
+    }, this.state || {});
+    let missing = '';
+    if (!st.name.trim()) missing = 'Escribe tu nombre para seguir';
+    else if (!st.phone.trim()) missing = 'Escribe tu celular para seguir';
+    else if (!st.agree) missing = 'Acepta la autorización para seguir';
+    const ok = !missing;
+    return {
+      name: st.name, email: st.email, phone: st.phone, agree: st.agree, remember: st.remember,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onPhone: (e) => this.setState({ phone: e.target.value }),
+      toggleAgree: () => this.setState({ agree: !st.agree }),
+      toggleRemember: () => this.setState({ remember: !st.remember }),
+      forget: () => this.setState({ name: '', email: '', phone: '', remember: false }),
+      cantNext: !ok,
+      next: () => {},
+      nextLabel: ok ? 'Siguiente' : missing,
+      nextStyle: 'height:56px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:17px;' + (ok ? 'background:#0B6E4F;color:#FFFFFF;cursor:pointer;' : 'background:#DCE3DF;color:#56645D;cursor:not-allowed;')
+    };
+  }
+}
+</script>
+</body>
+</html>

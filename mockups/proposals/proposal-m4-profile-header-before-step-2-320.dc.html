@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M-4 antes — paso 2 a 320 px con marca</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 320px; height: 568px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; overflow: hidden">
+  <header style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #E3E8E5; flex-shrink: 0">
+    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+      <button aria-label="Paso anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Dra. Laura Pérez</div>
+        <div style="font-size: 13px; color: #56645D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Odontóloga · El Poblado, Medellín</div>
+      </div>
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px; color: #0B6E4F; flex-shrink: 0">sepárame<span style="color: #E0A800">.</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px"><span style="height: 6px; border-radius: 999px; display: block; background: #0B6E4F"></span><span style="height: 6px; border-radius: 999px; display: block; background: #0B6E4F"></span><span style="height: 6px; border-radius: 999px; display: block; background: #E3E8E5"></span><span style="height: 6px; border-radius: 999px; display: block; background: #E3E8E5"></span></div>
+      <div style="font-size: 13px; font-weight: 600; color: #56645D">Paso 2 de 4 · Día y hora</div>
+      <div role="list" aria-label="Lo que elegiste" style="display: flex; gap: 6px; min-width: 0"><span style="display: flex; min-width: 0; flex-shrink: 1"><button aria-label="Cambiar servicio: Valoración · 30 min · $60.000" style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #EAF5F0; color: #084C37; font: inherit; font-size: 13px; font-weight: 600; min-width: 0; max-width: 100%; cursor: pointer"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Valoración · 30 min · $60.000</span></button></span></div>
+    </div>
+  </header>
+  <div style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 22px 20px 16px; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">¿Cuándo te sirve?</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+      <div style="display: flex; gap: 4px">
+        <button disabled aria-label="Semana anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; opacity: 0.4; display: flex; align-items: center; justify-content: center; cursor: default"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+        <button aria-label="Semana siguiente" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: #F3F6F4; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px"><button disabled aria-label="Martes 20, cerrado" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #F3F6F4; background: #F3F6F4; color: #5E6C65; cursor: default"><span style="font-size: 12px; font-weight: 600">Mar</span><span style="font-size: 18px; font-weight: 700">20</span></button><button aria-label="Miércoles 21" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D; cursor: pointer"><span style="font-size: 12px; font-weight: 600">Mié</span><span style="font-size: 18px; font-weight: 700">21</span></button><button aria-pressed="true" aria-label="Jueves 22" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #0B6E4F; background: #0B6E4F; color: #FFFFFF; cursor: pointer"><span style="font-size: 12px; font-weight: 600">Jue</span><span style="font-size: 18px; font-weight: 700">22</span></button><button aria-label="Viernes 23" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D; cursor: pointer"><span style="font-size: 12px; font-weight: 600">Vie</span><span style="font-size: 18px; font-weight: 700">23</span></button><button aria-label="Sábado 24" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D; cursor: pointer"><span style="font-size: 12px; font-weight: 600">Sáb</span><span style="font-size: 18px; font-weight: 700">24</span></button><button disabled aria-label="Domingo 25, cerrado" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #F3F6F4; background: #F3F6F4; color: #5E6C65; cursor: default"><span style="font-size: 12px; font-weight: 600">Dom</span><span style="font-size: 18px; font-weight: 700">25</span></button><button aria-label="Lunes 26" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0; border-radius: 14px; font: inherit; min-height: 64px; box-sizing: border-box; position: relative; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D; cursor: pointer"><span style="font-size: 12px; font-weight: 600">Lun</span><span style="font-size: 18px; font-weight: 700">26</span></button></div>
+    <div style="font-size: 14px; font-weight: 600; color: #56645D">Mañana</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: -4px"><button aria-pressed="false" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D">8:00 a. m.</button><button aria-pressed="false" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D">8:30 a. m.</button><button aria-pressed="false" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D">9:30 a. m.</button><button aria-pressed="true" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #FFC93C; background: #FFC93C; color: #15241D">10:00 a. m.</button><button aria-pressed="false" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D">10:30 a. m.</button><button aria-pressed="false" style="border-radius: 999px; font: inherit; font-weight: 600; font-size: 15px; min-height: 46px; cursor: pointer; border: 2px solid #E3E8E5; background: #FFFFFF; color: #15241D">11:30 a. m.</button></div>
+  </div>
+  <footer style="padding: 12px 16px 18px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 10px; background: #FFFFFF; flex-shrink: 0">
+    <button style="height: 56px; border-radius: 999px; border: 0; font: inherit; font-weight: 700; font-size: 17px; background: #0B6E4F; color: #FFFFFF; cursor: pointer; flex-shrink: 0">Siguiente</button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 320, "height": 568}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

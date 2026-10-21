@@ -72,10 +72,21 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         <div style="display: flex; flex-direction: column; gap: 8px">
           <div style="font-size: 14px; font-weight: 600">Duración</div>
           <div style="display: flex; flex-wrap: wrap; gap: 8px">
-            <sc-for list="{{durations}}" as="d" hint-placeholder-count="5">
+            <sc-for list="{{durations}}" as="d" hint-placeholder-count="10">
               <button onClick="{{d.pick}}" aria-pressed="{{d.selected}}" style="{{d.style}}">{{d.label}}</button>
             </sc-for>
+            <button onClick="{{pickOther}}" aria-pressed="{{otherOn}}" style="{{otherStyle}}">Otra</button>
           </div>
+          <sc-if value="{{otherOn}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <label for="svc-minutes" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Duración en minutos</label>
+                <input id="svc-minutes" type="text" inputmode="numeric" maxlength="3" placeholder="Ej. 75" style="height: 48px; width: 120px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+                <span style="font-size: 15px; font-weight: 600; color: #3E4C45">minutos</span>
+              </div>
+              <div style="font-size: 12px; color: #56645D">De 5 a 480 minutos, en múltiplos de 5.</div>
+            </div>
+          </sc-if>
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px">
           <label for="svc-price" style="font-size: 14px; font-weight: 600">Precio de referencia</label>
@@ -98,7 +109,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
 class Component extends DCLogic {
   renderVals() {
     const base = [
@@ -132,11 +143,14 @@ class Component extends DCLogic {
           knobStyle: 'width:26px;height:26px;border-radius:999px;background:#FFFFFF;display:block;'
         };
       }),
-      durations: [15, 30, 45, 60, 90].map((m) => ({
+      durations: [15, 20, 30, 45, 50, 60, 90, 120, 180, 240].map((m) => ({
         label: m + ' min', selected: curDur === m,
         pick: () => this.setState({ dur: m }),
         style: chip + (curDur === m ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
-      }))
+      })),
+      otherOn: curDur === 'other',
+      pickOther: () => this.setState({ dur: 'other' }),
+      otherStyle: chip + (curDur === 'other' ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
     };
   }
 }

@@ -14,7 +14,7 @@ body{margin:0}
 a{color:#0B6E4F}a:hover{color:#084C37}
 </style>
 </helmet>
-<div style="min-height: 980px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+<div style="position: relative; min-height: 980px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
 
   <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
     <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
@@ -95,24 +95,41 @@ a{color:#0B6E4F}a:hover{color:#084C37}
             <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Días bloqueados</h2>
             <a href="#" style="font-weight: 700; font-size: 14px">+ Agregar</a>
           </div>
-          <div style="background: #FFF4D1; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
-            <span style="font-weight: 700; font-size: 14px">Vacaciones</span>
-            <span style="font-size: 13px; color: #3E4C45">21 dic. 2026 – 4 ene. 2027</span>
-          </div>
-          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
-            <span style="font-weight: 700; font-size: 14px">Congreso de odontología</span>
-            <span style="font-size: 13px; color: #3E4C45">Viernes 13 nov., todo el día</span>
+          <sc-if value="{{showVacation}}" hint-placeholder-val="{{ false }}">
+            <div style="background: #FFF4D1; border-radius: 16px; padding: 12px 8px 12px 14px; display: flex; align-items: center; gap: 8px">
+              <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                <span style="font-weight: 700; font-size: 14px">Vacaciones</span>
+                <span style="font-size: 13px; color: #3E4C45">21 dic. 2026 – 4 ene. 2027</span>
+              </div>
+              <button onClick="{{removeVacation}}" aria-label="Quitar bloqueo «Vacaciones»" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </div>
+          </sc-if>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 8px 12px 14px; display: flex; align-items: center; gap: 8px">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+              <span style="font-weight: 700; font-size: 14px">Congreso de odontología</span>
+              <span style="font-size: 13px; color: #3E4C45">Viernes 13 nov., todo el día</span>
+            </div>
+            <button aria-label="Quitar bloqueo «Congreso de odontología»" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
           </div>
         </section>
       </div>
     </div>
   </main>
+  <sc-if value="{{showToast}}" hint-placeholder-val="{{ true }}">
+    <div role="status" aria-live="polite" style="position: absolute; right: 24px; bottom: 24px; left: 24px; display: flex; justify-content: flex-end; pointer-events: none">
+      <div style="pointer-events: auto; max-width: 420px; background: #15241D; color: #FFFFFF; border-radius: 16px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; font-size: 14px; font-weight: 600; line-height: 1.35; box-shadow: 0 10px 30px rgba(21,36,29,0.25)">
+        <span style="width: 28px; height: 28px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+        <span style="flex-grow: 1">Quitaste «Vacaciones». Ya se puede reservar en esas fechas.</span>
+        <button onClick="{{undo}}" style="min-height: 44px; margin: -8px 0; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-weight: 700; color: #FFC93C; cursor: pointer; flex-shrink: 0">Deshacer</button>
+      </div>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":980}}'>
+<script type="text/x-dc" data-dc-script data-props='{"blockRemoved":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":980}}'>
 class Component extends DCLogic {
   renderVals() {
-    const st = Object.assign({ closed: { 6: true }, holidays: true }, this.state || {});
+    const st = Object.assign({ closed: { 6: true }, holidays: true, removed: this.props.blockRemoved ?? true }, this.state || {});
     const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Suscripción'];
     const hrefs = ['pro-agenda-day.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'pro-services.dc.html', 'pro-availability.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'pro-billing-plans.dc.html'];
     const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
@@ -137,6 +154,10 @@ class Component extends DCLogic {
         { label: 'Anticipación mínima', help: 'Nadie reserva para dentro de menos', value: '2 horas' },
         { label: 'Reservar hasta', help: 'Qué tan adelante ven tu agenda', value: '60 días' }
       ],
+      showVacation: !st.removed,
+      showToast: st.removed,
+      removeVacation: () => this.setState({ removed: true }),
+      undo: () => this.setState({ removed: false }),
       holidays: st.holidays,
       toggleHolidays: () => this.setState({ holidays: !st.holidays }),
       holidaySwitch: sw(st.holidays),
