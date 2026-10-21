@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cita confirmada — línea C</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#D4FF3A}a:hover{color:#E6FF85}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #0F0F10; font-family: 'DM Sans', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 22px 20px 24px; gap: 24px">
+  <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px">sepárame<span style="color: #D4FF3A">/</span>laura</div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <span style="align-self: flex-start; font-size: 12px; font-weight: 700; color: #0F0F10; background: #D4FF3A; padding: 5px 10px; border-radius: 999px">Confirmada</span>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 46px; line-height: 0.98; letter-spacing: -1.8px">Jue 22 oct.<br>10:00 a. m.</h1>
+    <div style="font-size: 16px; color: #C9C9CF">Valoración · 30 min con la Dra. Laura Pérez</div>
+  </div>
+
+  <div style="background: #1C1C1F; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+    <div style="display: flex; gap: 10px; align-items: flex-start; line-height: 1.4">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4FF3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      <span>Cra. 43A #1-50, consultorio 302, El Poblado, Medellín</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: flex-start; line-height: 1.4">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4FF3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>
+      <span>Confirmación enviada a mariana@correo.com. Recordatorio 24 h antes.</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <a href="#" style="min-height: 56px; border-radius: 16px; background: #FFFFFF; color: #0F0F10; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-weight: 700; font-size: 15px; text-decoration: none">Agregar a Google Calendar
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg>
+    </a>
+    <a href="#" style="min-height: 56px; border-radius: 16px; background: #FFFFFF; color: #0F0F10; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-weight: 700; font-size: 15px; text-decoration: none">Agregar a Outlook
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg>
+    </a>
+    <a href="#" style="min-height: 56px; border-radius: 16px; border: 1.5px solid #3F3F46; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-weight: 700; font-size: 15px; text-decoration: none">Descargar .ics
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"></path></svg>
+    </a>
+  </div>
+
+  <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-size: 14px">
+    <a href="#" style="font-weight: 700">Cancelar o mover</a>
+    <a href="client-booking.dc.html" style="color: #C9C9CF">Volver</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

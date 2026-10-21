@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reserva — línea B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1E4FD8}a:hover{color:#163BA3}
+</style>
+</helmet>
+<div style="width: 390px; height: 1640px; box-sizing: border-box; background: #F4F6FA; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0E1B33; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #FFFFFF; border-bottom: 1px solid #D9E0EA; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; color: #0E2A5C">
+      <span style="width: 28px; height: 28px; border-radius: 7px; background: #0E2A5C; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8.5 13.5l2.5 2.5 4.5-5"></path></svg>
+      </span>
+      Sepárame
+    </div>
+    <div style="font-size: 13px; color: #4A5A73; display: flex; align-items: center; gap: 6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Reserva segura
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; padding: 22px 20px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid #D9E0EA">
+    <div style="width: 60px; height: 60px; border-radius: 10px; background: #E8EEFC; color: #1E4FD8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; flex-shrink: 0">LP</div>
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <h1 style="margin: 0; font-weight: 700; font-size: 21px; line-height: 1.2">Dra. Laura Pérez</h1>
+      <div style="font-size: 14px; color: #4A5A73">Odontóloga · Universidad de Antioquia</div>
+      <div style="font-size: 13px; color: #4A5A73">Cra. 43A #1-50, cons. 302 · Medellín</div>
+    </div>
+  </div>
+
+  <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; flex-grow: 1">
+
+    <section style="background: #FFFFFF; border: 1px solid #D9E0EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 10px; align-items: center"><span style="width: 24px; height: 24px; border-radius: 999px; background: #1E4FD8; color: #FFFFFF; font-size: 13px; display: flex; align-items: center; justify-content: center">1</span>Seleccione el servicio</h2>
+      <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+        <button onClick="{{s.pick}}" aria-pressed="{{s.selected}}" style="{{s.cardStyle}}">
+          <span style="{{s.dotStyle}}"></span>
+          <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <span style="font-weight: 600; font-size: 15px">{{s.name}}</span>
+            <span style="font-size: 13px; color: #4A5A73">{{s.dur}}</span>
+          </span>
+          <span style="font-weight: 600; font-size: 14px">{{s.price}}</span>
+        </button>
+      </sc-for>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid #D9E0EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 10px; align-items: center"><span style="width: 24px; height: 24px; border-radius: 999px; background: #1E4FD8; color: #FFFFFF; font-size: 13px; display: flex; align-items: center; justify-content: center">2</span>Elija la fecha</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <button aria-label="Mes anterior" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #D9E0EA; background: #FFFFFF; color: #0E1B33; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+        <div style="font-weight: 600; font-size: 15px">Octubre de 2026</div>
+        <button aria-label="Mes siguiente" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid #D9E0EA; background: #FFFFFF; color: #0E1B33; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 12px; font-weight: 600; color: #4A5A73">
+        <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+          <button onClick="{{c.pick}}" disabled="{{c.disabled}}" aria-pressed="{{c.selected}}" aria-label="{{c.aria}}" style="{{c.style}}">{{c.num}}</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #4A5A73">
+        <span style="display: flex; gap: 6px; align-items: center"><span style="width: 10px; height: 10px; border-radius: 3px; background: #E8EEFC"></span>Con disponibilidad</span>
+        <span style="display: flex; gap: 6px; align-items: center"><span style="width: 10px; height: 10px; border-radius: 3px; background: #F4F6FA; border: 1px solid #D9E0EA"></span>Sin atención o festivo</span>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid #D9E0EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 10px; align-items: center"><span style="width: 24px; height: 24px; border-radius: 999px; background: #1E4FD8; color: #FFFFFF; font-size: 13px; display: flex; align-items: center; justify-content: center">3</span>Elija la hora</h2>
+      <div style="font-size: 13px; color: #4A5A73">{{dayLabel}} · hora de Colombia</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{slots}}" as="t" hint-placeholder-count="12">
+          <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid #D9E0EA; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700; display: flex; gap: 10px; align-items: center"><span style="width: 24px; height: 24px; border-radius: 999px; background: #1E4FD8; color: #FFFFFF; font-size: 13px; display: flex; align-items: center; justify-content: center">4</span>Sus datos</h2>
+      <div style="display: flex; flex-direction: column; gap: 5px">
+        <label for="b-name" style="font-size: 13px; font-weight: 600">Nombre completo</label>
+        <input id="b-name" type="text" placeholder="Nombre y apellido" style="height: 46px; border-radius: 8px; border: 1px solid #B8C3D3; padding: 0 12px; font: inherit; font-size: 15px; color: #0E1B33; background: #FFFFFF">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px">
+        <label for="b-mail" style="font-size: 13px; font-weight: 600">Correo electrónico</label>
+        <input id="b-mail" type="email" placeholder="nombre@correo.com" style="height: 46px; border-radius: 8px; border: 1px solid #B8C3D3; padding: 0 12px; font: inherit; font-size: 15px; color: #0E1B33; background: #FFFFFF">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px">
+        <label for="b-phone" style="font-size: 13px; font-weight: 600">Teléfono celular</label>
+        <input id="b-phone" type="tel" placeholder="+57 300 123 4567" style="height: 46px; border-radius: 8px; border: 1px solid #B8C3D3; padding: 0 12px; font: inherit; font-size: 15px; color: #0E1B33; background: #FFFFFF">
+      </div>
+      <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; line-height: 1.5; color: #4A5A73; cursor: pointer">
+        <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 20px; height: 20px; margin: 0; accent-color: #1E4FD8; flex-shrink: 0">
+        <span>Autorizo el tratamiento de mis datos personales conforme a la Ley 1581 de 2012 y la <a href="#">política de privacidad</a>.</span>
+      </label>
+    </section>
+
+    <div style="background: #0E2A5C; color: #FFFFFF; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 12px; color: #B9C8E8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600">Resumen</div>
+        <div style="font-weight: 600; font-size: 15px">{{summaryService}}</div>
+        <div style="font-size: 14px; color: #DCE4F5">{{summaryWhen}}</div>
+      </div>
+      <a href="client-booking-confirmed.dc.html" style="height: 50px; border-radius: 8px; background: #FFFFFF; color: #0E2A5C; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; text-decoration: none">Confirmar cita</a>
+    </div>
+
+    <div style="margin-top: auto; text-align: center; font-size: 12px; color: #4A5A73">Agenda gestionada con Sepárame · <a href="#">Términos</a></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ service: 0, day: 22, slot: 3, agree: true }, this.state || {});
+    const services = [
+      { name: 'Valoración', dur: '30 minutos', price: '$60.000' },
+      { name: 'Limpieza dental', dur: '45 minutos', price: '$120.000' },
+      { name: 'Control', dur: '15 minutos', price: 'Sin costo' }
+    ];
+    const cardBase = 'display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:8px;font:inherit;color:inherit;cursor:pointer;min-height:60px;box-sizing:border-box;';
+    const weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    // October 2026 starts on a Thursday (index 3 with Monday first).
+    const cells = [];
+    for (let i = 0; i < 3; i++) cells.push({ num: '', disabled: true, style: 'visibility:hidden;min-height:44px;', aria: 'vacío' });
+    const cellBase = 'min-height:44px;border-radius:8px;font:inherit;font-size:14px;border:1px solid;';
+    for (let d = 1; d <= 31; d++) {
+      const dow = (3 + d - 1) % 7;
+      const off = d <= 20 || dow === 6;
+      const selected = st.day === d;
+      let style = cellBase;
+      if (off) style += 'background:#F4F6FA;border-color:#F4F6FA;color:#6A7891;cursor:default;';
+      else if (selected) style += 'background:#1E4FD8;border-color:#1E4FD8;color:#FFFFFF;font-weight:700;cursor:pointer;';
+      else style += 'background:#E8EEFC;border-color:#E8EEFC;color:#0E2A5C;font-weight:600;cursor:pointer;';
+      cells.push({ num: String(d), disabled: off, selected, style, aria: weekdays[dow] + ' ' + d + ' de octubre', pick: off ? undefined : () => this.setState({ day: d }) });
+    }
+    cells.push({ num: '', disabled: true, style: 'visibility:hidden;min-height:44px;', aria: 'vacío' });
+    const labels = ['8:00 a. m.', '8:30 a. m.', '9:30 a. m.', '10:00 a. m.', '10:30 a. m.', '11:30 a. m.', '2:00 p. m.', '2:30 p. m.', '3:00 p. m.', '4:00 p. m.', '4:30 p. m.', '5:30 p. m.'];
+    const slotBase = 'min-height:44px;border-radius:8px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1px solid;';
+    const dayDow = weekdays[(3 + st.day - 1) % 7];
+    const svc = services[st.service];
+    return {
+      agree: st.agree,
+      toggleAgree: () => this.setState({ agree: !st.agree }),
+      services: services.map((s, i) => {
+        const selected = st.service === i;
+        return Object.assign({}, s, {
+          selected,
+          pick: () => this.setState({ service: i }),
+          cardStyle: cardBase + (selected ? 'border:1.5px solid #1E4FD8;background:#F2F5FD;' : 'border:1px solid #D9E0EA;background:#FFFFFF;'),
+          dotStyle: 'width:20px;height:20px;border-radius:999px;flex-shrink:0;box-sizing:border-box;' + (selected ? 'border:6px solid #1E4FD8;background:#FFFFFF;' : 'border:1.5px solid #8C99AE;background:#FFFFFF;')
+        });
+      }),
+      cells,
+      slots: labels.map((label, i) => {
+        const selected = st.slot === i;
+        return { label, selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#1E4FD8;border-color:#1E4FD8;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#B8C3D3;color:#0E1B33;') };
+      }),
+      dayLabel: dayDow + ' ' + st.day + ' de octubre',
+      summaryService: svc.name + ' · ' + svc.dur + ' · ' + svc.price,
+      summaryWhen: dayDow + ' ' + st.day + ' de octubre de 2026, ' + labels[st.slot]
+    };
+  }
+}
+</script>
+</body>
+</html>

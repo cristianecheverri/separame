@@ -111,7 +111,7 @@ class Component extends DCLogic {
   renderVals() {
     const st = Object.assign({ closed: { 6: true }, holidays: true }, this.state || {});
     const navItems = ['Agenda', 'Citas', 'Servicios', 'Disponibilidad', 'Perfil público', 'Suscripción'];
-    const hrefs = ['pro-agenda-day.dc.html', '#', 'pro-services.dc.html', 'pro-availability.dc.html', 'Main.dc.html', 'pro-billing-plans.dc.html'];
+    const hrefs = ['pro-agenda-day.dc.html', '#', 'pro-services.dc.html', 'pro-availability.dc.html', 'client-booking-single-page.dc.html', 'pro-billing-plans.dc.html'];
     const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
     const sw = (on) => 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;box-sizing:border-box;' + (on ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;');
     const weekday = ['8:00 a. m. – 12:00 m.', '2:00 p. m. – 6:00 p. m.'];

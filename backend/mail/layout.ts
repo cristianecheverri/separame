@@ -2,7 +2,7 @@ import brand from '../../shared/brand.json';
 
 /**
  * Email-safe building blocks for the line A look (see
- * `mockups/email-booking-confirmed.dc.html`): nested tables, inline styles,
+ * `mockups/line-a/email-booking-confirmed.dc.html`): nested tables, inline styles,
  * Bricolage Grotesque / Figtree with Arial fallbacks (most clients drop web
  * fonts), green header band with the "sepárame." wordmark, soft-green
  * details card, pill buttons and the yellow note. Every interpolated value

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reserva — línea C</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#5B3DF5}a:hover{color:#4327D6}
+</style>
+</helmet>
+<div style="width: 390px; height: 1640px; box-sizing: border-box; background: #FFFFFF; font-family: 'DM Sans', system-ui, sans-serif; color: #0F0F10; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #0F0F10; color: #FFFFFF; padding: 18px 20px 26px; display: flex; flex-direction: column; gap: 26px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px">sepárame<span style="color: #D4FF3A">/</span>laura</div>
+      <span style="font-size: 12px; font-weight: 700; color: #0F0F10; background: #D4FF3A; padding: 5px 10px; border-radius: 999px">Odontología</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: -1.5px">Separa tu hora con la Dra. Laura Pérez.</h1>
+    <div style="display: flex; gap: 10px; align-items: center; font-size: 14px; color: #C9C9CF">
+      <div style="width: 40px; height: 40px; border-radius: 12px; background: #5B3DF5; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; flex-shrink: 0">LP</div>
+      <span>El Poblado, Medellín · Cra. 43A #1-50, cons. 302</span>
+    </div>
+  </div>
+
+  <div style="padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 30px; flex-grow: 1">
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #52525B">01 — Servicio</h2>
+      <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+        <button onClick="{{s.pick}}" aria-pressed="{{s.selected}}" style="{{s.cardStyle}}">
+          <span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+            <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px">{{s.name}}</span>
+            <span style="{{s.subStyle}}">{{s.dur}} · {{s.price}}</span>
+          </span>
+          <span style="{{s.markStyle}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+          </span>
+        </button>
+      </sc-for>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #52525B">02 — Día</h2>
+        <span style="font-size: 13px; color: #52525B">Próximos 14 días</span>
+      </div>
+      <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-right: -20px; padding-right: 20px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="14">
+          <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" style="{{d.style}}">
+            <span style="font-size: 12px; font-weight: 500">{{d.dow}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700">{{d.num}}</span>
+            <span style="font-size: 10px; font-weight: 700; min-height: 12px">{{d.note}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #52525B">03 — Hora</h2>
+        <span style="font-size: 13px; color: #52525B">{{dayLabel}}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{slots}}" as="t" hint-placeholder-count="12">
+          <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #52525B">04 — Tus datos</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="c-name" style="font-size: 14px; font-weight: 500">Nombre</label>
+        <input id="c-name" type="text" placeholder="Mariana Gómez" style="height: 52px; border-radius: 14px; border: 0; background: #F4F4F5; padding: 0 16px; font: inherit; font-size: 16px; color: #0F0F10">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="c-mail" style="font-size: 14px; font-weight: 500">Correo</label>
+        <input id="c-mail" type="email" placeholder="mariana@correo.com" style="height: 52px; border-radius: 14px; border: 0; background: #F4F4F5; padding: 0 16px; font: inherit; font-size: 16px; color: #0F0F10">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="c-phone" style="font-size: 14px; font-weight: 500">Celular</label>
+        <input id="c-phone" type="tel" placeholder="+57 300 123 4567" style="height: 52px; border-radius: 14px; border: 0; background: #F4F4F5; padding: 0 16px; font: inherit; font-size: 16px; color: #0F0F10">
+      </div>
+      <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3F3F46; cursor: pointer">
+        <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #5B3DF5; flex-shrink: 0">
+        <span>Acepto el tratamiento de mis datos (Ley 1581 de 2012). <a href="#">Política de privacidad</a></span>
+      </label>
+    </section>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="client-booking-confirmed.dc.html" style="min-height: 64px; border-radius: 18px; background: #0F0F10; color: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 10px 0 20px; text-decoration: none">
+        <span style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px">Separar · {{summaryShort}}</span>
+          <span style="font-size: 13px; color: #C9C9CF">{{summaryService}}</span>
+        </span>
+        <span style="width: 46px; height: 46px; border-radius: 12px; background: #D4FF3A; color: #0F0F10; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </span>
+      </a>
+      <div style="font-size: 13px; color: #52525B; text-align: center">Sin cuenta, sin llamadas. Confirmación al correo.</div>
+    </div>
+
+    <div style="margin-top: auto; text-align: center; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #52525B">hecho con sepárame<span style="color: #5B3DF5">/</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ service: 0, day: 2, slot: 3, agree: true }, this.state || {});
+    const services = [
+      { name: 'Valoración', dur: '30 min', price: '$60.000' },
+      { name: 'Limpieza dental', dur: '45 min', price: '$120.000' },
+      { name: 'Control', dur: '15 min', price: 'sin costo' }
+    ];
+    const cardBase = 'display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 16px 16px 18px;border-radius:16px;font:inherit;cursor:pointer;min-height:72px;box-sizing:border-box;border:1.5px solid;';
+    const days = [
+      ['Mar', '20', 'Hoy', true, 'martes 20 oct.'], ['Mié', '21', '', false, 'miércoles 21 oct.'], ['Jue', '22', '', false, 'jueves 22 oct.'],
+      ['Vie', '23', '', false, 'viernes 23 oct.'], ['Sáb', '24', '', false, 'sábado 24 oct.'], ['Dom', '25', '', true, 'domingo 25 oct.'],
+      ['Lun', '26', '', false, 'lunes 26 oct.'], ['Mar', '27', '', false, 'martes 27 oct.'], ['Mié', '28', '', false, 'miércoles 28 oct.'],
+      ['Jue', '29', '', false, 'jueves 29 oct.'], ['Vie', '30', '', false, 'viernes 30 oct.'], ['Sáb', '31', '', false, 'sábado 31 oct.'],
+      ['Dom', '1', '', true, 'domingo 1 nov.'], ['Lun', '2', 'Festivo', true, 'lunes 2 nov.']
+    ];
+    const dayBase = 'flex:0 0 58px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 0 8px;border-radius:14px;font:inherit;border:1.5px solid;';
+    const labels = ['8:00', '8:30', '9:30', '10:00', '10:30', '11:30', '2:00', '2:30', '3:00', '4:00', '4:30', '5:30'];
+    const full = (i) => labels[i] + (i < 6 ? ' a. m.' : ' p. m.');
+    const slotBase = 'min-height:48px;border-radius:12px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;border:1.5px solid;';
+    const svc = services[st.service];
+    return {
+      agree: st.agree,
+      toggleAgree: () => this.setState({ agree: !st.agree }),
+      services: services.map((s, i) => {
+        const selected = st.service === i;
+        return Object.assign({}, s, {
+          selected,
+          pick: () => this.setState({ service: i }),
+          cardStyle: cardBase + (selected ? 'background:#0F0F10;border-color:#0F0F10;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E4E4E7;color:#0F0F10;'),
+          subStyle: 'font-size:14px;' + (selected ? 'color:#C9C9CF;' : 'color:#52525B;'),
+          markStyle: 'width:28px;height:28px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;' + (selected ? 'background:#D4FF3A;color:#0F0F10;' : 'background:#F4F4F5;color:#F4F4F5;')
+        });
+      }),
+      days: days.map((d, i) => {
+        const selected = st.day === i;
+        let style = dayBase;
+        if (d[3]) style += 'background:#F4F4F5;border-color:#F4F4F5;color:#6B6B73;cursor:default;';
+        else if (selected) style += 'background:#5B3DF5;border-color:#5B3DF5;color:#FFFFFF;cursor:pointer;';
+        else style += 'background:#FFFFFF;border-color:#E4E4E7;color:#0F0F10;cursor:pointer;';
+        return { dow: d[0], num: d[1], note: d[2], disabled: d[3], selected, style, pick: d[3] ? undefined : () => this.setState({ day: i }) };
+      }),
+      slots: labels.map((l, i) => {
+        const selected = st.slot === i;
+        return { label: full(i), selected, pick: () => this.setState({ slot: i }), style: slotBase + (selected ? 'background:#5B3DF5;border-color:#5B3DF5;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E4E4E7;color:#0F0F10;') };
+      }),
+      dayLabel: days[st.day][4],
+      summaryShort: days[st.day][0].toLowerCase() + ' ' + days[st.day][1] + ', ' + full(st.slot),
+      summaryService: svc.name + ' · ' + svc.dur
+    };
+  }
+}
+</script>
+</body>
+</html>
