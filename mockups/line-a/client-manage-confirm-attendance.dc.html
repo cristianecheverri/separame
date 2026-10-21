@@ -28,7 +28,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 
   <div style="display: flex; flex-direction: column; gap: 16px; flex-grow: 1">
     <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">Hola, Mariana. ¿Qué quieres hacer con tu cita?</h1>
-    <a href="client-manage-attendance-confirmed.dc.html" style="height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 16px; text-decoration: none">
+    <a href="client-manage-attendance-confirmed.dc.html" style="{{confirmStyle}}">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
       Confirmar asistencia
     </a>
@@ -44,10 +44,14 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"fromEmail":{"editor":"boolean","default":true},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
-    return {};
+    // Opened from the reminder's "Sí, voy" (?action=confirm): the button is focused and ringed
+    // (ring-4 ring-accent ring-offset-2); it never confirms on its own, one tap is still required.
+    const fromEmail = this.props.fromEmail ?? true;
+    const base = 'height:56px;border-radius:999px;background:#0B6E4F;color:#FFFFFF;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16px;text-decoration:none;';
+    return { confirmStyle: base + (fromEmail ? 'box-shadow:0 0 0 2px #FFFFFF,0 0 0 6px #FFC93C;' : '') };
   }
 }
 </script>

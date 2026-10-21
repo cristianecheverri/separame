@@ -29,6 +29,7 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | Archivo | Pantalla | Nombre original |
 |---|---|---|
 | `client-booking-steps.dc.html` | Reserva por pasos (servicio → día y hora → datos → confirmar). **Es la implementada.** En «Tus datos»: Nombre, Celular (obligatorio) y Correo (opcional) | `Pasos` |
+| `client-booking-steps-captcha-hint.dc.html` | Paso 4 con la verificación y el aviso «Confirma que eres una persona ↑» (importa `client-booking-steps`) | `client-booking-steps-captcha-hint` |
 | `client-booking-steps-at-step-{2,3,4}.dc.html` | El mismo flujo abierto en el paso 2, 3 y 4 (importa `client-booking-steps`) | `Pasos-2/3/4` |
 | `client-booking-single-page.dc.html` | Reserva en una sola página (referencia del encabezado del perfil) | `Main` |
 | `client-booking-confirmed.dc.html` | Cita confirmada | `A-Confirmada` |
@@ -49,11 +50,12 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `client-booking-single-service.dc.html` | Reserva cuando hay un solo servicio: 3 pasos con la fila de chips de la selección (interactivo, tweak `step`) | `client-booking-single-service` |
 | `client-booking-single-service-at-step-{2,3}.dc.html` | El mismo flujo abierto en "Tus datos" y "Confirmar" (importa `client-booking-single-service`) | `client-booking-single-service-at-step-2/3` |
 | `client-waitlist-full-day.dc.html` | Día lleno: tarjeta "¿No encuentras hora?" | `client-waitlist-full-day` |
-| `client-waitlist-join.dc.html` | Lista de espera: elegir días y datos (aquí el correo sí es obligatorio) | `client-waitlist-join` |
+| `client-waitlist-join.dc.html` | Lista de espera: solo días llenos en filas de 7 días (semanas sin días llenos se omiten); Nombre, Celular y Correo (aquí sí obligatorio) | `client-waitlist-join` |
 | `client-waitlist-joined.dc.html` | Lista de espera: listo, te avisaremos | `client-waitlist-joined` |
-| `client-manage-confirm-attendance.dc.html` | Gestionar cita con el botón "Confirmar asistencia" | `client-manage-confirm-attendance` |
+| `client-manage-confirm-attendance.dc.html` | Gestionar cita con el botón "Confirmar asistencia" (abierto desde el correo: resaltado en amarillo, no confirma solo) | `client-manage-confirm-attendance` |
 | `client-manage-attendance-confirmed.dc.html` | "¡Gracias! Confirmaste tu asistencia" (y el menú después de confirmar) | `client-manage-attendance-confirmed` |
-| `client-waitlist-leave.dc.html` | Salir de la lista de espera (`/w/`) | `client-waitlist-leave` |
+| `client-waitlist-leave.dc.html` | Salir de la lista de espera (`/w/`): pregunta «¿Quieres salir de la lista de espera?» con «Sí, sácame de la lista» | `client-waitlist-leave` |
+| `client-waitlist-left.dc.html` | Lista de espera: ya saliste | `client-waitlist-left` |
 | `email-reminder-confirm-attendance.dc.html` | Correo de recordatorio "¿Confirmas tu asistencia?" con "Sí, voy" (tweak: ya confirmó) | `email-reminder-confirm-attendance` |
 | `email-waitlist-joined.dc.html` | Correo de lista de espera: "Te avisaremos…" | `email-waitlist-joined` |
 | `email-waitlist-offer.dc.html` | Correo de lista de espera: "Se liberó un cupo" | `email-waitlist-offer` |

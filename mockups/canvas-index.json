@@ -347,7 +347,7 @@
       "h": 844,
       "page": "linea-a",
       "radius": 28,
-      "title": "Cliente — Salir de la lista de espera (/w/)",
+      "title": "Cliente — ¿Salir de la lista de espera? (/w/)",
       "w": 390,
       "x": 3760,
       "y": 7190
@@ -1071,6 +1071,25 @@
       "y": 32547,
       "expand": "fill",
       "is_interactive": true
+    },
+    "client-waitlist-left.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "radius": 28,
+      "title": "Cliente — Saliste de la lista de espera",
+      "w": 390,
+      "x": 4700,
+      "y": 7190
+    },
+    "client-booking-steps-captcha-hint.dc.html": {
+      "h": 844,
+      "page": "linea-a",
+      "radius": 28,
+      "title": "Por pasos — 4 · Confirmar con aviso «Confirma que eres una persona ↑»",
+      "w": 390,
+      "x": 5170,
+      "y": 7190,
+      "is_interactive": true
     }
   },
   "createdOnFiles": {
@@ -1139,7 +1158,7 @@
     },
     "rowClienteNew": {
       "kind": "title1",
-      "maxW": 4620,
+      "maxW": 5560,
       "page": "linea-a",
       "text": "Cliente — novedades: un solo servicio, lista de espera y confirmar asistencia",
       "w": 240,
@@ -1475,7 +1494,9 @@
     "referral-signup-invited-desktop.dc.html",
     "referral-signup-invited-phone.dc.html",
     "referral-email-month-earned.dc.html",
-    "referral-admin-pro-detail.dc.html"
+    "referral-admin-pro-detail.dc.html",
+    "client-waitlist-left.dc.html",
+    "client-booking-steps-captcha-hint.dc.html"
   ],
   "pages": [
     {

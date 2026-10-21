@@ -49,7 +49,7 @@ body{margin:0}
             <span style="{{s.dotStyle}}"></span>
             <span style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
               <span style="font-weight: 700; font-size: 17px">{{s.name}}</span>
-              <span style="font-size: 14px; color: #56645D">{{s.dur}} · {{s.desc}}</span>
+              <span style="font-size: 14px; color: #56645D; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">{{s.dur}} · {{s.desc}}</span>
             </span>
             <span style="font-weight: 700; font-size: 15px">{{s.price}}</span>
           </button>
@@ -143,6 +143,14 @@ body{margin:0}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
           <span>Cra. 43A #1-50, consultorio 302, El Poblado</span>
         </div>
+        <sc-if value="{{showCaptcha}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; justify-content: center">
+            <div aria-label="Verificación anti-spam (la dibuja Cloudflare)" style="width: 300px; max-width: 100%; height: 65px; box-sizing: border-box; border: 1px solid #D0D5D2; border-radius: 4px; background: #FAFAFA; display: flex; align-items: center; gap: 12px; padding: 0 14px; font-size: 14px; color: #3E4C45">
+              <span aria-hidden="true" style="width: 24px; height: 24px; border: 2px solid #8A968F; border-radius: 3px; background: #FFFFFF; flex-shrink: 0"></span>
+              <span>Verifica que eres un ser humano</span>
+            </div>
+          </div>
+        </sc-if>
       </section>
     </sc-if>
   </div>
@@ -157,13 +165,17 @@ body{margin:0}
     <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}">
       <button onClick="{{next}}" disabled="{{cantNext}}" style="{{nextStyle}}">{{nextLabel}}</button>
     </sc-if>
-    <sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{showCaptcha}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="text-align: center; font-size: 14px; font-weight: 600; color: #3E4C45">Confirma que eres una persona <span aria-hidden="true">↑</span></div>
+      <button aria-busy="true" aria-disabled="true" style="height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; opacity: 0.8; cursor: progress; font: inherit; font-weight: 700; font-size: 17px">Separando tu cita…</button>
+    </sc-if>
+    <sc-if value="{{submitReady}}" hint-placeholder-val="{{ false }}">
       <a href="client-booking-confirmed.dc.html" style="height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; text-decoration: none">Separar mi cita</a>
     </sc-if>
   </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["1","2","3","4"],"default":"1"},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"enum","options":["1","2","3","4"],"default":"1"},"captchaHint":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
   renderVals() {
     const init = Math.min(4, Math.max(1, Number(this.props.step || 1)));
@@ -225,6 +237,9 @@ class Component extends DCLogic {
       step: st.step,
       stepName: names[st.step - 1],
       is1: st.step === 1, is2: st.step === 2, is3: st.step === 3, is4: st.step === 4,
+      // Turnstile asked for a click while submitting: the widget shows under the address and the footer says so.
+      showCaptcha: st.step === 4 && !!this.props.captchaHint,
+      submitReady: st.step === 4 && !this.props.captchaHint,
       notLast: st.step < 4,
       showBack: st.step > 1,
       showAvatar: st.step === 1,

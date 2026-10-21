@@ -31,25 +31,25 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.1; letter-spacing: -0.6px">Te avisamos si se libera un cupo</h1>
     <p style="margin: 0; font-size: 15px; color: #3E4C45; line-height: 1.45">Elige hasta 7 días que te sirvan para Valoración. Si alguien cancela, te escribimos para que separes primero.</p>
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
-      <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre 2026</span>
+      <span style="font-size: 14px; font-weight: 600; color: #56645D">Octubre – Noviembre 2026</span>
       <span aria-live="polite" style="font-size: 14px; font-weight: 600; color: #56645D">{{count}} de 7</span>
     </div>
     <div role="group" aria-label="Días que te sirven" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
-      <sc-for list="{{days}}" as="d" hint-placeholder-count="11">
-        <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" aria-label="{{d.label}}" style="{{d.style}}">
-          <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
-          <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
-        </button>
+      <sc-for list="{{cells}}" as="d" hint-placeholder-count="14">
+        <sc-if value="{{d.empty}}" hint-placeholder-val="{{ false }}">
+          <span aria-hidden="true"></span>
+        </sc-if>
+        <sc-if value="{{d.day}}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{d.pick}}" disabled="{{d.disabled}}" aria-pressed="{{d.selected}}" aria-label="{{d.label}}" style="{{d.style}}">
+            <span style="font-size: 12px; font-weight: 600">{{d.dow}}</span>
+            <span style="font-size: 18px; font-weight: 700">{{d.num}}</span>
+          </button>
+        </sc-if>
       </sc-for>
     </div>
     <div style="display: flex; flex-direction: column; gap: 6px">
       <label for="w-name" style="font-size: 14px; font-weight: 600">Nombre completo</label>
       <input id="w-name" type="text" autocomplete="name" placeholder="Ej. Mariana Gómez" value="{{name}}" onChange="{{onName}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="w-mail" style="font-size: 14px; font-weight: 600">Correo</label>
-      <input id="w-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
-      <span style="font-size: 12px; color: #56645D">Te avisamos por correo si se libera un cupo.</span>
     </div>
     <div style="display: flex; flex-direction: column; gap: 6px">
       <label for="w-phone" style="font-size: 14px; font-weight: 600">Celular</label>
@@ -58,9 +58,14 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         <input id="w-phone" type="tel" autocomplete="tel-national" placeholder="300 123 4567" value="{{phone}}" onChange="{{onPhone}}" style="height: 52px; flex-grow: 1; min-width: 0; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
       </div>
     </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="w-mail" style="font-size: 14px; font-weight: 600">Correo</label>
+      <input id="w-mail" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" value="{{email}}" onChange="{{onEmail}}" style="height: 52px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+      <span style="font-size: 12px; color: #56645D">Te avisamos por correo si se libera un cupo.</span>
+    </div>
     <label style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3E4C45; cursor: pointer">
       <input type="checkbox" checked="{{agree}}" onChange="{{toggleAgree}}" style="width: 22px; height: 22px; margin: 0; accent-color: #0B6E4F; flex-shrink: 0">
-      <span>Autorizo el tratamiento de mis datos personales para gestionar esta cita, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
+      <span>Autorizo el tratamiento de mis datos personales para avisarme si se libera un cupo, según la <a href="#" style="color: #0B6E4F">política de privacidad</a> (Ley 1581 de 2012).</span>
     </label>
   </section>
 
@@ -78,11 +83,11 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 class Component extends DCLogic {
   renderVals() {
     const st = Object.assign({ picked: ['20', '22'], name: '', email: '', phone: '', agree: false }, this.state || {});
-    const all = [
-      ['Mar', '20', 'Martes 20 de octubre'], ['Mié', '21', 'Miércoles 21 de octubre'], ['Jue', '22', 'Jueves 22 de octubre'],
-      ['Vie', '23', 'Viernes 23 de octubre'], ['Sáb', '24', 'Sábado 24 de octubre'], ['Lun', '26', 'Lunes 26 de octubre'],
-      ['Mar', '27', 'Martes 27 de octubre'], ['Mié', '28', 'Miércoles 28 de octubre'], ['Jue', '29', 'Jueves 29 de octubre'],
-      ['Vie', '30', 'Viernes 30 de octubre'], ['Sáb', '31', 'Sábado 31 de octubre']
+    // Same 7-day rows as "Día y hora" (window starts Tue 20). Only FULL open days are offered;
+    // the week of 27 oct – 2 nov has none, so it is skipped.
+    const weeks = [
+      [['Mar', '20', 'Martes 20 de octubre'], null, ['Jue', '22', 'Jueves 22 de octubre'], ['Vie', '23', 'Viernes 23 de octubre'], null, null, null],
+      [null, ['Mié', '4', 'Miércoles 4 de noviembre'], null, null, ['Sáb', '7', 'Sábado 7 de noviembre'], null, null]
     ];
     const max = 7;
     const dayBase = 'display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:14px;font:inherit;min-height:64px;border:2px solid;';
@@ -90,7 +95,9 @@ class Component extends DCLogic {
     const count = st.picked.length;
     return {
       count,
-      days: all.map(([dow, num, label]) => {
+      cells: [].concat(weeks[0], weeks[1]).map((cell) => {
+        if (!cell) return { empty: true, day: false };
+        const [dow, num, label] = cell;
         const selected = st.picked.includes(num);
         const disabled = !selected && count >= max;
         let style = dayBase;
@@ -98,13 +105,13 @@ class Component extends DCLogic {
         else if (disabled) style += 'background:#F3F6F4;border-color:#F3F6F4;color:#5E6C65;cursor:default;';
         else style += 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;cursor:pointer;';
         return {
-          dow, num, label, selected, disabled, style,
+          empty: false, day: true, dow, num, label, selected, disabled, style,
           pick: () => this.setState({ picked: selected ? st.picked.filter((x) => x !== num) : (count >= max ? st.picked : st.picked.concat([num])) })
         };
       }),
       ready: count > 0 && filled,
       notReady: !(count > 0 && filled),
-      blockedLabel: count === 0 ? 'Elige al menos un día' : 'Completa tus datos',
+      blockedLabel: count === 0 ? 'Elige al menos un día' : (st.name.trim() && st.email.trim() && st.phone.trim() && !st.agree ? 'Acepta la autorización para seguir' : 'Completa tus datos'),
       name: st.name, email: st.email, phone: st.phone, agree: st.agree,
       onName: (e) => this.setState({ name: e.target.value }),
       onEmail: (e) => this.setState({ email: e.target.value }),
