@@ -5,7 +5,6 @@
 # `SeparameGithubDeployRole` comes from the SeparameCiCd stack, deployed once with
 #   cd cdk && npx cdk deploy SeparameCiCd -c stage=prod -c cicd=true
 # and its ARN goes in the repo secret `AWS_DEPLOY_ROLE_ARN`.
-# The real Turnstile site key (public) goes in the repo variable `TURNSTILE_SITE_KEY`.
 name: Deploy
 
 on:
@@ -86,6 +85,4 @@ jobs:
 
       - name: CDK deploy --all (prod)
         working-directory: cdk
-        env:
-          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
         run: npx cdk deploy --all -c stage=prod --require-approval never --concurrency 4

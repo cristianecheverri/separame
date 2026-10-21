@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { REGION, STAGE_DOMAINS, TURNSTILE_TEST_KEYS, ssmPrefix } from '../../shared/infra';
+import { REGION, STAGE_DOMAINS, TURNSTILE_PROD_SITE_KEY, TURNSTILE_TEST_KEYS, ssmPrefix } from '../../shared/infra';
 
 /**
  * Per-stage configuration. dev and prod share the exact same structure (same
@@ -60,13 +60,14 @@ export function parseStage(value: unknown): Stage {
 
 /**
  * Turnstile site key (public). dev always uses Cloudflare's always-pass test
- * key; prod reads the real key from `-c turnstileSiteKey=…` or the
- * `TURNSTILE_SITE_KEY` env var (a GitHub Actions variable in CI).
+ * key; prod uses the real key committed in shared/infra.ts (public, so local and
+ * CI deploys can't disagree). `-c turnstileSiteKey=…` overrides it, e.g. to
+ * rotate the widget.
  */
 function resolveTurnstileSiteKey(scope: Construct, stage: Stage): string {
   if (stage === 'dev') return TURNSTILE_TEST_KEYS.siteKey;
   const fromContext: unknown = scope.node.tryGetContext('turnstileSiteKey');
-  return (typeof fromContext === 'string' && fromContext) || process.env.TURNSTILE_SITE_KEY || TURNSTILE_TEST_KEYS.siteKey;
+  return (typeof fromContext === 'string' && fromContext) || TURNSTILE_PROD_SITE_KEY;
 }
 
 export function stageConfig(scope: Construct, stage: Stage): StageConfig {

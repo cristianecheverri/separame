@@ -109,6 +109,13 @@ export const SITE_PATHS = {
   appConfig: '/app/config.json',
 } as const;
 
+/**
+ * Turnstile site key (PUBLIC — it ships inside every booking page) for prod.
+ * Its secret pair lives in SSM `/separame/prod/turnstile/secret-key`; the two must
+ * belong to the same Cloudflare widget or every booking fails the captcha.
+ */
+export const TURNSTILE_PROD_SITE_KEY = '0x4AAAAAAFeqxegjYOwLEBZf';
+
 /** Cloudflare Turnstile test keys (always pass) — used by the dev stage and local dev. */
 export const TURNSTILE_TEST_KEYS = {
   siteKey: '1x00000000000000000000AA',

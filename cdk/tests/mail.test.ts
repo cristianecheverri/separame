@@ -22,3 +22,14 @@ describe('MailStack DNS', () => {
     template.hasResourceProperties('AWS::SES::EmailIdentity', { EmailIdentity: 'separame.app' });
   });
 });
+
+describe('Turnstile site key', () => {
+  it('prod functions get the real public site key; dev gets the always-pass test key', async () => {
+    const { TURNSTILE_PROD_SITE_KEY, TURNSTILE_TEST_KEYS } = await import('../../shared/infra');
+    const envOf = (stage: 'dev' | 'prod') =>
+      JSON.stringify(templateOf(stage, (s) => s.api).findResources('AWS::Lambda::Function'));
+    expect(envOf('prod')).toContain(TURNSTILE_PROD_SITE_KEY);
+    expect(envOf('prod')).not.toContain(TURNSTILE_TEST_KEYS.siteKey);
+    expect(envOf('dev')).toContain(TURNSTILE_TEST_KEYS.siteKey);
+  });
+});
