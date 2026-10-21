@@ -48,7 +48,7 @@
       <ul>
         <li><strong>Profesionales:</strong> nombre, correo electrónico, teléfono, datos del perfil público (profesión, ciudad, barrio, dirección), servicios, horarios y datos de pago del plan (método, valor, fecha y referencia).</li>
         <li><strong>Clientes de los profesionales:</strong> nombre, correo electrónico, número de celular y la información de sus citas (servicio, fecha, hora y, si lo escriben, el motivo de una cancelación).</li>
-        <li><strong>Datos técnicos:</strong> registros mínimos de seguridad y funcionamiento (por ejemplo, la verificación anti-spam de Cloudflare Turnstile).</li>
+        <li><strong>Datos técnicos:</strong> registros mínimos de seguridad y funcionamiento, y los datos del navegador que procesa Cloudflare para la verificación anti-spam (ver <a href="#cloudflare-turnstile">Cloudflare Turnstile</a>).</li>
       </ul>
       <p>No pedimos ni guardamos datos sensibles, como información de salud o historias clínicas. Te pedimos no escribirlos en los campos de la reserva.</p>
 
@@ -100,6 +100,14 @@
         <strong>Estados Unidos</strong>, para almacenar los datos y enviar los correos, y <strong>Cloudflare</strong> para la verificación anti-spam. Estos
         proveedores actúan como encargados, con medidas de seguridad y confidencialidad adecuadas. Al aceptar esta política autorizas esta transferencia
         internacional.
+      </p>
+      <p id="cloudflare-turnstile">
+        <strong>Verificación anti-spam con Cloudflare Turnstile.</strong> Cuando separas una cita, la página usa Cloudflare Turnstile para comprobar,
+        normalmente sin que tengas que hacer nada, que quien reserva es una persona y no un programa automatizado. Para eso, Cloudflare recibe datos
+        técnicos de tu navegador y dispositivo (por ejemplo, la dirección IP, el tipo de navegador y señales de interacción con la página) y los trata
+        según el
+        <a href="https://www.cloudflare.com/es-es/turnstile-privacy-policy/" target="_blank" rel="noopener noreferrer">Anexo de privacidad de Cloudflare Turnstile</a>
+        (Turnstile Privacy Addendum). Sepárame no recibe esos datos: solo el resultado de la verificación.
       </p>
 
       <h2>9. Seguridad</h2>

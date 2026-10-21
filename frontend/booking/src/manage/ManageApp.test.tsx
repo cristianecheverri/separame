@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockApi } from '../mock/mockApi';
 import { ManageApp } from './ManageApp';
 
@@ -8,6 +8,14 @@ const click = (target: string | RegExp | HTMLElement) =>
   fireEvent.click(target instanceof HTMLElement ? target : screen.getByRole('button', { name: target }));
 
 describe('ManageApp', () => {
+  // The mock appointments are dated around Tue 20 Oct 2026; pin the clock there so the
+  // "too late" vs "already past" logic doesn't depend on the day the tests run.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-20T14:25:00.000Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
   it('cancels with an optional reason', async () => {
     render(<ManageApp token="demo-token" api={api()} />);
     await screen.findByRole('heading', { name: 'Hola, Mariana. ¿Qué quieres hacer con tu cita?' });
