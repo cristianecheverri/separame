@@ -18,7 +18,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
   <div style="background: #FFFFFF; border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #3E4C45">
     <div><strong style="color: #15241D">De:</strong> Sepárame &lt;citas@separame.app&gt;</div>
     <div><strong style="color: #15241D">Para:</strong> laura.perez@correo.com</div>
-    <div><strong style="color: #15241D">Asunto:</strong> {{title}} · jue 22 oct., 10:00 a. m. · Mariana Gómez</div>
+    <div><strong style="color: #15241D">Asunto:</strong> {{title}} · {{subjectWhen}} · Mariana Gómez</div>
     <div style="display: flex; gap: 6px; align-items: center; padding-top: 4px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12l-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 8"></path></svg>
       invite.ics
@@ -52,9 +52,9 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 class Component extends DCLogic {
   renderVals() {
     const copy = {
-      'Agregada': { title: 'Agregamos esta cita a tu calendario', intro: 'Abre la invitación adjunta para verla en tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.' },
-      'Actualizada': { title: 'Actualizamos esta cita en tu calendario', intro: 'La invitación adjunta trae la nueva fecha y hora.', when: 'Viernes 23 de octubre, 3:00 p. m.' },
-      'Quitada': { title: 'Quitamos esta cita de tu calendario', intro: 'La cita se canceló; la invitación adjunta la quita de tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.' }
+      'Agregada': { title: 'Agregamos esta cita a tu calendario', intro: 'Abre la invitación adjunta para verla en tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.', subjectWhen: 'jue 22 oct., 10:00 a. m.' },
+      'Actualizada': { title: 'Actualizamos esta cita en tu calendario', intro: 'La invitación adjunta trae la nueva fecha y hora.', when: 'Viernes 23 de octubre, 3:00 p. m.', subjectWhen: 'vie 23 oct., 3:00 p. m.' },
+      'Quitada': { title: 'Quitamos esta cita de tu calendario', intro: 'La cita se canceló; la invitación adjunta la quita de tu calendario.', when: 'Jueves 22 de octubre, 10:00 a. m.', subjectWhen: 'jue 22 oct., 10:00 a. m.' }
     };
     const kind = this.props.kind ?? 'Agregada';
     const c = copy[kind] || copy['Agregada'];
@@ -63,6 +63,7 @@ class Component extends DCLogic {
       title: c.title,
       intro: c.intro,
       when: c.when,
+      subjectWhen: c.subjectWhen,
       whenStyle: kind === 'Quitada' ? base + 'text-decoration:line-through;color:#56645D;font-weight:600;' : base
     };
   }

@@ -21,9 +21,13 @@ a{color:#0B6E4F}a:hover{color:#084C37}
       <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></span>
       <span style="font-size: 11px; font-weight: 700; background: #FFC93C; color: #15241D; padding: 3px 8px; border-radius: 999px">ADMIN</span>
     </div>
-    <sc-for list="{{nav}}" as="n" hint-placeholder-count="6">
-      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
-    </sc-for>
+    <a href="admin-overview.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Resumen</a>
+    <a href="admin-subscriptions.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; background: #FFC93C; color: #15241D">Suscripciones</a>
+    <a href="admin-prices.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Precios</a>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 4px">
+      <a href="pro-agenda-day.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Mi agenda</a>
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
   </nav>
 
   <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 28px; display: flex; flex-direction: column; gap: 20px">
@@ -176,9 +180,6 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 class Component extends DCLogic {
   renderVals() {
     const st = Object.assign({ method: 0, period: 0, notify: true, done: false, notice: 'pending' }, this.state || {});
-    const navItems = ['Resumen', 'Profesionales', 'Suscripciones', 'Precios', 'Pagos Wompi', 'Correos'];
-    const hrefs = ['#', '#', 'admin-subscriptions.dc.html', 'admin-prices.dc.html', '#', '#'];
-    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
     const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
     const on = 'background:#FFC93C;border-color:#FFC93C;color:#15241D;';
     const off = 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;';
@@ -222,7 +223,6 @@ class Component extends DCLogic {
     }
 
     return {
-      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 2 ? 'background:#FFC93C;color:#15241D;' : 'color:#FFFFFF;') })),
       statusLabel: st.done ? 'Vigente hasta ' + p.until : 'En gracia hasta el 21 oct.',
       statusStyle: badge + (st.done ? 'background:#0B6E4F;color:#FFFFFF;' : 'background:#FFE6CC;color:#7A3E00;'),
       methods: methods.map((x, i) => ({ label: x.label, selected: st.method === i, pick: () => this.setState({ method: i }), style: chip + (st.method === i ? on : off) })),
