@@ -8,13 +8,17 @@ El profesional administra su calendario; sus clientes reservan desde un enlace p
 La especificación completa (decisiones, precios, pasarela, legal, ideas descartadas)
 está en **`docs/specification.txt`**. Léela antes de proponer cambios de producto.
 
-Estado (20-oct-2026): MVP implementado y verificado localmente (≈ 260 tests, lint,
-typecheck, synth de dev y prod con los frontends reales); **aún no desplegado**.
+Estado (21-oct-2026): **MVP en producción** (https://separame.app) y en dev
+(https://dev.separame.app). Prod se despliega solo con cada push a `main` (GitHub Actions,
+rol OIDC `SeparameGithubDeployRole`; GitHub firma los tokens de este repo con el `sub` de
+ids inmutables `repo:cristianecheverri@37417336/separame@1427543331:…`). ≈ 265 tests.
+Pendiente antes de anunciarlo: completar privacidad/términos (responsable, cédula/NIT,
+correo; revisión legal) y `billing/instructions` en SSM de prod.
 `shared/` (contrato del API, modelo de datos, disponibilidad, festivos, suscripción),
 `backend/` (16 Lambdas), `cdk/` (8 stacks por ambiente), `frontend/booking` (Preact,
 ~19 KB de JS) y `frontend/app` (React, panel + admin, modo mock con `VITE_MOCK=1`).
 Los mockups de la línea A (`mockups/`) son la fuente de verdad visual: se implementan
-**exactos** y con responsive perfecto. Siguiente paso: primer despliegue a dev.
+**exactos** y con responsive perfecto.
 
 ## Idioma y convenciones
 - Habla con el usuario **en español**.

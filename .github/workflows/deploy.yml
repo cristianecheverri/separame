@@ -10,6 +10,11 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # Docs-only changes don't touch what's deployed; skip the prod deploy for them.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'mockups/**'
   workflow_dispatch:
 
 permissions:
