@@ -79,6 +79,14 @@ equipos y **notas clínicas** (datos de salud = datos sensibles por ley).
   mensual, que sea de unos $5.900.
 
 ## Pagos: SIN pasarela por ahora (Wompi descartado; se evalúa Nequi directo)
+- **Nequi (pendiente, 21-oct-2026):** se le pidió cotización a Nequi Negocios para la API de
+  **pagos push** (pago puntual) y la de **suscripciones** (débito automático → renovación
+  automática del plan). Nequi no publica tarifas: la comisión es un % negociado. Preguntas
+  clave enviadas: % por API, si hay **cargo fijo** por transacción (si no lo hay, el plan
+  mensual de $5.000 se vuelve rentable), si acepta **persona natural con RUT** o solo NIT,
+  cuenta requerida, plazos de abono y reintentos por saldo insuficiente. Integrarla = un
+  adaptador `nequi` (push + suscripción) + webhook `/webhooks/nequi`; certificación con Nequi
+  (casos JSON + video, hasta 4 días hábiles). No se integra hasta tener la respuesta.
 - **Primera versión = pago manual y prepago:** el profesional ve los paquetes y los datos
   de pago (Nequi / transferencia, en SSM `billing/instructions`), paga y toca **"Ya pagué"**
   → queda un aviso `pending` y se avisa al admin por correo → el admin lo **aprueba**
