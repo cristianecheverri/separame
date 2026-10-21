@@ -1,15 +1,15 @@
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { marshall } from '@aws-sdk/util-dynamodb';
-import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, DeleteCommand, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { calSyncKey, profileKey } from '../lib/keys';
-import { conditionalFailure, PRO_ID, profile, setTestEnv } from '../testing/fixtures';
-import { handler } from '../functions/stream-emails/index';
-import type { AppointmentItem } from './appointments';
-import { decideEmails, decideInvite } from './appointment-emails';
+import { calSyncKey, profileKey } from '../../lib/keys';
+import { conditionalFailure, PRO_ID, profile, setTestEnv } from '../../testing/fixtures';
+import { handler } from '../../functions/stream-appointments/index';
+import type { AppointmentItem } from '../appointments';
+import { decideEmails, decideInvite } from './emails';
 
 setTestEnv();
 const ddb = mockClient(DynamoDBDocumentClient);
@@ -21,6 +21,7 @@ const appt: AppointmentItem = {
   start: '2026-10-22T15:00:00.000Z', end: '2026-10-22T15:30:00.000Z', status: 'confirmed',
   client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
   createdBy: 'client', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-20T00:00:00.000Z', lockBufferMin: 10, lastChangedBy: 'client',
+  clientConfirmation: 'pending', revision: 0, clientKey: 'k1',
 };
 
 describe('decideEmails', () => {
@@ -100,7 +101,7 @@ function calendarPart(raw: string) {
   return part ? { ...part, body: part.body.replace(/\r\n /g, '') } : undefined;
 }
 
-describe('stream-emails handler', () => {
+describe('stream-appointments: emails module', () => {
   beforeEach(() => {
     ddb.reset();
     ses.reset();
@@ -110,8 +111,13 @@ describe('stream-emails handler', () => {
     ddb.on(GetCommand, { Key: profileKey(PRO_ID) }).resolves({ Item: profile });
     ddb.on(PutCommand).resolves({});
     ddb.on(DeleteCommand).resolves({});
+    // Other stream modules (clients, waitlist, push) find nothing to do.
+    ddb.on(QueryCommand).resolves({ Items: [] });
+    ddb.on(UpdateCommand).resolves({});
     ses.on(SendEmailCommand).resolves({ MessageId: 'm1' });
   });
+
+  const emailMarkers = () => ddb.commandCalls(PutCommand).map((c) => c.args[0].input.Item!.PK as string).filter((pk) => pk.startsWith('EMAIL#appt1#'));
 
   it('client booking: confirmation (PUBLISH .ics, reply-to pro) + "Nueva cita" carrying a REQUEST invite', async () => {
     const res = await handler(streamEvent(undefined, appt));
@@ -139,8 +145,7 @@ describe('stream-emails handler', () => {
     expect(ics).toContain('STATUS:CONFIRMED');
     expect(parts(proRaw).find((p) => p.headers.includes('invite.ics'))!.body.replace(/\r\n /g, '')).toBe(ics);
 
-    const markers = ddb.commandCalls(PutCommand).map((c) => c.args[0].input.Item!.PK);
-    expect(markers).toEqual(['EMAIL#appt1#client-confirmed#2026-10-20T00:00:00.000Z', 'EMAIL#appt1#pro-new-booking#2026-10-20T00:00:00.000Z']);
+    expect(emailMarkers()).toEqual(['EMAIL#appt1#client-confirmed#2026-10-20T00:00:00.000Z', 'EMAIL#appt1#pro-new-booking#2026-10-20T00:00:00.000Z']);
   });
 
   it('pro creates it: client confirmation + short "Agregamos esta cita a tu calendario" invite', async () => {
@@ -151,7 +156,7 @@ describe('stream-emails handler', () => {
     expect(toOf(own)).toBe('laura@correo.com');
     expect(parts(own).find((p) => p.headers.startsWith('Content-Type: text/html'))!.body).toContain('Agregamos esta cita a tu calendario');
     expect(calendarPart(own)!.body).toContain('METHOD:REQUEST');
-    expect(ddb.commandCalls(PutCommand).map((c) => c.args[0].input.Item!.PK)).toContain('EMAIL#appt1#invite#0');
+    expect(emailMarkers()).toContain('EMAIL#appt1#invite#0');
   });
 
   it('client moves it: the pro notice carries a REQUEST with the new times and SEQUENCE = revision', async () => {
@@ -212,7 +217,7 @@ describe('stream-emails handler', () => {
     ses.on(SendEmailCommand).rejects(new Error('SES throttled'));
     const res = await handler(streamEvent(undefined, appt, '777'));
     expect(res.batchItemFailures).toEqual([{ itemIdentifier: '777' }]);
-    expect(ddb.commandCalls(DeleteCommand)).toHaveLength(1);
+    expect(ddb.commandCalls(DeleteCommand).map((c) => c.args[0].input.Key!.PK)).toEqual(['EMAIL#appt1#client-confirmed#2026-10-20T00:00:00.000Z']);
   });
 
   it('does not email suppressed addresses', async () => {

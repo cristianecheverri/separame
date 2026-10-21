@@ -39,7 +39,7 @@ const APP_CONFIG_FILE = path.posix.basename(SITE_PATHS.appConfig); // 'config.js
 
 /**
  * Builds both frontends and uploads them to the site bucket:
- *  - frontend/booking → bucket root (landing, 404, /c/ page, booking bundle,
+ *  - frontend/booking → bucket root (landing, 404, /c/ and /w/ pages, booking bundle,
  *    profile template). `prune: false` is CRITICAL: the root also holds the
  *    backend-generated `/<slug>/index.html` profile pages, which a deploy must
  *    never delete.
@@ -195,6 +195,7 @@ function bookingPlaceholders(): s3deploy.ISource[] {
     s3deploy.Source.data('index.html', placeholderHtml('Sepárame (placeholder build)')),
     s3deploy.Source.data(keyOf(SITE_PATHS.notFound), placeholderHtml('Página no encontrada (placeholder)')),
     s3deploy.Source.data(keyOf(SITE_PATHS.manageIndex), placeholderHtml('Tu cita (placeholder)')),
+    s3deploy.Source.data(keyOf(SITE_PATHS.waitlistLeaveIndex), placeholderHtml('Lista de espera (placeholder)')),
   ];
 }
 

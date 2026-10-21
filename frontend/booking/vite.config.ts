@@ -37,7 +37,7 @@ function devRoutes(): Plugin {
         const staticPage = STATIC_PAGES.find((page) => path === `/${page}` || path === `/${page}/`);
         if (staticPage) {
           req.url = `/${staticPage}/index.html${url.search}`;
-        } else if (!passthrough && (path.startsWith('/c/') || /^\/[^/]+\/?$/.test(path))) {
+        } else if (!passthrough && (path.startsWith('/c/') || path.startsWith('/w/') || /^\/[^/]+\/?$/.test(path))) {
           req.url = `/_templates/booking.html${url.search}`;
         }
         next();
@@ -47,9 +47,10 @@ function devRoutes(): Plugin {
 }
 
 /**
- * The manage page (/c/<token>) runs the same bundle as the profile pages, so
- * it is derived from the built template instead of being a second entry (a
- * second entry would split booking.js into hashed shared chunks).
+ * The manage (/c/<token>) and waitlist-leave (/w/<token>) pages run the same
+ * bundle as the profile pages, so they are derived from the built template
+ * instead of being extra entries (which would split booking.js into hashed
+ * shared chunks).
  */
 function manageShell(): Plugin {
   return {
@@ -61,11 +62,14 @@ function manageShell(): Plugin {
       if (!template.includes(HEAD_MARKER) || !template.includes(DATA_MARKER)) {
         throw new Error('booking template lost its SEPARAME markers');
       }
-      const html = template
-        .replace(HEAD_MARKER, '<title>Tu cita · Sepárame</title>\n<meta name="robots" content="noindex">')
-        .replace(DATA_MARKER, '');
-      mkdirSync(resolve(outDir, 'c'), { recursive: true });
-      writeFileSync(resolve(outDir, 'c/index.html'), html);
+      const shells = { c: 'Tu cita · Sepárame', w: 'Lista de espera · Sepárame' };
+      for (const [dir, title] of Object.entries(shells)) {
+        const html = template
+          .replace(HEAD_MARKER, `<title>${title}</title>\n<meta name="robots" content="noindex">`)
+          .replace(DATA_MARKER, '');
+        mkdirSync(resolve(outDir, dir), { recursive: true });
+        writeFileSync(resolve(outDir, `${dir}/index.html`), html);
+      }
     },
   };
 }

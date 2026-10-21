@@ -19,6 +19,7 @@ const appt: AppointmentItem = {
   start: '2026-10-22T15:00:00.000Z', end: '2026-10-22T15:30:00.000Z', status: 'confirmed',
   client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
   createdBy: 'client', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-20T00:00:00.000Z', lockBufferMin: 10,
+  clientConfirmation: 'pending', revision: 0, clientKey: 'k1',
 };
 
 beforeEach(() => {

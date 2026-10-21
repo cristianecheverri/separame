@@ -122,6 +122,29 @@ export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailabi
   return { ...base, closed: null, ...(holiday ? { holidayName: holiday.name } : {}), slots };
 }
 
+/**
+ * Minutes the professional is open on a day (weekly ranges minus blocks; 0 on
+ * closed days and on holidays when closedOnHolidays). Ignores the booking
+ * window and minimum notice — it measures capacity, for occupancy stats.
+ */
+export function bookableMinutes(date: ISODate, ctx: Pick<AvailabilityContext, 'schedule' | 'rules' | 'blocks'>): number {
+  if (ctx.rules.closedOnHolidays && holidayOn(date)) return 0;
+  const ranges = ctx.schedule[weekdayOf(date)] ?? [];
+  let total = 0;
+  for (const r of ranges) {
+    const rs = ms(toInstant(date, r.start));
+    const re = ms(toInstant(date, r.end));
+    let blocked = 0;
+    for (const b of ctx.blocks) {
+      const s = Math.max(rs, ms(b.start));
+      const e = Math.min(re, ms(b.end));
+      if (e > s) blocked += e - s;
+    }
+    total += Math.max(0, re - rs - blocked) / 60_000;
+  }
+  return Math.round(total);
+}
+
 export function computeAvailability(from: ISODate, days: number, ctx: AvailabilityContext): DayAvailability[] {
   return Array.from({ length: days }, (_, i) => computeDay(addDays(from, i), ctx));
 }

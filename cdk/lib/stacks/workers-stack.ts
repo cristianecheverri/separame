@@ -29,15 +29,17 @@ export function dlqNameOf(config: Pick<StageConfig, 'prefix'>, def: Pick<Functio
 
 /** Background functions with a stream DLQ (MonitoringStack alarms on each). */
 export const STREAM_FUNCTIONS: readonly FunctionDef[] = [
-  BACKGROUND_FUNCTIONS.streamEmails,
+  BACKGROUND_FUNCTIONS.streamAppointments,
   BACKGROUND_FUNCTIONS.streamPublish,
 ];
 
 /**
  * Asynchronous work, off the request path:
- *  - stream-emails:  DynamoDB stream → appointment emails (confirmation,
- *    change, cancellation, notice to the professional). The event filter wakes
- *    it only for `APPT#` items.
+ *  - stream-appointments: the ONE consumer of appointment events (DynamoDB
+ *    recommends ≤ 2 readers per stream shard; stream-publish is the other):
+ *    emails + calendar invites, client history, waitlist offers and web push
+ *    to the professional. The event filter wakes it only for `APPT#` items and
+ *    `WAIT#` waitlist entries (join confirmation email + push to the pro).
  *  - stream-publish: DynamoDB stream → regenerates the static `/<slug>` page
  *    when the profile or a service changes.
  *  - jobs-tick:      ONE EventBridge Scheduler schedule every 10 minutes (24 h
@@ -55,14 +57,21 @@ export class WorkersStack extends cdk.Stack {
     const { config, table, siteBucket, distribution, mail } = props;
     const environment = commonEnvironment(config, { table, siteBucket, distribution });
 
-    // ── Appointment emails ────────────────────────────────────────────────
-    const streamEmails = createFunction(this, { config, def: BACKGROUND_FUNCTIONS.streamEmails, environment });
-    table.grantReadWriteData(streamEmails); // EMAIL# idempotency markers, SUPPRESS# lookups
-    grantSendEmail(streamEmails, mail);
-    grantReadStageParameters(streamEmails, config, this); // link signing secret
-    streamEmails.addEventSource(
-      this.streamSource(config, table, BACKGROUND_FUNCTIONS.streamEmails, [
+    // ── Appointment events ────────────────────────────────────────────────
+    const streamAppointments = createFunction(this, {
+      config,
+      def: BACKGROUND_FUNCTIONS.streamAppointments,
+      environment,
+    });
+    // EMAIL# idempotency markers, SUPPRESS# lookups, client history, waitlist.
+    table.grantReadWriteData(streamAppointments);
+    grantSendEmail(streamAppointments, mail);
+    // Link signing secret + web push VAPID keys.
+    grantReadStageParameters(streamAppointments, config, this);
+    streamAppointments.addEventSource(
+      this.streamSource(config, table, BACKGROUND_FUNCTIONS.streamAppointments, [
         lambda.FilterCriteria.filter({ dynamodb: { Keys: { SK: { S: lambda.FilterRule.beginsWith('APPT#') } } } }),
+        lambda.FilterCriteria.filter({ dynamodb: { Keys: { SK: { S: lambda.FilterRule.beginsWith('WAIT#') } } } }),
       ]),
     );
 
@@ -91,7 +100,7 @@ export class WorkersStack extends cdk.Stack {
       target: new schedulerTargets.LambdaInvoke(jobsTick, { retryAttempts: 0 }),
     });
 
-    this.functions = [streamEmails, streamPublish, jobsTick];
+    this.functions = [streamAppointments, streamPublish, jobsTick];
   }
 
   /** TRIM_HORIZON stream mapping with retries, bisection and an SQS DLQ. */

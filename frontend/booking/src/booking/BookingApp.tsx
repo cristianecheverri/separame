@@ -1,13 +1,14 @@
 /**
- * The /<slug> booking flow: Servicio → Día y hora → Tus datos → Confirmar,
- * then the confirmation screen. Each step is a history entry (the browser
- * back button steps back) and the half-filled form survives a reload
- * (sessionStorage).
+ * The /<slug> booking flow: Servicio → Día y hora → Tus datos → Confirmar
+ * (3 steps when the professional offers a single service), then the
+ * confirmation screen. Each step is a history entry (the browser back button
+ * steps back), the half-filled form survives a reload (sessionStorage) and
+ * `?service=<id>&date=<YYYY-MM-DD>` deep-links into "Día y hora".
  */
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile } from '@shared/api';
-import { capitalize, formatCop, formatDayLong, formatDayShort, formatDuration, formatInstantTime } from '@shared/format';
+import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile, type PublicService } from '@shared/api';
 import { normalizeEmail } from '@shared/contact';
+import { capitalize, formatCop, formatDayLong, formatDayShort, formatDuration, formatInstantTime, MONTH_SHORT } from '@shared/format';
 import { bogotaDate } from '@shared/time';
 import { Frame, DISABLED_BUTTON, LegalLinks, PRIMARY_BUTTON } from '../components/ui';
 import { ApiError, errorMessage } from '../lib/api';
@@ -19,13 +20,14 @@ import {
   type ContactErrors, type ContactField, type ContactForm,
 } from '../lib/validation';
 import { Confirmed } from './Confirmed';
-import { FlowFooter, FlowHeader, type Step } from './FlowChrome';
+import { FlowFooter, FlowHeader, type SelectionChip, type StepId } from './FlowChrome';
 import { FIELD_IDS, StepDetails } from './StepDetails';
 import { StepReview, type ReviewRow } from './StepReview';
 import { StepService } from './StepService';
 import { StepWhen, type AvailabilityState } from './StepWhen';
-import { TurnstileBox } from './TurnstileBox';
+import { useCaptcha } from './useCaptcha';
 import { MissingScreen, Unavailable } from './Unavailable';
+import { WaitlistScreen } from './WaitlistScreen';
 
 interface Draft extends ContactForm {
   serviceId: string | null;
@@ -34,13 +36,19 @@ interface Draft extends ContactForm {
 }
 
 interface HistoryState {
-  sep: Step | 'done';
+  sep: StepId | 'done' | 'waitlist';
   d: number;
 }
 
+const ALL_STEPS: StepId[] = ['service', 'when', 'details', 'review'];
 const EMPTY_DRAFT: Draft = { serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false };
-const BLOCKED_LABELS: Record<1 | 2 | 3, string> = { 1: 'Elige un servicio', 2: 'Elige día y hora', 3: 'Completa tus datos' };
+const BLOCKED_LABELS: Record<Exclude<StepId, 'review'>, string> = {
+  service: 'Elige un servicio',
+  when: 'Elige día y hora',
+  details: 'Completa tus datos',
+};
 const SLOT_TAKEN_NOTICE = 'Alguien acaba de separar esa hora. Elige otra, por favor.';
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 type Screen = 'flow' | 'unavailable' | 'notfound' | 'error';
 
@@ -54,26 +62,59 @@ function historyState(): Partial<HistoryState> {
   return (history.state as Partial<HistoryState> | null) ?? {};
 }
 
+function stepsFor(profile: PublicProfile | null): StepId[] {
+  return profile?.services.length === 1 ? ALL_STEPS.slice(1) : ALL_STEPS;
+}
+
 /** Furthest step the draft supports (used when restoring after a reload or a back/forward jump). */
-function maxStep(draft: Draft): Step {
-  if (!draft.serviceId) return 1;
-  if (!draft.start) return 2;
-  if (Object.keys(validateContact(draft)).length > 0) return 3;
-  return 4;
+function maxStep(draft: Draft): StepId {
+  if (!draft.serviceId) return 'service';
+  if (!draft.start) return 'when';
+  if (Object.keys(validateContact(draft)).length > 0) return 'details';
+  return 'review';
 }
 
-function clampStep(wanted: unknown, draft: Draft): Step {
-  const n = typeof wanted === 'number' && wanted >= 1 && wanted <= 4 ? (wanted as Step) : 1;
-  return Math.min(n, maxStep(draft)) as Step;
+function clampStep(wanted: unknown, draft: Draft, steps: StepId[]): StepId {
+  const limit = ALL_STEPS.indexOf(maxStep(draft));
+  const index = typeof wanted === 'string' ? ALL_STEPS.indexOf(wanted as StepId) : -1;
+  const clamped = ALL_STEPS[Math.min(Math.max(index, 0), limit)];
+  return steps.includes(clamped) ? clamped : steps[0];
 }
 
-function restoreDraft(key: string, profile: PublicProfile | null): Draft {
-  const saved = loadJson<Partial<Draft>>(key);
-  const draft = { ...EMPTY_DRAFT, ...saved };
-  if (profile && draft.serviceId && !profile.services.some((s) => s.id === draft.serviceId)) {
-    return { ...draft, serviceId: null, day: null, start: null };
-  }
-  return draft;
+/** Restored draft + single-service preselection + `?service=&date=` deep link. */
+function initialDraft(key: string, profile: PublicProfile | null): { draft: Draft; deepLinked: boolean } {
+  let draft: Draft = { ...EMPTY_DRAFT, ...loadJson<Partial<Draft>>(key) };
+  if (!profile) return { draft, deepLinked: false };
+  const known = (id: string | null) => Boolean(id && profile.services.some((s) => s.id === id));
+  if (!known(draft.serviceId)) draft = { ...draft, serviceId: null, day: null, start: null };
+  if (profile.services.length === 1 && !draft.serviceId) draft = { ...draft, serviceId: profile.services[0].id };
+
+  const params = new URLSearchParams(location.search);
+  const serviceParam = params.get('service');
+  const dateParam = params.get('date');
+  if (!known(serviceParam)) return { draft, deepLinked: false };
+  const date = dateParam && DATE_RE.test(dateParam) ? dateParam : null;
+  if (serviceParam !== draft.serviceId || date) draft = { ...draft, serviceId: serviceParam, day: date, start: null };
+  return { draft, deepLinked: true };
+}
+
+/** Drops `service`/`date` from the URL once applied so a reload keeps the client's own progress. */
+function stripDeepLink(): void {
+  const url = new URL(location.href);
+  if (!url.searchParams.has('service') && !url.searchParams.has('date')) return;
+  url.searchParams.delete('service');
+  url.searchParams.delete('date');
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+}
+
+/** "Jue 22 oct · 10:00 a. m." */
+function whenChip(start: string): string {
+  const date = bogotaDate(start);
+  return `${formatDayShort(date)} ${MONTH_SHORT[Number(date.slice(5, 7)) - 1].replace('.', '')} · ${formatInstantTime(start)}`;
+}
+
+function serviceChip(service: PublicService): string {
+  return joinDot(service.name, formatDuration(service.durationMin), formatCop(service.priceCop));
 }
 
 export function BookingApp({ slug, initialProfile, runtime }: Props) {
@@ -81,30 +122,33 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   const doneKey = `${draftKey}:done`;
   const { api, turnstileSiteKey } = runtime;
 
+  const [boot] = useState(() => initialDraft(draftKey, initialProfile));
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>('flow');
-  const [draft, setDraft] = useState<Draft>(() => restoreDraft(draftKey, initialProfile));
-  const [step, setStep] = useState<Step>(() => clampStep(historyState().sep, draft));
+  const [draft, setDraft] = useState<Draft>(boot.draft);
+  const [step, setStep] = useState<StepId>(() =>
+    boot.deepLinked ? 'when' : clampStep(historyState().sep, boot.draft, stepsFor(initialProfile)),
+  );
   const [done, setDone] = useState<CreateBookingResponse | null>(() =>
     historyState().sep === 'done' ? loadJson<CreateBookingResponse>(doneKey) : null,
   );
+  const [waitlistOpen, setWaitlistOpen] = useState(() => historyState().sep === 'waitlist');
   const [availability, setAvailability] = useState<Record<string, AvailabilityState>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
   const [slotNotice, setSlotNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaFailed, setCaptchaFailed] = useState(false);
-  const [captchaReset, setCaptchaReset] = useState(0);
+  const captcha = useCaptcha(turnstileSiteKey);
 
   const depthRef = useRef<number>(historyState().d ?? 0);
   const inflightRef = useRef(new Set<string>());
-  const pendingSubmitRef = useRef(false);
   const focusTitleRef = useRef(false);
   const scrollerRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const latestRef = useRef({ draft, done });
+  const latestRef = useRef({ draft, done, profile });
 
+  const steps = stepsFor(profile);
+  const stepIndex = Math.max(0, steps.indexOf(step));
   const apiSlug = profile?.slug ?? slug;
   const service = profile?.services.find((s) => s.id === draft.serviceId) ?? null;
 
@@ -116,7 +160,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       .getPro(slug)
       .then((res) => {
         if (cancelled) return;
+        const next = initialDraft(draftKey, res.profile);
         setProfile(res.profile);
+        setDraft(next.draft);
+        setStep(next.deepLinked ? 'when' : clampStep(historyState().sep, next.draft, stepsFor(res.profile)));
         if (!res.active) setScreen('unavailable');
       })
       .catch((error: unknown) => {
@@ -125,10 +172,12 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [api, slug, profile]);
+  }, [api, slug, profile, draftKey]);
 
   useEffect(() => {
-    if (profile && !document.title) document.title = `${profile.name} · Separa tu cita · Sepárame`;
+    if (!profile) return;
+    stripDeepLink();
+    if (!document.title) document.title = `${profile.name} · Separa tu cita · Sepárame`;
   }, [profile]);
 
   // ── Availability: one call (14 days) per service; prefetch the first service ──
@@ -164,13 +213,13 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
 
   // ── Persistence + history ──
   useEffect(() => {
-    latestRef.current = { draft, done };
+    latestRef.current = { draft, done, profile };
     saveJson(draftKey, draft);
-  }, [draft, done, draftKey]);
+  }, [draft, done, profile, draftKey]);
 
   useEffect(() => {
     if (historyState().sep === undefined) {
-      history.replaceState({ sep: latestRef.current.done ? 'done' : 1, d: 0 } satisfies HistoryState, '');
+      history.replaceState({ sep: latestRef.current.done ? 'done' : step, d: 0 } satisfies HistoryState, '');
     }
     const onPop = (event: PopStateEvent) => {
       const state = event.state as Partial<HistoryState> | null;
@@ -181,18 +230,26 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         if (saved) setDone(saved);
         return;
       }
+      if (state.sep === 'waitlist') {
+        setWaitlistOpen(true);
+        return;
+      }
+      setWaitlistOpen(false);
       focusTitleRef.current = true;
-      if (latestRef.current.done) {
+      const current = latestRef.current;
+      if (current.done) {
         // Leaving the confirmation through "back" starts a fresh booking.
         setDone(null);
         removeKey(doneKey);
-        setStep(1);
+        setStep(stepsFor(current.profile)[0]);
         return;
       }
-      setStep(clampStep(state.sep, latestRef.current.draft));
+      setStep(clampStep(state.sep, current.draft, stepsFor(current.profile)));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
+    // Registered once; reads fresh values through latestRef.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doneKey]);
 
   useEffect(() => {
@@ -201,9 +258,9 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       focusTitleRef.current = false;
       titleRef.current?.focus({ preventScroll: true });
     }
-  }, [step]);
+  }, [step, waitlistOpen]);
 
-  const go = (next: Step) => {
+  const go = (next: StepId) => {
     depthRef.current += 1;
     history.pushState({ sep: next, d: depthRef.current } satisfies HistoryState, '');
     focusTitleRef.current = true;
@@ -211,15 +268,29 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   };
 
   const back = () => {
-    if (step === 1) return;
+    if (stepIndex === 0) return;
     if (depthRef.current > 0 && historyState().sep === step) {
       history.back();
       return;
     }
-    const prev = (step - 1) as Step;
+    const prev = steps[stepIndex - 1];
     history.replaceState({ sep: prev, d: 0 } satisfies HistoryState, '');
     focusTitleRef.current = true;
     setStep(prev);
+  };
+
+  const openWaitlist = () => {
+    depthRef.current += 1;
+    history.pushState({ sep: 'waitlist', d: depthRef.current } satisfies HistoryState, '');
+    setWaitlistOpen(true);
+  };
+
+  const closeWaitlist = () => {
+    if (historyState().sep === 'waitlist') {
+      history.back();
+      return;
+    }
+    setWaitlistOpen(false);
   };
 
   // ── Step actions ──
@@ -240,11 +311,11 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     if (errors[field]) setErrors((e) => ({ ...e, [field]: validateField(field, next) }));
   };
 
-  const canNext = step === 1 ? Boolean(service) : step === 2 ? Boolean(draft.start) : isContactFilled(draft);
+  const canNext = step === 'service' ? Boolean(service) : step === 'when' ? Boolean(draft.start) : isContactFilled(draft);
 
   const next = () => {
     if (!canNext) return;
-    if (step === 3) {
+    if (step === 'details') {
       const found = validateContact(draft);
       setErrors(found);
       const first = CONTACT_FIELDS.find((f) => found[f]);
@@ -253,15 +324,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         return;
       }
     }
-    if (step < 4) go((step + 1) as Step);
+    if (stepIndex < steps.length - 1) go(steps[stepIndex + 1]);
   };
 
   // ── Booking ──
-  const resetCaptcha = () => {
-    setCaptchaToken(null);
-    setCaptchaReset((n) => n + 1);
-  };
-
   const book = async (token: string) => {
     if (!service || !draft.start) return;
     setSubmitting(true);
@@ -285,14 +351,14 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         setSlotNotice(SLOT_TAKEN_NOTICE);
         setDraft((d) => ({ ...d, start: null }));
         refreshAvailability(service.id);
-        go(2);
+        go('when');
       } else if (code === 'agenda_unavailable') {
         setScreen('unavailable');
       } else if (code === 'validation' && error instanceof ApiError) {
         const found = fieldsFromApi(error.fields);
         if (Object.keys(found).length > 0) {
           setErrors(found);
-          go(3);
+          go('details');
         } else {
           setSubmitError('Revisa los datos de tu cita e inténtalo de nuevo.');
         }
@@ -301,47 +367,17 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       }
     } finally {
       setSubmitting(false);
-      if (turnstileSiteKey) resetCaptcha();
+      captcha.reset();
     }
   };
 
   const submit = () => {
-    if (submitting) return;
-    if (!turnstileSiteKey) {
-      void book('mock-turnstile-token');
-      return;
-    }
-    if (captchaToken) {
-      void book(captchaToken);
-      return;
-    }
-    if (captchaFailed) {
-      setCaptchaFailed(false);
-      setSubmitError(errorMessage(new ApiError('captcha_failed', '')));
-      resetCaptcha();
-      return;
-    }
-    // Token still on its way: submit as soon as Turnstile hands it over.
-    pendingSubmitRef.current = true;
-    setSubmitting(true);
-  };
-
-  const onCaptchaToken = (token: string | null) => {
-    setCaptchaToken(token);
-    if (token) setCaptchaFailed(false);
-    if (token && pendingSubmitRef.current) {
-      pendingSubmitRef.current = false;
-      void book(token);
-    }
-  };
-
-  const onCaptchaError = () => {
-    setCaptchaFailed(true);
-    if (pendingSubmitRef.current) {
-      pendingSubmitRef.current = false;
-      setSubmitting(false);
-      setSubmitError(errorMessage(new ApiError('captcha_failed', '')));
-    }
+    if (submitting || captcha.waiting) return;
+    setSubmitError(null);
+    captcha.withToken(
+      (token) => void book(token),
+      () => setSubmitError(errorMessage(new ApiError('captcha_failed', ''))),
+    );
   };
 
   // ── Screens ──
@@ -362,85 +398,108 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   if (screen === 'unavailable') return <Unavailable profile={profile} />;
   if (done) return <Confirmed result={done} />;
 
-  const summary =
-    step === 2 && service
-      ? joinDot(service.name, formatDuration(service.durationMin))
-      : step === 3 && service && draft.start
-        ? `${joinDot(service.name, formatDayShort(bogotaDate(draft.start)))}, ${formatInstantTime(draft.start)}`
-        : '';
+  const serviceAvailability = service ? availability[service.id] : undefined;
+  if (waitlistOpen && service && serviceAvailability?.status === 'ready') {
+    return (
+      <WaitlistScreen
+        api={api}
+        turnstileSiteKey={turnstileSiteKey}
+        profile={profile}
+        service={service}
+        days={serviceAvailability.data.days}
+        initialDate={draft.day}
+        form={draft}
+        errors={errors}
+        onChange={changeField}
+        onErrors={setErrors}
+        onClose={closeWaitlist}
+        onUnavailable={() => setScreen('unavailable')}
+      />
+    );
+  }
+
+  const singleService = steps.length === 3;
+  const chips: SelectionChip[] = [];
+  if (service && (step === 'when' || step === 'details')) {
+    const label = serviceChip(service);
+    chips.push(singleService ? { label, title: label } : { label, title: `Cambiar servicio: ${label}`, target: 'service' });
+  }
+  if (draft.start && step === 'details') {
+    const label = whenChip(draft.start);
+    chips.push({ label, title: `Cambiar día y hora: ${label}`, target: 'when' });
+  }
 
   const reviewRows: ReviewRow[] = [
     {
       label: 'Servicio',
       value: service ? joinDot(service.name, formatDuration(service.durationMin)) : '—',
       sub: service ? formatCop(service.priceCop) : '',
-      step: 1,
+      step: singleService ? null : 'service',
     },
     {
       label: 'Cuándo',
       value: draft.start ? capitalize(formatDayLong(bogotaDate(draft.start))) : '—',
       sub: draft.start ? formatInstantTime(draft.start) : '',
-      step: 2,
+      step: 'when',
     },
     {
       label: 'A nombre de',
       value: draft.name.trim() || '—',
       // Non-breaking spaces keep "+57 300 123 4567" on one line.
-      sub: joinDot(draft.email.trim(), draft.phone && `+57 ${formatPhone(normalizePhone(draft.phone))}`.replace(/ /g, '\u00a0')),
-      step: 3,
+      sub: joinDot(draft.email.trim(), draft.phone && `+57 ${formatPhone(normalizePhone(draft.phone))}`.replace(/ /g, ' ')),
+      step: 'details',
     },
   ];
 
+  const busy = submitting || captcha.waiting;
   return (
     <Frame label={`Separar cita con ${profile.name}`}>
-      <FlowHeader profile={profile} step={step} onBack={back} />
+      <FlowHeader profile={profile} index={stepIndex} total={steps.length} step={step} chips={chips} onChip={go} onBack={back} />
       <main ref={scrollerRef} class="scroll-area">
         <div class="min-h-full pt-[22px] px-5 pb-4 flex flex-col fade-in" key={step}>
-          {step === 1 && <StepService profile={profile} serviceId={draft.serviceId} onPick={pickService} titleRef={titleRef} />}
-          {step === 1 && <LegalLinks class="mt-auto pt-6" />}
-          {step === 2 && (
+          {step === 'service' && <StepService profile={profile} serviceId={draft.serviceId} onPick={pickService} titleRef={titleRef} />}
+          {step === 'when' && (
             <StepWhen
-              availability={service ? availability[service.id] : undefined}
+              key={serviceAvailability?.status ?? 'idle'}
+              availability={serviceAvailability}
               day={draft.day}
               start={draft.start}
               notice={slotNotice}
               onPickDay={pickDay}
               onPickSlot={pickSlot}
               onRetry={() => service && refreshAvailability(service.id)}
+              onWaitlist={openWaitlist}
               titleRef={titleRef}
             />
           )}
-          {step === 3 && <StepDetails form={draft} errors={errors} onChange={changeField} titleRef={titleRef} />}
-          {step === 4 && (
+          {step === 'details' && <StepDetails form={draft} errors={errors} onChange={changeField} titleRef={titleRef} />}
+          {step === 'review' && (
             <StepReview
               rows={reviewRows}
               address={fullAddress(profile, false)}
               error={submitError}
               onEdit={go}
               titleRef={titleRef}
-              captcha={
-                turnstileSiteKey ? (
-                  <TurnstileBox siteKey={turnstileSiteKey} resetKey={captchaReset} onToken={onCaptchaToken} onError={onCaptchaError} />
-                ) : null
-              }
+              captcha={captcha.box}
             />
           )}
+          {stepIndex === 0 && <LegalLinks class="mt-auto pt-6" />}
         </div>
       </main>
-      <FlowFooter summary={summary}>
-        {step < 4 ? (
+      <FlowFooter>
+        {step !== 'review' ? (
           <button type="button" onClick={next} disabled={!canNext} class={canNext ? PRIMARY_BUTTON : DISABLED_BUTTON}>
-            {canNext ? 'Siguiente' : BLOCKED_LABELS[step as 1 | 2 | 3]}
+            {canNext ? 'Siguiente' : BLOCKED_LABELS[step]}
           </button>
         ) : (
           <button
             type="button"
             onClick={submit}
-            aria-busy={submitting}
-            aria-disabled={submitting}
-            class={`${PRIMARY_BUTTON} ${submitting ? 'opacity-80 cursor-progress' : ''}`}
+            aria-busy={busy}
+            aria-disabled={busy}
+            class={`${PRIMARY_BUTTON} ${busy ? 'opacity-80 cursor-progress' : ''}`}
           >
-            {submitting ? 'Separando tu cita…' : 'Separar mi cita'}
+            {busy ? 'Separando tu cita…' : 'Separar mi cita'}
           </button>
         )}
       </FlowFooter>
@@ -475,3 +534,4 @@ function LoadingFrame() {
     </Frame>
   );
 }
+

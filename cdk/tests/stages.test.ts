@@ -60,7 +60,7 @@ describe('stages', () => {
     const dlq = alarmsOf(prod)[0];
     const stats = dlq.Properties.Metrics!.filter((q) => q.MetricStat);
     expect(stats.map((q) => q.MetricStat!.Metric.Dimensions[0].Value).sort()).toEqual([
-      'separame-prod-stream-emails-dlq',
+      'separame-prod-stream-appointments-dlq',
       'separame-prod-stream-publish-dlq',
     ]);
     expect(stats.length).toBeLessThanOrEqual(MAX_METRICS_PER_ALARM);

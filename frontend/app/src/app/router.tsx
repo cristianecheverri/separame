@@ -37,6 +37,9 @@ export const routes: RouteObject[] = [
                     children: [
                       { index: true, element: <AgendaPage /> },
                       { path: 'appointments', lazy: page(() => import('../features/appointments/AppointmentsPage'), 'AppointmentsPage') },
+                      { path: 'clients', lazy: page(() => import('../features/clients/ClientsPage'), 'ClientsPage') },
+                      { path: 'clients/:clientKey', lazy: page(() => import('../features/clients/ClientDetailPage'), 'ClientDetailPage') },
+                      { path: 'stats', lazy: page(() => import('../features/stats/StatsPage'), 'StatsPage') },
                       { path: 'services', lazy: page(() => import('../features/services/ServicesPage'), 'ServicesPage') },
                       { path: 'availability', lazy: page(() => import('../features/availability/AvailabilityPage'), 'AvailabilityPage') },
                       { path: 'calendar-sync', lazy: page(() => import('../features/calendar/CalendarSyncPage'), 'CalendarSyncPage') },

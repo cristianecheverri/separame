@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery, useQueryClient, type QueryClient } from '@t
 import {
   apiPaths,
   type AdminProDetailResponse, type AdminStatsResponse, type AppointmentsResponse, type AvailabilitySettingsResponse, type CalendarSyncResponse,
-  type BillingResponse, type ListPricesResponse, type ListSubscriptionsQuery, type ListSubscriptionsResponse,
+  type BillingResponse, type ClientDetailResponse, type ClientsResponse, type ListPricesResponse, type PushConfigResponse, type StatsResponse, type WaitlistResponse, type ListSubscriptionsQuery, type ListSubscriptionsResponse,
   type MeResponse, type MigrationsResponse, type ProSlotsResponse, type ServicesResponse,
 } from '@shared/api';
 import type { ISODate } from '@shared/time';
@@ -20,6 +20,12 @@ export const keys = {
   slots: (serviceId: string, from: ISODate, days: number) => ['slots', serviceId, from, days] as const,
   billing: ['billing'] as const,
   calendarSync: ['calendar-sync'] as const,
+  clientsAll: ['clients'] as const,
+  clients: (q: string) => ['clients', 'list', q] as const,
+  client: (key: string) => ['clients', 'detail', key] as const,
+  waitlist: ['waitlist'] as const,
+  stats: (from: ISODate, to: ISODate) => ['stats', from, to] as const,
+  pushConfig: ['push-config'] as const,
   adminStats: ['admin', 'stats'] as const,
   adminSubscriptions: (q: ListSubscriptionsQuery) => ['admin', 'subscriptions', q.state ?? '', q.q ?? ''] as const,
   adminSubscriptionsAll: ['admin', 'subscriptions'] as const,
@@ -61,6 +67,20 @@ export function useSlots(serviceId: string | null, from: ISODate, days: number) 
 export function useBilling(enabled = true) {
   return useQuery({ queryKey: keys.billing, queryFn: () => api.get<BillingResponse>(apiPaths.billing()), enabled, staleTime: 60_000 });
 }
+
+export function useClients(q: string) {
+  return useQuery({ queryKey: keys.clients(q), queryFn: () => api.get<ClientsResponse>(apiPaths.clients(q ? { q } : undefined)), placeholderData: keepPreviousData });
+}
+
+export const useClient = (key: string) => useQuery({ queryKey: keys.client(key), queryFn: () => api.get<ClientDetailResponse>(apiPaths.client(key)) });
+
+export const useWaitlist = () => useQuery({ queryKey: keys.waitlist, queryFn: () => api.get<WaitlistResponse>(apiPaths.waitlist()) });
+
+export function useStats(from: ISODate, to: ISODate) {
+  return useQuery({ queryKey: keys.stats(from, to), queryFn: () => api.get<StatsResponse>(apiPaths.stats({ from, to })), placeholderData: keepPreviousData });
+}
+
+export const usePushConfig = () => useQuery({ queryKey: keys.pushConfig, queryFn: () => api.get<PushConfigResponse>(apiPaths.pushConfig()), staleTime: 5 * 60_000 });
 
 export const useCalendarSync = () =>
   useQuery({ queryKey: keys.calendarSync, queryFn: () => api.get<CalendarSyncResponse>(apiPaths.calendarSync()), staleTime: 5 * 60_000 });

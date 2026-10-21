@@ -14,6 +14,9 @@ import { firstName, formatDayMonth, formatDayTitle, linkLabel } from '../../lib/
 import { usePro } from '../../lib/pro';
 import { useAppointments, useAvailability } from '../../lib/queries';
 import { AppointmentCard } from '../appointments/AppointmentCard';
+import { useOutcome } from '../appointments/useOutcome';
+import { WaitlistCard } from '../appointments/Waitlist';
+import { InstallCard } from '../../components/install/InstallCard';
 import type { AppointmentModalState } from '../appointments/AppointmentModals';
 import { LazyAppointmentModals as AppointmentModals } from '../appointments/LazyAppointmentModals';
 import { CalendarSyncCard, ReadOnlyChecklist, ReminderNote, ShareCard, UpcomingCard } from './SideCards';
@@ -41,6 +44,7 @@ export function AgendaPage() {
   const [view, setView] = useState<'day' | 'week'>('day');
   const [date, setDate] = useState<ISODate>(today);
   const [modal, setModal] = useState<AppointmentModalState>(null);
+  const markOutcome = useOutcome();
 
   const shownDate = readOnly ? today : date;
   const weekStart = addDays(shownDate, -((jsWeekday(shownDate) + 6) % 7));
@@ -99,6 +103,11 @@ export function AgendaPage() {
         </div>
       </div>
 
+      {!readOnly && (
+        <div className="lg:hidden empty:hidden">
+          <InstallCard />
+        </div>
+      )}
       <div className="flex flex-wrap gap-6 items-start">
         <section className={cx(ui.card, 'flex-[999_1_480px] min-w-0 gap-[6px]')} aria-labelledby="agenda-title">
           <div className="flex flex-wrap justify-between items-center gap-3 pb-[10px]">
@@ -186,7 +195,9 @@ export function AgendaPage() {
               <AppointmentCard
                 key={row.key}
                 row={row}
+                now={clock}
                 readOnly={readOnly}
+                onOutcome={markOutcome}
                 onMove={(appointment) => setModal({ kind: 'move', appointment })}
                 onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}
                 onFree={() => setModal({ kind: 'new', date: shownDate })}
@@ -203,8 +214,12 @@ export function AgendaPage() {
           </div>
         ) : (
           <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+            <div className="hidden lg:block empty:hidden">
+              <InstallCard />
+            </div>
             <ShareCard url={publicUrl} slug={profile.slug} />
             <UpcomingCard today={today} appointments={upcomingQuery.data?.appointments} schedule={settings?.schedule} rules={settings?.rules} />
+            <WaitlistCard />
             <ReminderNote today={today} appointments={upcomingQuery.data?.appointments} />
             <CalendarSyncCard />
           </div>

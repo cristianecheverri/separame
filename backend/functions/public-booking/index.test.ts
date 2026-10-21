@@ -1,6 +1,7 @@
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
+import { clientKeyOf } from '../../../shared/clients';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { serviceKey, settingsKey, slugKey, subKey, profileKey } from '../../lib/keys';
 import { verifyManageToken } from '../../lib/tokens';
@@ -70,6 +71,8 @@ describe('POST /public/pros/{slug}/bookings', () => {
       GSI2PK: 'REMIND#2026-10-20',
       createdBy: 'client',
       revision: 0,
+      clientConfirmation: 'pending',
+      clientKey: clientKeyOf({ email: 'mariana@correo.com', phone: '' }),
       client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
     });
     expect(appt.GSI2SK).toBe(`2026-10-20T15:00:00.000Z#${PRO_ID}#${appt.id}`);
@@ -81,7 +84,7 @@ describe('POST /public/pros/{slug}/bookings', () => {
     expect(locks.every((l) => l.Item!.ttl === Date.parse('2026-10-28T15:40:00.000Z') / 1000)).toBe(true);
 
     const body = parse(res);
-    expect(body.booking).toMatchObject({ appointmentId: appt.id, serviceName: 'Valoración', pro: { slug: profile.slug, initials: 'LP' } });
+    expect(body.booking).toMatchObject({ appointmentId: appt.id, serviceName: 'Valoración', clientConfirmation: 'pending', pro: { slug: profile.slug, initials: 'LP', neighborhood: 'El Poblado' } });
     const token = verifyManageToken(body.manageToken, 'link-secret', NOW);
     expect(token).toMatchObject({ ok: true, payload: { p: PRO_ID, a: appt.id } });
   });

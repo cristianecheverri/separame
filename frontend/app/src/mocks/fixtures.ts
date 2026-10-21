@@ -7,7 +7,7 @@ import type { AdminSubscriptionRow } from '@shared/api';
 import type { PaymentInstructions } from '@shared/types';
 import { DEFAULT_RULES } from '@shared/availability';
 import { addDays, toInstant, type ISODate } from '@shared/time';
-import type { Appointment, Block, Payment, PriceMigration, PriceVersion, ProProfile, Service, WeeklySchedule } from '@shared/types';
+import type { Appointment, Block, Payment, PriceMigration, PriceVersion, ProProfile, Service, WaitlistEntry, WeeklySchedule } from '@shared/types';
 
 export const MOCK_NOW = '2026-10-20T14:25:00.000Z'; // 9:25 a. m. in Bogotá
 export const TODAY: ISODate = '2026-10-20';
@@ -90,6 +90,9 @@ function appt(
     createdBy: 'client',
     createdAt: '2026-10-14T16:00:00.000Z',
     updatedAt: '2026-10-14T16:00:00.000Z',
+    clientConfirmation: seq % 3 === 0 ? 'pending' : 'confirmed',
+    revision: 0,
+    clientKey: `c-${slug}`,
     ...extra,
   };
 }
@@ -111,13 +114,13 @@ function fill(date: ISODate, count: number, offset: number): Appointment[] {
 export function trialAppointments(): Appointment[] {
   seq = 0;
   return [
-    appt(TODAY, '08:00', 'Mariana Gómez', 'svc-valoracion'),
-    appt(TODAY, '08:30', 'Juan Esteban Ruiz', 'svc-control', { createdBy: 'pro' }),
-    appt(TODAY, '10:00', 'Sofía Castaño', 'svc-limpieza', { createdAt: '2026-10-20T12:10:00.000Z', updatedAt: '2026-10-20T12:10:00.000Z' }),
-    appt(TODAY, '11:00', 'Carlos Mejía', 'svc-valoracion'),
+    appt(TODAY, '08:00', 'Mariana Gómez', 'svc-valoracion', { clientConfirmation: 'confirmed', outcome: 'attended', outcomeAt: '2026-10-20T13:35:00.000Z' }),
+    appt(TODAY, '08:30', 'Juan Esteban Ruiz', 'svc-control', { createdBy: 'pro', clientConfirmation: 'confirmed' }),
+    appt(TODAY, '10:00', 'Sofía Castaño', 'svc-limpieza', { createdAt: '2026-10-20T12:10:00.000Z', updatedAt: '2026-10-20T12:10:00.000Z', clientConfirmation: 'pending' }),
+    appt(TODAY, '11:00', 'Carlos Mejía', 'svc-valoracion', { clientConfirmation: 'confirmed' }),
     appt(TODAY, '14:00', 'Valentina Osorio', 'svc-control', { status: 'cancelled', cancelledBy: 'client', updatedAt: '2026-10-19T22:00:00.000Z' }),
-    appt(TODAY, '15:00', 'Daniela Herrera', 'svc-limpieza'),
-    appt(TODAY, '16:00', 'Tomás Rendón', 'svc-control', { createdBy: 'pro' }),
+    appt(TODAY, '15:00', 'Daniela Herrera', 'svc-limpieza', { clientConfirmation: 'confirmed' }),
+    appt(TODAY, '16:00', 'Tomás Rendón', 'svc-control', { createdBy: 'pro', clientConfirmation: 'pending' }),
     ...fill(addDays(TODAY, 1), 5, 0),
     ...fill(addDays(TODAY, 2), 7, 5),
     ...fill(addDays(TODAY, 3), 3, 12),
@@ -127,7 +130,28 @@ export function trialAppointments(): Appointment[] {
     ...fill(addDays(TODAY, -1), 4, 6),
     ...fill(addDays(TODAY, -4), 3, 10),
     ...fill(addDays(TODAY, -6), 2, 2),
-  ].map((a) => (a.start < MOCK_NOW && a.status === 'confirmed' ? { ...a, reminderSentAt: addMinutesIso(a.start, -24 * 60) } : a));
+    ...history(),
+  ].map((a) => {
+    if (a.start >= MOCK_NOW || a.status !== 'confirmed') return a;
+    const withReminder = { ...a, reminderSentAt: addMinutesIso(a.start, -24 * 60) };
+    // Older past appointments are marked (one in eight a no-show); the last week stays partly unmarked.
+    const old = a.start < toInstant(addDays(TODAY, -3), '00:00');
+    if (a.outcome || a.start.startsWith('2026-10-20') || (!old && a.id.length % 2 === 0)) return withReminder;
+    return { ...withReminder, outcome: Number(a.id.slice(4)) % 8 === 0 ? ('no_show' as const) : ('attended' as const), outcomeAt: a.end };
+  });
+}
+
+/** ~4 months of past appointments so stats, clients and history have substance. */
+function history(): Appointment[] {
+  const out: Appointment[] = [];
+  for (let d = -125; d <= -7; d++) {
+    const date = addDays(TODAY, d);
+    const wd = new Date(`${date}T12:00:00Z`).getUTCDay();
+    if (wd === 0) continue;
+    const count = wd === 6 ? 2 : 2 + ((d * 7 + wd) % 4 === 0 ? 2 : (d + wd) % 3);
+    out.push(...fill(date, Math.min(count, 5), Math.abs(d * 3 + wd)));
+  }
+  return out.map((a, i) => (i % 17 === 0 ? { ...a, status: 'cancelled', cancelledBy: 'client' } : i % 5 === 0 ? { ...a, createdBy: 'pro' } : a));
 }
 
 export function expiredAppointments(): Appointment[] {
@@ -267,3 +291,16 @@ export function calendarSyncFor(token: string, invitesEnabled: boolean) {
 }
 
 export const CALENDAR_TOKEN = 'demoToken7f3a9c1e5b2d4086';
+
+export function waitlistEntries(): WaitlistEntry[] {
+  const base = { proId: lauraProfile.id, status: 'waiting' as const, notifiedCount: 0, lastNotifiedAt: null };
+  return [
+    { ...base, id: 'wl-1', serviceId: 'svc-limpieza', serviceName: 'Limpieza dental', dates: ['2026-10-22', '2026-10-23'], client: { name: 'Paula Restrepo', email: 'paula.restrepo@correo.co', phone: '3007788990' }, createdAt: '2026-10-19T14:00:00.000Z' },
+    { ...base, id: 'wl-2', serviceId: 'svc-valoracion', serviceName: 'Valoración', dates: ['2026-10-21'], client: { name: 'Esteban Gil', email: 'esteban.gil@correo.co', phone: '3014455667' }, createdAt: '2026-10-19T20:30:00.000Z', notifiedCount: 1, lastNotifiedAt: '2026-10-20T13:00:00.000Z' },
+    { ...base, id: 'wl-3', serviceId: 'svc-control', serviceName: 'Control', dates: ['2026-10-26', '2026-10-27', '2026-10-28'], client: { name: 'Lina Marcela Ruiz', email: '', phone: '3102233445' }, createdAt: '2026-10-20T11:15:00.000Z' },
+    { ...base, id: 'wl-4', serviceId: 'svc-valoracion', serviceName: 'Valoración', dates: ['2026-10-23'], client: { name: 'Andrés Cardona', email: 'andres.cardona@correo.co', phone: '3156677889' }, createdAt: '2026-10-20T12:40:00.000Z' },
+    { ...base, id: 'wl-5', serviceId: 'svc-limpieza', serviceName: 'Limpieza dental', dates: ['2026-10-20'], status: 'booked', client: { name: 'Camila Zapata', email: 'camila.zapata@correo.co', phone: '3120001122' }, createdAt: '2026-10-18T12:40:00.000Z' },
+  ];
+}
+
+export const PUSH_VAPID_KEY = 'BMockVapidPublicKey_onlyForMockMode_not-real-0123456789abcdefghijklmnopqrstuvwxyzABCDEFG';

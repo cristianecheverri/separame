@@ -2,7 +2,8 @@ import { cancelBookingSchema, rescheduleBookingSchema } from '../../../shared/sc
 import { ApiError, createApiHandler, ok, parseBody, pathParam, sourceIp } from '../../lib/http';
 import { hitRateLimit, RATE_RULES } from '../../lib/rate-limit';
 import {
-  bookingSummary, cancelAppointment, canClientChange, managedResponse, moveAppointment, resolveManageToken, toAppointment,
+  bookingSummary, cancelAppointment, canClientChange, confirmAttendance, managedResponse, moveAppointment, resolveManageToken,
+  toAppointment,
 } from '../../services/appointments';
 import { requireProfile } from '../../services/profiles';
 import { assertBookable, loadSubscription } from '../../services/subscriptions';
@@ -11,7 +12,8 @@ import { assertBookable, loadSubscription } from '../../services/subscriptions';
  * Client manages an appointment through the signed link `/c/<token>` (no
  * account). Changes close CLIENT_CHANGE_CUTOFF_MIN before the start. Cancel
  * works even if the professional's plan expired; reschedule needs an active
- * agenda (it is a new booking).
+ * agenda (it is a new booking). "Sí, voy" (confirm attendance) works until
+ * the start, also with an expired plan.
  */
 export const handler = createApiHandler({
   'GET /public/appointments/{token}': async (event) => {
@@ -31,6 +33,15 @@ export const handler = createApiHandler({
     if (!canClientChange(appt, now)) throw new ApiError('too_late');
     const cancelled = await cancelAppointment({ appt, actor: 'client', reason: input.reason, now });
     return ok({ booking: bookingSummary(toAppointment(cancelled), pro) });
+  },
+
+  'POST /public/appointments/{token}/confirm': async (event) => {
+    await hitRateLimit(RATE_RULES.managePerIp, sourceIp(event));
+    const now = new Date();
+    const appt = await resolveManageToken(pathParam(event, 'token'), now);
+    const confirmed = await confirmAttendance(appt, now);
+    const pro = await requireProfile(appt.proId);
+    return ok({ booking: bookingSummary(toAppointment(confirmed), pro) });
   },
 
   'POST /public/appointments/{token}/reschedule': async (event) => {

@@ -86,12 +86,16 @@ export interface DayPillProps {
   label: string;
   selected: boolean;
   disabled: boolean;
+  /** Open but fully booked: looks like a closed day, still selectable (waitlist). */
+  full?: boolean;
   onPick: () => void;
 }
 
-export function DayPill({ dow, num, label, selected, disabled, onPick }: DayPillProps) {
+export function DayPill({ dow, num, label, selected, disabled, full = false, onPick }: DayPillProps) {
   const tone = disabled
     ? 'bg-surface border-surface text-faint cursor-default'
+    : full && !selected
+      ? 'bg-surface border-surface text-faint hover:border-line'
     : selected
       ? 'bg-primary border-primary text-white'
       : 'bg-white border-line text-ink hover:border-line-strong';

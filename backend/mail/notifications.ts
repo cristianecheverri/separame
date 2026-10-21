@@ -1,12 +1,14 @@
+import { CONFIRM_ACTION_PARAM } from '../../shared/api';
 import { ROOT_DOMAIN, SITE_PATHS } from '../../shared/infra';
 import type { ISODate, ISOInstant } from '../../shared/time';
-import type { Appointment, Payment, PriceVersion, ProProfile } from '../../shared/types';
+import type { Appointment, Payment, PriceVersion, ProProfile, WaitlistEntry } from '../../shared/types';
 import { env } from '../lib/env';
 import { manageTokenFor } from '../lib/tokens';
 import { googleCalendarUrl, outlookCalendarUrl, type CalendarEvent } from './calendar-links';
 import { buildIcs } from './ics';
 import { sendEmail, type CalendarInvite, type SendResult } from './sender';
 import { proCalendarEmail, type ProCalendarKind } from './templates/pro-calendar';
+import { waitlistJoinedEmail, waitlistOfferEmail } from './templates/waitlist';
 import { bookingConfirmedEmail, type BookingEmailData } from './templates/booking-confirmed';
 import { bookingChangedEmail, proBookingChangedEmail } from './templates/booking-changed';
 import { clientCancelledEmail, proCancelledEmail, type CancelledData } from './templates/booking-cancelled';
@@ -174,6 +176,7 @@ export async function sendReminder(appt: Appointment, pro: ProProfile): Promise<
     ...reminderEmail({
       siteUrl: env.siteUrl(), clientName: appt.client.name, pro: proInfo(pro), serviceName: appt.serviceName,
       durationMin: appt.durationMin, start: appt.start, manageUrl: link,
+      confirmUrl: `${link}?${CONFIRM_ACTION_PARAM}`, clientConfirmation: appt.clientConfirmation ?? 'pending',
     }),
     to: appt.client.email,
     replyTo: pro.email,
@@ -238,5 +241,31 @@ export async function sendNoticeRejected(input: { profile: ProProfile; payment: 
     ...noticeRejectedEmail({ siteUrl: env.siteUrl(), name: input.profile.name, payment: input.payment }),
     to: input.profile.email,
     replyTo: operatorReplyTo(),
+  });
+}
+
+// ── Waitlist ───────────────────────────────────────────────────────────────
+
+export async function sendWaitlistJoined(input: { entry: WaitlistEntry; pro: ProProfile; leaveUrl: string }): Promise<SendResult> {
+  return sendEmail({
+    ...waitlistJoinedEmail({
+      siteUrl: env.siteUrl(), clientName: input.entry.client.name, pro: proInfo(input.pro), serviceName: input.entry.serviceName,
+      dates: input.entry.dates, leaveUrl: input.leaveUrl,
+    }),
+    to: input.entry.client.email,
+    replyTo: input.pro.email,
+  });
+}
+
+export async function sendWaitlistOffer(input: {
+  entry: WaitlistEntry; pro: ProProfile; date: ISODate; slots: ISOInstant[]; leaveUrl: string;
+}): Promise<SendResult> {
+  return sendEmail({
+    ...waitlistOfferEmail({
+      siteUrl: env.siteUrl(), clientName: input.entry.client.name, pro: proInfo(input.pro), serviceId: input.entry.serviceId,
+      serviceName: input.entry.serviceName, date: input.date, slots: input.slots, leaveUrl: input.leaveUrl,
+    }),
+    to: input.entry.client.email,
+    replyTo: input.pro.email,
   });
 }

@@ -22,6 +22,9 @@
  *                                                              approved only: GSI1PK=PAYMENTS#<YYYY-MM>  GSI1SK=<paidAt>#<proId>#<id>
  *                                                              (monthly revenue in one query)
  *  PRO#<proId>                      CALSYNC                    { token, invitesEnabled, createdAt } — calendar sync settings
+ *  PRO#<proId>                      CLIENT#<clientKey>         ClientRecord (aggregates from appointment events + notes)
+ *  PRO#<proId>                      WAIT#<entryId>             WaitlistEntry (TTL: last date + 1 day)
+ *  PRO#<proId>                      PUSH#<sha256(endpoint)>    web push subscription of one device
  *  CALFEED#<token>                  CALFEED                    { proId } — resolves the secret .ics feed URL (deleted on rotate)
  *  SLUG#<slug>                      SLUG                       { proId }  — uniqueness via conditional put
  *  LOCK#<proId>#<bogotaDate>        <HH:mm>                    { apptId } — 5-min double-booking locks (TTL: slot end + 7 days)
@@ -33,7 +36,15 @@
  *  SUPPRESS#<email>                 SUPPRESS                   bounced / complained address
  *  RATE#<scope>#<id>#<window>       RATE                       anti-spam counter (TTL)
  *
- *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, and LOCK once its slot is in the
+ *  Internal attributes: CLIENT items keep `appts` (≤ 500 per client; older ones summed into
+ *  `archived`), `contactAt` and an optimistic `version`; WAIT items keep `offeredAt`; SETTINGS keeps
+ *  `clientsBackfilledAt` (lazy client backfill done). A deleted client's appointments keep
+ *  `clientKey = 'deleted'` with the contact scrubbed.
+ *
+ *  clientKey = first 24 hex chars of sha256(normalized email), or of sha256('tel:' + phone) when
+ *  there's no email (helper `clientKeyOf` in shared/clients.ts).
+ *
+ *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, WAIT (after its last date), and LOCK once its slot is in the
  *  past (a past slot can never be booked again, so the lock is no longer needed). Appointments,
  *  payments and subscriptions never expire.
  */
@@ -80,6 +91,9 @@ export const SSM_PARAMS = {
   billingInstructions: '/billing/instructions',
   /** HMAC key for the client's cancel/reschedule links. */
   linkSigningSecret: '/links/signing-secret',
+  /** VAPID key pair for web push to the pro's devices (public = plain String). */
+  webPushPublicKey: '/webpush/public-key',
+  webPushPrivateKey: '/webpush/private-key',
 } as const;
 
 export const ssmPrefix = (stage: 'dev' | 'prod') => `/separame/${stage}`;
@@ -95,6 +109,9 @@ export const SITE_PATHS = {
   manage: '/c/',
   /** File every /c/<token> request is rewritten to (built by frontend/booking). */
   manageIndex: '/c/index.html',
+  /** Waitlist "leave" page from the offer emails: /w/<token> → /w/index.html. */
+  waitlistLeave: '/w/',
+  waitlistLeaveIndex: '/w/index.html',
   /** Error page CloudFront serves for 403/404 (built by frontend/booking). */
   notFound: '/404.html',
   /** HTML shell the profile pages are generated from (built by frontend/booking). */

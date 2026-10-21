@@ -7,7 +7,9 @@ import { setTransport } from '../lib/api';
 import { auth } from '../lib/auth';
 import { pinClock } from '../lib/clock';
 import { MOCK_NOW, type BillingMockState, type MockState } from '../mocks/fixtures';
-import { mockAuthClient } from '../mocks/install';
+import { mockAuthClient, mockPushAdapter } from '../mocks/install';
+import { push } from '../lib/push';
+import { installStore } from '../lib/install';
 import { mockTransport, resetMockDb } from '../mocks/mockApi';
 
 interface Options {
@@ -22,6 +24,9 @@ export async function renderApp(path: string, { state = 'trial', admin = false, 
   pinClock(MOCK_NOW);
   resetMockDb({ state, isAdmin: admin, billing });
   setTransport((req) => mockTransport(req, 0));
+  push.set(mockPushAdapter());
+  installStore.override(null);
+  localStorage.clear();
   await auth.init(mockAuthClient(signedIn ? 'laura@consultoriolaura.co' : null));
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchInterval: false, refetchOnWindowFocus: false } } });
   const router = createMemoryRouter(routes, { initialEntries: [path] });

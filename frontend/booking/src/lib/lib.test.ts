@@ -63,7 +63,7 @@ describe('slots helpers', () => {
 
 describe('calendar links', () => {
   const booking: BookingSummary = {
-    appointmentId: 'a1', status: 'confirmed', start: '2026-10-22T15:00:00.000Z', end: '2026-10-22T15:30:00.000Z',
+    appointmentId: 'a1', status: 'confirmed', clientConfirmation: 'pending', start: '2026-10-22T15:00:00.000Z', end: '2026-10-22T15:30:00.000Z',
     serviceId: 's1', serviceName: 'Valoración', durationMin: 30, priceCop: 60000,
     client: { name: 'Mariana Gómez', email: 'mariana@correo.com' },
     pro: {

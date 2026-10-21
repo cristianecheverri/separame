@@ -1,24 +1,24 @@
 import { randomBytes } from 'node:crypto';
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { CALENDAR_FEED_FUTURE_DAYS, CALENDAR_FEED_PAST_DAYS, type CalendarSyncResponse } from '../../shared/api';
-import { LSI1, ROOT_DOMAIN } from '../../shared/infra';
+import { ROOT_DOMAIN } from '../../shared/infra';
 import { addDays, toInstant, todayBogota, type ISOInstant } from '../../shared/time';
 import type { ProProfile } from '../../shared/types';
-import { ddb, failedConditionIndex, getItem, queryAll, table, transactWrite } from '../lib/dynamo';
+import { ddb, failedConditionIndex, getItem, table, transactWrite } from '../lib/dynamo';
 import { env } from '../lib/env';
 import { ApiError } from '../lib/http';
-import { apptStartSk, calFeedKey, calSyncKey, proPk } from '../lib/keys';
+import { calFeedKey, calSyncKey } from '../lib/keys';
 import { log } from '../lib/logger';
 import { buildCalendar, type IcsEvent, type IcsMethod } from '../mail/ics';
 import { whereText } from '../mail/templates/common';
-import { revisionOf, type AppointmentItem } from './appointments';
+import { appointmentItemsBetween, revisionOf, type AppointmentItem } from './appointments';
 
 /**
  * Calendar sync for the professional, without OAuth:
  *  1. A secret subscription feed (`/public/calendar/<token>.ics`) that
  *     Google / Outlook / Apple poll. Rotating the token kills the old URL.
  *  2. Calendar invitations (REQUEST / CANCEL) emailed on every change by
- *     stream-emails, when `invitesEnabled` (default true).
+ *     stream-appointments, when `invitesEnabled` (default true).
  * Both use the same UID per appointment and its `revision` as SEQUENCE.
  */
 
@@ -190,15 +190,9 @@ export async function buildFeed(pro: ProProfile, now: Date = new Date()): Promis
   const from = toInstant(addDays(today, -CALENDAR_FEED_PAST_DAYS), '00:00');
   const to = toInstant(addDays(today, CALENDAR_FEED_FUTURE_DAYS + 1), '00:00');
   const cancelledSince = new Date(now.getTime() - CALENDAR_FEED_PAST_DAYS * DAY_MS).toISOString();
-  const items = await queryAll<AppointmentItem>({
-    IndexName: LSI1.name,
-    KeyConditionExpression: 'PK = :pk AND #sk BETWEEN :from AND :to',
-    ExpressionAttributeNames: { '#sk': LSI1.sk },
-    ExpressionAttributeValues: { ':pk': proPk(pro.id), ':from': apptStartSk(from), ':to': apptStartSk(to) },
-    Select: 'ALL_ATTRIBUTES',
-  }, 10_000);
+  const items = await appointmentItemsBetween(pro.id, from, to, 10_000);
   const events = items
-    .filter((a) => a.start < to && (a.status === 'confirmed' || (a.status === 'cancelled' && a.updatedAt >= cancelledSince)))
+    .filter((a) => (a.status === 'confirmed' || (a.status === 'cancelled' && a.updatedAt >= cancelledSince)))
     .map((a) => proEvent(a, pro, now));
   return buildCalendar({
     method: 'PUBLISH',

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type CalendarSyncResponse, type UpdateCalendarSyncRequest } from '@shared/api';
 import { cx } from '../../components/ui/cx';
@@ -12,6 +13,7 @@ import { api, errorMessage } from '../../lib/api';
 import { copyText } from '../../lib/clipboard';
 import { keys, useCalendarSync } from '../../lib/queries';
 import { AppleCalendarLogo, GoogleCalendarLogo, OutlookLogo } from './CalendarLogos';
+import { PushCard } from './PushCard';
 
 const badge = 'text-[12px] font-bold py-[5px] px-[10px] rounded-full whitespace-nowrap';
 
@@ -139,6 +141,10 @@ function FeedCard({ sync }: { sync: CalendarSyncResponse }) {
 /** "Tu calendario": calendar invitations and the subscribed .ics feed (no OAuth). */
 export function CalendarSyncPage() {
   const sync = useCalendarSync();
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash === '#avisos') document.getElementById('avisos')?.scrollIntoView({ block: 'start' });
+  }, [location.hash, sync.data]);
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -162,6 +168,7 @@ export function CalendarSyncPage() {
             <AlertIcon size={20} className="shrink-0 mt-[1px]" />
             <span>Si usas las dos opciones verás cada cita dos veces (una en tu calendario principal y otra en el suscrito). Puedes ocultar uno de los dos en tu calendario.</span>
           </section>
+          <PushCard />
         </>
       )}
     </div>

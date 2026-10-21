@@ -171,11 +171,11 @@ export async function sendEmail(email: OutgoingEmail): Promise<SendResult> {
  * if sending fails the marker is removed so a retry can send again.
  * Returns false when the key was already used.
  */
-export async function sendOnce(key: string, send: () => Promise<unknown>, now: Date = new Date()): Promise<boolean> {
+export async function sendOnce(key: string, send: () => Promise<unknown>, now: Date = new Date(), ttlDays = MARKER_TTL_DAYS): Promise<boolean> {
   try {
     await ddb.send(new PutCommand({
       TableName: table(),
-      Item: { ...emailKey(key), at: now.toISOString(), ttl: ttlInDays(MARKER_TTL_DAYS, now) },
+      Item: { ...emailKey(key), at: now.toISOString(), ttl: ttlInDays(ttlDays, now) },
       ConditionExpression: 'attribute_not_exists(PK)',
     }));
   } catch (err) {

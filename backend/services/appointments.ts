@@ -4,12 +4,13 @@ import type {
 } from '../../shared/api';
 import { CLIENT_CHANGE_CUTOFF_MIN } from '../../shared/api';
 import { isSlotBookable, lockUnits } from '../../shared/availability';
+import { clientKeyOf } from '../../shared/clients';
 import { initials } from '../../shared/format';
 import { GSI2, LSI1 } from '../../shared/infra';
 import { addDays, addMinutes, bogotaDate, toInstant, type ISODate, type ISOInstant } from '../../shared/time';
-import type { Actor, Appointment, ClientContact, ProProfile, Service } from '../../shared/types';
+import type { Actor, Appointment, AppointmentOutcome, ClientContact, ProProfile, Service } from '../../shared/types';
 import {
-  cancellationCodes, ddb, failedConditionIndex, getItem, MAX_TRANSACT_ITEMS, queryAll, table, transactWrite,
+  cancellationCodes, ddb, failedConditionIndex, getItem, isConditionalFailure, MAX_TRANSACT_ITEMS, queryAll, table, transactWrite,
   type Item, type TransactItem,
 } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
@@ -28,7 +29,7 @@ import { loadContext } from './availability';
  * bookings always share a unit, so the second transaction is canceled and
  * surfaces as 409 `slot_taken`. Cancel deletes the locks and the reminder
  * attributes in the same transaction. Emails are NOT sent here: the DynamoDB
- * stream (stream-emails) reacts to the item changes.
+ * stream (stream-appointments) reacts to the item changes.
  */
 
 const DAY_MS = 86_400_000;
@@ -38,19 +39,30 @@ const REMINDER_LEAD_MS = DAY_MS;
 export interface AppointmentItem extends Appointment {
   /** Buffer used when the locks were written (rules may change later). */
   lockBufferMin: number;
-  /** Who made the last change (stream-emails decides whom to notify). */
+  /** Who made the last change (stream-appointments decides whom to notify). */
   lastChangedBy?: Actor;
-  /**
-   * Monotonic revision: 0 on create, +1 in every update transaction (move,
-   * cancel). Used as the iCalendar SEQUENCE (feed + invitations). Missing = 0.
-   */
-  revision?: number;
 }
 
-export const revisionOf = (appt: Pick<AppointmentItem, 'revision'>): number => appt.revision ?? 0;
+/**
+ * Revision: 0 on create, +1 in every calendar change (move, cancel) — the
+ * iCalendar SEQUENCE of the feed and invitations. Attendance confirmation and
+ * outcome are not calendar changes and don't bump it. Missing = 0.
+ */
+export const revisionOf = (appt: Pick<Partial<AppointmentItem>, 'revision'>): number => appt.revision ?? 0;
+
+/** Old items predate some fields: fill the defaults so every reader sees a full Appointment. */
+export function normalizeAppointment(item: Item): AppointmentItem {
+  const a = item as Partial<AppointmentItem> & Item;
+  return {
+    ...(a as AppointmentItem),
+    clientConfirmation: a.clientConfirmation ?? 'pending',
+    revision: a.revision ?? 0,
+    clientKey: a.clientKey ?? clientKeyOf(a.client ?? { email: '', phone: '' }),
+  };
+}
 
 export function toAppointment(item: Item): Appointment {
-  const a = item as AppointmentItem;
+  const a = normalizeAppointment(item);
   return {
     id: a.id, proId: a.proId, serviceId: a.serviceId, serviceName: a.serviceName, durationMin: a.durationMin,
     priceCop: a.priceCop ?? null, start: a.start, end: a.end, status: a.status, client: a.client,
@@ -58,6 +70,12 @@ export function toAppointment(item: Item): Appointment {
     ...(a.cancelledBy ? { cancelledBy: a.cancelledBy } : {}),
     ...(a.cancelReason ? { cancelReason: a.cancelReason } : {}),
     ...(a.reminderSentAt ? { reminderSentAt: a.reminderSentAt } : {}),
+    clientConfirmation: a.clientConfirmation,
+    ...(a.confirmedAt ? { confirmedAt: a.confirmedAt } : {}),
+    ...(a.outcome ? { outcome: a.outcome } : {}),
+    ...(a.outcomeAt ? { outcomeAt: a.outcomeAt } : {}),
+    revision: a.revision,
+    clientKey: a.clientKey,
   };
 }
 
@@ -73,6 +91,7 @@ export function bookingSummary(appt: Appointment, pro: ProProfile): BookingSumma
   return {
     appointmentId: appt.id,
     status: appt.status,
+    clientConfirmation: appt.clientConfirmation ?? 'pending',
     start: appt.start,
     end: appt.end,
     serviceId: appt.serviceId,
@@ -197,7 +216,8 @@ async function releaseLocks(proId: string, apptId: string, units: ISOInstant[]):
 // ── Core operations ────────────────────────────────────────────────────────
 
 export async function getAppointmentItem(proId: string, apptId: string, consistent = true): Promise<AppointmentItem | undefined> {
-  return getItem<AppointmentItem>(apptKey(proId, apptId), consistent);
+  const item = await getItem(apptKey(proId, apptId), consistent);
+  return item ? normalizeAppointment(item) : undefined;
 }
 
 export async function requireAppointmentItem(proId: string, apptId: string): Promise<AppointmentItem> {
@@ -236,6 +256,8 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
     start, end: addMinutes(start, service.durationMin), status: 'confirmed', client: input.client,
     createdBy: input.createdBy, createdAt: at, updatedAt: at, lockBufferMin: ctx.rules.bufferMin, lastChangedBy: input.createdBy,
     revision: 0,
+    clientConfirmation: 'pending',
+    clientKey: clientKeyOf(input.client),
   };
   const item = {
     ...apptKey(proId, id),
@@ -361,6 +383,60 @@ export async function cancelAppointment(input: { appt: AppointmentItem; actor: A
   };
 }
 
+/**
+ * "Sí, voy": the client confirms attendance (manage link / reminder). Idempotent;
+ * only for confirmed appointments that haven't started. Not a calendar change
+ * (no revision bump); the pro hears about it through web push.
+ */
+export async function confirmAttendance(appt: AppointmentItem, now: Date): Promise<AppointmentItem> {
+  if (appt.status !== 'confirmed' || now.getTime() >= new Date(appt.start).getTime()) {
+    throw new ApiError('too_late', 'Esta cita ya no se puede confirmar.');
+  }
+  if (appt.clientConfirmation === 'confirmed') return appt;
+  const at = now.toISOString();
+  try {
+    await ddb.send(new UpdateCommand({
+      TableName: table(),
+      Key: apptKey(appt.proId, appt.id),
+      UpdateExpression: 'SET clientConfirmation = :c, confirmedAt = :at, updatedAt = :at',
+      ConditionExpression: '#st = :confirmed AND #start = :start',
+      ExpressionAttributeNames: { '#st': 'status', '#start': 'start' },
+      ExpressionAttributeValues: { ':c': 'confirmed', ':at': at, ':confirmed': 'confirmed', ':start': appt.start },
+    }));
+  } catch (err) {
+    if (isConditionalFailure(err)) throw new ApiError('conflict', 'La cita cambió mientras tanto. Recarga e intenta de nuevo.');
+    throw err;
+  }
+  log.info('attendance confirmed', { proId: appt.proId, appointmentId: appt.id });
+  return { ...appt, clientConfirmation: 'confirmed', confirmedAt: at, updatedAt: at };
+}
+
+/** The pro marks attended / no-show (or clears it) once the appointment started. Record keeping: no revision bump. */
+export async function setOutcome(appt: AppointmentItem, outcome: AppointmentOutcome | null, now: Date): Promise<AppointmentItem> {
+  if (appt.status !== 'confirmed') throw new ApiError('too_late', 'Esta cita fue cancelada.');
+  if (now.getTime() < new Date(appt.start).getTime()) {
+    throw new ApiError('too_late', 'Puedes marcar la asistencia cuando llegue la hora de la cita.');
+  }
+  const at = now.toISOString();
+  const update = outcome
+    ? { UpdateExpression: 'SET outcome = :o, outcomeAt = :at, updatedAt = :at', ExpressionAttributeValues: { ':o': outcome, ':at': at, ':confirmed': 'confirmed' } }
+    : { UpdateExpression: 'SET updatedAt = :at REMOVE outcome, outcomeAt', ExpressionAttributeValues: { ':at': at, ':confirmed': 'confirmed' } };
+  try {
+    await ddb.send(new UpdateCommand({
+      TableName: table(),
+      Key: apptKey(appt.proId, appt.id),
+      ConditionExpression: '#st = :confirmed',
+      ExpressionAttributeNames: { '#st': 'status' },
+      ...update,
+    }));
+  } catch (err) {
+    if (isConditionalFailure(err)) throw new ApiError('conflict', 'La cita cambió mientras tanto. Recarga e intenta de nuevo.');
+    throw err;
+  }
+  const { outcome: _o, outcomeAt: _oa, ...rest } = appt;
+  return { ...rest, ...(outcome ? { outcome, outcomeAt: at } : {}), updatedAt: at };
+}
+
 /** A pro's appointments with start in the Bogotá days [from, to] (LSI1 range). */
 export async function listAppointments(proId: string, from: ISODate, to: ISODate): Promise<Appointment[]> {
   const startMin = toInstant(from, '00:00');
@@ -374,6 +450,18 @@ export async function listAppointments(proId: string, from: ISODate, to: ISODate
     Select: 'ALL_ATTRIBUTES',
   });
   return items.filter((a) => a.start < endExclusive).map(toAppointment);
+}
+
+/** Every appointment of a pro whose start is in [from, to) (normalized items; LSI1). */
+export async function appointmentItemsBetween(proId: string, from: ISOInstant, to: ISOInstant, max = 20_000): Promise<AppointmentItem[]> {
+  const items = await queryAll({
+    IndexName: LSI1.name,
+    KeyConditionExpression: 'PK = :pk AND #sk BETWEEN :from AND :to',
+    ExpressionAttributeNames: { '#sk': LSI1.sk },
+    ExpressionAttributeValues: { ':pk': proPk(proId), ':from': apptStartSk(from), ':to': apptStartSk(to) },
+    Select: 'ALL_ATTRIBUTES',
+  }, max);
+  return items.filter((a) => a.start < to).map(normalizeAppointment);
 }
 
 /** Count of confirmed upcoming appointments (admin detail). */
@@ -434,7 +522,7 @@ export async function markReminderSent(proId: string, apptId: string, now: Date)
     }));
     return true;
   } catch (err) {
-    if ((err as { name?: string }).name === 'ConditionalCheckFailedException') return false;
+    if (isConditionalFailure(err)) return false;
     throw err;
   }
 }

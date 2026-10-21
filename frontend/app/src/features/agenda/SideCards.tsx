@@ -1,4 +1,7 @@
 import { Link } from 'react-router';
+import { push } from '../../lib/push';
+import { usePushConfig } from '../../lib/queries';
+import { usePushDevice } from '../../lib/usePushDevice';
 import { DAY_NAMES } from '@shared/format';
 import { addDays, jsWeekday, type ISODate } from '@shared/time';
 import type { Appointment, BookingRules, WeeklySchedule } from '@shared/types';
@@ -120,14 +123,25 @@ export function ReadOnlyChecklist() {
   );
 }
 
-/** Compact link to "Tu calendario". */
+/** Compact link to "Tu calendario" (and to push notices when this device can get them). */
 export function CalendarSyncCard() {
+  const config = usePushConfig();
+  const device = usePushDevice();
+  const offerPush = !!config.data?.vapidPublicKey && push.get().supported() && device.isSuccess && !device.data;
   return (
     <section className={cx(ui.card, 'gap-2')}>
       <h2 className={ui.h2sm}>¿Ves tus citas en Google Calendar?</h2>
       <Link to="/calendar-sync" className="self-start font-bold text-[14px] underline underline-offset-2 min-h-11 inline-flex items-center">
         Sincroniza tu calendario →
       </Link>
+      {offerPush && (
+        <div className="border-t border-line pt-3 mt-1 flex flex-col gap-1">
+          <span className="text-[14px] text-ink-2 leading-[1.4]">Recibe un aviso en este celular cuando te separen una cita.</span>
+          <Link to="/calendar-sync#avisos" className="self-start font-bold text-[14px] underline underline-offset-2 min-h-11 inline-flex items-center">
+            Activar avisos →
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

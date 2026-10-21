@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
-  DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand,
+  BatchGetCommand, DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand,
   type QueryCommandInput, type TransactWriteCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { env } from './env';
@@ -40,6 +40,21 @@ export async function queryAll<T = Item>(input: Omit<QueryCommandInput, 'TableNa
     startKey = res.LastEvaluatedKey;
   } while (startKey && items.length < max);
   return items.slice(0, max);
+}
+
+/** BatchGet in chunks of 100, retrying UnprocessedKeys with backoff. Order is not preserved. */
+export async function batchGetAll<T = Item>(keys: Key[], consistent = false): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < keys.length; i += 100) {
+    let pending: Key[] = keys.slice(i, i + 100);
+    for (let attempt = 0; pending.length > 0 && attempt < 6; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 40 * 2 ** attempt));
+      const res = await ddb.send(new BatchGetCommand({ RequestItems: { [table()]: { Keys: pending, ConsistentRead: consistent } } }));
+      out.push(...((res.Responses?.[table()] ?? []) as T[]));
+      pending = (res.UnprocessedKeys?.[table()]?.Keys ?? []) as Key[];
+    }
+  }
+  return out;
 }
 
 export async function transactWrite(items: TransactItem[]): Promise<void> {

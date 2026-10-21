@@ -4,18 +4,21 @@
  * Query switches:
  *   state=unavailable   subscription expired (active: false)
  *   state=notfound      unknown slug
- *   state=empty         no free slots in the window
+ *   state=empty         no free slots in the window (waitlist card)
+ *   services=1          profile with a single service (3-step flow)
  *   fail=<code>         first booking/reschedule attempt fails with that code
  *                       (slot_taken, agenda_unavailable, validation, captcha_failed, network)
  *   delay=<ms>          artificial latency (default 350)
- * Manage tokens: late (cutoff passed), cancelled, invalid (404); any other token is the demo appointment.
+ * Manage tokens: late (cutoff passed), cancelled, confirmed (attendance already
+ * confirmed), invalid (404); any other token is the demo appointment.
+ * Waitlist leave (/w/<token>): `invalid` → 404, anything else succeeds.
  */
 import type {
   AvailabilityResponse, BookingSummary, CreateBookingRequest, ManagedAppointmentResponse, PublicProfile,
 } from '@shared/api';
 import { CLIENT_CHANGE_CUTOFF_MIN } from '@shared/api';
 import { computeAvailability, type Interval } from '@shared/availability';
-import { addMinutes } from '@shared/time';
+import { addMinutes, bogotaDate, bogotaTime, toInstant } from '@shared/time';
 import { ApiError, type ApiClient } from '../lib/api';
 import { MOCK_NOW, MOCK_PROFILE, MOCK_RULES, MOCK_SCHEDULE, MOCK_TODAY, mockBusy } from './fixtures';
 
@@ -29,6 +32,7 @@ function summary(profile: PublicProfile, serviceId: string, start: string, clien
   return {
     appointmentId: id,
     status: 'confirmed',
+    clientConfirmation: 'pending',
     start,
     end: addMinutes(start, service.durationMin),
     serviceId: service.id,
@@ -44,17 +48,41 @@ function summary(profile: PublicProfile, serviceId: string, start: string, clien
   };
 }
 
+/**
+ * The manage page compares against the real clock, so mock appointments must
+ * stay in the future: the mockup's Thu 22 Oct 10:00 a. m. while that's ahead,
+ * otherwise tomorrow at the same time.
+ */
+function upcoming(fixed: string): string {
+  const now = Date.now();
+  if (new Date(fixed).getTime() > now) return fixed;
+  const tomorrow = new Date(now + 24 * 3600_000);
+  return toInstant(bogotaDate(tomorrow), bogotaTime(fixed));
+}
+
+/** Within the 2-hour change cutoff (real clock), on a half hour. */
+function soon(): string {
+  const half = 30 * 60_000;
+  return new Date(Math.ceil((Date.now() + 60 * 60_000) / half) * half).toISOString();
+}
+
 export function createMockApi(params: URLSearchParams): ApiClient {
   const state = params.get('state');
   let failure = params.get('fail');
   const delayMs = Number(params.get('delay') ?? 350);
+  const profile: PublicProfile =
+    params.get('services') === '1' ? { ...MOCK_PROFILE, services: MOCK_PROFILE.services.slice(0, 1) } : MOCK_PROFILE;
   const busy: Interval[] = mockBusy();
   const mariana = { name: 'Mariana Gómez', email: 'mariana@correo.com' };
   const appointments = new Map<string, StoredAppointment>([
-    ['demo', { booking: summary(MOCK_PROFILE, 'valoracion', '2026-10-22T15:00:00.000Z', mariana, 'appt-demo'), canChange: true }],
-    ['late', { booking: summary(MOCK_PROFILE, 'valoracion', '2026-10-20T22:30:00.000Z', mariana, 'appt-late'), canChange: false }],
+    ['demo', { booking: summary(MOCK_PROFILE, 'valoracion', upcoming('2026-10-22T15:00:00.000Z'), mariana, 'appt-demo'), canChange: true }],
+    ['late', { booking: summary(MOCK_PROFILE, 'valoracion', soon(), mariana, 'appt-late'), canChange: false }],
+    ['confirmed', {
+      booking: { ...summary(MOCK_PROFILE, 'valoracion', upcoming('2026-10-22T15:00:00.000Z'), mariana, 'appt-confirmed'), clientConfirmation: 'confirmed' },
+      canChange: true,
+    }],
     ['cancelled', {
-      booking: { ...summary(MOCK_PROFILE, 'valoracion', '2026-10-22T15:00:00.000Z', mariana, 'appt-cancelled'), status: 'cancelled' },
+      booking: { ...summary(MOCK_PROFILE, 'valoracion', upcoming('2026-10-22T15:00:00.000Z'), mariana, 'appt-cancelled'), status: 'cancelled' },
       canChange: false,
     }],
   ]);
@@ -83,7 +111,7 @@ export function createMockApi(params: URLSearchParams): ApiClient {
     async getPro(slug) {
       await wait();
       if (state === 'notfound') throw new ApiError('not_found', 'No existe', 404);
-      return { profile: { ...MOCK_PROFILE, slug: slug || MOCK_PROFILE.slug }, active };
+      return { profile: { ...profile, slug: slug || profile.slug }, active };
     },
     async getAvailability(_slug, query): Promise<AvailabilityResponse> {
       await wait();
@@ -126,6 +154,26 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       appt.booking = { ...appt.booking, status: 'cancelled' };
       appt.canChange = false;
       return { booking: appt.booking };
+    },
+    async confirmAppointment(token) {
+      await wait();
+      const appt = find(token);
+      if (appt.booking.status === 'cancelled') throw new ApiError('conflict', 'Cancelada', 409);
+      if (new Date(appt.booking.start).getTime() <= Date.now()) throw new ApiError('too_late', 'Muy tarde', 422);
+      appt.booking = { ...appt.booking, clientConfirmation: 'confirmed' };
+      return { booking: appt.booking };
+    },
+    async joinWaitlist(_slug, body) {
+      await wait();
+      if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
+      takeFailure();
+      const service = MOCK_PROFILE.services.find((s) => s.id === body.serviceId) ?? MOCK_PROFILE.services[0];
+      return { entry: { id: `wait-${Date.now()}`, dates: body.dates, serviceName: service.name } };
+    },
+    async leaveWaitlist(token) {
+      await wait();
+      if (token === 'invalid') throw new ApiError('not_found', 'No existe', 404);
+      return { pro: { slug: MOCK_PROFILE.slug, name: MOCK_PROFILE.name } };
     },
     async rescheduleAppointment(token, body) {
       await wait();

@@ -19,6 +19,13 @@ export const apptSk = (apptId: string) => `${APPT_PREFIX}${apptId}`;
 export const PAY_PREFIX = 'PAY#';
 export const paySk = (createdAt: ISOInstant, paymentId: string) => `${PAY_PREFIX}${createdAt}#${paymentId}`;
 
+export const CLIENT_PREFIX = 'CLIENT#';
+export const clientRecordKey = (proId: string, clientKey: string) => ({ PK: proPk(proId), SK: `${CLIENT_PREFIX}${clientKey}` });
+export const WAIT_PREFIX = 'WAIT#';
+export const waitKey = (proId: string, entryId: string) => ({ PK: proPk(proId), SK: `${WAIT_PREFIX}${entryId}` });
+export const PUSH_PREFIX = 'PUSH#';
+export const pushKey = (proId: string, endpointHash: string) => ({ PK: proPk(proId), SK: `${PUSH_PREFIX}${endpointHash}` });
+
 export const profileKey = (proId: string) => ({ PK: proPk(proId), SK: PROFILE });
 export const subKey = (proId: string) => ({ PK: proPk(proId), SK: SUB });
 export const settingsKey = (proId: string) => ({ PK: proPk(proId), SK: SETTINGS });

@@ -99,6 +99,17 @@ ensure_ssm_params() {
       --value "$(openssl rand -base64 48 | tr -d '\n')" >/dev/null
   fi
 
+  if ! ssm_exists "$prefix/webpush/private-key" || ! ssm_exists "$prefix/webpush/public-key"; then
+    # VAPID key pair (P-256) for web push to the pro's devices: public = uncompressed
+    # point, private = scalar, both base64url — the format the web-push library expects.
+    step "Creando las llaves de los avisos al celular (web push, $stage)"
+    local vapid public private
+    vapid="$(node -e "const {generateKeyPairSync}=require('crypto');const k=generateKeyPairSync('ec',{namedCurve:'prime256v1'}).privateKey.export({format:'jwk'});const b=s=>Buffer.from(s,'base64url');process.stdout.write(Buffer.concat([Buffer.from([4]),b(k.x),b(k.y)]).toString('base64url')+' '+k.d)")"
+    public="${vapid% *}"; private="${vapid#* }"
+    aws ssm put-parameter --name "$prefix/webpush/public-key" --type String --value "$public" --overwrite >/dev/null
+    aws ssm put-parameter --name "$prefix/webpush/private-key" --type SecureString --value "$private" --overwrite >/dev/null
+  fi
+
   if [ "$stage" = "dev" ] && ! ssm_exists "$prefix/turnstile/secret-key"; then
     # Cloudflare's always-pass test secret (shared/infra.ts TURNSTILE_TEST_KEYS).
     aws ssm put-parameter --name "$prefix/turnstile/secret-key" --type SecureString \

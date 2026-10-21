@@ -10,6 +10,7 @@ import { ApiError } from './lib/api';
 import { auth } from './lib/auth';
 import { createAmplifyAuth } from './lib/amplifyAuth';
 import { loadConfig } from './lib/config';
+import { captureInstallEvents } from './lib/install';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,8 @@ const queryClient = new QueryClient({
   },
 });
 auth.onSignOut(() => queryClient.clear());
+
+captureInstallEvents();
 
 const root = createRoot(document.getElementById('root')!);
 

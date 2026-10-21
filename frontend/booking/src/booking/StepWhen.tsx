@@ -3,7 +3,7 @@ import type { AvailabilityResponse } from '@shared/api';
 import type { DayAvailability } from '@shared/availability';
 import { capitalize, DAY_SHORT, formatDayLong, formatDayShort, formatInstantTime } from '@shared/format';
 import { jsWeekday } from '@shared/time';
-import { ChevronLeft, ChevronRight } from '../components/icons';
+import { Bell, ChevronLeft, ChevronRight } from '../components/icons';
 import { DayPill, Notice, SkeletonPills, SkeletonSlots, SlotButton } from '../components/ui';
 import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, splitSlots } from '../lib/slots';
 import { StepTitle } from './FlowChrome';
@@ -21,6 +21,7 @@ interface Props {
   onPickDay: (date: string) => void;
   onPickSlot: (start: string) => void;
   onRetry: () => void;
+  onWaitlist: () => void;
   titleRef: preact.Ref<HTMLHeadingElement>;
 }
 
@@ -32,6 +33,26 @@ function dayLabel(day: DayAvailability): string {
   if (day.closed === 'holiday') return `${base}, festivo`;
   if (!isDayBookable(day)) return `${base}, sin horas libres`;
   return base;
+}
+
+/** Entry point to the waitlist when the client can't find a free hour. */
+export function WaitlistCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      class="flex items-center gap-3 w-full text-left p-4 rounded-[20px] border-2 border-accent-soft bg-accent-soft text-ink hover:border-accent transition-colors fade-in"
+    >
+      <span class="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0" aria-hidden="true">
+        <Bell size={20} />
+      </span>
+      <span class="flex flex-col gap-0.5 grow min-w-0">
+        <span class="font-bold text-[16px]">¿No encuentras hora?</span>
+        <span class="text-[14px] text-ink-2">Te avisamos si se libera un cupo</span>
+      </span>
+      <ChevronRight size={18} strokeWidth={2.4} class="shrink-0" />
+    </button>
+  );
 }
 
 function SlotGroup({ title, slots, start, onPickSlot }: { title: string; slots: string[]; start: string | null; onPickSlot: (s: string) => void }) {
@@ -48,7 +69,7 @@ function SlotGroup({ title, slots, start, onPickSlot }: { title: string; slots: 
   );
 }
 
-export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, titleRef }: Props) {
+export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, onWaitlist, titleRef }: Props) {
   const days = availability?.status === 'ready' ? availability.data.days : [];
   const weeks = chunk(days, DAYS_PER_WEEK);
   const selectedIndex = day ? days.findIndex((d) => d.date === day) : -1;
@@ -57,6 +78,7 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
   const selectedDay = selectedIndex >= 0 ? days[selectedIndex] : null;
   const holidays = current.filter((d) => d.holidayName);
   const nothingFree = availability?.status === 'ready' && days.length > 0 && !days.some(isDayBookable);
+  const canWait = days.some((d) => d.closed === null);
   const loading = !availability || availability.status === 'loading';
 
   return (
@@ -102,7 +124,8 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
               num={String(Number(d.date.slice(8)))}
               label={dayLabel(d)}
               selected={d.date === day}
-              disabled={!isDayBookable(d)}
+              disabled={d.closed !== null}
+              full={d.closed === null && d.slots.length === 0}
               onPick={() => onPickDay(d.date)}
             />
           ))}
@@ -117,10 +140,13 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
 
       {loading && day ? (
         <SkeletonSlots />
-      ) : nothingFree ? (
-        <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
-          No quedan horas libres en los próximos días. Vuelve a intentarlo más adelante.
-        </div>
+      ) : nothingFree && !(selectedDay && selectedDay.slots.length > 0) ? (
+        <>
+          <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
+            No quedan horas libres en los próximos días.
+          </div>
+          {canWait && <WaitlistCard onClick={onWaitlist} />}
+        </>
       ) : selectedDay ? (
         selectedDay.slots.length > 0 ? (
           <div class="flex flex-col gap-2.5 fade-in" key={selectedDay.date}>
@@ -128,9 +154,12 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
             <SlotGroup title="Tarde" slots={splitSlots(selectedDay.slots).afternoon} start={start} onPickSlot={onPickSlot} />
           </div>
         ) : (
-          <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
-            Ya no quedan horas libres este día. Elige otro, por favor.
-          </div>
+          <>
+            <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center leading-[1.45]">
+              Ya no quedan horas libres este día.
+            </div>
+            <WaitlistCard onClick={onWaitlist} />
+          </>
         )
       ) : (
         <div class="bg-surface rounded-[18px] p-[18px] text-[14px] text-ink-2 text-center">Elige un día para ver las horas libres.</div>

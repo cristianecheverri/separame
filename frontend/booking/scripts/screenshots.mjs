@@ -147,6 +147,69 @@ const scenarios = {
     await page.getByRole('button', { name: 'Jueves 22 de octubre' }).waitFor();
     await shot(page, vp, 'step2-slot-taken', { bottom: true });
   },
+  async singleService(page, vp) {
+    await page.goto(`${BASE}${SLUG}&services=1`);
+    await page.getByText('Paso 1 de 3 · Día y hora').waitFor();
+    await page.getByRole('button', { name: 'Jueves 22 de octubre' }).click();
+    await page.getByRole('button', { name: '10:00 a. m.' }).click();
+    await shot(page, vp, 'single-when');
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await page.getByLabel('Nombre completo').fill('Mariana Gómez');
+    await page.getByLabel('Correo').fill('mariana@correo.com');
+    await page.getByLabel('Celular').fill('300 123 4567');
+    await page.getByRole('checkbox').check();
+    await shot(page, vp, 'single-details');
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await page.getByRole('heading', { name: '¿Todo bien?' }).waitFor();
+    await shot(page, vp, 'single-review');
+  },
+  async deepLink(page, vp) {
+    await page.goto(`${BASE}${SLUG}&service=limpieza&date=2026-10-30`);
+    await page.getByRole('button', { name: 'Viernes 30 de octubre', pressed: true }).waitFor();
+    await shot(page, vp, 'deeplink');
+  },
+  async waitlist(page, vp) {
+    await page.goto(`${BASE}${SLUG}`);
+    await page.getByRole('button', { name: /Valoración/ }).click();
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await page.getByRole('button', { name: 'Martes 20 de octubre, sin horas libres' }).click();
+    await page.getByRole('button', { name: /¿No encuentras hora/ }).waitFor();
+    await shot(page, vp, 'waitlist-card');
+    await page.getByRole('button', { name: /¿No encuentras hora/ }).click();
+    await page.getByRole('heading', { name: 'Te avisamos si se libera un cupo' }).waitFor();
+    await page.getByRole('button', { name: 'Jueves 22 de octubre' }).click();
+    await shot(page, vp, 'waitlist-form', { bottom: true });
+    await page.getByLabel('Nombre completo').fill('Mariana Gómez');
+    await page.getByLabel('Correo').fill('mariana@correo.com');
+    await page.getByLabel('Celular').fill('300 123 4567');
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', { name: 'Avisarme si se libera' }).click();
+    await page.getByRole('heading', { name: /Te escribiremos a/ }).waitFor();
+    await shot(page, vp, 'waitlist-done');
+  },
+  async waitlistEmpty(page, vp) {
+    await page.goto(`${BASE}${SLUG}&state=empty`);
+    await page.getByRole('button', { name: /Valoración/ }).click();
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await page.getByRole('button', { name: /¿No encuentras hora/ }).waitFor();
+    await shot(page, vp, 'waitlist-empty');
+  },
+  async attendance(page, vp) {
+    await page.goto(`${BASE}/c/demo-token?mock=1&delay=60&action=confirm`);
+    await page.getByRole('heading', { name: /Confirmaste tu asistencia/ }).waitFor();
+    await shot(page, vp, 'manage-attended');
+    await page.goto(`${BASE}/c/confirmed?mock=1&delay=60`);
+    await page.getByText('Asistencia confirmada').waitFor();
+    await shot(page, vp, 'manage-menu-confirmed');
+  },
+  async leave(page, vp) {
+    await page.goto(`${BASE}/w/tok?mock=1&delay=60`);
+    await page.getByRole('heading', { name: /ya no estás en la lista/ }).waitFor();
+    await shot(page, vp, 'waitlist-leave');
+    await page.goto(`${BASE}/w/invalid?mock=1&delay=60`);
+    await page.getByRole('heading', { name: 'Este enlace no es válido' }).waitFor();
+    await shot(page, vp, 'waitlist-leave-invalid');
+  },
   async unavailable(page, vp) {
     await page.goto(`${BASE}${SLUG}&state=unavailable`);
     await page.getByText('Agenda no disponible temporalmente').waitFor();

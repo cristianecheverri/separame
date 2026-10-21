@@ -7,6 +7,7 @@
  * Bucket layout it maps onto:
  *   /index.html, /404.html     landing + not-found (frontend/booking)
  *   /c/index.html              client cancel/reschedule page (/c/<token>)
+ *   /w/index.html              leave-the-waitlist page (/w/<token>)
  *   /b/…                       booking bundle (stable entries + hashed assets)
  *   /_templates/booking.html   profile page template (read by stream-publish)
  *   /<slug>/index.html         static profile pages (written by the backend)
@@ -16,7 +17,7 @@
  *   1. host `www.<apex>` (prod)  → 301 https://<apex><uri>?<query>
  *   2. `/app`                    → 301 `/app/`
  *   3. `/app/…` without a file extension → `/app/index.html` (SPA routes)
- *   4. `/c/…` without a file extension   → `/c/index.html`
+ *   4. `/c/…` / `/w/…` without a file extension → `/c/index.html` / `/w/index.html`
  *   5. `/`                       → `/index.html`
  *   6. one segment without a dot, optional trailing slash → `/<slug>/index.html`
  *   7. anything else unchanged (missing objects → /404.html via error responses)
@@ -38,8 +39,10 @@ var REDIRECT_HOSTS = ${JSON.stringify(options.redirectHosts)};
 var APP_PREFIX = ${JSON.stringify(appPrefix)};
 var APP_ROOT = ${JSON.stringify(appPrefix.replace(/\/$/, ''))};
 var APP_INDEX = ${JSON.stringify(`${appPrefix}index.html`)};
-var MANAGE_PREFIX = ${JSON.stringify(SITE_PATHS.manage)};
-var MANAGE_INDEX = ${JSON.stringify(SITE_PATHS.manageIndex)};
+var TOKEN_PAGES = ${JSON.stringify([
+    { prefix: SITE_PATHS.manage, index: SITE_PATHS.manageIndex },
+    { prefix: SITE_PATHS.waitlistLeave, index: SITE_PATHS.waitlistLeaveIndex },
+  ])};
 
 function queryString(query) {
   var parts = [];
@@ -81,9 +84,11 @@ function handler(event) {
     if (!hasExtension(uri)) request.uri = APP_INDEX;
     return request;
   }
-  if (uri.indexOf(MANAGE_PREFIX) === 0) {
-    if (!hasExtension(uri)) request.uri = MANAGE_INDEX;
-    return request;
+  for (var i = 0; i < TOKEN_PAGES.length; i++) {
+    if (uri.indexOf(TOKEN_PAGES[i].prefix) === 0) {
+      if (!hasExtension(uri)) request.uri = TOKEN_PAGES[i].index;
+      return request;
+    }
   }
   if (uri === '/') {
     request.uri = '/index.html';

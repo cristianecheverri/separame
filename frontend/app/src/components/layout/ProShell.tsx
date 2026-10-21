@@ -4,6 +4,7 @@ import { auth } from '../../lib/auth';
 import { usePriceHeadline, usePro } from '../../lib/pro';
 import { cx } from '../ui/cx';
 import { CloseIcon, MenuIcon } from '../ui/icons';
+import { InstallListener } from '../install/InstallListener';
 import { Drawer } from './Drawer';
 import { ExpiredBanner } from './ExpiredBanner';
 import { SubscriptionCard } from './SubscriptionCard';
@@ -18,6 +19,8 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/', label: 'Agenda', end: true },
   { to: '/appointments', label: 'Citas' },
+  { to: '/clients', label: 'Clientes' },
+  { to: '/stats', label: 'Estadísticas' },
   { to: '/services', label: 'Servicios' },
   { to: '/availability', label: 'Disponibilidad' },
   { to: '/calendar-sync', label: 'Tu calendario' },
@@ -94,6 +97,7 @@ export function ProShell() {
         {showBanner && <ExpiredBanner subscription={subscription} priceName={price?.name ?? null} minPackageCop={minPackageCop} />}
         <Outlet />
       </main>
+      <InstallListener />
     </div>
   );
 }

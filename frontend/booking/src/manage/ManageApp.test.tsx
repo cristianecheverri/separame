@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockApi } from '../mock/mockApi';
+import { LeaveWaitlist } from './LeaveWaitlist';
 import { ManageApp } from './ManageApp';
 
 const api = () => createMockApi(new URLSearchParams('delay=0'));
@@ -49,6 +50,42 @@ describe('ManageApp', () => {
 
   it('handles a bad link', async () => {
     render(<ManageApp token="invalid" api={api()} />);
+    expect(await screen.findByRole('heading', { name: 'Este enlace no es válido' })).toBeTruthy();
+  });
+
+  it('confirms attendance from the menu and shows the badge', async () => {
+    render(<ManageApp token="demo-token" api={api()} />);
+    click(await screen.findByRole('button', { name: 'Confirmar asistencia' }));
+    expect(await screen.findByRole('heading', { name: '¡Gracias, Mariana! Confirmaste tu asistencia.' })).toBeTruthy();
+    expect(screen.getByText('Asistencia confirmada')).toBeTruthy();
+    click('Ver opciones de mi cita');
+    expect(screen.queryByRole('button', { name: 'Confirmar asistencia' })).toBeNull();
+  });
+
+  it('confirms automatically with ?action=confirm and strips the param', async () => {
+    history.replaceState(null, '', '/c/demo-token?action=confirm');
+    render(<ManageApp token="demo-token" api={api()} />);
+    expect(await screen.findByRole('heading', { name: '¡Gracias, Mariana! Confirmaste tu asistencia.' })).toBeTruthy();
+    expect(location.search).toBe('');
+  });
+
+  it('shows the badge when attendance was already confirmed', async () => {
+    render(<ManageApp token="confirmed" api={api()} />);
+    await screen.findByRole('heading', { name: /Qué quieres hacer/ });
+    expect(screen.getByText('Asistencia confirmada')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Confirmar asistencia' })).toBeNull();
+  });
+});
+
+describe('LeaveWaitlist', () => {
+  it('takes the client off the waitlist', async () => {
+    render(<LeaveWaitlist token="tok" api={api()} />);
+    expect(await screen.findByRole('heading', { name: 'Listo, ya no estás en la lista de espera.' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Separar una cita con Dra. Laura Pérez' }).getAttribute('href')).toBe('/dra-laura-perez');
+  });
+
+  it('handles a bad link', async () => {
+    render(<LeaveWaitlist token="invalid" api={api()} />);
     expect(await screen.findByRole('heading', { name: 'Este enlace no es válido' })).toBeTruthy();
   });
 });

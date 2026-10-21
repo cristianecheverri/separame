@@ -23,6 +23,8 @@ export const RATE_RULES = {
   bookingPerEmail: { scope: 'book-email', max: 5, window: 'day' },
   managePerIp: { scope: 'manage-ip', max: 20, window: 10 },
   paymentNoticePerPro: { scope: 'notice-pro', max: 5, window: 'day' },
+  waitlistPerIp: { scope: 'wait-ip', max: 5, window: 10 },
+  waitlistPerEmail: { scope: 'wait-email', max: 5, window: 'day' },
 } satisfies Record<string, RateLimitRule>;
 
 function windowId(rule: RateLimitRule, now: Date): { id: string; expiresAt: number } {

@@ -105,3 +105,15 @@ describe('lockUnits', () => {
     expect(c.some((u) => a.has(u))).toBe(false);
   });
 });
+
+describe('bookableMinutes', () => {
+  it('sums weekly ranges, subtracts blocks and closes holidays', async () => {
+    const { bookableMinutes } = await import('./availability');
+    expect(bookableMinutes('2026-10-22', ctx())).toBe(480); // 8–12 + 14–18
+    expect(bookableMinutes('2026-10-24', ctx())).toBe(240); // Saturday 8–12
+    expect(bookableMinutes('2026-10-25', ctx())).toBe(0); // Sunday
+    expect(bookableMinutes('2026-11-02', ctx())).toBe(0); // holiday
+    const morningOff = [{ start: toInstant('2026-10-22', '08:00'), end: toInstant('2026-10-22', '12:00') }];
+    expect(bookableMinutes('2026-10-22', ctx({ blocks: morningOff }))).toBe(240);
+  });
+});

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { createAppointmentSchema } from '@shared/schemas';
 import { formatCop, formatDuration, formatWhen } from '@shared/format';
 import type { ISODate } from '@shared/time';
-import type { Appointment } from '@shared/types';
+import type { Appointment, ClientContact } from '@shared/types';
 import { Field } from '../../components/ui/Field';
 import { Modal } from '../../components/ui/Modal';
 import { cx } from '../../components/ui/cx';
@@ -14,7 +14,7 @@ import { useCancelAppointment, useCreateAppointment, useMoveAppointment } from '
 import { SlotPicker } from './SlotPicker';
 
 export type AppointmentModalState =
-  | { kind: 'new'; date?: ISODate }
+  | { kind: 'new'; date?: ISODate; client?: ClientContact }
   | { kind: 'move'; appointment: Appointment }
   | { kind: 'cancel'; appointment: Appointment }
   | null;
@@ -22,15 +22,15 @@ export type AppointmentModalState =
 const submitClass = 'h-12 px-6 rounded-full bg-primary text-white font-bold text-[15px] hover:bg-primary-dark disabled:bg-disabled disabled:text-muted disabled:cursor-not-allowed grow sm:grow-0';
 const backClass = 'h-12 px-5 rounded-full border-2 border-line-strong bg-white font-bold text-[15px] text-ink grow sm:grow-0';
 
-export function NewAppointmentModal({ date, onClose }: { date?: ISODate; onClose: () => void }) {
+export function NewAppointmentModal({ date, client, onClose }: { date?: ISODate; client?: ClientContact; onClose: () => void }) {
   const services = useServices();
   const create = useCreateAppointment();
   const toast = useToast();
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [start, setStart] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(client?.name ?? '');
+  const [email, setEmail] = useState(client?.email ?? '');
+  const [phone, setPhone] = useState(client?.phone ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [slotKey, setSlotKey] = useState(0);
 
@@ -231,7 +231,7 @@ export function CancelAppointmentModal({ appointment, onClose }: { appointment: 
 /** Renders the open appointment modal, if any. */
 export function AppointmentModals({ state, onClose }: { state: AppointmentModalState; onClose: () => void }) {
   if (!state) return null;
-  if (state.kind === 'new') return <NewAppointmentModal date={state.date} onClose={onClose} />;
+  if (state.kind === 'new') return <NewAppointmentModal date={state.date} client={state.client} onClose={onClose} />;
   if (state.kind === 'move') return <MoveAppointmentModal appointment={state.appointment} onClose={onClose} />;
   return <CancelAppointmentModal appointment={state.appointment} onClose={onClose} />;
 }

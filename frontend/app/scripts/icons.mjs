@@ -22,5 +22,10 @@ for (const [file, size, pad] of targets) {
   );
   await page.screenshot({ path: new URL(`../public/${file}`, import.meta.url).pathname, omitBackground: !pad });
 }
+// Monochrome badge for Android notifications: white glyph on transparent.
+const glyph = svg.replace(/<rect[^>]*\/>/, '').replace(/fill="#fff"/, 'fill="#FFFFFF"').replace(/<circle[^>]*\/>/, '<circle cx="46" cy="44" r="4.2" fill="#FFFFFF"/>');
+await page.setViewportSize({ width: 72, height: 72 });
+await page.setContent(`<html><body style="margin:0;background:transparent">${glyph.replace('<svg ', '<svg width="72" height="72" ')}</body></html>`);
+await page.screenshot({ path: new URL('../public/badge-72.png', import.meta.url).pathname, omitBackground: true });
 await browser.close();
 console.log('icons written');

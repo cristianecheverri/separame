@@ -15,7 +15,7 @@ const base: AppointmentItem = {
   id: 'appt1', proId: PRO_ID, serviceId: 'svc1', serviceName: 'Valoración', durationMin: 30, priceCop: 60000,
   start: '2026-10-22T15:00:00.000Z', end: '2026-10-22T15:30:00.000Z', status: 'confirmed',
   client: { name: 'Mariana Gómez; "M"', email: 'mariana@correo.com', phone: '3001234567' },
-  createdBy: 'client', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-20T00:00:00.000Z', lockBufferMin: 10, revision: 2,
+  createdBy: 'client', createdAt: '2026-10-20T00:00:00.000Z', updatedAt: '2026-10-20T00:00:00.000Z', lockBufferMin: 10, revision: 2, clientConfirmation: 'pending', clientKey: 'k1',
 };
 const recentCancel: AppointmentItem = { ...base, id: 'appt2', status: 'cancelled', updatedAt: '2026-10-15T00:00:00.000Z', revision: 1 };
 const oldCancel: AppointmentItem = { ...base, id: 'appt3', status: 'cancelled', updatedAt: '2026-09-01T00:00:00.000Z' };

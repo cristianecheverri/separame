@@ -13,6 +13,9 @@ import {
   type CreateBookingResponse,
   type ErrorCode,
   type GetPublicProResponse,
+  type JoinWaitlistRequest,
+  type JoinWaitlistResponse,
+  type LeaveWaitlistResponse,
   type ManagedAppointmentResponse,
   type RescheduleBookingRequest,
 } from '@shared/api';
@@ -38,18 +41,22 @@ export interface ApiClient {
   getAppointment(token: string): Promise<ManagedAppointmentResponse>;
   cancelAppointment(token: string, body: CancelBookingRequest): Promise<BookingMutationResponse>;
   rescheduleAppointment(token: string, body: RescheduleBookingRequest): Promise<BookingMutationResponse>;
+  /** "Sí, voy" — idempotent, allowed until the start. */
+  confirmAppointment(token: string): Promise<BookingMutationResponse>;
+  joinWaitlist(slug: string, body: JoinWaitlistRequest): Promise<JoinWaitlistResponse>;
+  leaveWaitlist(token: string): Promise<LeaveWaitlistResponse>;
 }
 
 const TIMEOUT_MS = 15_000;
 
 export function createHttpApi(baseUrl: string): ApiClient {
-  async function request<T>(path: string, body?: unknown): Promise<T> {
+  async function request<T>(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let response: Response;
     try {
       response = await fetch(baseUrl + path, {
-        method: body === undefined ? 'GET' : 'POST',
+        method,
         headers: body === undefined ? undefined : { 'content-type': 'application/json' },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
@@ -70,10 +77,13 @@ export function createHttpApi(baseUrl: string): ApiClient {
   return {
     getPro: (slug) => request(apiPaths.publicPro(slug)),
     getAvailability: (slug, query) => request(apiPaths.publicAvailability(slug, query)),
-    createBooking: (slug, body) => request(apiPaths.publicBookings(slug), body),
+    createBooking: (slug, body) => request(apiPaths.publicBookings(slug), 'POST', body),
     getAppointment: (token) => request(apiPaths.publicAppointment(token)),
-    cancelAppointment: (token, body) => request(apiPaths.publicCancel(token), body),
-    rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), body),
+    cancelAppointment: (token, body) => request(apiPaths.publicCancel(token), 'POST', body),
+    rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), 'POST', body),
+    confirmAppointment: (token) => request(apiPaths.publicConfirm(token), 'POST', {}),
+    joinWaitlist: (slug, body) => request(apiPaths.publicWaitlist(slug), 'POST', body),
+    leaveWaitlist: (token) => request(apiPaths.publicLeaveWaitlist(token), 'POST', {}),
   };
 }
 

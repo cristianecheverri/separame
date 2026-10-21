@@ -158,6 +158,36 @@ export const cancelAppointmentSchema = z.object({
   reason: z.string().trim().max(300).optional(),
 });
 
+export const joinWaitlistSchema = z.object({
+  serviceId: z.string().min(1).max(64),
+  dates: z.array(isoDateSchema).min(1, 'Elige al menos un día').max(7, 'Máximo 7 días'),
+  client: clientContactSchema,
+  consent: z.literal(true, { message: 'Debes autorizar el tratamiento de tus datos' }),
+  turnstileToken: z.string().min(1).max(4096),
+});
+
+export const setOutcomeSchema = z.object({
+  outcome: z.enum(['attended', 'no_show']).nullable(),
+});
+
+export const clientsQuerySchema = z.object({ q: z.string().trim().max(80).optional() });
+
+export const updateClientNotesSchema = z.object({
+  notes: z.string().trim().max(1000, 'Máximo 1.000 caracteres'),
+});
+
+export const statsQuerySchema = z
+  .object({ from: isoDateSchema, to: isoDateSchema })
+  .refine((q) => q.from <= q.to, 'Rango inválido');
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.url().max(2048).refine((u) => u.startsWith('https://'), 'Endpoint inválido'),
+  keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(128) }),
+  deviceLabel: z.string().trim().max(60).optional(),
+});
+
+export const removePushSubscriptionSchema = z.object({ endpoint: z.url().max(2048) });
+
 export const updateCalendarSyncSchema = z.object({
   invitesEnabled: z.boolean(),
 });

@@ -6,18 +6,19 @@ import type { ZodType } from 'zod';
 import type {
   AdminProDetailResponse, AdminSubscriptionRow, AppointmentsResponse, CreateAppointmentRequest, CreateBlockRequest,
   CreateMigrationRequest, CreatePriceRequest, ErrorCode, ManualPaymentRequest, MeResponse, OnboardingRequest,
-  PaymentNoticeRequest, PutAvailabilityRequest, RejectNoticeRequest, UpdatePriceRequest, UpsertServiceRequest,
+  PaymentNoticeRequest, PushConfigResponse, PushSubscriptionRequest, PutAvailabilityRequest, RejectNoticeRequest, UpdatePriceRequest, UpsertServiceRequest,
 } from '@shared/api';
 import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
   createAppointmentSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
-  moveAppointmentSchema, onboardingSchema, updateCalendarSyncSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
+  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil } from '@shared/subscription';
-import { addMinutes, bogotaDate, toInstant, todayBogota } from '@shared/time';
-import type { Appointment, Block, Payment, PriceMigration, ProProfile, Service, SubscriptionStatus } from '@shared/types';
+import { addDays, addMinutes, bogotaDate, toInstant, todayBogota } from '@shared/time';
+import type { Appointment, Block, ClientRecord, Payment, PriceMigration, ProProfile, ProStats, Service, SubscriptionStatus, WaitlistEntry } from '@shared/types';
+import { endpointHash } from '../lib/push';
 import type { HttpMethod, TransportRequest, TransportResponse } from '../lib/api';
 import { now } from '../lib/clock';
 import * as fx from './fixtures';
@@ -39,6 +40,9 @@ interface Db {
   details: Record<string, { profile: ProProfile; sub: { trialEndsAt: string; paidUntil: string | null }; payments: Payment[]; upcoming: number; trialStartedAt: string; priceId: string }>;
   takenSlugs: Set<string>;
   calendar: ReturnType<typeof fx.calendarSyncFor>;
+  waitlist: WaitlistEntry[];
+  clientNotes: Record<string, string>;
+  push: PushConfigResponse;
 }
 
 const clone = <T,>(v: T): T => structuredClone(v);
@@ -46,7 +50,7 @@ let db: Db;
 let idSeq = 1000;
 const newId = (prefix: string) => `${prefix}-${++idSeq}`;
 
-export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; billing: fx.BillingMockState }) {
+export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; billing: fx.BillingMockState; push?: boolean }) {
   const state = options.state;
   const subInput = fx.subscriptionInputs[state === 'onboarding' ? 'trial' : state];
   const details: Db['details'] = {};
@@ -80,6 +84,12 @@ export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; bi
     details,
     takenSlugs: new Set(['laura-perez', 'dra-laura', 'estudio-lua', 'camilo-entrena']),
     calendar: fx.calendarSyncFor(fx.CALENDAR_TOKEN, true),
+    waitlist: state === 'onboarding' ? [] : fx.waitlistEntries(),
+    clientNotes: { 'c-mariana.gomez': 'Prefiere citas temprano. Llega en bicicleta, pide dónde dejarla.' },
+    push: {
+      vapidPublicKey: options.push === false ? null : fx.PUSH_VAPID_KEY,
+      devices: [{ endpointHash: 'mac-chrome-demo', deviceLabel: 'Mac · Chrome', createdAt: '2026-10-18T15:00:00.000Z', lastSuccessAt: '2026-10-20T12:10:00.000Z' }],
+    },
   };
 }
 
@@ -222,7 +232,80 @@ function paymentNotice(body: PaymentNoticeRequest) {
   return { payment };
 }
 
-type Handler = (params: string[], body: unknown, query: URLSearchParams) => unknown;
+function clientKeyOf(c: { email: string; phone: string }): string {
+  const id = c.email ? c.email.split('@')[0] : c.phone;
+  return `c-${id.toLowerCase()}`;
+}
+
+const ms = (iso: string) => new Date(iso).getTime();
+
+function clientRecords(): ClientRecord[] {
+  const t = now().getTime();
+  const map = new Map<string, ClientRecord>();
+  for (const a of [...db.appointments].sort((x, y) => x.start.localeCompare(y.start))) {
+    if (!a.client.name || a.client.name === 'Cliente eliminado') continue;
+    const r = map.get(a.clientKey) ?? {
+      key: a.clientKey, name: a.client.name, email: a.client.email, phone: a.client.phone, firstSeenAt: a.createdAt < a.start ? a.createdAt : a.start,
+      lastAppointmentAt: null, nextAppointmentAt: null, totals: { appointments: 0, attended: 0, noShows: 0, cancelled: 0 },
+      notes: db.clientNotes[a.clientKey] ?? '', updatedAt: a.updatedAt,
+    };
+    if (a.status === 'cancelled') r.totals.cancelled++;
+    else {
+      r.totals.appointments++;
+      if (a.outcome === 'attended') r.totals.attended++;
+      if (a.outcome === 'no_show') r.totals.noShows++;
+      if (ms(a.start) < t) r.lastAppointmentAt = a.start;
+      else if (!r.nextAppointmentAt) r.nextAppointmentAt = a.start;
+    }
+    if (a.updatedAt > r.updatedAt) r.updatedAt = a.updatedAt;
+    map.set(a.clientKey, r);
+  }
+  const activity = (r: ClientRecord) => r.nextAppointmentAt ?? r.lastAppointmentAt ?? r.firstSeenAt;
+  return [...map.values()].sort((a, b) => Math.abs(ms(activity(a)) - t) - Math.abs(ms(activity(b)) - t));
+}
+
+function computeStats(from: string, to: string): ProStats {
+  const t = now().getTime();
+  const inRange = db.appointments.filter((a) => {
+    const d = bogotaDate(a.start);
+    return d >= from && d <= to;
+  });
+  const active = inRange.filter((a) => a.status === 'confirmed');
+  const past = active.filter((a) => ms(a.end) < t);
+  const attended = past.filter((a) => a.outcome === 'attended').length;
+  const noShows = past.filter((a) => a.outcome === 'no_show').length;
+  const firstByClient = new Map<string, string>();
+  for (const a of db.appointments) if (!firstByClient.has(a.clientKey) || a.start < firstByClient.get(a.clientKey)!) firstByClient.set(a.clientKey, a.start);
+  const clients = new Set(active.map((a) => a.clientKey));
+  const newClients = [...clients].filter((k) => bogotaDate(firstByClient.get(k)!) >= from).length;
+  const byService = new Map<string, { serviceId: string; serviceName: string; appointments: number; revenueCop: number }>();
+  for (const a of active) {
+    const row = byService.get(a.serviceId) ?? { serviceId: a.serviceId, serviceName: a.serviceName, appointments: 0, revenueCop: 0 };
+    row.appointments++;
+    row.revenueCop += a.priceCop ?? 0;
+    byService.set(a.serviceId, row);
+  }
+  const days = Math.max(1, Math.round((ms(`${to}T12:00:00Z`) - ms(`${from}T12:00:00Z`)) / 86_400_000) + 1);
+  const bookedMin = active.reduce((sum, a) => sum + a.durationMin, 0);
+  const openMinPerWeek = Object.values(db.schedule).flat().reduce((sum, r) => sum + (Number(r.end.slice(0, 2)) * 60 + Number(r.end.slice(3)) - Number(r.start.slice(0, 2)) * 60 - Number(r.start.slice(3))), 0);
+  return {
+    from, to,
+    appointments: active.length,
+    cancelled: inRange.length - active.length,
+    attended, noShows,
+    unmarked: past.filter((a) => !a.outcome).length,
+    occupancy: Math.min(1, bookedMin / Math.max(1, (openMinPerWeek * days) / 7)),
+    newClients,
+    returningClients: clients.size - newClients,
+    estimatedRevenueCop: active.reduce((sum, a) => sum + (a.priceCop ?? 0), 0),
+    byService: [...byService.values()],
+    byWeekday: Array.from({ length: 7 }, (_, i) => ({ weekday: i, appointments: active.filter((a) => (new Date(ms(a.start) - 5 * 3_600_000).getUTCDay() + 6) % 7 === i).length })),
+    bySource: { client: active.filter((a) => a.createdBy === 'client').length, pro: active.filter((a) => a.createdBy !== 'client').length },
+    noShowRate: attended + noShows ? noShows / (attended + noShows) : 0,
+  };
+}
+
+type Handler = (params: string[], body: unknown, query: URLSearchParams) => unknown | Promise<unknown>;
 const routes: [HttpMethod, RegExp, Handler][] = [];
 const on = (method: HttpMethod, pattern: string, handler: Handler) =>
   routes.push([method, new RegExp(`^${pattern.replace(/\{[^}]+\}/g, '([^/]+)')}$`), handler]);
@@ -314,7 +397,7 @@ on('POST', '/me/appointments', (_p, body) => {
   const appointment: Appointment = {
     id: newId('apt'), proId: db.profile!.id, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin, priceCop: service.priceCop,
     start: new Date(data.start).toISOString(), end: addMinutes(data.start, service.durationMin), status: 'confirmed', client: data.client,
-    createdBy: 'pro', createdAt: at, updatedAt: at,
+    createdBy: 'pro', createdAt: at, updatedAt: at, clientConfirmation: 'pending', revision: 0, clientKey: clientKeyOf(data.client),
   };
   db.appointments.push(appointment);
   return { appointment };
@@ -354,6 +437,77 @@ on('GET', '/me/slots', (_p, _b, q) => {
   };
 });
 
+on('POST', '/me/appointments/{id}/outcome', ([id], body) => {
+  requireWritable();
+  const data = validate(setOutcomeSchema, body);
+  const current = db.appointments.find((a) => a.id === id);
+  if (!current) throw new HttpError(404, 'not_found', 'Cita no encontrada');
+  if (current.status !== 'confirmed' || ms(current.start) > now().getTime()) throw new HttpError(409, 'conflict', 'Solo puedes marcar asistencia cuando la cita ya empezó');
+  const appointment: Appointment = { ...current, outcome: data.outcome ?? undefined, outcomeAt: data.outcome ? now().toISOString() : undefined, revision: current.revision + 1 };
+  db.appointments = db.appointments.map((a) => (a.id === id ? appointment : a));
+  return { appointment };
+});
+on('GET', '/me/waitlist', () => (requireProfile(), { entries: db.waitlist }));
+on('DELETE', '/me/waitlist/{id}', ([id]) => {
+  requireProfile();
+  db.waitlist = db.waitlist.map((e) => (e.id === id ? { ...e, status: 'removed' } : e));
+  return {};
+});
+on('GET', '/me/clients', (_p, _b, q) => {
+  requireProfile();
+  const term = (q.get('q') ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const clients = clientRecords().filter((c) => !term || `${c.name} ${c.email} ${c.phone}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term));
+  return { clients };
+});
+on('GET', '/me/clients/{key}', ([key]) => {
+  requireProfile();
+  const client = clientRecords().find((c) => c.key === key);
+  if (!client) throw new HttpError(404, 'not_found', 'Cliente no encontrado');
+  return { client, appointments: db.appointments.filter((a) => a.clientKey === key).sort((a, b) => b.start.localeCompare(a.start)) };
+});
+on('PUT', '/me/clients/{key}/notes', ([key], body) => {
+  requireWritable();
+  const data = validate(updateClientNotesSchema, body);
+  db.clientNotes[key] = data.notes;
+  db.appointments = db.appointments.map((a) => (a.clientKey === key ? { ...a, updatedAt: now().toISOString() } : a));
+  return { client: clientRecords().find((c) => c.key === key) };
+});
+on('DELETE', '/me/clients/{key}', ([key]) => {
+  requireWritable();
+  const t = now().getTime();
+  if (db.appointments.some((a) => a.clientKey === key && a.status === 'confirmed' && ms(a.start) > t)) {
+    throw new HttpError(409, 'conflict', 'Tiene citas próximas. Cancélalas antes de eliminar este cliente.');
+  }
+  db.appointments = db.appointments.map((a) => (a.clientKey === key ? { ...a, client: { name: 'Cliente eliminado', email: '', phone: '' }, clientKey: 'deleted' } : a));
+  delete db.clientNotes[key];
+  return {};
+});
+on('GET', '/me/stats', (_p, _b, q) => {
+  requireProfile();
+  const { from, to } = validate(statsQuerySchema, { from: q.get('from'), to: q.get('to') });
+  const days = Math.round((ms(`${to}T12:00:00Z`) - ms(`${from}T12:00:00Z`)) / 86_400_000) + 1;
+  const prevTo = addDays(from, -1);
+  return { stats: computeStats(from, to), previous: computeStats(addDays(prevTo, -(days - 1)), prevTo) };
+});
+on('GET', '/me/push-config', () => (requireProfile(), db.push));
+on('POST', '/me/push-subscriptions', async (_p, body) => {
+  requireProfile();
+  const data = validate(pushSubscriptionSchema, body as PushSubscriptionRequest);
+  const hash = await endpointHash(data.endpoint);
+  db.push = {
+    ...db.push,
+    devices: [...db.push.devices.filter((d) => d.endpointHash !== hash), { endpointHash: hash, deviceLabel: data.deviceLabel ?? 'Dispositivo', createdAt: now().toISOString(), lastSuccessAt: null }],
+  };
+  return {};
+});
+on('POST', '/me/push-subscriptions/remove', async (_p, body) => {
+  requireProfile();
+  const data = validate(removePushSubscriptionSchema, body);
+  const hash = await endpointHash(data.endpoint);
+  db.push = { ...db.push, devices: db.push.devices.filter((d) => d.endpointHash !== hash) };
+  return {};
+});
+on('POST', '/me/push-subscriptions/test', () => (requireProfile(), {}));
 on('GET', '/me/calendar-sync', () => (requireProfile(), db.calendar));
 on('PUT', '/me/calendar-sync', (_p, body) => {
   requireProfile();
@@ -442,7 +596,7 @@ export async function mockTransport(req: TransportRequest, delayMs: number): Pro
     const match = method === req.method && re.exec(url.pathname);
     if (!match) continue;
     try {
-      const body = handler(match.slice(1).map(decodeURIComponent), clone(req.body ?? null), url.searchParams);
+      const body = await handler(match.slice(1).map(decodeURIComponent), clone(req.body ?? null), url.searchParams);
       return { status: 200, body: clone(body) };
     } catch (e) {
       if (e instanceof HttpError) return { status: e.status, body: { error: { code: e.code, message: e.message, fields: e.fields } } };

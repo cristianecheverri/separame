@@ -18,6 +18,7 @@ const appt: AppointmentItem = {
   start: '2026-10-21T15:00:00.000Z', end: '2026-10-21T15:30:00.000Z', status: 'confirmed',
   client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
   createdBy: 'client', createdAt: '2026-10-18T00:00:00.000Z', updatedAt: '2026-10-18T00:00:00.000Z', lockBufferMin: 10,
+  clientConfirmation: 'pending', revision: 0, clientKey: 'k1',
 };
 const token = signManageToken({ p: PRO_ID, a: appt.id, e: tokenExpiryFor(appt.end) }, 'link-secret');
 
@@ -100,5 +101,36 @@ describe('client manage link', () => {
     mockData(subItem({ trialEndsAt: '2026-09-01T00:00:00.000Z' }));
     const res = await handler(apiEvent('POST /public/appointments/{token}/reschedule', { path: { token }, body: { start: '2026-10-21T15:30:00.000Z' } }));
     expect(parse(res).error.code).toBe('agenda_unavailable');
+  });
+});
+
+describe('attendance confirmation ("Sí, voy")', () => {
+  const confirm = () => handler(apiEvent('POST /public/appointments/{token}/confirm', { path: { token } }));
+
+  it('sets clientConfirmation + confirmedAt without bumping the revision — even with an expired plan', async () => {
+    mockData(subItem({ trialEndsAt: '2026-09-01T00:00:00.000Z' }));
+    const res = await confirm();
+    expect(res.statusCode).toBe(200);
+    expect(parse(res).booking.clientConfirmation).toBe('confirmed');
+    const update = ddb.commandCalls(UpdateCommand).find((c) => c.args[0].input.Key!.SK === 'APPT#appt1')!.args[0].input;
+    expect(update.UpdateExpression).toBe('SET clientConfirmation = :c, confirmedAt = :at, updatedAt = :at');
+    expect(update.UpdateExpression).not.toContain('revision');
+    expect(update.ConditionExpression).toBe('#st = :confirmed AND #start = :start');
+  });
+
+  it('is idempotent', async () => {
+    mockData(subItem(), { ...appt, clientConfirmation: 'confirmed', confirmedAt: '2026-10-19T12:00:00.000Z' });
+    const res = await confirm();
+    expect(parse(res).booking.clientConfirmation).toBe('confirmed');
+    expect(ddb.commandCalls(UpdateCommand).filter((c) => c.args[0].input.Key!.SK === 'APPT#appt1')).toHaveLength(0);
+  });
+
+  it('is too late once the appointment started, or when cancelled', async () => {
+    vi.setSystemTime(new Date('2026-10-21T15:01:00.000Z'));
+    mockData();
+    expect(parse(await confirm()).error.code).toBe('too_late');
+    vi.setSystemTime(NOW);
+    mockData(subItem(), { ...appt, status: 'cancelled' });
+    expect((await confirm()).statusCode).toBe(422);
   });
 });

@@ -34,6 +34,10 @@ export const API_FUNCTIONS = {
   proAppointments: fn('pro-appointments', 'Professional calendar: list, create, move, cancel'),
   proBilling: fn('pro-billing', 'Plans, payment instructions, history and "Ya pagué" notices'),
   calendarSync: fn('calendar-sync', 'Calendar subscription feed (.ics) for the pro and calendar-invite settings'),
+  waitlist: fn('waitlist', 'Waitlist: clients join/leave; the pro lists and removes entries'),
+  proClients: fn('pro-clients', 'Client history per professional: list, detail, notes, delete'),
+  proStats: fn('pro-stats', 'Professional statistics for a date range'),
+  proNotifications: fn('pro-notifications', 'Web push subscriptions of the professional (PWA)'),
   adminSubscriptions: fn('admin-subscriptions', 'Admin: stats, subscriptions, pro detail, manual payments'),
   adminPrices: fn('admin-prices', 'Admin: price versions and price migrations'),
 } as const;
@@ -43,7 +47,12 @@ export type ApiFunctionKey = keyof typeof API_FUNCTIONS;
 /** Functions not behind the HTTP API. */
 export const BACKGROUND_FUNCTIONS = {
   jobsTick: fn('jobs-tick', 'Every 10 min: 24 h reminders, renewal notices, price migrations', { timeoutSec: 120 }),
-  streamEmails: fn('stream-emails', 'DynamoDB stream: appointment emails (confirm, change, cancel, notify pro)', { timeoutSec: 60 }),
+  /**
+   * The ONE consumer of appointment events (DynamoDB recommends ≤ 2 readers per
+   * stream shard; stream-publish is the other). Modules inside: emails + calendar
+   * invites, client history aggregates, waitlist offers, web push to the pro.
+   */
+  streamAppointments: fn('stream-appointments', 'DynamoDB stream: appointment events → emails, client history, waitlist offers, web push', { timeoutSec: 60 }),
   streamPublish: fn('stream-publish', 'DynamoDB stream: regenerate the static /<slug> page on profile/service changes', { timeoutSec: 60 }),
   sesFeedback: fn('ses-feedback', 'SES bounces/complaints via SNS: suppress the address'),
   cognitoPreSignUp: fn('cognito-pre-signup', 'Cognito: reject disposable email domains'),
@@ -70,6 +79,9 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/public/appointments/{token}', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/appointments/{token}/cancel', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/appointments/{token}/reschedule', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
+  { method: 'POST', path: '/public/appointments/{token}/confirm', fn: 'publicAppointment', auth: 'public' },
+  { method: 'POST', path: '/public/pros/{slug}/waitlist', fn: 'waitlist', auth: 'public', throttle: 'booking' },
+  { method: 'POST', path: '/public/waitlist/{token}/leave', fn: 'waitlist', auth: 'public' },
   // Secret-URL calendar feed that Google/Outlook/Apple poll: /public/calendar/<token>.ics
   { method: 'GET', path: '/public/calendar/{file}', fn: 'calendarSync', auth: 'public' },
 
@@ -94,6 +106,22 @@ export const ROUTES: RouteDef[] = [
   { method: 'PATCH', path: '/me/appointments/{appointmentId}', fn: 'proAppointments', auth: 'pro' },
   { method: 'POST', path: '/me/appointments/{appointmentId}/cancel', fn: 'proAppointments', auth: 'pro' },
   { method: 'GET', path: '/me/slots', fn: 'proAppointments', auth: 'pro' },
+  { method: 'POST', path: '/me/appointments/{appointmentId}/outcome', fn: 'proAppointments', auth: 'pro' },
+
+  { method: 'GET', path: '/me/waitlist', fn: 'waitlist', auth: 'pro' },
+  { method: 'DELETE', path: '/me/waitlist/{entryId}', fn: 'waitlist', auth: 'pro' },
+
+  { method: 'GET', path: '/me/clients', fn: 'proClients', auth: 'pro' },
+  { method: 'GET', path: '/me/clients/{clientKey}', fn: 'proClients', auth: 'pro' },
+  { method: 'PUT', path: '/me/clients/{clientKey}/notes', fn: 'proClients', auth: 'pro' },
+  { method: 'DELETE', path: '/me/clients/{clientKey}', fn: 'proClients', auth: 'pro' },
+
+  { method: 'GET', path: '/me/stats', fn: 'proStats', auth: 'pro' },
+
+  { method: 'GET', path: '/me/push-config', fn: 'proNotifications', auth: 'pro' },
+  { method: 'POST', path: '/me/push-subscriptions', fn: 'proNotifications', auth: 'pro' },
+  { method: 'POST', path: '/me/push-subscriptions/remove', fn: 'proNotifications', auth: 'pro' },
+  { method: 'POST', path: '/me/push-subscriptions/test', fn: 'proNotifications', auth: 'pro' },
 
   { method: 'GET', path: '/me/calendar-sync', fn: 'calendarSync', auth: 'pro' },
   { method: 'PUT', path: '/me/calendar-sync', fn: 'calendarSync', auth: 'pro' },

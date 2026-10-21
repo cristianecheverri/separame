@@ -61,6 +61,13 @@ describe('site router (CloudFront Function)', () => {
     expect(uriOf(prod, '/c/index.html')).toBe('/c/index.html');
   });
 
+  it('serves the leave-the-waitlist page for /w/<token>', () => {
+    expect(uriOf(prod, '/w/eyJhbGciOi-xyz')).toBe('/w/index.html');
+    expect(uriOf(prod, '/w/')).toBe('/w/index.html');
+    expect(uriOf(prod, '/w/index.html')).toBe('/w/index.html');
+    expect(uriOf(prod, '/w/logo.png')).toBe('/w/logo.png');
+  });
+
   it('serves the landing page at /', () => {
     expect(uriOf(prod, '/')).toBe('/index.html');
   });

@@ -2,9 +2,10 @@
  * /c/<token>: the client cancels or reschedules from the link in the email.
  * Loaded lazily — profile pages never download this chunk.
  */
+import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import {
-  AVAILABILITY_DAYS, CLIENT_CHANGE_CUTOFF_MIN, type AvailabilityResponse, type BookingSummary, type ManagedAppointmentResponse,
+  AVAILABILITY_DAYS, CLIENT_CHANGE_CUTOFF_MIN, CONFIRM_ACTION_PARAM, type AvailabilityResponse, type BookingSummary, type ManagedAppointmentResponse,
 } from '@shared/api';
 import { capitalize, DAY_SHORT, formatDayLong, formatInstantTime, formatWhen } from '@shared/format';
 import { bogotaDate, jsWeekday } from '@shared/time';
@@ -17,7 +18,7 @@ import { ApiError, errorMessage, type ApiClient } from '../lib/api';
 import { chunk, isDayBookable, monthLabel } from '../lib/slots';
 import { firstName, formatPhone, telHref } from '../lib/text';
 
-type Mode = 'menu' | 'move' | 'cancel' | 'moved' | 'cancelled' | 'too_late' | 'was_cancelled' | 'past';
+type Mode = 'menu' | 'move' | 'cancel' | 'moved' | 'cancelled' | 'too_late' | 'was_cancelled' | 'past' | 'attended';
 
 type LoadState =
   | { status: 'loading' }
@@ -35,6 +36,33 @@ const OPTION =
 const NAV_BUTTON =
   'w-11 h-11 rounded-full border-0 bg-surface text-ink flex items-center justify-center hover:bg-line disabled:opacity-40 disabled:cursor-default';
 
+/** `/c/<token>?action=confirm` comes from the reminder email's "Sí, voy" button. */
+function wantsConfirm(): boolean {
+  return new URLSearchParams(location.search).get('action') === CONFIRM_ACTION_PARAM.split('=')[1];
+}
+
+function stripAction(): void {
+  const url = new URL(location.href);
+  if (!url.searchParams.has('action')) return;
+  url.searchParams.delete('action');
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+}
+
+function canConfirm(booking: BookingSummary): boolean {
+  return booking.status === 'confirmed' && booking.clientConfirmation === 'pending' && new Date(booking.start).getTime() > Date.now();
+}
+
+/** "a las 10:00 a. m." / "a la 1:30 p. m." — glued with non-breaking spaces. */
+function atTime(start: string): string {
+  const time = formatInstantTime(start).replace(/ /g, '\u00a0');
+  return `${time.startsWith('1:') ? 'a la' : 'a las'} ${time}`;
+}
+
+/** Ends a sentence without doubling the period of "a. m.". */
+function sentence(text: string): string {
+  return text.endsWith('.') ? text : `${text}.`;
+}
+
 function initialMode(data: ManagedAppointmentResponse): Mode {
   if (data.booking.status === 'cancelled') return 'was_cancelled';
   if (data.canChange) return 'menu';
@@ -45,16 +73,31 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   const [load, setLoad] = useState<LoadState>({ status: 'loading' });
   const [booking, setBooking] = useState<BookingSummary | null>(null);
   const [mode, setModeState] = useState<Mode>('menu');
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const autoConfirm = wantsConfirm();
+    stripAction();
     api
       .getAppointment(token)
-      .then((data) => {
+      .then(async (data) => {
+        if (cancelled) return;
+        let current = data.booking;
+        let next = initialMode(data);
+        if (autoConfirm && current.status === 'confirmed' && new Date(current.start).getTime() > Date.now()) {
+          try {
+            current = current.clientConfirmation === 'confirmed' ? current : (await api.confirmAppointment(token)).booking;
+            next = 'attended';
+          } catch (error) {
+            if (!cancelled) setConfirmError(errorMessage(error));
+          }
+        }
         if (cancelled) return;
         setLoad({ status: 'ready', data });
-        setBooking(data.booking);
-        setModeState(initialMode(data));
+        setBooking(current);
+        setModeState(next);
       })
       .catch((error: unknown) => {
         if (!cancelled) setLoad({ status: 'error', notFound: error instanceof ApiError && error.code === 'not_found' });
@@ -79,6 +122,20 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   const toMenu = () => {
     if ((history.state as { manage?: string } | null)?.manage) history.back();
     else setModeState('menu');
+  };
+  const confirmAttendance = async () => {
+    if (confirming) return;
+    setConfirming(true);
+    setConfirmError(null);
+    try {
+      const res = await api.confirmAppointment(token);
+      finish('attended', res.booking);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'too_late') finish('past');
+      else setConfirmError(errorMessage(error));
+    } finally {
+      setConfirming(false);
+    }
   };
   const finish = (next: Mode, updated?: BookingSummary) => {
     if (updated) setBooking(updated);
@@ -129,12 +186,20 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
             <div class="text-[14px] text-ink-2">
               {booking.serviceName} con {proName}
             </div>
+            {!cancelledCard && booking.status === 'confirmed' && booking.clientConfirmation === 'confirmed' && (
+              <span class="mt-1.5 self-start inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-primary text-white text-[13px] font-semibold">
+                <Check size={14} strokeWidth={3} />
+                Asistencia confirmada
+              </span>
+            )}
           </div>
         </div>
 
         {mode === 'menu' && (
           <div class="flex flex-col gap-4 grow fade-in">
             <h1 class={H1_BIG}>Hola, {firstName(booking.client.name)}. ¿Qué quieres hacer con tu cita?</h1>
+            {confirmError && <Notice>{confirmError}</Notice>}
+            {canConfirm(booking) && <ConfirmButton busy={confirming} onClick={confirmAttendance} />}
             <button type="button" class={OPTION} onClick={() => openMode('move')}>
               <span class="w-11 h-11 rounded-[14px] bg-accent-soft flex items-center justify-center shrink-0">
                 <Swap size={20} stroke="#15241D" />
@@ -201,6 +266,24 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
             text={`Faltan menos de ${CLIENT_CHANGE_CUTOFF_MIN / 60} horas para tu cita, así que ya no se puede mover ni cancelar desde aquí. Si lo necesitas, comunícate directamente con ${proName}.`}
             phone={booking.pro.phone}
             href={bookAgain}
+          >
+            {confirmError && <Notice>{confirmError}</Notice>}
+            {canConfirm(booking) && <ConfirmButton busy={confirming} onClick={confirmAttendance} />}
+          </ResultPanel>
+        )}
+        {mode === 'attended' && (
+          <ResultPanel
+            icon="check"
+            title={`¡Gracias, ${firstName(booking.client.name)}! Confirmaste tu asistencia.`}
+            text={`${sentence(`Te esperamos el ${formatDayLong(bogotaDate(booking.start))} ${atTime(booking.start)}`)} Si algo cambia, puedes cambiar o cancelar tu cita desde este mismo enlace.`}
+            href={bookAgain}
+            action={
+              load.data.canChange ? (
+                <button type="button" onClick={() => setModeState('menu')} class="font-bold text-[15px] text-primary border-0 bg-transparent h-11 px-3 rounded-full hover:text-primary-dark">
+                  Ver opciones de mi cita
+                </button>
+              ) : undefined
+            }
           />
         )}
         {mode === 'past' && (
@@ -219,12 +302,24 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
   );
 }
 
-function ResultPanel({ icon, title, text, href, phone }: {
+function ConfirmButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} aria-busy={busy} class={`${PRIMARY_BUTTON_16} gap-2 ${busy ? 'opacity-80 cursor-progress' : ''}`}>
+      <Check size={20} strokeWidth={2.6} />
+      {busy ? 'Confirmando…' : 'Confirmar asistencia'}
+    </button>
+  );
+}
+
+function ResultPanel({ icon, title, text, href, phone, action, children }: {
   icon: 'check' | 'locked';
   title: string;
   text: string;
   href: string;
   phone?: string | null;
+  /** Replaces the "Separar otra cita" link at the bottom. */
+  action?: ComponentChildren;
+  children?: ComponentChildren;
 }) {
   return (
     <div class="flex flex-col gap-3.5 grow fade-in">
@@ -249,10 +344,13 @@ function ResultPanel({ icon, title, text, href, phone }: {
           </span>
         </a>
       )}
+      {children}
       <div class="mt-auto flex flex-col gap-2.5 items-center">
-        <a href={href} class="font-bold text-[15px]">
-          Separar otra cita
-        </a>
+        {action ?? (
+          <a href={href} class="font-bold text-[15px]">
+            Separar otra cita
+          </a>
+        )}
       </div>
     </div>
   );

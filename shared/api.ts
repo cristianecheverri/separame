@@ -10,8 +10,8 @@ import type { DayAvailability } from './availability';
 import type { Holiday } from './holidays';
 import type { SlugProblem } from './slug';
 import type {
-  Appointment, AvailabilitySettings, Block, ClientContact, ISODate, ISOInstant, Payment, PaymentInstructions,
-  PaymentMethod, PriceMigration, PricePackage, PriceVersion, PriceVersionStatus, ProProfile, Service, SubscriptionState,
+  Appointment, AppointmentOutcome, AvailabilitySettings, Block, ClientConfirmation, ClientContact, ClientRecord, ISODate,
+  ISOInstant, Payment, PaymentInstructions, PaymentMethod, PriceMigration, ProStats, WaitlistEntry, PricePackage, PriceVersion, PriceVersionStatus, ProProfile, Service, SubscriptionState,
   SubscriptionStatus, BookingRules, WeeklySchedule,
 } from './types';
 
@@ -117,6 +117,8 @@ export interface CreateBookingRequest {
 export interface BookingSummary {
   appointmentId: string;
   status: Appointment['status'];
+  /** Attendance confirmation ("Sí, voy"). */
+  clientConfirmation: ClientConfirmation;
   start: ISOInstant;
   end: ISOInstant;
   serviceId: string;
@@ -160,6 +162,35 @@ export interface RescheduleBookingRequest {
 
 export interface BookingMutationResponse {
   booking: BookingSummary;
+}
+
+/** POST /public/appointments/{token}/confirm — idempotent; allowed until the start. Returns BookingMutationResponse. */
+export const CONFIRM_ACTION_PARAM = 'action=confirm';
+
+// ── Waitlist ───────────────────────────────────────────────────────────────
+
+export const WAITLIST_MAX_DATES = 7;
+
+export interface JoinWaitlistRequest {
+  serviceId: string;
+  /** 1–WAITLIST_MAX_DATES Bogotá dates within the booking window. */
+  dates: ISODate[];
+  client: ClientContact;
+  consent: true;
+  turnstileToken: string;
+}
+
+export interface JoinWaitlistResponse {
+  entry: Pick<WaitlistEntry, 'id' | 'dates' | 'serviceName'>;
+}
+
+export interface WaitlistResponse {
+  entries: WaitlistEntry[];
+}
+
+/** POST /public/waitlist/{token}/leave — idempotent; 404 = invalid/expired link. */
+export interface LeaveWaitlistResponse {
+  pro: { slug: string; name: string };
 }
 
 // ── Professional ───────────────────────────────────────────────────────────
@@ -260,12 +291,84 @@ export interface CancelAppointmentRequest {
   reason?: string;
 }
 
+/** POST /me/appointments/{id}/outcome — only after the start; null clears it. */
+export interface SetOutcomeRequest {
+  outcome: AppointmentOutcome | null;
+}
+
 export interface AppointmentResponse {
   appointment: Appointment;
 }
 
 /** GET /me/slots?serviceId&from&days — same shape as the public availability. */
 export type ProSlotsResponse = AvailabilityResponse;
+
+// ── Clients ────────────────────────────────────────────────────────────────
+
+export interface ClientsQuery {
+  q?: string;
+}
+
+export interface ClientsResponse {
+  /** Most recent activity first. */
+  clients: ClientRecord[];
+}
+
+export interface ClientDetailResponse {
+  client: ClientRecord;
+  /** Newest first. */
+  appointments: Appointment[];
+}
+
+export interface UpdateClientNotesRequest {
+  notes: string;
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+
+/** Max days per stats query. */
+export const STATS_MAX_DAYS = 366;
+
+export interface StatsQuery {
+  from: ISODate;
+  to: ISODate;
+}
+
+export interface StatsResponse {
+  stats: ProStats;
+  /** Same-length period right before, for "vs. periodo anterior". */
+  previous: ProStats;
+}
+
+// ── Web push (pro's devices) ──────────────────────────────────────────────
+
+/** Browser PushSubscription.toJSON(). */
+export interface PushSubscriptionRequest {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  /** Shown in the device list ("iPhone · Safari"). */
+  deviceLabel?: string;
+}
+
+export interface RemovePushSubscriptionRequest {
+  endpoint: string;
+}
+
+/** POST /me/push-subscriptions and /remove return PushConfigResponse; /test returns this (409 when push isn't configured). */
+export interface TestPushResponse {
+  sent: number;
+}
+
+/**
+ * GET /me/push-config — read at runtime (not baked into config.json) so a stage
+ * without VAPID keys still deploys; push is simply disabled until they exist.
+ */
+export interface PushConfigResponse {
+  /** VAPID public key (base64url) for PushManager.subscribe; null = push not configured. */
+  vapidPublicKey: string | null;
+  /** Devices of this pro already subscribed. */
+  devices: { endpointHash: string; deviceLabel: string; createdAt: ISOInstant; lastSuccessAt: ISOInstant | null }[];
+}
 
 // ── Calendar sync (pro's own calendar) ────────────────────────────────────
 
@@ -449,6 +552,9 @@ export const apiPaths = {
   publicAppointment: (token: string) => `/public/appointments/${enc(token)}`,
   publicCancel: (token: string) => `/public/appointments/${enc(token)}/cancel`,
   publicReschedule: (token: string) => `/public/appointments/${enc(token)}/reschedule`,
+  publicConfirm: (token: string) => `/public/appointments/${enc(token)}/confirm`,
+  publicWaitlist: (slug: string) => `/public/pros/${enc(slug)}/waitlist`,
+  publicLeaveWaitlist: (token: string) => `/public/waitlist/${enc(token)}/leave`,
 
   me: () => '/me',
   onboarding: () => '/me/onboarding',
@@ -463,6 +569,17 @@ export const apiPaths = {
   appointment: (id: string) => `/me/appointments/${enc(id)}`,
   cancelAppointment: (id: string) => `/me/appointments/${enc(id)}/cancel`,
   slots: (q: AvailabilityQuery) => `/me/slots${qs({ ...q })}`,
+  appointmentOutcome: (id: string) => `/me/appointments/${enc(id)}/outcome`,
+  waitlist: () => '/me/waitlist',
+  waitlistEntry: (id: string) => `/me/waitlist/${enc(id)}`,
+  clients: (q?: ClientsQuery) => `/me/clients${q ? qs({ ...q }) : ''}`,
+  client: (key: string) => `/me/clients/${enc(key)}`,
+  clientNotes: (key: string) => `/me/clients/${enc(key)}/notes`,
+  stats: (q: StatsQuery) => `/me/stats${qs({ ...q })}`,
+  pushConfig: () => '/me/push-config',
+  pushSubscriptions: () => '/me/push-subscriptions',
+  removePushSubscription: () => '/me/push-subscriptions/remove',
+  testPush: () => '/me/push-subscriptions/test',
   calendarSync: () => '/me/calendar-sync',
   calendarSyncRotate: () => '/me/calendar-sync/rotate',
   publicCalendarFeed: (token: string) => `/public/calendar/${enc(token)}.ics`,

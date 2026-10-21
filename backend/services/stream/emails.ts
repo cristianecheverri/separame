@@ -1,14 +1,14 @@
-import type { ProProfile } from '../../shared/types';
-import { log } from '../lib/logger';
+import type { ProProfile } from '../../../shared/types';
+import { log } from '../../lib/logger';
 import {
   sendClientCancelled, sendClientChanged, sendClientConfirmation, sendProCalendarNotice, sendProCancelled, sendProChanged,
   sendProNewBooking,
-} from '../mail/notifications';
-import { sendOnce, type CalendarInvite } from '../mail/sender';
-import type { ProCalendarKind } from '../mail/templates/pro-calendar';
-import { revisionOf, toAppointment, type AppointmentItem } from './appointments';
-import { buildInvite, invitesEnabledFor } from './calendar-sync';
-import { getProfile } from './profiles';
+} from '../../mail/notifications';
+import { sendOnce, type CalendarInvite } from '../../mail/sender';
+import type { ProCalendarKind } from '../../mail/templates/pro-calendar';
+import { revisionOf, toAppointment, type AppointmentItem } from '../appointments';
+import { buildInvite, invitesEnabledFor } from '../calendar-sync';
+import { getProfile } from '../profiles';
 
 /**
  * What the DynamoDB stream should email for an appointment change. Pure

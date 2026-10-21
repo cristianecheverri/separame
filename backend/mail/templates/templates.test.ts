@@ -83,7 +83,16 @@ describe('other templates', () => {
   });
 
   it('reminder and pro new booking', () => {
-    expect(reminderEmail(data).subject).toBe('Recordatorio: tu cita es mañana · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez');
+    const reminder = reminderEmail({ ...data, confirmUrl: 'https://separame.app/c/tok.sig?action=confirm', clientConfirmation: 'pending' });
+    expect(reminder.subject).toBe('¿Confirmas tu asistencia? · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez');
+    expect(reminder.html).toContain('¿Confirmas tu asistencia?');
+    expect(reminder.html).toContain('href="https://separame.app/c/tok.sig?action=confirm"');
+    expect(reminder.html).toContain('Sí, voy');
+    expect(reminder.html).toContain('Necesito cancelar o cambiar');
+    expect(reminder.html).toContain('href="https://separame.app/c/tok.sig"');
+    const already = reminderEmail({ ...data, confirmUrl: 'x', clientConfirmation: 'confirmed' });
+    expect(already.subject).toBe('Recordatorio: tu cita es mañana · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez');
+    expect(already.html).not.toContain('Sí, voy');
     const n = proNewBookingEmail({
       siteUrl: data.siteUrl, pro, client: { name: 'Mariana Gómez', email: 'mariana@correo.com', phone: '3001234567' },
       serviceName: 'Valoración', durationMin: 30, priceCop: 60000, start: data.start,

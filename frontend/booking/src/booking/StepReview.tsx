@@ -1,20 +1,21 @@
 import type { ComponentChildren } from 'preact';
 import { Pin } from '../components/icons';
 import { Notice } from '../components/ui';
-import { StepTitle, type Step } from './FlowChrome';
+import { StepTitle, type StepId } from './FlowChrome';
 
 export interface ReviewRow {
   label: string;
   value: string;
   sub: string;
-  step: Step;
+  /** Step to jump back to; null hides "Cambiar" (e.g. the only service). */
+  step: StepId | null;
 }
 
 interface Props {
   rows: ReviewRow[];
   address: string;
   error: string | null;
-  onEdit: (step: Step) => void;
+  onEdit: (step: StepId) => void;
   captcha: ComponentChildren;
   titleRef: preact.Ref<HTMLHeadingElement>;
 }
@@ -31,14 +32,16 @@ export function StepReview({ rows, address, error, onEdit, captcha, titleRef }: 
               <span class="font-bold text-[15px] break-words">{row.value}</span>
               {row.sub && <span class="text-[13px] text-ink-2 [overflow-wrap:anywhere]">{row.sub}</span>}
             </div>
+            {row.step && (
             <button
               type="button"
-              onClick={() => onEdit(row.step)}
+              onClick={() => row.step && onEdit(row.step)}
               aria-label={`Cambiar ${row.label.toLowerCase()}`}
               class="h-11 px-3 border-0 bg-transparent font-bold text-[14px] text-primary shrink-0 rounded-full hover:text-primary-dark"
             >
               Cambiar
             </button>
+            )}
           </div>
         ))}
       </div>

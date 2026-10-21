@@ -27,7 +27,15 @@ const SCREENS = [
     await p.getByRole('button', { name: /Valoración/ }).click();
   }],
   ['agenda-expired', '/?as=pro&state=expired'],
+  ['agenda-install-android', '/?as=pro&state=trial&install=android'],
+  ['agenda-install-ios', '/?as=pro&state=trial&install=ios', async (p) => p.getByRole('button', { name: 'Instalar' }).filter({ visible: true }).first().click()],
   ['appointments', '/appointments?as=pro&state=trial'],
+  ['appointments-unmarked', '/appointments?as=pro&state=trial&tab=past&filter=unmarked'],
+  ['appointments-waitlist', '/appointments?as=pro&state=trial&tab=waitlist'],
+  ['clients', '/clients?as=pro&state=trial'],
+  ['client-detail', '/clients/c-ana.maria.salazar?as=pro&state=trial'],
+  ['stats', '/stats?as=pro&state=trial'],
+  ['stats-90', '/stats?as=pro&state=trial', async (p) => p.getByRole('button', { name: 'Últimos 90 días' }).click()],
   ['services', '/services?as=pro&state=trial'],
   ['services-expired', '/services?as=pro&state=expired'],
   ['availability', '/availability?as=pro&state=trial'],
@@ -76,7 +84,7 @@ for (const [name, path, action] of SCREENS) {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) problems.push(`${name}@${width}: horizontal overflow ${overflow}px`);
     // Overlays (drawer, modals) are fixed to the viewport: capture just the viewport.
-    await page.screenshot({ path: `${out}${name}-${width}.png`, fullPage: !['drawer', 'agenda-new-modal'].includes(name) });
+    await page.screenshot({ path: `${out}${name}-${width}.png`, fullPage: !['drawer', 'agenda-new-modal', 'agenda-install-ios'].includes(name) });
     await context.close();
   }
   console.log(`✓ ${name}`);

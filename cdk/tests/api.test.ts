@@ -60,7 +60,8 @@ describe('ApiStack', () => {
 
   it('throttles the stage and, more strictly, the booking routes', () => {
     const bookingKeys = ROUTES.filter((r) => r.throttle === 'booking').map(routeKey);
-    expect(bookingKeys.length).toBeGreaterThan(0);
+    expect(bookingKeys).toContain('POST /public/pros/{slug}/waitlist');
+    expect(bookingKeys).not.toContain('POST /public/waitlist/{token}/leave');
     const [[, stage]] = resourcesOf(template, 'AWS::ApiGatewayV2::Stage');
     expect(stage.Properties.DefaultRouteSettings).toEqual({
       ThrottlingRateLimit: DEFAULT_THROTTLE.rateLimit,

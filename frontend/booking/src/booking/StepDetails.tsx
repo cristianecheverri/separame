@@ -3,10 +3,15 @@ import { StepTitle } from './FlowChrome';
 
 export const PRIVACY_URL = '/privacy';
 
-interface Props {
+interface FieldsProps {
   form: ContactForm;
   errors: ContactErrors;
   onChange: (field: ContactField, value: string | boolean) => void;
+  /** Hint under the email field. */
+  emailHint?: string;
+}
+
+interface Props extends FieldsProps {
   titleRef: preact.Ref<HTMLHeadingElement>;
 }
 
@@ -26,14 +31,23 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-export function StepDetails({ form, errors, onChange, titleRef }: Props) {
+export function StepDetails({ titleRef, ...fields }: Props) {
+  return (
+    <section class="flex flex-col gap-3.5">
+      <StepTitle titleRef={titleRef}>¿A nombre de quién?</StepTitle>
+      <ContactFields {...fields} />
+    </section>
+  );
+}
+
+/** Name / email / phone (+57) / Ley 1581 consent — shared by the booking and the waitlist. */
+export function ContactFields({ form, errors, onChange, emailHint = 'Aquí te llega la confirmación y el recordatorio.' }: FieldsProps) {
   const describedBy = (field: ContactField, extra?: string) =>
     [errors[field] ? `${FIELD_IDS[field]}-error` : '', extra ?? ''].filter(Boolean).join(' ') || undefined;
   const text = (field: 'name' | 'email' | 'phone') => (e: Event) => onChange(field, (e.currentTarget as HTMLInputElement).value);
 
   return (
-    <section class="flex flex-col gap-3.5">
-      <StepTitle titleRef={titleRef}>¿A nombre de quién?</StepTitle>
+    <>
       <div class="flex flex-col gap-1.5">
         <label for={FIELD_IDS.name} class="text-[14px] font-semibold">Nombre completo</label>
         <input
@@ -73,7 +87,7 @@ export function StepDetails({ form, errors, onChange, titleRef }: Props) {
           onInput={text('email')}
         />
         <FieldError id={`${FIELD_IDS.email}-error`} message={errors.email} />
-        <span id="p-mail-hint" class="text-[12px] text-muted">Aquí te llega la confirmación y el recordatorio.</span>
+        <span id="p-mail-hint" class="text-[12px] text-muted">{emailHint}</span>
       </div>
       <div class="flex flex-col gap-1.5">
         <label for={FIELD_IDS.phone} class="text-[14px] font-semibold">Celular</label>
@@ -120,6 +134,6 @@ export function StepDetails({ form, errors, onChange, titleRef }: Props) {
         </label>
         <FieldError id={`${FIELD_IDS.agree}-error`} message={errors.agree} />
       </div>
-    </section>
+    </>
   );
 }

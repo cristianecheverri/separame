@@ -14,6 +14,8 @@ describe('FrontendDeployStack', () => {
       if (!d.Properties.DestinationBucketKeyPrefix) expect(d.Properties.Prune).toBe(false);
     }
     expect(byId('BookingDeployment').Prune).toBe(false);
+    // index.html, 404.html, c/index.html, w/index.html placeholders.
+    expect((byId('BookingDeployment').SourceObjectKeys as unknown[]).length).toBe(4);
   });
 
   it('deploys the SPA under app/ (pruned within the prefix) with config.json', () => {

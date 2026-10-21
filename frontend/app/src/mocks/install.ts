@@ -2,13 +2,15 @@
  * Mock mode bootstrap (VITE_MOCK=1, dev server only): in-memory API, fake
  * Cognito, clock pinned to the mockups' day. Query switches (remembered for
  * the tab): ?as=admin | ?as=pro | ?as=guest, ?state=trial|active|grace|expired|onboarding,
- * ?billing=none|pending|rejected,
+ * ?billing=none|pending|rejected, ?install=android|ios|ios-other|installed|none,
  * ?delay=<ms>.
  */
 import { setTransport } from '../lib/api';
 import { auth } from '../lib/auth';
 import { pinClock } from '../lib/clock';
 import type { AuthClient } from '../lib/authClient';
+import { deviceLabel, push, type PushAdapter } from '../lib/push';
+import { installStore, type BeforeInstallPromptEvent, type InstallVariant } from '../lib/install';
 import { session } from '../lib/storage';
 import { MOCK_NOW, type BillingMockState, type MockState } from './fixtures';
 import { mockTransport, resetMockDb } from './mockApi';
@@ -103,6 +105,47 @@ export function installMocks(): void {
   pinClock(MOCK_NOW);
   resetMockDb({ state, isAdmin: as === 'admin', billing });
   setTransport((req) => mockTransport(req, Number.isFinite(delay) ? delay : 150));
+  push.set(mockPushAdapter());
+  const installParam = param('install', ['android', 'ios', 'ios-other', 'installed', 'none', 'real'], 'real');
+  if (installParam !== 'real') {
+    const variant: InstallVariant = installParam === 'android' ? 'prompt' : (installParam as InstallVariant);
+    installStore.override(variant, variant === 'prompt' ? fakeInstallPrompt() : undefined);
+  }
   void auth.init(mockAuthClient(as === 'guest' ? null : 'laura@consultoriolaura.co'));
   console.info(`[sepárame] mock mode · as=${as} · state=${state} · contraseña «incorrecta» = error, código 000000 = incorrecto`);
+}
+
+/** Fake PushManager for mock mode: subscribes instantly, no browser prompt. */
+export function mockPushAdapter(): PushAdapter {
+  let endpoint: string | null = null;
+  let permission: NotificationPermission = 'default';
+  return {
+    supported: () => true,
+    permission: () => permission,
+    currentEndpoint: async () => endpoint,
+    async subscribe() {
+      permission = 'granted';
+      endpoint = 'https://push.example.com/mock/this-device';
+      return { endpoint, keys: { p256dh: 'mock-p256dh', auth: 'mock-auth' }, deviceLabel: deviceLabel() };
+    },
+    async unsubscribe() {
+      const removed = endpoint;
+      endpoint = null;
+      return removed;
+    },
+  };
+}
+
+/** Chromium's install prompt, faked: "accepts" and fires the installed event. */
+export function fakeInstallPrompt(): BeforeInstallPromptEvent {
+  const event = new Event('beforeinstallprompt') as BeforeInstallPromptEvent;
+  let resolve: (v: { outcome: 'accepted' | 'dismissed' }) => void = () => {};
+  Object.assign(event, {
+    userChoice: new Promise((r) => (resolve = r)),
+    prompt: async () => {
+      resolve({ outcome: 'accepted' });
+      setTimeout(() => installStore.markInstalled(), 50);
+    },
+  });
+  return event;
 }

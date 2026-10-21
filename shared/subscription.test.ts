@@ -79,3 +79,9 @@ describe('schemas', () => {
     expect(manualPaymentSchema.safeParse({ ...p, amountCop: 15000 }).success).toBe(true);
   });
 });
+
+describe('reserved single-letter paths', () => {
+  it('blocks c, b and w (manage, booking assets, waitlist leave)', () => {
+    for (const s of ['c', 'b', 'w']) expect(slugProblem(s)).not.toBeNull();
+  });
+});

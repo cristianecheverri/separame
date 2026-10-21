@@ -80,6 +80,10 @@ export interface AvailabilitySettings {
 // ── Appointments ───────────────────────────────────────────────────────────
 
 export type AppointmentStatus = 'confirmed' | 'cancelled';
+/** The client's answer to "¿Confirmas tu asistencia?" (reminder email / manage page). */
+export type ClientConfirmation = 'pending' | 'confirmed';
+/** What actually happened, marked by the pro after the start time. */
+export type AppointmentOutcome = 'attended' | 'no_show';
 export type Actor = 'client' | 'pro' | 'admin' | 'system';
 
 export interface ClientContact {
@@ -108,6 +112,82 @@ export interface Appointment {
   cancelReason?: string;
   /** When the 24 h reminder went out (absent = pending or not applicable). */
   reminderSentAt?: ISOInstant;
+  /** Attendance confirmation by the client (missing on old items = 'pending'). */
+  clientConfirmation: ClientConfirmation;
+  confirmedAt?: ISOInstant;
+  /** Marked by the pro once the appointment started; absent = not marked. */
+  outcome?: AppointmentOutcome;
+  outcomeAt?: ISOInstant;
+  /** Monotonic revision (0 on create, +1 on every CALENDAR change: move, cancel): calendar SEQUENCE. Confirm/outcome don't bump it. */
+  revision: number;
+  /** Key of the client record (see ClientRecord) this appointment belongs to. */
+  clientKey: string;
+}
+
+// ── Clients (lightweight history per professional) ─────────────────────────
+
+/**
+ * One record per client of a professional, keyed by `clientKey` (hash of the
+ * normalized email, or of the phone when there's no email). Aggregates are
+ * maintained from appointment events. Notes are free text for logistics only —
+ * the UI warns not to store health data (datos sensibles, Ley 1581).
+ */
+export interface ClientRecord {
+  key: string;
+  name: string;
+  email: string;
+  phone: string;
+  firstSeenAt: ISOInstant;
+  lastAppointmentAt: ISOInstant | null;
+  nextAppointmentAt: ISOInstant | null;
+  totals: { appointments: number; attended: number; noShows: number; cancelled: number };
+  notes: string;
+  updatedAt: ISOInstant;
+}
+
+// ── Waitlist ───────────────────────────────────────────────────────────────
+
+export type WaitlistStatus = 'waiting' | 'booked' | 'expired' | 'removed';
+
+/** A client waiting for a slot on specific days; offered freed slots first-come. */
+export interface WaitlistEntry {
+  id: string;
+  proId: string;
+  serviceId: string;
+  serviceName: string;
+  /** Bogotá dates the client can come (1–7). */
+  dates: ISODate[];
+  client: ClientContact;
+  status: WaitlistStatus;
+  createdAt: ISOInstant;
+  notifiedCount: number;
+  lastNotifiedAt: ISOInstant | null;
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+
+export interface ProStats {
+  from: ISODate;
+  to: ISODate;
+  /** Confirmed (non-cancelled) appointments in the range. */
+  appointments: number;
+  cancelled: number;
+  attended: number;
+  noShows: number;
+  /** Past confirmed appointments the pro hasn't marked yet. */
+  unmarked: number;
+  /** Booked minutes / bookable minutes (schedule − blocks − holidays), 0–1. */
+  occupancy: number;
+  newClients: number;
+  returningClients: number;
+  /** Sum of reference prices of non-cancelled appointments (estimate, never charged). */
+  estimatedRevenueCop: number;
+  byService: { serviceId: string; serviceName: string; appointments: number; revenueCop: number }[];
+  /** 0 = Monday … 6 = Sunday. */
+  byWeekday: { weekday: number; appointments: number }[];
+  bySource: { client: number; pro: number };
+  /** Share of past appointments that ended as no-show, 0–1. */
+  noShowRate: number;
 }
 
 // ── Subscriptions, prices, payments ────────────────────────────────────────

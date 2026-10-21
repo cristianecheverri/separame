@@ -22,6 +22,11 @@ export default defineConfig(({ mode, command }) => {
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'script',
+        // Custom worker (src/sw.ts): precache + web push notices for the pro.
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
+        injectManifest: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           id: '/app/',
@@ -39,12 +44,6 @@ export default defineConfig(({ mode, command }) => {
             { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
             { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
-        },
-        workbox: {
-          navigateFallback: '/app/index.html',
-          // config.json is written by CDK at deploy time and must always come from the network.
-          navigateFallbackDenylist: [/\/config\.json$/],
-          globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         },
       }),
     ],

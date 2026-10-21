@@ -3,14 +3,20 @@ import { AlertIcon, CheckIcon } from './icons';
 
 type ToastKind = 'success' | 'error' | 'info';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface ToastItem {
   id: number;
   message: string;
   kind: ToastKind;
+  action?: ToastAction;
 }
 
 interface ToastApi {
-  show: (message: string, kind?: ToastKind) => void;
+  show: (message: string, kind?: ToastKind, action?: ToastAction) => void;
   success: (message: string) => void;
   error: (message: string) => void;
 }
@@ -21,11 +27,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const seq = useRef(0);
 
-  const show = useCallback((message: string, kind: ToastKind = 'info') => {
-    const id = ++seq.current;
-    setItems((list) => [...list.slice(-2), { id, message, kind }]);
-    setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), kind === 'error' ? 6_000 : 3_500);
-  }, []);
+  const dismiss = useCallback((id: number) => setItems((list) => list.filter((t) => t.id !== id)), []);
+  const show = useCallback(
+    (message: string, kind: ToastKind = 'info', action?: ToastAction) => {
+      const id = ++seq.current;
+      setItems((list) => [...list.slice(-2), { id, message, kind, action }]);
+      setTimeout(() => dismiss(id), action ? 7_000 : kind === 'error' ? 6_000 : 3_500);
+    },
+    [dismiss],
+  );
 
   const api = useMemo<ToastApi>(
     () => ({ show, success: (m) => show(m, 'success'), error: (m) => show(m, 'error') }),
@@ -41,7 +51,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${t.kind === 'error' ? 'bg-accent text-ink' : 'bg-primary text-white'}`}>
               {t.kind === 'error' ? <AlertIcon size={16} /> : <CheckIcon size={14} />}
             </span>
-            <span>{t.message}</span>
+            <span className="grow">{t.message}</span>
+            {t.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  t.action!.onClick();
+                  dismiss(t.id);
+                }}
+                className="min-h-11 -my-2 px-3 rounded-full font-bold text-accent hover:bg-white/10 shrink-0"
+              >
+                {t.action.label}
+              </button>
+            )}
           </div>
         ))}
       </div>

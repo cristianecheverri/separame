@@ -1,6 +1,6 @@
 /** Appointment mutations with optimistic updates (rolled back on error). */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiPaths, type AppointmentResponse, type CreateAppointmentRequest, type ServicesResponse } from '@shared/api';
+import { apiPaths, type AppointmentResponse, type CreateAppointmentRequest, type ServicesResponse, type SetOutcomeRequest } from '@shared/api';
 import { addMinutes, bogotaDate } from '@shared/time';
 import type { Appointment } from '@shared/types';
 import { sortByStart } from '../../lib/agenda';
@@ -35,7 +35,7 @@ export function useCreateAppointment() {
       const temp: Appointment = {
         id: `temp-${Date.now()}`, proId: '', serviceId: service.id, serviceName: service.name, durationMin: service.durationMin,
         priceCop: service.priceCop, start: req.start, end: addMinutes(req.start, service.durationMin), status: 'confirmed',
-        client: req.client, createdBy: 'pro', createdAt: at, updatedAt: at,
+        client: req.client, createdBy: 'pro', createdAt: at, updatedAt: at, clientConfirmation: 'pending', revision: 0, clientKey: '',
       };
       const snapshot = await patchAppointmentLists(qc, (list, range) => (inRange(temp, range) ? sortByStart([...list, temp]) : list));
       return { snapshot };
@@ -76,5 +76,25 @@ export function useCancelAppointment() {
     },
     onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
     onSettled: settle,
+  });
+}
+
+export function useSetOutcome() {
+  const qc = useQueryClient();
+  return useMutation<AppointmentResponse, Error, { appointment: Appointment; outcome: SetOutcomeRequest['outcome'] }, Ctx>({
+    mutationFn: ({ appointment, outcome }) => api.post<AppointmentResponse>(apiPaths.appointmentOutcome(appointment.id), { outcome }),
+    onMutate: async ({ appointment, outcome }) => {
+      const at = now().toISOString();
+      const snapshot = await patchAppointmentLists(qc, (list) =>
+        list.map((a) => (a.id === appointment.id ? { ...a, outcome: outcome ?? undefined, outcomeAt: outcome ? at : undefined } : a)),
+      );
+      return { snapshot };
+    },
+    onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: keys.appointmentsAll });
+      void qc.invalidateQueries({ queryKey: ['clients'] });
+      void qc.invalidateQueries({ queryKey: ['stats'] });
+    },
   });
 }

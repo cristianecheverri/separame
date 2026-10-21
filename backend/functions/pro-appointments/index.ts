@@ -1,11 +1,12 @@
 import {
   availabilityQuerySchema, cancelAppointmentSchema, createAppointmentSchema, listAppointmentsQuerySchema, moveAppointmentSchema,
+  setOutcomeSchema,
 } from '../../../shared/schemas';
 import { diffDays } from '../../../shared/time';
 import { requirePro } from '../../lib/auth';
 import { created, createApiHandler, ok, parseBody, parseQuery, pathParam, validationError } from '../../lib/http';
 import {
-  cancelAppointment, createAppointment, listAppointments, moveAppointment, requireAppointmentItem, toAppointment,
+  cancelAppointment, createAppointment, listAppointments, moveAppointment, requireAppointmentItem, setOutcome, toAppointment,
 } from '../../services/appointments';
 import { availabilityFor } from '../../services/availability';
 import { requireProId } from '../../services/profiles';
@@ -17,7 +18,8 @@ import { loadSubscription, requireWritable } from '../../services/subscriptions'
  * public booking, except the minimum notice (the pro may book a walk-in for
  * right now) and hidden services. Creating/moving needs a non-expired plan.
  * Cancelling is allowed even when the plan expired, so the pro can still
- * warn a client who already has an appointment.
+ * warn a client who already has an appointment; so is marking the outcome
+ * (attended / no-show), which is record keeping.
  */
 
 const MAX_RANGE_DAYS = 62;
@@ -58,6 +60,13 @@ export const handler = createApiHandler({
     const appt = await requireAppointmentItem(proId, pathParam(event, 'appointmentId'));
     const cancelled = await cancelAppointment({ appt, actor: 'pro', reason: input.reason, now: new Date() });
     return ok({ appointment: toAppointment(cancelled) });
+  },
+
+  'POST /me/appointments/{appointmentId}/outcome': async (event) => {
+    const { outcome } = parseBody(event, setOutcomeSchema);
+    const proId = await requireProId(requirePro(event));
+    const appt = await requireAppointmentItem(proId, pathParam(event, 'appointmentId'));
+    return ok({ appointment: toAppointment(await setOutcome(appt, outcome, new Date())) });
   },
 
   'GET /me/slots': async (event) => {

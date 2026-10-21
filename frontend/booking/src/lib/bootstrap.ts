@@ -35,11 +35,20 @@ export function slugFromLocation(loc: Pick<Location, 'pathname' | 'search'> = lo
   return decodeURIComponent(loc.pathname.split('/').filter(Boolean)[0] ?? '');
 }
 
+function tokenAfter(prefix: string, pathname: string): string | null {
+  if (!pathname.startsWith(prefix)) return null;
+  const token = pathname.slice(prefix.length).split('/')[0];
+  return token ? decodeURIComponent(token) : null;
+}
+
 /** `/c/<token>` → token. */
 export function manageTokenFromLocation(loc: Pick<Location, 'pathname'> = location): string | null {
-  if (!loc.pathname.startsWith(SITE_PATHS.manage)) return null;
-  const token = loc.pathname.slice(SITE_PATHS.manage.length).split('/')[0];
-  return token ? decodeURIComponent(token) : null;
+  return tokenAfter(SITE_PATHS.manage, loc.pathname);
+}
+
+/** `/w/<token>` → token (leave the waitlist). */
+export function waitlistTokenFromLocation(loc: Pick<Location, 'pathname'> = location): string | null {
+  return tokenAfter(SITE_PATHS.waitlistLeave, loc.pathname);
 }
 
 export function isMockMode(): boolean {
