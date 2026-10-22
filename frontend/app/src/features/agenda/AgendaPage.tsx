@@ -11,7 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import { activeAppointments, buildDayRows } from '../../lib/agenda';
 import { now } from '../../lib/clock';
 import { firstName, formatDayMonth, formatDayShortMonth, formatDayTitle } from '../../lib/format';
-import { canShareNatively, shareOrCopy } from '../../lib/share';
+import { canShareNatively, shareOrCopy, trackShare } from '../../lib/share';
 import { usePro } from '../../lib/pro';
 import { useAppointments, useAvailability } from '../../lib/queries';
 import { AppointmentCard } from '../appointments/AppointmentCard';
@@ -88,6 +88,7 @@ export function AgendaPage() {
   const nativeShare = canShareNatively();
   const share = async () => {
     const outcome = await shareOrCopy({ title: 'Separa tu cita conmigo', text: 'Separa tu cita conmigo', url: publicUrl });
+    trackShare(outcome, 'booking_link');
     if (outcome === 'copied') toast.success('Enlace copiado. Pégalo donde quieras.');
     else if (outcome === 'failed') toast.error('No pudimos copiar el enlace.');
   };

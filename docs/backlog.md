@@ -39,12 +39,15 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
   - [ ] Hablar con un contador: régimen y facturación electrónica DIAN.
   - [ ] Pasarme responsable, cédula o NIT y correo de contacto para completar
         privacidad y términos (y decidir si creamos `soporte@separame.app`).
-- [ ] **Google Search Console** (después del despliegue a prod del SEO, 22-oct):
+- [x] **Google Search Console** (22-oct):
   - [x] Propiedad de tipo **Dominio** `separame.app` y registro TXT (22-oct; creado a mano y
         pasado a CDK: `GOOGLE_SITE_VERIFICATION` en `cdk/lib/config.ts`).
-  - [ ] Tras verificar: enviar `https://separame.app/sitemap.xml` en "Sitemaps" y pedir la
-        indexación de `https://separame.app/` en "Inspección de URLs".
+  - [x] Sitemap enviado y pedida la indexación de `https://separame.app/` (22-oct).
   - [ ] Opcional: Bing Webmaster Tools → "Importar desde Google Search Console".
+- [ ] **Google Analytics de Sepárame** (22-oct, después del despliegue a prod): en el flujo web
+      apagar en "Medición mejorada" los clics salientes, interacciones con formularios, descargas de
+      archivos y cambios de página según el historial; retención de 14 meses; registrar las
+      dimensiones personalizadas y los eventos clave. Detalle en `docs/analytics.md`.
 
 ## 2. Lo que hago yo (desarrollo)
 
@@ -86,6 +89,11 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       citas en línea" en un H2 de la página principal (lienzo y `mockups/line-a/` al día).
 - [x] Registro TXT de Search Console en CDK (el manual se borra justo antes del despliegue a prod
       que lo crea; si no, CloudFormation falla con "already exists").
+
+### Analítica (22-oct)
+- [x] Google Analytics 4 en la página principal, la reserva y el panel (solo prod, sin datos
+      personales ni tokens; eventos tipados en `shared/analytics.ts`, guía en `docs/analytics.md`).
+- [x] CSP con los dominios de Google y la política de privacidad actualizada (sección 8).
 
 ### Mockups que faltan dibujar
 - [ ] Página principal a 768 px (la tarjeta de 12 meses sola en la segunda fila).

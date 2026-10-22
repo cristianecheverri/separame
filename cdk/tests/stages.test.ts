@@ -49,6 +49,14 @@ describe('stages', () => {
     expect(customHeaders('prod').map((h) => h.Header)).not.toContain('X-Robots-Tag');
   });
 
+  it('lets Google Analytics load and send hits (CSP)', () => {
+    const policies = templateOf('prod', (s) => s.site).findResources('AWS::CloudFront::ResponseHeadersPolicy');
+    const csp = JSON.stringify(policies);
+    expect(csp).toMatch(/script-src 'self' https:\/\/challenges\.cloudflare\.com https:\/\/www\.googletagmanager\.com;/);
+    expect(csp).toMatch(/connect-src [^;]*https:\/\/\*\.google-analytics\.com https:\/\/\*\.analytics\.google\.com/);
+    expect(csp).not.toContain("'unsafe-inline' https://www.googletagmanager.com");
+  });
+
   it('publishes the Search Console TXT record at the apex only in prod', () => {
     templateOf('dev', (s) => s.site).resourceCountIs('AWS::Route53::RecordSet', 2); // A + AAAA
     templateOf('prod', (s) => s.site).hasResourceProperties('AWS::Route53::RecordSet', {

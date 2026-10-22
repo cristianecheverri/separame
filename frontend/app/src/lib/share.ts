@@ -1,3 +1,5 @@
+import type { AnalyticsEvents } from '@shared/analytics';
+import { track } from './analytics';
 import { copyText } from './clipboard';
 
 export type ShareOutcome = 'shared' | 'cancelled' | 'copied' | 'failed';
@@ -21,4 +23,17 @@ export async function shareOrCopy(data: { title: string; text?: string; url: str
     }
   }
   return (await copyText(data.url)) ? 'copied' : 'failed';
+}
+
+/** Copies a link and counts it (the booking link copied from the onboarding or the profile). */
+export async function copyLink(url: string, contentType: AnalyticsEvents['share']['content_type']): Promise<boolean> {
+  const copied = await copyText(url);
+  if (copied) trackShare('copied', contentType);
+  return copied;
+}
+
+/** Analytics for a share or copy that went through (cancelled / failed ones aren't counted). */
+export function trackShare(outcome: ShareOutcome, contentType: AnalyticsEvents['share']['content_type']): void {
+  if (outcome === 'shared') track('share', { method: 'native', content_type: contentType });
+  else if (outcome === 'copied') track('share', { method: 'copy', content_type: contentType });
 }

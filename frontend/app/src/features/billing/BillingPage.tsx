@@ -11,6 +11,7 @@ import { CheckIcon, CopyIcon, StarIcon } from '../../components/ui/icons';
 import { SectionSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
+import { track } from '../../lib/analytics';
 import { api, errorMessage } from '../../lib/api';
 import { copyText } from '../../lib/clipboard';
 import { now } from '../../lib/clock';
@@ -111,7 +112,8 @@ function NoticeForm({ plan, instructions, pending }: { plan: PlanOption; instruc
   const [sent, setSent] = useState(false);
   const notice = useMutation({
     mutationFn: (body: PaymentNoticeRequest) => api.post<PaymentNoticeResponse>(apiPaths.paymentNotices(), body),
-    onSuccess: () => {
+    onSuccess: (_res, body) => {
+      track('payment_notice_sent', { months: body.months });
       setSent(true);
       void qc.invalidateQueries({ queryKey: keys.billing });
     },

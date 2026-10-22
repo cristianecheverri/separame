@@ -8,7 +8,7 @@ import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { api, ApiError, errorMessage } from '../../lib/api';
 import { auth } from '../../lib/auth';
-import { copyText } from '../../lib/clipboard';
+import { copyLink } from '../../lib/share';
 import { linkLabel } from '../../lib/format';
 import { usePro } from '../../lib/pro';
 import { keys } from '../../lib/queries';
@@ -77,7 +77,7 @@ export function ProfilePage() {
             <h2 className={ui.h2sm}>Tu enlace</h2>
             <div className="font-bold text-[15px] text-primary [overflow-wrap:anywhere]">{linkLabel(publicUrl)}</div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" className={ui.btnOutline} onClick={async () => ((await copyText(publicUrl)) ? toast.success('Enlace copiado.') : toast.error('No pudimos copiar el enlace.'))}>
+              <button type="button" className={ui.btnOutline} onClick={async () => ((await copyLink(publicUrl, 'booking_link')) ? toast.success('Enlace copiado.') : toast.error('No pudimos copiar el enlace.'))}>
                 <CopyIcon size={16} /> Copiar enlace
               </button>
               <a href={publicUrl} target="_blank" rel="noreferrer" className={cx(ui.btnOutline, 'no-underline text-ink hover:text-ink')}>

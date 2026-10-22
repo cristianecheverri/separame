@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { track } from '../../lib/analytics';
 import { useInstall } from '../../lib/install';
 import { useToast } from '../ui/Toast';
 
@@ -8,7 +9,10 @@ export function InstallListener() {
   const toast = useToast();
   const seen = useRef(installedTick);
   useEffect(() => {
-    if (installedTick > seen.current) toast.success('¡Listo! Ya tienes Sepárame en tu pantalla de inicio.');
+    if (installedTick > seen.current) {
+      track('app_installed', {});
+      toast.success('¡Listo! Ya tienes Sepárame en tu pantalla de inicio.');
+    }
     seen.current = installedTick;
   }, [installedTick, toast]);
   return null;

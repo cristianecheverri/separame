@@ -55,14 +55,20 @@ export class SiteStack extends cdk.Stack {
 
     // ── Security headers ──────────────────────────────────────────────────
     // No inline scripts anywhere: the profile data travels in a
-    // <script type="application/json"> block, which CSP doesn't execute.
+    // <script type="application/json"> block, which CSP doesn't execute, and
+    // gtag is bootstrapped from our own bundles (no inline snippet).
+    // Google Analytics 4 (prod only at runtime: shared/analytics.ts); same policy in both stages.
+    const ga = {
+      script: 'https://www.googletagmanager.com',
+      hits: 'https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com',
+    };
     const csp = [
       `default-src 'self'`,
-      `script-src 'self' https://challenges.cloudflare.com`,
+      `script-src 'self' https://challenges.cloudflare.com ${ga.script}`,
       `style-src 'self' 'unsafe-inline'`,
       `font-src 'self' data:`,
-      `img-src 'self' data: blob:`,
-      `connect-src 'self' ${config.apiUrl} https://cognito-idp.${config.region}.amazonaws.com https://challenges.cloudflare.com`,
+      `img-src 'self' data: blob: ${ga.hits}`,
+      `connect-src 'self' ${config.apiUrl} https://cognito-idp.${config.region}.amazonaws.com https://challenges.cloudflare.com ${ga.hits}`,
       `frame-src https://challenges.cloudflare.com`,
       `frame-ancestors 'none'`,
       `base-uri 'self'`,

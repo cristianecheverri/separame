@@ -9,6 +9,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { ApiError } from './lib/api';
 import { auth } from './lib/auth';
 import { createAmplifyAuth } from './lib/amplifyAuth';
+import { initAnalytics, trackPageView } from './lib/analytics';
 import { loadConfig } from './lib/config';
 import { captureInstallEvents } from './lib/install';
 
@@ -27,8 +28,23 @@ const queryClient = new QueryClient({
 auth.onSignOut(() => queryClient.clear());
 
 captureInstallEvents();
+initAnalytics();
 
 const root = createRoot(document.getElementById('root')!);
+
+/** One page_view per distinct URL, once its (lazy) route has loaded. */
+function measurePageViews(router: ReturnType<typeof createRouter>) {
+  let measured = '';
+  const measure = ({ pathname, search }: { pathname: string; search: string }) => {
+    if (pathname + search === measured) return;
+    measured = pathname + search;
+    trackPageView();
+  };
+  measure(router.state.location);
+  router.subscribe((state) => {
+    if (state.navigation.state === 'idle') measure(state.location);
+  });
+}
 
 async function boot() {
   if (__MOCK__) {
@@ -39,6 +55,7 @@ async function boot() {
     void auth.init(createAmplifyAuth(config));
   }
   const router = createRouter();
+  measurePageViews(router);
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

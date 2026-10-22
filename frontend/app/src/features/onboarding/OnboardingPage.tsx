@@ -16,8 +16,9 @@ import { CloseIcon, CopyIcon } from '../../components/ui/icons';
 import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
+import { track } from '../../lib/analytics';
 import { auth } from '../../lib/auth';
-import { copyText } from '../../lib/clipboard';
+import { copyLink } from '../../lib/share';
 import { formatCopInput, linkLabel, parseCopInput } from '../../lib/format';
 import { keys, useMe } from '../../lib/queries';
 import { session } from '../../lib/storage';
@@ -145,7 +146,9 @@ export function OnboardingPage() {
     if (!parsed.success) return setErrors({ slug: parsed.error.issues[0]?.message ?? 'Revisa tus datos.' });
     void run(async () => {
       // Referral attribution (features/referrals/storedCode.ts): the server ignores bad or own codes.
-      const res = await api.post<ProfileResponse>(apiPaths.onboarding(), { ...parsed.data, referralCode: storedReferralCode() ?? undefined });
+      const referralCode = storedReferralCode();
+      const res = await api.post<ProfileResponse>(apiPaths.onboarding(), { ...parsed.data, referralCode: referralCode ?? undefined });
+      track('agenda_created', { referred: referralCode ? 'yes' : 'no' });
       clearReferralCode();
       session.set(STEP_KEY, '3');
       setPublicUrl(res.publicUrl);
@@ -286,7 +289,7 @@ export function OnboardingPage() {
             <div className="flex flex-col gap-2 min-w-0 grow">
               <span className="font-bold text-[17px] text-primary [overflow-wrap:anywhere]">{linkLabel(url)}</span>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className={ui.btnOutline} onClick={async () => ((await copyText(url)) ? toast.success('Enlace copiado.') : toast.error('No pudimos copiar el enlace.'))}>
+                <button type="button" className={ui.btnOutline} onClick={async () => ((await copyLink(url, 'booking_link')) ? toast.success('Enlace copiado.') : toast.error('No pudimos copiar el enlace.'))}>
                   <CopyIcon size={16} /> Copiar enlace
                 </button>
                 <button type="button" className={ui.btnOutline} onClick={() => void downloadQr(url, form.slug || me?.profile?.slug || 'separame')}>

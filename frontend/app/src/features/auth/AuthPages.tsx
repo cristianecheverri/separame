@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { emailSchema } from '@shared/schemas';
+import { track } from '../../lib/analytics';
 import { auth } from '../../lib/auth';
 import { authErrorMessage, passwordOk, type SignInStep } from '../../lib/authClient';
 import { AuthHeading, AuthLayout, CodeInput, EmailField, FormError, FormNotice, PasswordField, ResendButton, SubmitButton } from './parts';
@@ -87,7 +88,10 @@ export function LoginPage() {
 
   const signIn = async () => {
     const next = await auth.client.signIn(normalizeEmail(email), password);
-    if (next === 'done') return auth.refresh();
+    if (next === 'done') {
+      track('login', { method: 'email' });
+      return auth.refresh();
+    }
     if (next === 'confirmSignUp') await auth.client.resendSignUpCode(normalizeEmail(email));
     if (next === 'resetPassword') throw Object.assign(new Error('reset'), { name: 'PasswordResetRequiredException' });
     setStep(next);
@@ -166,7 +170,9 @@ export function SignupPage() {
     });
   };
 
+  /** Runs once the account exists and its email is confirmed. */
   const finish = async (canAutoSignIn: boolean) => {
+    track('sign_up', { method: 'email', referred: referralCode ? 'yes' : 'no' });
     const step = canAutoSignIn ? await auth.client.autoSignIn() : await auth.client.signIn(normalizeEmail(email), password);
     if (step !== 'done') {
       navigate('/login', { state: { email: normalizeEmail(email) } });

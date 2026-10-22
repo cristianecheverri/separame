@@ -4,6 +4,7 @@ import { formatDuration, formatServicePrice } from '@shared/format';
 import { SITE_PATHS } from '@shared/infra';
 import { Alert, CalendarIcon, CalendarPlus, Check, Download, GoogleCalendarMark, Mail, OutlookMark, Pin } from '../components/icons';
 import { Avatar, Frame, LegalLinks, PageScroll, PRIMARY_BUTTON, Wordmark } from '../components/ui';
+import { track } from '../lib/analytics';
 import { calendarPlatform, eventFromBooking, googleCalendarUrl, outlookCalendarUrl, type CalendarEvent } from '../lib/calendar';
 import { firstName, fullAddress, joinDot } from '../lib/text';
 import { whenLabel } from '../lib/when';
@@ -32,12 +33,12 @@ function CalendarButtons({ event, icsUrl }: { event: CalendarEvent; icsUrl: stri
   return (
     <div class="flex flex-col gap-2.5">
       {apple ? (
-        <a href={icsUrl} class={CALENDAR_PRIMARY}>
+        <a href={icsUrl} class={CALENDAR_PRIMARY} onClick={() => track('add_to_calendar', { method: 'device' })}>
           <CalendarPlus size={22} />
           Agregar al calendario del {platform === 'ipad' ? 'iPad' : 'iPhone'}
         </a>
       ) : (
-        <a href={google} target="_blank" rel="noopener" class={CALENDAR_PRIMARY}>
+        <a href={google} target="_blank" rel="noopener" class={CALENDAR_PRIMARY} onClick={() => track('add_to_calendar', { method: 'google' })}>
           <CalendarPlus size={22} />
           Agregar a Google Calendar
         </a>
@@ -45,17 +46,37 @@ function CalendarButtons({ event, icsUrl }: { event: CalendarEvent; icsUrl: stri
       <div class="text-[13px] font-bold text-ink-2 pt-1">Otros calendarios</div>
       <div class="grid grid-cols-2 gap-2">
         {apple && (
-          <a href={google} target="_blank" rel="noopener" aria-label="Agregar a Google Calendar" class={CALENDAR_OTHER}>
+          <a
+            href={google}
+            target="_blank"
+            rel="noopener"
+            aria-label="Agregar a Google Calendar"
+            class={CALENDAR_OTHER}
+            onClick={() => track('add_to_calendar', { method: 'google' })}
+          >
             <GoogleCalendarMark />
             Google
           </a>
         )}
-        <a href={outlookCalendarUrl(event)} target="_blank" rel="noopener" aria-label="Agregar a Outlook" class={CALENDAR_OTHER}>
+        <a
+          href={outlookCalendarUrl(event)}
+          target="_blank"
+          rel="noopener"
+          aria-label="Agregar a Outlook"
+          class={CALENDAR_OTHER}
+          onClick={() => track('add_to_calendar', { method: 'outlook' })}
+        >
           <OutlookMark />
           Outlook
         </a>
         {!apple && (
-          <a href={icsUrl} download="cita-separame.ics" aria-label="Descargar archivo .ics" class={CALENDAR_OTHER}>
+          <a
+            href={icsUrl}
+            download="cita-separame.ics"
+            aria-label="Descargar archivo .ics"
+            class={CALENDAR_OTHER}
+            onClick={() => track('add_to_calendar', { method: 'ics' })}
+          >
             <Download size={18} />
             Archivo .ics
           </a>

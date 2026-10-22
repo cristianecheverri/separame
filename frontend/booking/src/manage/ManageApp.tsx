@@ -14,6 +14,7 @@ import {
   Avatar, DayPill, DISABLED_BUTTON, Frame, Notice, OUTLINE_BUTTON, PageScroll, PRIMARY_BUTTON, SkeletonPills, SkeletonSlots, SlotGroup, WeekNav, Wordmark,
 } from '../components/ui';
 import { MissingScreen } from '../booking/Unavailable';
+import { track } from '../lib/analytics';
 import { ApiError, errorMessage, type ApiClient } from '../lib/api';
 import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, resolveDay, splitSlots, weekOf } from '../lib/slots';
 import { firstName, formatPhone, telHref } from '../lib/text';
@@ -167,6 +168,7 @@ export function ManageApp({ token, api }: { token: string; api: ApiClient }) {
     setConfirmError(null);
     try {
       const res = await api.confirmAppointment(token);
+      track('attendance_confirmed', {});
       finish('attended', res.booking);
     } catch (error) {
       if (error instanceof ApiError && error.code === 'too_late') finish('past');
@@ -464,6 +466,7 @@ function MovePanel({ api, token, booking, onBack, onMoved, onTooLate }: {
     setNotice(null);
     try {
       const res = await api.rescheduleAppointment(token, { start });
+      track('appointment_rescheduled', { by: 'client' });
       onMoved(res.booking);
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'internal';
@@ -589,6 +592,7 @@ function CancelPanel({ api, token, proName, onMove, onCancelled, onTooLate }: {
     try {
       const trimmed = reason.trim();
       const res = await api.cancelAppointment(token, trimmed ? { reason: trimmed } : {});
+      track('appointment_cancelled', { by: 'client' });
       onCancelled(res.booking);
     } catch (error) {
       if (error instanceof ApiError && error.code === 'too_late') return onTooLate();

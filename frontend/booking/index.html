@@ -31,6 +31,7 @@
     <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/landing.css" />
+    <script type="module" src="/src/site.ts"></script>
     <!--price:jsonld--><script type="application/ld+json">{}</script><!--/price:jsonld-->
     <!-- Site name and logo for search results. -->
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://separame.app/#organization","name":"Sepárame","url":"https://separame.app/","logo":"https://separame.app/app/pwa-512.png","areaServed":"CO"},{"@type":"WebSite","@id":"https://separame.app/#website","name":"Sepárame","url":"https://separame.app/","inLanguage":"es-CO","publisher":{"@id":"https://separame.app/#organization"}}]}</script>
@@ -55,7 +56,7 @@
               <h1 class="m-0 font-display font-extrabold text-[40px] md:text-[60px] leading-[1.02] tracking-[-1px] md:tracking-[-1.6px]">Tus clientes separan cita desde un enlace.</h1>
               <p class="m-0 max-w-[540px] text-[17px] md:text-[20px] leading-[1.5] text-mint">Sin app, sin crear cuenta y sin llamadas. Compartes tu enlace por WhatsApp o Instagram y ellos eligen servicio, día y hora. Tú recibes la cita, ellos el recordatorio.</p>
               <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                <a href="/app/signup" class="h-14 px-7 rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
+                <a data-track="hero" href="/app/signup" class="h-14 px-7 rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
                 <a href="#como-funciona" class="h-14 px-7 rounded-full border-2 border-white/40 text-white flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:border-white hover:text-white">Ver cómo funciona</a>
               </div>
               <p class="m-0 text-[14px] font-semibold text-mint">Sin tarjeta · Después, desde <!--price:from-->$5.000<!--/price:from--> al mes</p>
@@ -446,7 +447,7 @@
                 <li class="flex gap-2.5 items-start"><svg class="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Panel instalable en el celular con avisos</span></li>
               </ul>
             </div>
-            <p class="m-0 text-[14px] text-ink-2 md:text-center">Precios en pesos colombianos. ¿Trabajas con más profesionales? <a href="/app/signup" class="font-bold underline">Solicita el plan para equipos</a></p>
+            <p class="m-0 text-[14px] text-ink-2 md:text-center">Precios en pesos colombianos. ¿Trabajas con más profesionales? <a data-track="teams" href="/app/signup" class="font-bold underline">Solicita el plan para equipos</a></p>
           </div>
         </section>
 
@@ -494,7 +495,7 @@
               <h2 id="cta-title" class="m-0 font-display font-extrabold text-[30px] md:text-[46px] leading-[1.05] tracking-[-0.6px] md:tracking-[-1.2px]">Tu enlace de citas, listo hoy.</h2>
               <p class="m-0 text-[16px] md:text-[18px] text-mint">Prueba gratis {{trialDays}} días, sin tarjeta. Después, desde <!--price:from-->$5.000<!--/price:from--> al mes.</p>
             </div>
-            <a href="/app/signup" class="w-full md:w-auto h-[58px] px-[30px] rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
+            <a data-track="final" href="/app/signup" class="w-full md:w-auto h-[58px] px-[30px] rounded-full bg-accent text-ink flex items-center justify-center font-bold text-[17px] no-underline transition-colors hover:bg-[#ffd666] hover:text-ink">Prueba gratis {{trialDays}} días</a>
           </div>
         </section>
       </main>

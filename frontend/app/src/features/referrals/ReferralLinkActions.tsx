@@ -3,7 +3,7 @@ import { referralLinkLabel } from '@shared/referrals';
 import { CopyIcon } from '../../components/ui/icons';
 import { useToast } from '../../components/ui/Toast';
 import { copyText } from '../../lib/clipboard';
-import { shareOrCopy } from '../../lib/share';
+import { shareOrCopy, trackShare } from '../../lib/share';
 import { ShareNodesIcon } from './icons';
 
 const SHARE_TEXT = 'Agenda tus citas en línea con Sepárame. Regístrate con mi enlace:';
@@ -22,12 +22,14 @@ export function ReferralLinkButtons({ url }: { url: string }) {
 
   const copy = async () => {
     if (!(await copyText(url))) return toast.error('No pudimos copiar el enlace.');
+    trackShare('copied', 'referral_link');
     setCopied(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 2_500);
   };
   const share = async () => {
     const outcome = await shareOrCopy({ title: 'Sepárame', text: SHARE_TEXT, url });
+    trackShare(outcome, 'referral_link');
     if (outcome === 'copied') toast.success('Enlace copiado. Pégalo donde quieras.');
     else if (outcome === 'failed') toast.error('No pudimos copiar el enlace.');
   };

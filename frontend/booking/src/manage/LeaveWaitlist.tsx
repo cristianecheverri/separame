@@ -8,6 +8,7 @@ import type { LeaveWaitlistResponse } from '@shared/api';
 import { Bell, Check } from '../components/icons';
 import { Frame, LegalLinks, Notice, PageScroll, PRIMARY_BUTTON, Wordmark } from '../components/ui';
 import { MissingScreen } from '../booking/Unavailable';
+import { track } from '../lib/analytics';
 import { ApiError, errorMessage, type ApiClient } from '../lib/api';
 
 type State = 'ask' | 'leaving' | 'done' | 'not_found';
@@ -27,6 +28,7 @@ export function LeaveWaitlist({ token, api }: { token: string; api: ApiClient })
       const res = await api.leaveWaitlist(token);
       setPro(res?.pro ?? null);
       setState('done');
+      track('waitlist_left', {});
     } catch (e) {
       if (e instanceof ApiError && e.code === 'not_found') return setState('not_found');
       setError(errorMessage(e));

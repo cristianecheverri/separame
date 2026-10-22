@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { IosInstallSheet } from '../../components/install/IosInstallSheet';
 import { Switch } from '../../components/ui/Switch';
 import { useToast } from '../../components/ui/Toast';
+import { track } from '../../lib/analytics';
 import { api, errorMessage } from '../../lib/api';
 import { endpointHash, isIos, isStandalone, push, PushError } from '../../lib/push';
 import { keys, usePushConfig } from '../../lib/queries';
@@ -45,6 +46,7 @@ export function PushCard() {
       await api.post(apiPaths.pushSubscriptions(), subscription);
     },
     onSuccess: () => {
+      track('push_enabled', {});
       refresh();
       toast.success('Listo: te avisaremos en este celular.');
     },

@@ -14,6 +14,7 @@ import { normalizeEmail } from '@shared/contact';
 import { capitalize, formatDayLong, formatDayShort, formatDuration, formatInstantTime, formatServicePrice, MONTH_SHORT } from '@shared/format';
 import { bogotaDate } from '@shared/time';
 import { Frame, DISABLED_BUTTON, LegalLinks, PRIMARY_BUTTON } from '../components/ui';
+import { track } from '../lib/analytics';
 import { ApiError, errorMessage } from '../lib/api';
 import type { Runtime } from '../lib/bootstrap';
 import { loadJson, loadSavedContact, removeKey, saveContact, saveJson } from '../lib/storage';
@@ -211,11 +212,20 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     };
   }, [api, slug, profile, draftKey]);
 
+  const viewTrackedRef = useRef(false);
   useEffect(() => {
     if (!profile) return;
+    if (!viewTrackedRef.current) {
+      viewTrackedRef.current = true;
+      track('booking_view', { pro_slug: profile.slug });
+    }
     stripDeepLink();
     if (!document.title) document.title = `${profile.name} · Separa tu cita · Sepárame`;
   }, [profile]);
+
+  useEffect(() => {
+    if (screen === 'unavailable') track('booking_unavailable', { pro_slug: apiSlug });
+  }, [screen, apiSlug]);
 
   // ── Availability: one call (14 days) per service; prefetch the first service ──
   const fetchAvailability = useCallback(
@@ -314,6 +324,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   }, [step, waitlistOpen]);
 
   const go = (next: StepId) => {
+    track('booking_step', { pro_slug: apiSlug, step: next });
     depthRef.current += 1;
     history.pushState({ sep: next, d: depthRef.current } satisfies HistoryState, '');
     focusTitleRef.current = true;
@@ -416,8 +427,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       history.replaceState({ sep: 'done', d: depthRef.current } satisfies HistoryState, '');
       setDraft(EMPTY_DRAFT);
       setDone(result);
+      track('booking_confirmed', { pro_slug: apiSlug, has_email: normalizeEmail(draft.email) ? 'yes' : 'no' });
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'internal';
+      track('booking_error', { pro_slug: apiSlug, reason: code });
       if (code === 'slot_taken') {
         setSlotNotice(SLOT_TAKEN_NOTICE);
         setDraft((d) => ({ ...d, start: null }));

@@ -10,6 +10,7 @@ import { capitalize, DAY_SHORT, formatDayLong, formatDayShort } from '@shared/fo
 import { jsWeekday } from '@shared/time';
 import { Check } from '../components/icons';
 import { DayPill, DISABLED_BUTTON, Frame, PRIMARY_BUTTON, RevealedNotice } from '../components/ui';
+import { track } from '../lib/analytics';
 import { ApiError, errorMessage, type ApiClient } from '../lib/api';
 import { chunk, DAYS_PER_WEEK, monthLabel } from '../lib/slots';
 import {
@@ -71,6 +72,7 @@ export function WaitlistScreen(props: Props) {
         turnstileToken: token,
       });
       setDoneEmail(normalizeEmail(form.email));
+      track('waitlist_joined', { pro_slug: profile.slug });
     } catch (e) {
       const code = e instanceof ApiError ? e.code : 'internal';
       if (code === 'agenda_unavailable') return onUnavailable();

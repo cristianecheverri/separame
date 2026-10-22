@@ -15,6 +15,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://separame.app/privacy" />
     <link rel="stylesheet" href="/src/landing.css" />
+    <script type="module" src="/src/site.ts"></script>
   </head>
   <body class="bg-white text-ink font-sans">
     <header class="border-b border-line pt-[env(safe-area-inset-top)]">
@@ -27,7 +28,7 @@
     <main class="max-w-[720px] mx-auto px-5 sm:px-8 py-10 md:py-14 text-[16px] leading-[1.65] text-ink-2 [&_h2]:font-display [&_h2]:font-extrabold [&_h2]:text-ink [&_h2]:text-[22px] [&_h2]:leading-[1.2] [&_h2]:tracking-[-0.3px] [&_h2]:mt-10 [&_h2]:mb-3 [&_p]:my-3 [&_ul]:my-3 [&_ul]:pl-5 [&_ul]:list-disc [&_li]:my-1.5 [&_strong]:text-ink">
       <p class="text-[13px] font-semibold text-muted uppercase tracking-[0.6px] mt-0!">Ley 1581 de 2012</p>
       <h1 class="m-0 font-display font-extrabold text-ink text-[34px] md:text-[42px] leading-[1.05] tracking-[-0.8px]">Política de tratamiento de datos personales</h1>
-      <p class="text-[14px] text-muted">Última actualización: 20 de octubre de 2026</p>
+      <p class="text-[14px] text-muted">Última actualización: 22 de octubre de 2026</p>
 
       <h2>1. Responsable del tratamiento</h2>
       <p>
@@ -50,7 +51,7 @@
       <ul>
         <li><strong>Profesionales:</strong> nombre, correo electrónico, teléfono, datos del perfil público (profesión, ciudad, barrio, dirección), servicios, horarios y datos de pago del plan (método, valor, fecha y referencia).</li>
         <li><strong>Clientes de los profesionales:</strong> nombre, correo electrónico, número de celular y la información de sus citas (servicio, fecha, hora y, si lo escriben, el motivo de una cancelación).</li>
-        <li><strong>Datos técnicos:</strong> registros mínimos de seguridad y funcionamiento, y los datos del navegador que procesa Cloudflare para la verificación anti-spam (ver <a href="#cloudflare-turnstile">Cloudflare Turnstile</a>).</li>
+        <li><strong>Datos técnicos:</strong> registros mínimos de seguridad y funcionamiento, y los datos del navegador que procesa Cloudflare para la verificación anti-spam (ver <a href="#cloudflare-turnstile">Cloudflare Turnstile</a>), y estadísticas de uso del sitio que no te identifican por nombre (ver <a href="#google-analytics">Google Analytics</a>).</li>
       </ul>
       <p>No pedimos ni guardamos datos sensibles, como información de salud o historias clínicas. Te pedimos no escribirlos en los campos de la reserva.</p>
 
@@ -61,6 +62,7 @@
         <li>Enviar correos transaccionales: confirmación con archivo de calendario, recordatorio un día antes y avisos de cambios.</li>
         <li>Gestionar la suscripción del profesional: prueba gratis, pagos, vencimientos y avisos de renovación.</li>
         <li>Prevenir abusos y spam, y mantener la seguridad del servicio.</li>
+        <li>Medir, de forma agregada, cómo se usa el sitio (visitas, desde dónde llegan y qué funciones se usan) para mejorarlo.</li>
         <li>Cumplir obligaciones legales y atender requerimientos de autoridades competentes.</li>
       </ul>
       <p>No vendemos tus datos ni los usamos para publicidad de terceros.</p>
@@ -99,7 +101,7 @@
       <h2>8. Proveedores y transferencia internacional</h2>
       <p>
         Para prestar el servicio usamos proveedores de infraestructura en la nube, principalmente <strong>Amazon Web Services (AWS)</strong>, con servidores en
-        <strong>Estados Unidos</strong>, para almacenar los datos y enviar los correos, y <strong>Cloudflare</strong> para la verificación anti-spam. Estos
+        <strong>Estados Unidos</strong>, para almacenar los datos y enviar los correos, y <strong>Cloudflare</strong> para la verificación anti-spam y <strong>Google</strong> para las estadísticas de uso. Estos
         proveedores actúan como encargados, con medidas de seguridad y confidencialidad adecuadas. Al aceptar esta política autorizas esta transferencia
         internacional.
       </p>
@@ -110,6 +112,15 @@
         según el
         <a href="https://www.cloudflare.com/es-es/turnstile-privacy-policy/" target="_blank" rel="noopener noreferrer">Anexo de privacidad de Cloudflare Turnstile</a>
         (Turnstile Privacy Addendum). Sepárame no recibe esos datos: solo el resultado de la verificación.
+      </p>
+      <p id="google-analytics">
+        <strong>Estadísticas de uso con Google Analytics.</strong> Usamos Google Analytics para saber, en conjunto, cuántas personas visitan Sepárame,
+        desde qué país, ciudad, dispositivo y sitio llegan, y qué funciones usan (por ejemplo, cuántas reservas se completan). Para eso, Google usa
+        cookies y recibe datos técnicos de tu navegador. No le enviamos tu nombre, correo, celular ni los datos de tus citas, quitamos de las direcciones
+        los enlaces privados para gestionar citas y tenemos desactivadas las funciones de publicidad de Google. Google trata esos datos según su
+        <a href="https://policies.google.com/privacy?hl=es-419" target="_blank" rel="noopener noreferrer">Política de privacidad</a>. Puedes bloquear estas
+        cookies desde tu navegador o con el
+        <a href="https://tools.google.com/dlpage/gaoptout?hl=es-419" target="_blank" rel="noopener noreferrer">complemento de inhabilitación de Google Analytics</a>.
       </p>
 
       <h2>9. Seguridad</h2>

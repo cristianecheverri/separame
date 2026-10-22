@@ -6,6 +6,7 @@
 import { render } from 'preact';
 import './styles.css';
 import { BookingApp } from './booking/BookingApp';
+import { initAnalytics, trackPageView } from './lib/analytics';
 import { createRuntime, manageTokenFromLocation, readEmbeddedData, slugFromLocation, waitlistTokenFromLocation } from './lib/bootstrap';
 
 async function start(root: HTMLElement): Promise<void> {
@@ -25,6 +26,9 @@ async function start(root: HTMLElement): Promise<void> {
   }
   render(<BookingApp slug={profile?.slug ?? slugFromLocation()} initialProfile={profile} runtime={runtime} />, root);
 }
+
+initAnalytics();
+trackPageView();
 
 const root = document.getElementById('app');
 if (root) void start(root);

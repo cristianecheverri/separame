@@ -4,6 +4,7 @@ import { apiPaths, type AppointmentResponse, type CreateAppointmentRequest, type
 import { addMinutes, bogotaDate } from '@shared/time';
 import type { Appointment } from '@shared/types';
 import { sortByStart } from '../../lib/agenda';
+import { track } from '../../lib/analytics';
 import { api } from '../../lib/api';
 import { now } from '../../lib/clock';
 import { keys, patchAppointmentLists, restoreSnapshot } from '../../lib/queries';
@@ -40,6 +41,7 @@ export function useCreateAppointment() {
       const snapshot = await patchAppointmentLists(qc, (list, range) => (inRange(temp, range) ? sortByStart([...list, temp]) : list));
       return { snapshot };
     },
+    onSuccess: () => track('appointment_created', { by: 'pro' }),
     onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
     onSettled: settle,
   });
@@ -58,6 +60,7 @@ export function useMoveAppointment() {
       });
       return { snapshot };
     },
+    onSuccess: () => track('appointment_rescheduled', { by: 'pro' }),
     onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
     onSettled: settle,
   });
@@ -74,6 +77,7 @@ export function useCancelAppointment() {
       );
       return { snapshot };
     },
+    onSuccess: () => track('appointment_cancelled', { by: 'pro' }),
     onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
     onSettled: settle,
   });
