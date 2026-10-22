@@ -95,6 +95,8 @@ export class SiteStack extends cdk.Stack {
             value: 'geolocation=(), microphone=(), camera=(), payment=(), usb=()',
             override: true,
           },
+          // dev must never show up in search results (robots.txt still lets crawlers see this).
+          ...(config.indexable ? [] : [{ header: 'X-Robots-Tag', value: 'noindex, nofollow', override: true }]),
         ],
       },
     });
@@ -141,6 +143,15 @@ export class SiteStack extends cdk.Stack {
       new route53.ARecord(this, `SiteA${suffix}`, { zone, recordName, target });
       new route53.AaaaRecord(this, `SiteAaaa${suffix}`, { zone, recordName, target });
     });
+
+    if (config.siteVerification) {
+      new route53.TxtRecord(this, 'SearchConsoleVerification', {
+        zone,
+        recordName: ROOT_DOMAIN,
+        values: [config.siteVerification],
+        ttl: cdk.Duration.hours(1),
+      });
+    }
 
     new cdk.CfnOutput(this, 'SiteUrl', { value: config.siteUrl });
     new cdk.CfnOutput(this, 'BucketName', { value: this.bucket.bucketName });

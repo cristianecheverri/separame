@@ -39,6 +39,25 @@ describe('stages', () => {
     });
   });
 
+  it('keeps dev out of search engines (X-Robots-Tag: noindex on every response)', () => {
+    const customHeaders = (stage: 'dev' | 'prod') => {
+      const policies = templateOf(stage, (s) => s.site).findResources('AWS::CloudFront::ResponseHeadersPolicy');
+      const [policy] = Object.values(policies) as Array<{ Properties: { ResponseHeadersPolicyConfig: { CustomHeadersConfig: { Items: Array<{ Header: string; Value: string }> } } } }>;
+      return policy.Properties.ResponseHeadersPolicyConfig.CustomHeadersConfig.Items;
+    };
+    expect(customHeaders('dev')).toContainEqual(expect.objectContaining({ Header: 'X-Robots-Tag', Value: 'noindex, nofollow' }));
+    expect(customHeaders('prod').map((h) => h.Header)).not.toContain('X-Robots-Tag');
+  });
+
+  it('publishes the Search Console TXT record at the apex only in prod', () => {
+    templateOf('dev', (s) => s.site).resourceCountIs('AWS::Route53::RecordSet', 2); // A + AAAA
+    templateOf('prod', (s) => s.site).hasResourceProperties('AWS::Route53::RecordSet', {
+      Name: 'separame.app.',
+      Type: 'TXT',
+      ResourceRecords: [Match.stringLikeRegexp('^"google-site-verification=.+"$')],
+    });
+  });
+
   it('creates the CiCd stack only for prod with -c cicd=true', () => {
     expect(synthStage('dev', { cicd: 'true' }).cicd).toBeUndefined();
     expect(synthStage('prod').cicd).toBeUndefined();

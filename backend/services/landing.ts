@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { PublicPricesResponse } from '../../shared/api';
 import { SITE_PATHS } from '../../shared/infra';
 import { landingSlotsIn, renderLandingPrices, toPublicPrices } from '../../shared/landing';
 import { env } from '../lib/env';
 import { log } from '../lib/logger';
 import { defaultPrice } from './prices';
-import { invalidate } from './publish';
+import { headSiteObject, invalidate, isMissingObject } from './publish';
 
 /**
  * The landing (`/`) with real prices. frontend/booking deploys
@@ -39,27 +39,12 @@ export async function publicPrices(now: Date = new Date()): Promise<PublicPrices
 export const pricesHash = (prices: PublicPricesResponse): string =>
   createHash('sha256').update(JSON.stringify(prices)).digest('hex').slice(0, 16);
 
-const isMissing = (err: unknown): boolean => {
-  const name = (err as { name?: string }).name;
-  return name === 'NoSuchKey' || name === 'NotFound' || name === 'AccessDenied';
-};
-
-async function head(key: string): Promise<{ etag: string; metadata: Record<string, string> } | null> {
-  try {
-    const res = await s3.send(new HeadObjectCommand({ Bucket: env.siteBucket(), Key: key }));
-    return { etag: res.ETag ?? '', metadata: res.Metadata ?? {} };
-  } catch (err) {
-    if (isMissing(err)) return null;
-    throw err;
-  }
-}
-
 async function readTemplate(): Promise<string | null> {
   try {
     const res = await s3.send(new GetObjectCommand({ Bucket: env.siteBucket(), Key: SITE_PATHS.landingTemplate }));
     return (await res.Body?.transformToString('utf-8')) || null;
   } catch (err) {
-    if (isMissing(err)) return null;
+    if (isMissingObject(err)) return null;
     throw err;
   }
 }
@@ -68,7 +53,7 @@ async function readTemplate(): Promise<string | null> {
 export async function publishLanding(options: { now?: Date; force?: boolean } = {}): Promise<LandingOutcome> {
   const prices = await publicPrices(options.now);
   const hash = pricesHash(prices);
-  const [templateHead, pageHead] = await Promise.all([head(SITE_PATHS.landingTemplate), head(SITE_PATHS.landingPage)]);
+  const [templateHead, pageHead] = await Promise.all([headSiteObject(SITE_PATHS.landingTemplate), headSiteObject(SITE_PATHS.landingPage)]);
   if (!templateHead) {
     log.warn('landing template missing; landing not rendered', { key: SITE_PATHS.landingTemplate });
     return 'no_template';

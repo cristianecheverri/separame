@@ -1,5 +1,5 @@
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { PublicProfile } from '../../shared/api';
 import { SITE_PATHS } from '../../shared/infra';
 import { env } from '../lib/env';
@@ -27,6 +27,23 @@ export interface PageConfig {
 
 let templateCache: string | null = null;
 
+/** Missing key (without s3:ListBucket S3 answers AccessDenied for it). */
+export const isMissingObject = (err: unknown): boolean => {
+  const name = (err as { name?: string }).name;
+  return name === 'NoSuchKey' || name === 'NotFound' || name === 'AccessDenied';
+};
+
+/** ETag + user metadata of a site bucket object; null when it doesn't exist. */
+export async function headSiteObject(key: string): Promise<{ etag: string; metadata: Record<string, string> } | null> {
+  try {
+    const res = await s3.send(new HeadObjectCommand({ Bucket: env.siteBucket(), Key: key }));
+    return { etag: res.ETag ?? '', metadata: res.Metadata ?? {} };
+  } catch (err) {
+    if (isMissingObject(err)) return null;
+    throw err;
+  }
+}
+
 /** The booking template (cached per container); null when it isn't deployed yet. */
 export async function loadTemplate(): Promise<string | null> {
   if (templateCache) return templateCache;
@@ -37,8 +54,7 @@ export async function loadTemplate(): Promise<string | null> {
     templateCache = body;
     return body;
   } catch (err) {
-    const name = (err as { name?: string }).name;
-    if (name === 'NoSuchKey' || name === 'NotFound' || name === 'AccessDenied') return null;
+    if (isMissingObject(err)) return null;
     throw err;
   }
 }

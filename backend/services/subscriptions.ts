@@ -92,6 +92,18 @@ export async function listSubItems(): Promise<SubItem[]> {
   }, 20_000);
 }
 
+/** Slugs of the pros that can take bookings (graceUntil ≥ now): the sitemap's profile pages. */
+export async function listBookableSlugs(now: Date = new Date()): Promise<string[]> {
+  const items = await queryAll<Pick<SubItem, 'slug'>>({
+    IndexName: GSI1.name,
+    KeyConditionExpression: '#pk = :pk AND #sk >= :from',
+    ProjectionExpression: '#slug',
+    ExpressionAttributeNames: { '#pk': GSI1.pk, '#sk': GSI1.sk, '#slug': 'slug' },
+    ExpressionAttributeValues: { ':pk': SUBS_GSI1PK, ':from': now.toISOString() },
+  }, 50_000);
+  return items.map((item) => item.slug).filter(Boolean);
+}
+
 /** Subscriptions whose graceUntil falls in [from, to] (GSI1 range — renewal notices). */
 export async function listSubItemsByGrace(from: ISOInstant, to: ISOInstant): Promise<SubItem[]> {
   return queryAll<SubItem>({

@@ -15,6 +15,14 @@ export const STAGES: readonly Stage[] = ['dev', 'prod'];
 /** Operator inbox: alarms, budget notifications and the seeded admin user. */
 const OPERATOR_EMAIL = 'crisechevrri@gmail.com';
 
+/**
+ * Google Search Console ownership of the `separame.app` Domain property (covers
+ * every subdomain): the full `google-site-verification=…` value Search Console
+ * shows, published as a TXT record at the apex by the prod SiteStack. Public by
+ * design (anyone can read DNS). Empty = no record.
+ */
+const GOOGLE_SITE_VERIFICATION = 'google-site-verification=FczoMVQ0v2oeheWlKpyGIYLUNP35rYW_pP8CAbG3L20';
+
 /** Vite dev servers (frontend/booking and frontend/app) — dev stage CORS only. */
 const DEV_LOCAL_ORIGINS = ['http://localhost:5173', 'http://localhost:5174'];
 
@@ -47,6 +55,10 @@ export interface StageConfig {
   adminEmail: string;
   /** Allowed browser origins for the HTTP API. */
   corsOrigins: string[];
+  /** prod only: dev answers with `X-Robots-Tag: noindex` and a sitemap-less robots.txt. */
+  indexable: boolean;
+  /** TXT value proving domain ownership to Google Search Console (prod only; null = none yet). */
+  siteVerification: string | null;
 }
 
 /** Validates the `-c stage=dev|prod` context value. */
@@ -99,6 +111,8 @@ export function stageConfig(scope: Construct, stage: Stage): StageConfig {
     alertEmail: OPERATOR_EMAIL,
     adminEmail: OPERATOR_EMAIL,
     corsOrigins: isProd ? [siteUrl] : [siteUrl, ...DEV_LOCAL_ORIGINS],
+    indexable: isProd,
+    siteVerification: isProd && GOOGLE_SITE_VERIFICATION ? GOOGLE_SITE_VERIFICATION : null,
   };
 }
 

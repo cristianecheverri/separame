@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SITE_PATHS } from '../../../shared/infra';
+import { ROBOTS_KEY, robotsTxt } from '../../../shared/seo';
 import type { StageConfig } from '../config';
 import { REPO_ROOT } from '../lambda';
 
@@ -40,7 +41,7 @@ const APP_CONFIG_FILE = path.posix.basename(SITE_PATHS.appConfig); // 'config.js
 /**
  * Builds both frontends and uploads them to the site bucket:
  *  - frontend/booking → bucket root (landing, 404, /c/ and /w/ pages, booking bundle,
- *    profile template). `prune: false` is CRITICAL: the root also holds the
+ *    profile template), plus the stage's robots.txt (shared/seo.ts). `prune: false` is CRITICAL: the root also holds the
  *    backend-generated `/<slug>/index.html` profile pages, which a deploy must
  *    never delete.
  *  - frontend/app → `app/` (prune limited to that prefix), plus
@@ -79,9 +80,12 @@ export class FrontendDeployStack extends cdk.Stack {
       ephemeralStorageSize: cdk.Size.mebibytes(1024),
     };
 
+    // Per stage (dev is not indexable), so it ships here instead of in the build.
+    const robots = s3deploy.Source.data(ROBOTS_KEY, robotsTxt({ siteUrl: config.siteUrl, indexable: config.indexable }));
+
     const bookingBase = new s3deploy.BucketDeployment(this, 'BookingDeployment', {
       ...common,
-      sources: booking,
+      sources: [...booking, robots],
       prune: false, // never delete /<slug>/index.html profile pages
       cacheControl: [NO_CACHE],
     });

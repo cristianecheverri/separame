@@ -32,6 +32,8 @@
     <link rel="preload" href="./node_modules/@fontsource/figtree/files/figtree-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/landing.css" />
     <!--price:jsonld--><script type="application/ld+json">{}</script><!--/price:jsonld-->
+    <!-- Site name and logo for search results. -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://separame.app/#organization","name":"Sepárame","url":"https://separame.app/","logo":"https://separame.app/app/pwa-512.png","areaServed":"CO"},{"@type":"WebSite","@id":"https://separame.app/#website","name":"Sepárame","url":"https://separame.app/","inLanguage":"es-CO","publisher":{"@id":"https://separame.app/#organization"}}]}</script>
   </head>
   <body class="bg-white text-ink font-sans">
     <div class="overflow-x-clip">
@@ -126,7 +128,7 @@
           <div class="max-w-[1160px] mx-auto flex flex-col gap-6 md:gap-9">
             <div class="lp-head">
               <span class="lp-kicker">Para cualquier profesional</span>
-              <h2 id="pros-title" class="lp-h2">Tu página de citas, con tu nombre y tus servicios.</h2>
+              <h2 id="pros-title" class="lp-h2">Tu agenda de citas en línea, con tu nombre y tus servicios.</h2>
               <p class="lp-lead">Consultorios, estudios, barberías, oficinas o a domicilio: cada profesional tiene su enlace con sus servicios, duraciones y precios de referencia.</p>
             </div>
             <div class="lp-rail pro-rail" role="region" aria-label="Ejemplos de páginas de citas" tabindex="0">
