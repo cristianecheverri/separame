@@ -1,8 +1,8 @@
 import { formatDuration } from '../../../shared/format';
 import type { ISOInstant } from '../../../shared/time';
-import { detailsCard, outlineButton, paragraph, renderLayout, stack, type RenderedEmail } from '../layout';
+import { detailsCard, outlineButton, paragraph, type RenderedEmail, renderLayout, sentence, stack } from '../layout';
 import { bookingRows, calendarBlock, manageBlock, reminderNote, type BookingEmailData } from './booking-confirmed';
-import { clientFooter, firstName, proFooter, subjectWhen, textRows, whenLong, type ProInfo } from './common';
+import { agendaRows, clientFooter, firstName, proFooter, type ProInfo, subjectWhen, textRows, whenLong } from './common';
 
 /** "Tu cita cambió" (client, new .ics) and the professional's notice when the client moved it. */
 
@@ -24,7 +24,7 @@ export function bookingChangedEmail(d: BookingChangedData): RenderedEmail {
   ]);
   const html = renderLayout({
     title: subject,
-    preheader: `Nueva fecha: ${whenLong(d.start)}.`,
+    preheader: sentence(`Nueva fecha: ${whenLong(d.start)}`),
     heading,
     body: stack([
       paragraph('Esta es la nueva fecha de tu cita. Te adjuntamos el archivo actualizado para tu calendario.'),
@@ -61,6 +61,7 @@ export function proBookingChangedEmail(d: ProBookingChangedData): RenderedEmail 
   const subject = `Cita movida · ${subjectWhen(d.start)} · ${d.clientName}`;
   const heading = `${d.clientName} movió su cita`;
   const rows: [string, string, { strike?: boolean }?][] = [
+    ...agendaRows(d.pro.agendaOf),
     ['Cliente', d.clientName],
     ['Servicio', `${d.serviceName} · ${formatDuration(d.durationMin)}`],
     ['Antes', whenLong(d.previousStart), { strike: true }],
@@ -70,7 +71,7 @@ export function proBookingChangedEmail(d: ProBookingChangedData): RenderedEmail 
   const footer = proFooter(d.siteUrl);
   const html = renderLayout({
     title: subject,
-    preheader: `Ahora es el ${whenLong(d.start)}.`,
+    preheader: sentence(`Ahora es el ${whenLong(d.start)}`),
     heading,
     body: stack([detailsCard(rows), outlineButton(agendaUrl, 'Ver mi agenda')]),
     footer: footer.html,

@@ -92,7 +92,7 @@ describe('ApiStack', () => {
       Name: 'separame-dev-api',
       CorsConfiguration: Match.objectLike({
         AllowOrigins: ['https://dev.separame.app', 'http://localhost:5173', 'http://localhost:5174'],
-        AllowHeaders: ['content-type', 'authorization'],
+        AllowHeaders: ['content-type', 'authorization', 'x-separame-pro'],
         MaxAge: 86400,
       }),
     });

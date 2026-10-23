@@ -180,7 +180,7 @@ export function OnboardingPage() {
       }
       setServices([]);
       setSvc({ name: '', durationMin: 30, price: '' });
-      void qc.invalidateQueries({ queryKey: keys.services });
+      void qc.invalidateQueries({ queryKey: keys.servicesAll });
       go(4);
     });
   };
@@ -190,7 +190,7 @@ export function OnboardingPage() {
     if (Object.keys(scheduleErrors(schedule)).length) return setErrors({ schedule: 'Revisa el horario: hay franjas que se cruzan.' });
     void run(async () => {
       await api.put(apiPaths.availability(), { schedule: toSchedule(schedule), rules: DEFAULT_RULES });
-      void qc.invalidateQueries({ queryKey: keys.availability });
+      void qc.invalidateQueries({ queryKey: keys.availabilityAll });
       go(5);
     });
   };

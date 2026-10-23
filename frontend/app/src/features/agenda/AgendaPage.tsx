@@ -10,10 +10,13 @@ import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { activeAppointments, buildDayRows } from '../../lib/agenda';
 import { now } from '../../lib/clock';
-import { firstName, formatDayMonth, formatDayShortMonth, formatDayTitle } from '../../lib/format';
+import { firstName, formatDayMonth, formatDayShortMonth, formatDayTitle, linkLabel, plural } from '../../lib/format';
 import { canShareNatively, shareOrCopy, trackShare } from '../../lib/share';
 import { usePro } from '../../lib/pro';
-import { useAppointments, useAvailability } from '../../lib/queries';
+import { useActing, useAgendaAppointments, useAvailability } from '../../lib/queries';
+import { ProSelector } from '../team/ProSelector';
+import { TeamCard, TeamRequestCard } from '../team/TeamCards';
+import { useMemberTag } from '../team/useMemberTag';
 import { AppointmentCard } from '../appointments/AppointmentCard';
 import { useOutcome } from '../appointments/useOutcome';
 import { WaitlistCard } from '../appointments/Waitlist';
@@ -24,13 +27,26 @@ import { CalendarSyncCard, ReadOnlyChecklist, ReminderNote, ShareCard, UpcomingC
 import { ReferralCard } from '../referrals/ReferralCard';
 import { WeekView } from './WeekView';
 
-function greeting(name: string, count: number, readOnly: boolean): string {
+/** Team plan: whose agenda the headline talks about. */
+type Whose = { kind: 'own' } | { kind: 'all' } | { kind: 'member'; first: string };
+
+function greeting(name: string, count: number, readOnly: boolean, whose: Whose): string {
+  if (whose.kind === 'member') return count === 0 ? `${whose.first} no tiene citas hoy.` : `${whose.first} tiene ${plural(count, 'cita', 'citas')} hoy.`;
+  if (whose.kind === 'all') {
+    const today = count === 0 ? 'Hoy no hay citas en el consultorio' : `Hoy hay ${plural(count, 'cita', 'citas')} en el consultorio`;
+    return readOnly ? today : `Hola, ${firstName(name)}. ${today}.`;
+  }
   const today = count === 0 ? 'Hoy no tienes citas' : count === 1 ? 'Hoy tienes 1 cita' : `Hoy tienes ${count} citas`;
   return readOnly ? today : `Hola, ${firstName(name)}. ${today}.`;
 }
 
-/** Phones: one line, "Hola, Laura · 6 citas hoy" (proposal MP-02). */
-function compactGreeting(name: string, count: number, readOnly: boolean): string {
+/** Phones: one line, "Hola, Laura · 6 citas hoy" (proposal MP-02; team: board team-owner-agenda-phone). */
+function compactGreeting(name: string, count: number, readOnly: boolean, whose: Whose): string {
+  if (whose.kind === 'member') return `${whose.first} · ${count === 0 ? 'sin citas hoy' : `${plural(count, 'cita', 'citas')} hoy`}`;
+  if (whose.kind === 'all') {
+    const today = count === 0 ? 'sin citas en el consultorio' : `${plural(count, 'cita', 'citas')} en el consultorio`;
+    return readOnly ? today.charAt(0).toUpperCase() + today.slice(1) : `Hola, ${firstName(name)} · ${today}`;
+  }
   const today = count === 0 ? 'Sin citas hoy' : count === 1 ? '1 cita hoy' : `${count} citas hoy`;
   return readOnly ? today : `Hola, ${firstName(name)} · ${count === 0 ? 'sin citas hoy' : today}`;
 }
@@ -49,7 +65,14 @@ function sectionTitle(view: 'day' | 'week', date: ISODate, today: ISODate, weekS
 
 /** pro-agenda-day (and pro-expired-read-only when the subscription expired). */
 export function AgendaPage() {
-  const { profile, readOnly, publicUrl } = usePro();
+  const { profile, readOnly, publicUrl, me } = usePro();
+  const acting = useActing();
+  const team = me.team;
+  const actingMember = acting.isAll ? null : acting.members.find((m) => m.proId === acting.proId) ?? null;
+  const whose: Whose = acting.isAll ? { kind: 'all' } : actingMember && !actingMember.isOwner ? { kind: 'member', first: firstName(actingMember.name) } : { kind: 'own' };
+  /** The link to share: the team page under «Todos», the selected professional's otherwise. */
+  const shareUrl = acting.isAll && team ? team.publicUrl : (actingMember?.publicUrl ?? publicUrl);
+  const memberTag = useMemberTag();
   const toast = useToast();
   const clock = now();
   const today = todayBogota(clock);
@@ -63,16 +86,17 @@ export function AgendaPage() {
   const shownDate = readOnly ? today : date;
   const weekStart = addDays(shownDate, -((jsWeekday(shownDate) + 6) % 7));
   const availability = useAvailability();
-  const todayQuery = useAppointments(today, today);
-  const dayQuery = useAppointments(shownDate, shownDate, view === 'day');
-  const weekQuery = useAppointments(weekStart, addDays(weekStart, 6), view === 'week' && !readOnly);
-  const upcomingQuery = useAppointments(addDays(today, 1), addDays(today, 14), !readOnly);
+  // Team plan: «Todos» merges every professional's appointments (free gaps aren't shown then).
+  const todayQuery = useAgendaAppointments(today, today);
+  const dayQuery = useAgendaAppointments(shownDate, shownDate, view === 'day');
+  const weekQuery = useAgendaAppointments(weekStart, addDays(weekStart, 6), view === 'week' && !readOnly);
+  const upcomingQuery = useAgendaAppointments(addDays(today, 1), addDays(today, 14), !readOnly);
 
   const settings = availability.data?.settings;
   const todayCount = todayQuery.data ? activeAppointments(todayQuery.data.appointments).length : null;
   const rows =
     dayQuery.data && settings
-      ? buildDayRows(shownDate, dayQuery.data.appointments, settings.schedule, settings.rules, clock, { includeFree: !readOnly })
+      ? buildDayRows(shownDate, dayQuery.data.appointments, settings.schedule, settings.rules, clock, { includeFree: !readOnly && !acting.isAll })
       : null;
 
   const focusReady = !!focusId && !!rows?.some((row) => row.key === focusId);
@@ -87,7 +111,8 @@ export function AgendaPage() {
   const step = (delta: number) => setDate(addDays(date, view === 'week' ? delta * 7 : delta));
   const nativeShare = canShareNatively();
   const share = async () => {
-    const outcome = await shareOrCopy({ title: 'Separa tu cita conmigo', text: 'Separa tu cita conmigo', url: publicUrl });
+    const text = shareUrl === publicUrl ? 'Separa tu cita conmigo' : 'Separa tu cita';
+    const outcome = await shareOrCopy({ title: text, text, url: shareUrl });
     trackShare(outcome, 'booking_link');
     if (outcome === 'copied') toast.success('Enlace copiado. Pégalo donde quieras.');
     else if (outcome === 'failed') toast.error('No pudimos copiar el enlace.');
@@ -105,24 +130,33 @@ export function AgendaPage() {
     <div className={cx('flex flex-col', readOnly ? 'gap-4 sm:gap-[22px]' : 'gap-4 sm:gap-6')}>
       <div className="flex flex-nowrap sm:flex-wrap gap-3 sm:gap-4 justify-between items-center sm:items-end">
         <div className="flex flex-col gap-1 min-w-0">
-          <div className="hidden sm:block text-[15px] text-muted font-semibold">{formatDayTitle(today)}</div>
+          <div className="hidden sm:block text-[15px] text-muted font-semibold">
+            {formatDayTitle(today)}
+            {team && ` · ${team.name}`}
+          </div>
           <h1 className="m-0 font-display font-extrabold text-[24px] leading-[1.2] tracking-[-0.5px] sm:text-[34px] sm:tracking-[-0.8px]">
             {todayCount === null ? (
               <span className="skeleton inline-block h-7 sm:h-9 w-[min(420px,60vw)] align-middle" />
             ) : (
               <>
-                <span className="sm:hidden">{compactGreeting(profile.name, todayCount, readOnly)}</span>
-                <span className="hidden sm:inline">{greeting(profile.name, todayCount, readOnly)}</span>
+                <span className="sm:hidden">{compactGreeting(profile.name, todayCount, readOnly, whose)}</span>
+                <span className="hidden sm:inline">{greeting(profile.name, todayCount, readOnly, whose)}</span>
               </>
             )}
           </h1>
         </div>
         <div className="flex flex-wrap gap-[10px] shrink-0 sm:shrink sm:min-w-0 max-w-full">
           {!readOnly && (
-            <button type="button" className={cx(ui.btnOutline, 'h-11 px-[14px] gap-[6px] sm:h-[46px] sm:px-[18px] sm:gap-2')} aria-label={nativeShare ? 'Compartir mi enlace' : 'Copiar mi enlace'} onClick={() => void share()}>
+            <button
+              type="button"
+              className={cx(ui.btnOutline, 'h-11 px-[14px] gap-[6px] sm:h-[46px] sm:px-[18px] sm:gap-2 min-w-0')}
+              aria-label={team ? `${nativeShare ? 'Compartir' : 'Copiar'} enlace ${linkLabel(shareUrl)}` : nativeShare ? 'Compartir mi enlace' : 'Copiar mi enlace'}
+              onClick={() => void share()}
+            >
               {nativeShare ? <ShareIcon className="shrink-0" /> : <LinkIcon className="shrink-0" />}
               <span className="sm:hidden">{nativeShare ? 'Compartir' : 'Copiar'}</span>
-              <span className="hidden sm:inline">{nativeShare ? 'Compartir mi enlace' : 'Copiar mi enlace'}</span>
+              {/* Team plan: the link of who is selected, as in board team-owner-agenda-desktop. */}
+              <span className="hidden sm:inline truncate">{team ? linkLabel(shareUrl) : nativeShare ? 'Compartir mi enlace' : 'Copiar mi enlace'}</span>
             </button>
           )}
           {/* Below 1024 px the floating button takes over (MP-03), except when it's locked (read-only). */}
@@ -155,7 +189,10 @@ export function AgendaPage() {
             <div className="flex flex-wrap items-center gap-x-0 gap-y-2 sm:gap-2 pb-[10px]">
               <h2 id="agenda-title" className="order-2 sm:order-none sm:mr-auto m-0 min-w-0 font-display font-extrabold text-[17px] sm:text-[20px]">
                 <span className="sm:hidden">{sectionTitle(view, shownDate, today, weekStart, true)}</span>
-                <span className="hidden sm:inline">{sectionTitle(view, shownDate, today, weekStart)}</span>
+                <span className="hidden sm:inline">
+                  {sectionTitle(view, shownDate, today, weekStart)}
+                  {whose.kind === 'member' && ` · ${whose.first}`}
+                </span>
               </h2>
               {date !== today && (
                 <button type="button" onClick={() => setDate(today)} className="order-4 sm:order-none hit-44 h-9 px-[14px] rounded-full text-[13px] font-bold text-primary hover:bg-primary-soft">
@@ -186,6 +223,7 @@ export function AgendaPage() {
             </div>
           )}
 
+          <ProSelector variant="inline" allowAll className="hidden lg:flex pb-3 border-b border-line mb-2" />
           {view === 'week' && !readOnly ? (
             weekQuery.data ? (
               <WeekView
@@ -241,6 +279,7 @@ export function AgendaPage() {
                 now={clock}
                 readOnly={readOnly}
                 highlighted={row.key === focusId}
+                member={memberTag(row.appointment)}
                 onOutcome={markOutcome}
                 onMove={(appointment) => setModal({ kind: 'move', appointment })}
                 onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}
@@ -262,9 +301,12 @@ export function AgendaPage() {
             <div className="empty:hidden">
               <InstallCard />
             </div>
-            <ShareCard url={publicUrl} slug={profile.slug} />
+            {team && <TeamCard team={team} />}
+            <ShareCard url={shareUrl} slug={actingMember?.slug ?? (acting.isAll && team ? team.slug : profile.slug)} />
             {/* Right below "Comparte tu agenda" (proposal referral-agenda-card), on phones and desktop. */}
             <ReferralCard />
+            {/* Team plan request (board team-request-card-desktop); hidden once the team exists. */}
+            <TeamRequestCard team={team} request={me.teamRequest} />
             <UpcomingCard today={today} appointments={upcomingQuery.data?.appointments} schedule={settings?.schedule} rules={settings?.rules} />
             <WaitlistCard />
             <ReminderNote today={today} appointments={upcomingQuery.data?.appointments} />

@@ -7,7 +7,7 @@ import type { ManualPaymentRequest } from '../../shared/api';
 import type { Payment } from '../../shared/types';
 import type { AuthUser } from '../lib/auth';
 import { clearParamCache } from '../lib/ssm';
-import { priceKey, profileKey, subKey } from '../lib/keys';
+import { priceKey, profileKey, subKey, teamKey } from '../lib/keys';
 import { canceledTx, PRO_ID, profile, setTestEnv, subItem } from '../testing/fixtures';
 import { DEFAULT_PRICE_SEEDS } from './prices';
 import {
@@ -120,6 +120,14 @@ describe('"Ya pagué" notices', () => {
     const subjects = ses.commandCalls(SendEmailCommand).map((c) => c.args[0].input.Content!.Simple!.Subject!.Data);
     expect(subjects).toContain('Nuevo aviso de pago · Dra. Laura Pérez · Fundador');
     expect(subjects).toContain('Recibimos tu aviso de pago');
+  });
+
+  it('a team owner pays the package plus each additional professional for the same months', async () => {
+    ddb.on(GetCommand, { Key: subKey(PRO_ID) }).resolves({ Item: subItem() });
+    ddb.on(GetCommand, { Key: teamKey(PRO_ID) }).resolves({ Item: { seats: 2 } });
+    const payment = await createPaymentNotice(PRO_ID, { months: 3, method: 'nequi', reference: '' }, NOW);
+    // Fundador 3 months $15.000 + 2 professionals × $3.900 × 3 months.
+    expect(payment.amountCop).toBe(15000 + 2 * 3900 * 3);
   });
 
   it('allows only one pending notice (409 conflict)', async () => {

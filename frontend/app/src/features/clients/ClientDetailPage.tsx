@@ -19,7 +19,7 @@ import { buildDayRows } from '../../lib/agenda';
 import { now } from '../../lib/clock';
 import { formatPhone } from '../../lib/format';
 import { usePro } from '../../lib/pro';
-import { keys, useClient } from '../../lib/queries';
+import { keys, useActing, useClient } from '../../lib/queries';
 import { AppointmentCard } from '../appointments/AppointmentCard';
 import type { AppointmentModalState } from '../appointments/AppointmentModals';
 import { LazyAppointmentModals } from '../appointments/LazyAppointmentModals';
@@ -156,13 +156,14 @@ function Detail({ data }: { data: ClientDetailResponse }) {
 
 function NotesCard({ client, readOnly }: { client: ClientRecord; readOnly: boolean }) {
   const qc = useQueryClient();
+  const { proId, header } = useActing();
   const toast = useToast();
   const [notes, setNotes] = useState(client.notes);
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
-    mutationFn: (body: { notes: string }) => api.put(apiPaths.clientNotes(client.key), body),
+    mutationFn: (body: { notes: string }) => api.put(apiPaths.clientNotes(client.key), body, { actingProId: header }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.client(client.key) });
+      void qc.invalidateQueries({ queryKey: keys.client(client.key, proId) });
       toast.success('Notas guardadas.');
     },
     onError: (e) => toast.error(errorMessage(e)),
@@ -207,11 +208,12 @@ function NotesCard({ client, readOnly }: { client: ClientRecord; readOnly: boole
 
 function DeleteClientModal({ client, onClose }: { client: ClientRecord; onClose: () => void }) {
   const qc = useQueryClient();
+  const { header } = useActing();
   const toast = useToast();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const remove = useMutation({
-    mutationFn: () => api.del(apiPaths.client(client.key)),
+    mutationFn: () => api.del(apiPaths.client(client.key), { actingProId: header }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.clientsAll });
       toast.success(`Eliminaste los datos de ${client.name}.`);

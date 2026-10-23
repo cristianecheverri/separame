@@ -24,8 +24,10 @@ export interface ProProfile {
   address: string;
   /** Contact phone shown on the "agenda no disponible" page (optional). */
   phone: string | null;
-  /** Login email (Cognito); also the Reply-To of client emails. */
+  /** Login email (Cognito); also the Reply-To of client emails. A team member carries the owner's. */
   email: string;
+  /** Team plan: set only on team members (no user of their own; managed by this owner). */
+  ownerId?: string;
   createdAt: ISOInstant;
   updatedAt: ISOInstant;
 }
@@ -249,6 +251,11 @@ export interface PriceVersion {
   /** Headline monthly price for "desde $5.000/mes". `null` while a draft has no price yet. */
   monthlyCop: number | null;
   packages: PricePackage[];
+  /**
+   * Team plan: monthly value of each additional professional (frozen with the version, like the
+   * packages). `null` = this version has no team pricing yet (missing in versions created before teams).
+   */
+  extraProfessionalCop: number | null;
   status: PriceVersionStatus;
   /** Offered to new sign-ups (exactly one active default). */
   isDefault: boolean;
@@ -356,4 +363,42 @@ export interface PriceMigration {
   affectedCount: number;
   createdAt: ISOInstant;
   createdBy: { sub: string; email: string };
+}
+
+// ── Team plan (docs/team-plan.md) ────────────────────────────────────────────
+
+export type TeamRequestStatus = 'pending' | 'approved' | 'rejected';
+
+/** The owner's request for the team plan (one at a time; a new one replaces a reviewed one). */
+export interface TeamRequest {
+  status: TeamRequestStatus;
+  /** Consultorio / studio name. */
+  name: string;
+  /** How many professionals in total, counting the owner. */
+  professionals: number;
+  message: string;
+  /** Additional professionals the admin approved. */
+  seatsApproved: number | null;
+  rejectReason: string | null;
+  createdAt: ISOInstant;
+  reviewedAt: ISOInstant | null;
+}
+
+/** A professional of the team (the owner is the first one). */
+export interface TeamMember {
+  proId: string;
+  name: string;
+  title: string;
+  slug: string;
+  isOwner: boolean;
+}
+
+export interface Team {
+  name: string;
+  slug: string;
+  /** Approved additional professionals (the owner is not a seat). */
+  seats: number;
+  /** Owner first, then the members in the order they were added. */
+  members: TeamMember[];
+  createdAt: ISOInstant;
 }

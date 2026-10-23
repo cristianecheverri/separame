@@ -10,12 +10,14 @@ import { buildDayRows } from '../../lib/agenda';
 import { now } from '../../lib/clock';
 import { formatDayTitle, normalize, plural } from '../../lib/format';
 import { usePro } from '../../lib/pro';
-import { useAppointments } from '../../lib/queries';
+import { useAgendaAppointments } from '../../lib/queries';
+import { useMemberTag } from '../team/useMemberTag';
 import { AppointmentCard } from './AppointmentCard';
 import type { AppointmentModalState } from './AppointmentModals';
 import { LazyAppointmentModals as AppointmentModals } from './LazyAppointmentModals';
 import { useOutcome } from './useOutcome';
 import { WaitlistSection } from './Waitlist';
+import { ProSelector } from '../team/ProSelector';
 
 const AHEAD_DAYS = 90;
 const BACK_DAYS = 90;
@@ -55,8 +57,10 @@ export function AppointmentsPage() {
   };
   const markOutcome = useOutcome();
   const [modal, setModal] = useState<AppointmentModalState>(null);
-  const upcoming = useAppointments(today, addDays(today, AHEAD_DAYS), tab === 'upcoming');
-  const past = useAppointments(addDays(today, -BACK_DAYS), today, tab === 'past');
+  // Team plan: under «Todos», every professional's appointments merged (each card tagged).
+  const upcoming = useAgendaAppointments(today, addDays(today, AHEAD_DAYS), tab === 'upcoming');
+  const past = useAgendaAppointments(addDays(today, -BACK_DAYS), today, tab === 'past');
+  const memberTag = useMemberTag();
   const source = tab === 'upcoming' ? upcoming : past;
 
   const t = clock.getTime();
@@ -82,6 +86,7 @@ export function AppointmentsPage() {
           Nueva cita
         </button>
       </div>
+      <ProSelector variant="inline" allowAll className="hidden lg:flex" />
 
       <section className={cx(ui.card, 'gap-4')}>
         <div className="flex flex-wrap gap-3 justify-between items-center">
@@ -128,7 +133,7 @@ export function AppointmentsPage() {
         {tab === 'waitlist' ? (
           <WaitlistSection
             readOnly={readOnly}
-            onSchedule={(entry) => setModal({ kind: 'new', client: entry.client, serviceId: entry.serviceId, date: entry.dates.find((d) => d >= today) })}
+            onSchedule={(entry) => setModal({ kind: 'new', client: entry.client, serviceId: entry.serviceId, date: entry.dates.find((d) => d >= today), proId: entry.proId })}
           />
         ) : !source.data ? (
           <div className="flex flex-col gap-[6px]" aria-busy="true" aria-label="Cargando">
@@ -157,6 +162,7 @@ export function AppointmentsPage() {
                   now={clock}
                   readOnly={readOnly}
                   onOutcome={markOutcome}
+                  member={memberTag(row.appointment)}
                   actions={tab === 'upcoming'}
                   onMove={(appointment) => setModal({ kind: 'move', appointment })}
                   onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}

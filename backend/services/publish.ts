@@ -1,11 +1,14 @@
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import type { PublicProfile } from '../../shared/api';
+import type { PublicProfile, PublicTeam } from '../../shared/api';
+import { initials } from '../../shared/format';
 import { SITE_PATHS } from '../../shared/infra';
 import { env } from '../lib/env';
 import { log } from '../lib/logger';
 import { getProfile, toPublicProfile } from './profiles';
 import { listServices } from './services';
+import { ownerIdOf } from './subscriptions';
+import { getTeamItem } from './teams';
 
 /**
  * Static profile pages: `/<slug>/index.html` in the site bucket, generated
@@ -81,9 +84,12 @@ export function jsonForScript(value: unknown): string {
 export const pageKey = (slug: string) => `${slug}/index.html`;
 export const pagePaths = (slug: string) => [`/${slug}`, `/${slug}/`, `/${slug}/index.html`];
 
-export function renderHead(profile: PublicProfile, cfg: PageConfig): string {
+export function renderHead(
+  profile: Pick<PublicProfile, 'slug' | 'name' | 'title' | 'city'>,
+  cfg: PageConfig,
+  description = `${profile.title} en ${profile.city}. Separa tu cita en línea en segundos.`,
+): string {
   const title = `Agenda de ${profile.name} · Sepárame`;
-  const description = `${profile.title} en ${profile.city}. Separa tu cita en línea en segundos.`;
   const url = `${cfg.siteUrl}/${profile.slug}`;
   const image = `${cfg.siteUrl}/og.png`;
   const t = escapeHtml(title);
@@ -108,16 +114,30 @@ export function renderHead(profile: PublicProfile, cfg: PageConfig): string {
   ].join('\n');
 }
 
-export function renderDataScript(profile: PublicProfile, cfg: PageConfig): string {
-  const data = { profile, config: { turnstileSiteKey: cfg.turnstileSiteKey, apiUrl: cfg.apiUrl } };
+/** A profile page embeds `profile`; a team page (/<teamSlug>) embeds `team` instead. */
+export type PageData = { profile: PublicProfile } | { team: PublicTeam };
+
+export function renderDataScript(page: PageData, cfg: PageConfig): string {
+  const data = { ...page, config: { turnstileSiteKey: cfg.turnstileSiteKey, apiUrl: cfg.apiUrl } };
   return `<script type="application/json" id="${SITE_PATHS.dataScriptId}">${jsonForScript(data)}</script>`;
 }
 
 /** Replaces both markers (split/join: no `$` replacement patterns from user text). */
-export function renderProfilePage(template: string, profile: PublicProfile, cfg: PageConfig): string {
+function renderPage(template: string, head: string, page: PageData, cfg: PageConfig): string {
   return template
-    .split(SITE_PATHS.templateHeadMarker).join(renderHead(profile, cfg))
-    .split(SITE_PATHS.templateDataMarker).join(renderDataScript(profile, cfg));
+    .split(SITE_PATHS.templateHeadMarker).join(head)
+    .split(SITE_PATHS.templateDataMarker).join(renderDataScript(page, cfg));
+}
+
+export function renderProfilePage(template: string, profile: PublicProfile, cfg: PageConfig): string {
+  return renderPage(template, renderHead(profile, cfg), { profile }, cfg);
+}
+
+export function renderTeamPage(template: string, team: PublicTeam, cfg: PageConfig): string {
+  const head = renderHead({
+    slug: team.slug, name: team.name, title: '', city: team.city,
+  }, cfg, `Separa tu cita en línea con el equipo de ${team.name} en ${team.city}.`);
+  return renderPage(template, head, { team }, cfg);
 }
 
 export function pageConfig(): PageConfig {
@@ -147,8 +167,10 @@ export async function publishPro(proId: string): Promise<PublishOutcome> {
     log.warn('booking template missing; page not generated', { proId, key: SITE_PATHS.bookingTemplate });
     return 'no_template';
   }
-  const services = await listServices(proId, true);
-  const html = renderProfilePage(template, toPublicProfile(profile, services), pageConfig());
+  const [services, teamOwnerId] = await Promise.all([listServices(proId, true), teamOwnerFor(proId)]);
+  const team = teamOwnerId ? await getTeamItem(teamOwnerId, true) : undefined;
+  const publicProfile = { ...toPublicProfile(profile, services), ...(team ? { team: { name: team.name, slug: team.slug } } : {}) };
+  const html = renderProfilePage(template, publicProfile, pageConfig());
   await s3.send(new PutObjectCommand({
     Bucket: env.siteBucket(),
     Key: pageKey(profile.slug),
@@ -158,6 +180,47 @@ export async function publishPro(proId: string): Promise<PublishOutcome> {
   }));
   await invalidate(pagePaths(profile.slug));
   log.info('profile page published', { proId, slug: profile.slug });
+  return 'published';
+}
+
+/** The owner of the team a professional belongs to (themselves when they own one), or undefined. */
+export async function teamOwnerFor(proId: string): Promise<string | undefined> {
+  const ownerId = await ownerIdOf(proId);
+  if (ownerId) return ownerId;
+  return (await getTeamItem(proId, true)) ? proId : undefined;
+}
+
+/** (Re)generates the team page `/<teamSlug>`: every member's public profile and services. */
+export async function publishTeam(ownerId: string): Promise<PublishOutcome> {
+  const team = await getTeamItem(ownerId, true);
+  if (!team) return 'no_profile';
+  const template = await loadTemplate();
+  if (!template) {
+    log.warn('booking template missing; team page not generated', { ownerId, key: SITE_PATHS.bookingTemplate });
+    return 'no_template';
+  }
+  const ids = [ownerId, ...team.memberIds];
+  const loaded = await Promise.all(ids.map(async (id): Promise<PublicProfile | null> => {
+    const [profile, services] = await Promise.all([getProfile(id, true), listServices(id, true)]);
+    return profile ? { ...toPublicProfile(profile, services), team: { name: team.name, slug: team.slug } } : null;
+  }));
+  const owner = loaded[0];
+  if (!owner) return 'no_profile';
+  // Clients only see professionals they can book (a new member has no services yet).
+  const members = loaded.filter((m): m is PublicProfile => m !== null && m.services.length > 0);
+  const publicTeam: PublicTeam = {
+    slug: team.slug, name: team.name, city: owner.city, neighborhood: owner.neighborhood, address: owner.address,
+    phone: owner.phone, initials: initials(team.name), members,
+  };
+  await s3.send(new PutObjectCommand({
+    Bucket: env.siteBucket(),
+    Key: pageKey(team.slug),
+    Body: renderTeamPage(template, publicTeam, pageConfig()),
+    ContentType: 'text/html; charset=utf-8',
+    CacheControl: 'public, max-age=0, s-maxage=60',
+  }));
+  await invalidate(pagePaths(team.slug));
+  log.info('team page published', { ownerId, slug: team.slug });
   return 'published';
 }
 

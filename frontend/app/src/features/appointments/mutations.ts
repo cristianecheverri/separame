@@ -7,7 +7,8 @@ import { sortByStart } from '../../lib/agenda';
 import { track } from '../../lib/analytics';
 import { api } from '../../lib/api';
 import { now } from '../../lib/clock';
-import { keys, patchAppointmentLists, restoreSnapshot } from '../../lib/queries';
+import { actingHeaderFor } from '../../lib/actingPro';
+import { keys, patchAppointmentLists, restoreSnapshot, useActing } from '../../lib/queries';
 
 type Ctx = { snapshot?: Awaited<ReturnType<typeof patchAppointmentLists>> };
 
@@ -24,21 +25,29 @@ function useSettle() {
   };
 }
 
+/** Team plan: an appointment is always changed on its own professional's agenda (also under «Todos»). */
+function useHeaderOf() {
+  const { ownerId } = useActing();
+  return (appointment: Appointment) => ({ actingProId: actingHeaderFor(appointment.proId, ownerId) });
+}
+
+/** Creates on the acting professional's agenda (an `ActingScope` picks the member under «Todos»). */
 export function useCreateAppointment() {
   const qc = useQueryClient();
   const settle = useSettle();
+  const { proId, header } = useActing();
   return useMutation<AppointmentResponse, Error, CreateAppointmentRequest, Ctx>({
-    mutationFn: (req) => api.post<AppointmentResponse>(apiPaths.appointments(), req),
+    mutationFn: (req) => api.post<AppointmentResponse>(apiPaths.appointments(), req, { actingProId: header }),
     onMutate: async (req) => {
-      const service = qc.getQueryData<ServicesResponse>(keys.services)?.services.find((s) => s.id === req.serviceId);
+      const service = qc.getQueryData<ServicesResponse>(keys.services(proId))?.services.find((s) => s.id === req.serviceId);
       if (!service) return {};
       const at = now().toISOString();
       const temp: Appointment = {
-        id: `temp-${Date.now()}`, proId: '', serviceId: service.id, serviceName: service.name, durationMin: service.durationMin,
+        id: `temp-${Date.now()}`, proId, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin,
         priceCop: service.priceCop, start: req.start, end: addMinutes(req.start, service.durationMin), status: 'confirmed',
         client: req.client, createdBy: 'pro', createdAt: at, updatedAt: at, clientConfirmation: 'pending', revision: 0, clientKey: '',
       };
-      const snapshot = await patchAppointmentLists(qc, (list, range) => (inRange(temp, range) ? sortByStart([...list, temp]) : list));
+      const snapshot = await patchAppointmentLists(qc, (list, range) => (inRange(temp, range) ? sortByStart([...list, temp]) : list), proId);
       return { snapshot };
     },
     onSuccess: () => track('appointment_created', { by: 'pro' }),
@@ -50,8 +59,9 @@ export function useCreateAppointment() {
 export function useMoveAppointment() {
   const qc = useQueryClient();
   const settle = useSettle();
+  const headerOf = useHeaderOf();
   return useMutation<AppointmentResponse, Error, { appointment: Appointment; start: string }, Ctx>({
-    mutationFn: ({ appointment, start }) => api.patch<AppointmentResponse>(apiPaths.appointment(appointment.id), { start }),
+    mutationFn: ({ appointment, start }) => api.patch<AppointmentResponse>(apiPaths.appointment(appointment.id), { start }, headerOf(appointment)),
     onMutate: async ({ appointment, start }) => {
       const moved: Appointment = { ...appointment, start, end: addMinutes(start, appointment.durationMin) };
       const snapshot = await patchAppointmentLists(qc, (list, range) => {
@@ -69,8 +79,9 @@ export function useMoveAppointment() {
 export function useCancelAppointment() {
   const qc = useQueryClient();
   const settle = useSettle();
+  const headerOf = useHeaderOf();
   return useMutation<AppointmentResponse, Error, { appointment: Appointment; reason?: string }, Ctx>({
-    mutationFn: ({ appointment, reason }) => api.post<AppointmentResponse>(apiPaths.cancelAppointment(appointment.id), reason ? { reason } : {}),
+    mutationFn: ({ appointment, reason }) => api.post<AppointmentResponse>(apiPaths.cancelAppointment(appointment.id), reason ? { reason } : {}, headerOf(appointment)),
     onMutate: async ({ appointment, reason }) => {
       const snapshot = await patchAppointmentLists(qc, (list) =>
         list.map((a) => (a.id === appointment.id ? { ...a, status: 'cancelled', cancelledBy: 'pro', cancelReason: reason } : a)),
@@ -85,8 +96,9 @@ export function useCancelAppointment() {
 
 export function useSetOutcome() {
   const qc = useQueryClient();
+  const headerOf = useHeaderOf();
   return useMutation<AppointmentResponse, Error, { appointment: Appointment; outcome: SetOutcomeRequest['outcome'] }, Ctx>({
-    mutationFn: ({ appointment, outcome }) => api.post<AppointmentResponse>(apiPaths.appointmentOutcome(appointment.id), { outcome }),
+    mutationFn: ({ appointment, outcome }) => api.post<AppointmentResponse>(apiPaths.appointmentOutcome(appointment.id), { outcome }, headerOf(appointment)),
     onMutate: async ({ appointment, outcome }) => {
       const at = now().toISOString();
       const snapshot = await patchAppointmentLists(qc, (list) =>
@@ -97,8 +109,8 @@ export function useSetOutcome() {
     onError: (_e, _v, ctx) => restoreSnapshot(qc, ctx?.snapshot),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: keys.appointmentsAll });
-      void qc.invalidateQueries({ queryKey: ['clients'] });
-      void qc.invalidateQueries({ queryKey: ['stats'] });
+      void qc.invalidateQueries({ queryKey: keys.clientsAll });
+      void qc.invalidateQueries({ queryKey: keys.statsAll });
     },
   });
 }

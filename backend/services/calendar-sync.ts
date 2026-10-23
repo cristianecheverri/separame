@@ -8,6 +8,7 @@ import { ddb, failedConditionIndex, getItem, table, transactWrite } from '../lib
 import { env } from '../lib/env';
 import { ApiError } from '../lib/http';
 import { calFeedKey, calSyncKey } from '../lib/keys';
+import { ownerIdOf } from './subscriptions';
 import { log } from '../lib/logger';
 import { buildCalendar, type IcsEvent, type IcsMethod } from '../mail/ics';
 import { whereText } from '../mail/templates/common';
@@ -115,7 +116,8 @@ export async function rotateFeedToken(proId: string, now: Date = new Date()): Pr
 
 /** Invitations are on unless the pro turned them off (no CALSYNC item yet → on). */
 export async function invitesEnabledFor(proId: string): Promise<boolean> {
-  const item = await getSync(proId);
+  // A team member's invitations go to the owner's email: the owner's setting decides.
+  const item = await getSync((await ownerIdOf(proId)) ?? proId);
   return item ? item.invitesEnabled !== false : true;
 }
 

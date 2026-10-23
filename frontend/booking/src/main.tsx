@@ -1,5 +1,5 @@
 /**
- * Entry of /b/booking.js — serves the profile pages (/<slug>), the manage
+ * Entry of /b/booking.js — serves the profile and team pages (/<slug>), the manage
  * page (/c/<token>) and the waitlist leave page (/w/<token>); the last two are
  * lazily loaded.
  */
@@ -7,10 +7,13 @@ import { render } from 'preact';
 import './styles.css';
 import { BookingApp } from './booking/BookingApp';
 import { initAnalytics, trackPageView } from './lib/analytics';
-import { createRuntime, manageTokenFromLocation, readEmbeddedData, slugFromLocation, waitlistTokenFromLocation } from './lib/bootstrap';
+import {
+  createRuntime, manageTokenFromLocation, readEmbeddedData, slugFromLocation, waitlistTokenFromLocation, withMockPage,
+} from './lib/bootstrap';
 
 async function start(root: HTMLElement): Promise<void> {
-  const { profile, config } = readEmbeddedData();
+  const slug = slugFromLocation();
+  const { profile, team, config } = await withMockPage(readEmbeddedData(), slug);
   const runtime = await createRuntime(config);
   const waitToken = waitlistTokenFromLocation();
   if (waitToken) {
@@ -24,7 +27,7 @@ async function start(root: HTMLElement): Promise<void> {
     render(<ManageApp token={token} api={runtime.api} />, root);
     return;
   }
-  render(<BookingApp slug={profile?.slug ?? slugFromLocation()} initialProfile={profile} runtime={runtime} />, root);
+  render(<BookingApp slug={team?.slug ?? profile?.slug ?? slug} initialProfile={profile} team={team} runtime={runtime} />, root);
 }
 
 initAnalytics();

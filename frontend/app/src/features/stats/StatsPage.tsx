@@ -12,6 +12,7 @@ import { errorMessage } from '../../lib/api';
 import { now } from '../../lib/clock';
 import { useStats } from '../../lib/queries';
 import { delta, PERIODS, periodRange, type PeriodKey } from './periods';
+import { ProSelector } from '../team/ProSelector';
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const WEEKDAYS_LONG = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -144,6 +145,7 @@ export function StatsPage() {
         <h1 className={ui.h1}>Estadísticas</h1>
         <div className="text-[15px] text-muted">Cómo va tu agenda: citas, ocupación y asistencia.</div>
       </div>
+      <ProSelector variant="inline" allowAll={false} className="hidden lg:flex" />
       <div className="flex flex-nowrap overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:flex-wrap sm:overflow-visible sm:mx-0 sm:px-0 gap-2" role="group" aria-label="Periodo">
         {PERIODS.map((x) => (
           <Chip key={x.key} selected={period === x.key} onClick={() => setPeriod(x.key)} className="whitespace-nowrap shrink-0">

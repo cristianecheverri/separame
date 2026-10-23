@@ -1,6 +1,6 @@
 import { CONFIRM_ACTION_PARAM } from '../../shared/api';
 import type { ISODate, ISOInstant } from '../../shared/time';
-import type { Appointment, Payment, PriceVersion, ProProfile, WaitlistEntry } from '../../shared/types';
+import type { Appointment, Payment, PriceVersion, ProProfile, TeamRequest, WaitlistEntry } from '../../shared/types';
 import { env } from '../lib/env';
 import { manageTokenFor } from '../lib/tokens';
 import { googleCalendarUrl, outlookCalendarUrl } from './calendar-links';
@@ -18,6 +18,7 @@ import { referralRewardEmail, type ReferralRewardData } from './templates/referr
 import { reminderEmail } from './templates/reminder-24h';
 import { renewalNoticeEmail } from './templates/renewal-notice';
 import { noticeAdminEmail, noticeReceivedEmail, noticeRejectedEmail } from './templates/payment-notice';
+import { teamApprovedEmail, teamRejectedEmail, teamRequestAdminEmail } from './templates/team';
 import { log } from '../lib/logger';
 
 /**
@@ -36,7 +37,10 @@ const operatorReplyTo = (): string | undefined => env.adminEmail();
 
 export { manageUrl };
 
-const proInfo = (p: ProProfile) => ({ name: p.name, title: p.title, neighborhood: p.neighborhood, address: p.address, city: p.city, slug: p.slug });
+const proInfo = (p: ProProfile) => ({
+  name: p.name, title: p.title, neighborhood: p.neighborhood, address: p.address, city: p.city, slug: p.slug,
+  ...(p.ownerId ? { agendaOf: p.name } : {}),
+});
 
 function icsAttachment(appt: Appointment, pro: ProProfile, link: string) {
   return { ...clientIcsFile(appt, pro, link), contentType: 'text/calendar; charset=UTF-8; method=PUBLISH' };
@@ -136,7 +140,7 @@ export async function sendProCalendarNotice(appt: Appointment, pro: ProProfile, 
   return sendEmail({
     ...proCalendarEmail({
       siteUrl: env.siteUrl(), kind, clientName: appt.client.name, serviceName: appt.serviceName,
-      durationMin: appt.durationMin, start: appt.start,
+      durationMin: appt.durationMin, start: appt.start, agendaOf: pro.ownerId ? pro.name : undefined,
     }),
     to: pro.email,
     invite,
@@ -231,6 +235,30 @@ export async function sendNoticeRejected(input: { profile: ProProfile; payment: 
     to: input.profile.email,
     replyTo: operatorReplyTo(),
   });
+}
+
+// ── Team plan ──────────────────────────────────────────────────────────────
+
+/** Operator alert; skipped (logged) when ADMIN_EMAIL isn't configured. */
+export async function sendTeamRequestToAdmin(input: { profile: ProProfile; request: TeamRequest }): Promise<SendResult> {
+  const to = env.adminEmail();
+  if (!to) {
+    log.warn('ADMIN_EMAIL not set: team request alert skipped', { proId: input.profile.id });
+    return 'skipped';
+  }
+  return sendEmail({ ...teamRequestAdminEmail({ siteUrl: env.siteUrl(), ...input }), to, replyTo: input.profile.email });
+}
+
+export async function sendTeamApproved(input: {
+  profile: ProProfile; teamName: string; teamUrl: string; seats: number; extraProfessionalCop: number | null;
+}): Promise<SendResult> {
+  const { profile, ...data } = input;
+  return sendEmail({ ...teamApprovedEmail({ siteUrl: env.siteUrl(), name: profile.name, ...data }), to: profile.email, replyTo: operatorReplyTo() });
+}
+
+export async function sendTeamRejected(input: { profile: ProProfile; teamName: string; reason: string }): Promise<SendResult> {
+  const { profile, ...data } = input;
+  return sendEmail({ ...teamRejectedEmail({ siteUrl: env.siteUrl(), name: profile.name, ...data }), to: profile.email, replyTo: operatorReplyTo() });
 }
 
 // ── Waitlist ───────────────────────────────────────────────────────────────

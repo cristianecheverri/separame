@@ -22,7 +22,7 @@ En Analytics → Administrar → Flujos de datos → separame.app → **Medició
 Recomendado además:
 - Administrar → Configuración de datos → **Retención de datos: 14 meses**.
 - Administrar → **Dimensiones personalizadas** (de evento): `pro_slug`, `step`, `has_email`,
-  `reason`, `method`, `content_type`, `location`, `by`, `referred`. Sin registrarlas, los parámetros
+  `reason`, `method`, `content_type`, `location`, `by`, `referred`, `pro_choice`. Sin registrarlas, los parámetros
   no aparecen en los informes ni en los embudos.
 - Administrar → **Eventos clave**: `booking_confirmed`, `sign_up`, `agenda_created`,
   `payment_notice_sent`.
@@ -42,9 +42,9 @@ Recomendado además:
 |---|---|---|---|
 | `page_view` | todo el sitio | — | vista de página (ruta limpia) |
 | `cta_click` | página principal | `location`: hero · teams · final | clic en «Prueba gratis» / plan para equipos |
-| `booking_view` | página de un profesional | `pro_slug` | alguien abrió una agenda |
-| `booking_step` | reserva | `pro_slug`, `step`: service · when · details · review | avanzó a ese paso |
-| `booking_confirmed` | reserva | `pro_slug`, `has_email`: yes · no | **reserva hecha** |
+| `booking_view` | página de un profesional o de un consultorio (equipo) | `pro_slug` | alguien abrió una agenda |
+| `booking_step` | reserva | `pro_slug`, `step`: who · service · when · details · review; en la página de un consultorio también `pro_choice`: specific · any | avanzó a ese paso (`who` = «¿Con quién?», solo en consultorios) |
+| `booking_confirmed` | reserva | `pro_slug`, `has_email`: yes · no; en un consultorio también `pro_choice`: specific · any | **reserva hecha** |
 | `booking_error` | reserva | `pro_slug`, `reason` (código: slot_taken, validation…) | la reserva falló |
 | `booking_unavailable` | reserva | `pro_slug` | agenda vencida («no disponible») |
 | `waitlist_joined` | reserva | `pro_slug` | se anotó en la lista de espera |
@@ -61,6 +61,10 @@ Recomendado además:
 | `payment_notice_sent` | Suscripción | `months` | tocó «Ya pagué» |
 | `push_enabled` | Tu calendario | — | activó los avisos en el celular |
 | `app_installed` | panel | — | instaló el panel como app |
+
+En la página de un consultorio (plan para equipos) `pro_slug` es el slug del consultorio en todos
+los eventos de la reserva, y `pro_choice` dice si el cliente eligió a un profesional (`specific`) o
+«Cualquiera disponible» (`any`); nunca se envía a quién eligió.
 
 ## Embudos útiles (Explorar → Exploración de embudo)
 

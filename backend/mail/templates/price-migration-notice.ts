@@ -1,7 +1,7 @@
 import { formatCop, MONTH_NAMES } from '../../../shared/format';
 import type { ISODate } from '../../../shared/time';
 import { esc, paragraph, renderLayout, stack, type RenderedEmail } from '../layout';
-import { firstName, proFooter } from './common';
+import { greetingName, proFooter } from './common';
 
 /** Price change notice, sent MIGRATION_NOTICE_DAYS before it takes effect (mockup: admin-prices). */
 
@@ -20,7 +20,7 @@ export function priceMigrationNoticeEmail(d: MigrationNoticeData): RenderedEmail
   const when = dayMonth(d.effectiveDate);
   const subject = `Tu precio en Sepárame cambia el ${when}`;
   const heading = subject;
-  const body = `Hola, ${firstName(d.name)}. Desde tu renovación del ${when}, tu plan pasa de ${formatCop(d.fromMonthlyCop)} a ${formatCop(d.toMonthlyCop)} al mes. Hasta esa fecha todo sigue igual. Si tienes dudas, responde este correo.`;
+  const body = `Hola, ${greetingName(d.name)}. Desde tu renovación del ${when}, tu plan pasa de ${formatCop(d.fromMonthlyCop)} a ${formatCop(d.toMonthlyCop)} al mes. Hasta esa fecha todo sigue igual. Si tienes dudas, responde este correo.`;
   const footer = proFooter(d.siteUrl);
   const html = renderLayout({ title: subject, preheader: body, heading, body: stack([paragraph(esc(body))]), footer: footer.html });
   return { subject, html, text: [heading, body, footer.text].join('\n\n') };

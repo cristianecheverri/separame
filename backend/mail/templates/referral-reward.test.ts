@@ -70,7 +70,7 @@ describe('price display in emails', () => {
 
 describe('manual payment receipt with saved referral months', () => {
   const price: PriceVersion = {
-    id: 'fundador-v1', code: 'fundador-v1', name: 'Fundador', currency: 'COP', monthlyCop: 5000, packages: [], status: 'active', isDefault: true, createdAt: '2026-01-01T00:00:00.000Z',
+    id: 'fundador-v1', code: 'fundador-v1', name: 'Fundador', currency: 'COP', monthlyCop: 5000, packages: [], extraProfessionalCop: null, status: 'active', isDefault: true, createdAt: '2026-01-01T00:00:00.000Z',
   };
   const payment: Payment = {
     id: 'p1', proId: 'x', method: 'nequi', status: 'approved', source: 'admin', amountCop: 15000, months: 3, paidAt: '2026-10-20T17:00:00.000Z',

@@ -1,6 +1,10 @@
 /**
  * In-memory API for local development and visual QA (`?mock=1`).
  *
+ * Team plan: /consultorio-sonrie is the team page (embedded data from
+ * fixtures); /dr-julian-ortiz and /dra-sara-gomez are its members' pages
+ * («Parte de Consultorio Sonríe»), each with its own services and busy hours.
+ *
  * Query switches:
  *   state=unavailable   subscription expired (active: false)
  *   state=notfound      unknown slug
@@ -24,7 +28,7 @@ import { addMinutes, bogotaDate, bogotaTime, toInstant } from '@shared/time';
 import { ApiError, type ApiClient } from '../lib/api';
 import { eventFromBooking, icsDataUrl } from '../lib/calendar';
 import { SITE_PATHS } from '@shared/infra';
-import { MOCK_NOW, MOCK_PROFILE, MOCK_RULES, MOCK_SCHEDULE, MOCK_TODAY, mockBusy } from './fixtures';
+import { MOCK_NOW, MOCK_PROFILE, MOCK_RULES, MOCK_SCHEDULE, MOCK_TODAY, mockBusy, mockProfileFor } from './fixtures';
 
 interface StoredAppointment {
   booking: BookingSummary;
@@ -75,9 +79,18 @@ export function createMockApi(params: URLSearchParams): ApiClient {
   const state = params.get('state');
   let failure = params.get('fail');
   const delayMs = Number(params.get('delay') ?? 350);
-  const profile: PublicProfile =
-    params.get('services') === '1' ? { ...MOCK_PROFILE, services: MOCK_PROFILE.services.slice(0, 1) } : MOCK_PROFILE;
-  const busy: Interval[] = mockBusy();
+  const singleService = params.get('services') === '1';
+  const profileFor = (slug: string): PublicProfile => {
+    const profile = mockProfileFor(slug);
+    return singleService && profile.slug === MOCK_PROFILE.slug ? { ...profile, services: profile.services.slice(0, 1) } : profile;
+  };
+  const busyBySlug = new Map<string, Interval[]>();
+  const busyFor = (slug: string): Interval[] => {
+    const key = mockProfileFor(slug).slug;
+    const busy = busyBySlug.get(key) ?? mockBusy(31, key);
+    busyBySlug.set(key, busy);
+    return busy;
+  };
   const mariana = { name: 'Mariana Gómez', email: 'mariana@correo.com' };
   const appointments = new Map<string, StoredAppointment>([
     ['demo', { booking: summary(MOCK_PROFILE, 'valoracion', upcoming('2026-10-22T15:00:00.000Z'), mariana, 'appt-demo'), canChange: true }],
@@ -117,11 +130,13 @@ export function createMockApi(params: URLSearchParams): ApiClient {
     async getPro(slug) {
       await wait();
       if (state === 'notfound') throw new ApiError('not_found', 'No existe', 404);
-      return { profile: { ...profile, slug: slug || profile.slug }, active };
+      return { profile: profileFor(slug), active };
     },
-    async getAvailability(_slug, query): Promise<AvailabilityResponse> {
+    async getAvailability(slug, query): Promise<AvailabilityResponse> {
       await wait();
-      const service = MOCK_PROFILE.services.find((s) => s.id === query.serviceId) ?? MOCK_PROFILE.services[0];
+      const { services } = mockProfileFor(slug);
+      const service = services.find((s) => s.id === query.serviceId) ?? services[0];
+      const busy = busyFor(slug);
       const from = query.from ?? MOCK_TODAY;
       if (!active) return { active, serviceId: service.id, from, days: [] };
       const days = computeAvailability(from, query.days ?? 14, {
@@ -137,10 +152,11 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
       const replayed = body.idempotencyKey ? byIdempotencyKey.get(body.idempotencyKey) : undefined;
       if (replayed) return replayed;
+      const busy = busyFor(slug);
       if (failure === 'slot_taken') busy.push({ start: body.start, end: addMinutes(body.start, 30) });
       if (failure !== 'lost') takeFailure();
       const id = `appt-${appointments.size + 1}`;
-      const booking = summary({ ...MOCK_PROFILE, slug }, body.serviceId, body.start, { name: body.client.name, email: body.client.email }, id);
+      const booking = summary(mockProfileFor(slug), body.serviceId, body.start, { name: body.client.name, email: body.client.email }, id);
       const token = `mock-${id}`;
       appointments.set(token, { booking, canChange: true });
       busy.push({ start: booking.start, end: booking.end });
@@ -180,11 +196,12 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       appt.booking = { ...appt.booking, clientConfirmation: 'confirmed' };
       return { booking: appt.booking };
     },
-    async joinWaitlist(_slug, body) {
+    async joinWaitlist(slug, body) {
       await wait();
       if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
       takeFailure();
-      const service = MOCK_PROFILE.services.find((s) => s.id === body.serviceId) ?? MOCK_PROFILE.services[0];
+      const { services } = mockProfileFor(slug);
+      const service = services.find((s) => s.id === body.serviceId) ?? services[0];
       return { entry: { id: `wait-${Date.now()}`, dates: body.dates, serviceName: service.name } };
     },
     async leaveWaitlist(token) {
@@ -196,7 +213,7 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       await wait();
       const appt = find(token);
       if (!appt.canChange) throw new ApiError('too_late', 'Muy tarde', 422);
-      if (failure === 'slot_taken') busy.push({ start: body.start, end: addMinutes(body.start, 30) });
+      if (failure === 'slot_taken') busyFor(appt.booking.pro.slug).push({ start: body.start, end: addMinutes(body.start, 30) });
       takeFailure();
       appt.booking = { ...appt.booking, start: body.start, end: addMinutes(body.start, appt.booking.durationMin) };
       return { booking: appt.booking };

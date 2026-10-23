@@ -18,7 +18,8 @@ beforeEach(() => {
   ddb.reset();
   s3.reset();
   cf.reset();
-  ddb.on(QueryCommand).resolves({ Items: [{ slug: 'dra-laura' }, { slug: 'barberia-el-parche' }] });
+  ddb.on(QueryCommand).resolves({ Items: [{ proId: 'p1', slug: 'dra-laura' }, { proId: 'p2', slug: 'barberia-el-parche' }] });
+  ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': 'TEAMS' } }).resolves({ Items: [] });
   s3.on(HeadObjectCommand).rejects(Object.assign(new Error('nf'), { name: 'NotFound' }));
   s3.on(PutObjectCommand).resolves({});
   cf.on(CreateInvalidationCommand).resolves({});
@@ -41,6 +42,20 @@ describe('publishSitemap', () => {
     expect(put.Body).toContain('/barberia-el-parche</loc>');
     expect(put.Body).toContain('/dra-laura</loc>');
     expect(cf.commandCalls(CreateInvalidationCommand)[0].args[0].input.InvalidationBatch?.Paths?.Items).toEqual(['/sitemap.xml']);
+  });
+
+  it('adds the team page and its members when the owner can take bookings', async () => {
+    ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': 'TEAMS' } }).resolves({
+      Items: [
+        { ownerId: 'p1', slug: 'consultorio-sonrie', memberSlugs: ['dr-julian-ortiz'] },
+        { ownerId: 'expired-owner', slug: 'estudio-cerrado', memberSlugs: ['nadie'] },
+      ],
+    });
+    await publishSitemap(NOW);
+    const body = String(s3.commandCalls(PutObjectCommand)[0].args[0].input.Body);
+    expect(body).toContain('/consultorio-sonrie</loc>');
+    expect(body).toContain('/dr-julian-ortiz</loc>');
+    expect(body).not.toContain('estudio-cerrado');
   });
 
   it('does nothing when the published sitemap has the same content', async () => {

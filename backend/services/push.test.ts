@@ -19,7 +19,7 @@ import { WebPushError } from 'web-push';
 import { clearParamCache } from '../lib/ssm';
 import { apiEvent, conditionalFailure, parse, PRO_ID, proClaims, setTestEnv, SUB_ID } from '../testing/fixtures';
 import { handler } from '../functions/pro-notifications/index';
-import { ownerKey } from '../lib/keys';
+import { ownerKey, profileKey } from '../lib/keys';
 import type { AppointmentItem } from './appointments';
 import { endpointHash, pushToPro, vapidSubject } from './push';
 import { appointmentPayload, decidePush, pushOnAppointment, PUSH_MAX_AGE_MS } from './stream/push';
@@ -84,6 +84,15 @@ describe('pushToPro', () => {
     expect(JSON.parse(body)).toMatchObject({ title: 'Nueva cita', tag: 'appt1' });
     expect(opts).toMatchObject({ TTL: 86400, vapidDetails: { subject: 'mailto:noreply@dev.separame.app', publicKey: 'vapid-key', privateKey: 'vapid-key' } });
     expect(vapidSubject()).toBe('mailto:noreply@dev.separame.app');
+  });
+
+  it('a team member has no devices: the owner gets the notice, labelled with the member', async () => {
+    ddb.on(GetCommand, { Key: profileKey('member-1') }).resolves({ Item: { id: 'member-1', name: 'Dr. Julián Ortiz', ownerId: PRO_ID } });
+    ddb.on(PutCommand).resolves({});
+    await pushOnAppointment(undefined, { ...appt, proId: 'member-1' } as AppointmentItem, NOW, NOW);
+    const query = ddb.commandCalls(QueryCommand)[0].args[0].input;
+    expect(query.ExpressionAttributeValues?.[':pk']).toBe(`PRO#${PRO_ID}`);
+    expect(JSON.parse(sendNotification.mock.calls[0][1])).toMatchObject({ title: 'Nueva cita · Julián' });
   });
 
   it('deletes expired subscriptions (404/410) and keeps going', async () => {

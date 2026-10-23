@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Pie de página · Después</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 300px; box-sizing: border-box; background: #FFFFFF; font-family: 'Figtree', system-ui, sans-serif; color: #15241D">
+  <div style="padding: 40px 20px 32px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px">
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #56645D">Final de la página principal</div>
+  </div>
+  <footer style="padding: 0 20px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; font-size: 14px; color: #56645D">
+    <span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: #0B6E4F">sepárame<span style="color: #E0A800">.</span></span> · Hecho en Colombia</span>
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 2px; margin-left: -10px">
+      <nav aria-label="En esta página" style="display: flex; gap: 4px; flex-wrap: wrap">
+      <a href="#como-funciona" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Cómo funciona</a>
+      <a href="#precios" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Precios</a>
+      <a href="#preguntas" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Preguntas</a>
+      </nav>
+      <nav aria-label="Enlaces legales" style="display: flex; gap: 4px; flex-wrap: wrap">
+      <a href="#" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Entrar</a>
+      <a href="#" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Privacidad</a>
+      <a href="#" style="min-height: 44px; padding: 0 10px; display: flex; align-items: center">Términos</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { requirePrice } from '../../services/prices';
 import { requireProId } from '../../services/profiles';
 import { myReferrals } from '../../services/referrals';
 import { loadSubscription } from '../../services/subscriptions';
+import { teamSeats } from '../../services/teams';
 
 /**
  * Plan, how to pay (Nequi / transfer instructions from SSM), payment history,
@@ -17,10 +18,10 @@ export const handler = createApiHandler({
   'GET /me/billing': async (event) => {
     const proId = await requireProId(requirePro(event));
     const { status } = await loadSubscription(proId);
-    const [price, payments, instructions] = await Promise.all([
-      requirePrice(status.priceVersionId), listPayments(proId), getPaymentInstructions(),
+    const [price, payments, instructions, seats] = await Promise.all([
+      requirePrice(status.priceVersionId), listPayments(proId), getPaymentInstructions(), teamSeats(proId),
     ]);
-    return ok({ subscription: status, price, payments, instructions });
+    return ok({ subscription: status, price, payments, instructions, teamSeats: seats });
   },
 
   'POST /me/billing/payment-notices': async (event) => {

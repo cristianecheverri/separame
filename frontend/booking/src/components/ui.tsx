@@ -49,6 +49,34 @@ export function Avatar({ initials, size = 44, tone = 'green', class: className =
   );
 }
 
+/** Team plan: each professional keeps a color by position (same idea as the panel), cycling after the third. */
+const MEMBER_TONES = ['bg-primary text-white', 'bg-accent text-ink', 'bg-ink text-white'] as const;
+
+const MEMBER_AVATAR_SIZES = {
+  24: 'w-6 h-6 text-[10px]',
+  32: 'w-8 h-8 text-[12px] border-2 border-white',
+  44: 'w-11 h-11 text-[15px]',
+} as const;
+
+/** Initials of a team member in their color: «¿Con quién?», the team band and «Te atiende». */
+export function MemberAvatar({ initials, index, size = 44, class: className = '' }: {
+  initials: string;
+  /** Position in the team (owner = 0): picks the color. */
+  index: number;
+  size?: keyof typeof MEMBER_AVATAR_SIZES;
+  class?: string;
+}) {
+  const tone = MEMBER_TONES[((index % MEMBER_TONES.length) + MEMBER_TONES.length) % MEMBER_TONES.length];
+  return (
+    <span
+      class={`${MEMBER_AVATAR_SIZES[size]} ${tone} rounded-full flex items-center justify-center shrink-0 font-bold box-border ${className}`}
+      aria-hidden="true"
+    >
+      {initials}
+    </span>
+  );
+}
+
 /** Page-like screens: the whole frame content scrolls and bottom links sit at the end. */
 export function PageScroll({ children, class: className = '' }: { children: ComponentChildren; class?: string }) {
   return (

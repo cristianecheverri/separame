@@ -28,12 +28,18 @@
  *                                                              (state registered | rewarded | saved; name/title snapshot, trialEndsAt,
  *                                                              paidMonths, paidAt, rewardedAt, appliedAt). `saved` = month waiting for
  *                                                              the referrer's next approved payment (no counter: these items ARE the pending months)
+ *  PRO#<ownerId>                    TEAM                       { name, slug, seats, memberIds[], memberSlugs[], createdAt, updatedAt } — team plan
+ *                                                              GSI1PK=TEAMS  GSI1SK=<createdAt>#<ownerId>  (admin list, sitemap)
+ *  PRO#<ownerId>                    TEAMREQ                    TeamRequest (latest one); GSI1PK=TEAMREQS GSI1SK=<createdAt>#<ownerId> only while pending
+ *  PRO#<memberId>                   PROFILE                    a team member: ProProfile + ownerId, no OWNER/SUB/TRIAL items (pays and is managed
+ *                                                              through the owner; docs/team-plan.md)
  *  PRO#<proId>                      CALSYNC                    { token, invitesEnabled, createdAt } — calendar sync settings
  *  PRO#<proId>                      CLIENT#<clientKey>         ClientRecord (aggregates from appointment events + notes)
  *  PRO#<proId>                      WAIT#<entryId>             WaitlistEntry (TTL: last date + 1 day)
  *  PRO#<proId>                      PUSH#<sha256(endpoint)>    web push subscription of one device
  *  CALFEED#<token>                  CALFEED                    { proId } — resolves the secret .ics feed URL (deleted on rotate)
  *  SLUG#<slug>                      SLUG                       { proId }  — uniqueness via conditional put
+ *                                                              or { teamOwnerId } for a team page (/<teamSlug>)
  *  LOCK#<proId>#<bogotaDate>        <HH:mm>                    { apptId } — 5-min double-booking locks (TTL: slot end + 7 days)
  *  OWNER#<cognitoSub>               OWNER                      { proId } — Cognito user → professional
  *  TRIAL#<sha256(email)>            TRIAL                      { proId, at } — one free trial per email

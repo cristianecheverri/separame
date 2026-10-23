@@ -4,16 +4,16 @@ import type {
 import { GSI1, SSM_PARAMS } from '../../shared/infra';
 import { paymentInstructionsSchema } from '../../shared/schemas';
 import { referralUrl, type ReferralRewardOutcome } from '../../shared/referrals';
-import { extendPaidUntil } from '../../shared/subscription';
+import { extendPaidUntil, teamPackageAmount } from '../../shared/subscription';
 import { addDays, bogotaDate, toInstant, todayBogota, type ISOInstant } from '../../shared/time';
 import type { Payment, PaymentInstructions, SubscriptionStatus } from '../../shared/types';
 import type { AuthUser } from '../lib/auth';
-import { failedConditionIndex, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem } from '../lib/dynamo';
+import { failedConditionIndex, getItem, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem } from '../lib/dynamo';
 import { env } from '../lib/env';
 import { ApiError, validationError } from '../lib/http';
 import { newId } from '../lib/ids';
 import { log } from '../lib/logger';
-import { PAY_PREFIX, paymentGsi1Sk, paymentsGsi1Pk, paySk, proPk, subKey } from '../lib/keys';
+import { PAY_PREFIX, paymentGsi1Sk, paymentsGsi1Pk, paySk, proPk, subKey, teamKey } from '../lib/keys';
 import { getOptionalParam } from '../lib/ssm';
 import { sendManualPaymentReceipt, sendNoticeReceived, sendNoticeRejected, sendNoticeToAdmin, sendReferralReward } from '../mail/notifications';
 import { hitRateLimit, RATE_RULES } from '../lib/rate-limit';
@@ -113,10 +113,13 @@ export async function createPaymentNotice(proId: string, input: PaymentNoticeReq
   const price = await requirePrice(sub.priceVersionId);
   const pkg = findPackage(price, input.months);
   if (!pkg) throw validationError({ months: 'Ese paquete no está disponible en tu plan' });
+  // Team plan: the package plus each additional professional for the same months.
+  const team = await getItem<{ seats: number }>(teamKey(proId), true);
+  const amountCop = teamPackageAmount(pkg, team?.seats ?? 0, price.extraProfessionalCop);
 
   const at = now.toISOString();
   const notice: Payment = {
-    id: newId(now), proId, method: input.method, status: 'pending', source: 'pro_notice', amountCop: pkg.amountCop,
+    id: newId(now), proId, method: input.method, status: 'pending', source: 'pro_notice', amountCop,
     months: pkg.months, paidAt: at, until: null, reference: input.reference ?? '', priceVersionId: price.id, createdAt: at,
   };
   try {

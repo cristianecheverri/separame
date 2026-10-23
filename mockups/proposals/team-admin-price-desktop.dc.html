@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Precios con valor por profesional — propuesta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 1520px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú de administración" style="flex: 1 1 220px; box-sizing: border-box; background: #15241D; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 12px 20px">
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px">sepárame<span style="color: #FFC93C">.</span></span>
+      <span style="font-size: 11px; font-weight: 700; background: #FFC93C; color: #15241D; padding: 3px 8px; border-radius: 999px">ADMIN</span>
+    </div>
+    <a href="../line-a/admin-overview.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Resumen</a>
+    <a href="../line-a/admin-subscriptions.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Suscripciones</a>
+    <a href="team-admin-requests-desktop.dc.html" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">
+      Equipos
+      <span style="min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #FFC93C; color: #15241D; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center"><span aria-hidden="true">2</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">2 solicitudes por revisar</span></span>
+    </a>
+    <a href="team-admin-price-desktop.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; background: #FFC93C; color: #15241D">Precios</a>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 4px">
+      <a href="../line-a/pro-agenda-day.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; color: #FFFFFF">Mi agenda</a>
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.8px">Precios</h1>
+        <div style="font-size: 15px; color: #56645D">Cada versión es inmutable. Cambiar un precio es crear una versión nueva.</div>
+      </div>
+      <a href="#new-version" style="height: 46px; padding: 0 20px; box-sizing: border-box; border-radius: 999px; background: #0B6E4F; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; color: #FFFFFF; text-decoration: none">+ Nueva versión</a>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 8px 8px 12px">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; color: #56645D; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px">
+              <th style="padding: 14px 14px 10px; font-weight: 700">Versión</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Precio</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Paquetes</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Profesional adicional</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Estado</th>
+              <th style="padding: 14px 10px 10px; font-weight: 700">Suscripciones</th>
+              <th style="padding: 14px 14px 10px; font-weight: 700">Creada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{versions}}" as="v" hint-placeholder-count="4">
+              <tr style="border-top: 1px solid #E3E8E5">
+                <td style="padding: 12px 14px"><div style="font-weight: 700">{{v.name}}</div><div style="font-size: 12px; color: #56645D">{{v.code}}</div></td>
+                <td style="padding: 12px 10px; white-space: nowrap; font-weight: 700">{{v.amount}}</td>
+                <td style="padding: 12px 10px; color: #3E4C45">{{v.packs}}</td>
+                <td style="padding: 12px 10px; white-space: nowrap; font-weight: 700">{{v.perPro}}</td>
+                <td style="padding: 12px 10px"><span style="{{v.tagStyle}}">{{v.tag}}</span></td>
+                <td style="padding: 12px 10px">{{v.subs}}</td>
+                <td style="padding: 12px 14px; white-space: nowrap; color: #3E4C45">{{v.created}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start">
+      <section id="new-version" aria-labelledby="new-version-title" style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 id="new-version-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Nueva versión</h2>
+          <div style="font-size: 14px; color: #56645D">Una vez creada no se puede editar: para cambiar un valor, crea otra versión.</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="nv-name" style="font-size: 14px; font-weight: 600">Nombre</label>
+            <input id="nv-name" type="text" placeholder="Nombre que ve el profesional" style="height: 48px; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="nv-code" style="font-size: 14px; font-weight: 600">Código</label>
+            <input id="nv-code" type="text" placeholder="Identificador único, en minúsculas" style="height: 48px; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="nv-monthly" style="font-size: 14px; font-weight: 600">Precio mensual (COP)</label>
+          <div style="display: flex; gap: 8px; max-width: 320px">
+            <div style="height: 48px; border-radius: 14px; background: #F3F6F4; padding: 0 12px; display: flex; align-items: center; font-weight: 600; font-size: 14px">COP $</div>
+            <input id="nv-monthly" type="text" inputmode="numeric" placeholder="Valor de un mes" style="height: 48px; flex-grow: 1; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+        </div>
+        <div role="group" aria-labelledby="nv-packs-label" style="display: flex; flex-direction: column; gap: 8px">
+          <div id="nv-packs-label" style="font-size: 14px; font-weight: 600">Paquetes</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="nv-pack-3" style="font-size: 13px; color: #3E4C45">3 meses</label>
+              <input id="nv-pack-3" type="text" inputmode="numeric" placeholder="Valor del paquete" style="height: 48px; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="nv-pack-6" style="font-size: 13px; color: #3E4C45">6 meses</label>
+              <input id="nv-pack-6" type="text" inputmode="numeric" placeholder="Valor del paquete" style="height: 48px; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <label for="nv-pack-12" style="font-size: 13px; color: #3E4C45">12 meses</label>
+              <input id="nv-pack-12" type="text" inputmode="numeric" placeholder="Valor del paquete" style="height: 48px; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+            </div>
+          </div>
+        </div>
+        <div style="background: #EAF5F0; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <label for="nv-per-pro" style="font-size: 14px; font-weight: 600">Valor por profesional adicional (al mes, COP)</label>
+            <span style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF">Nuevo</span>
+          </div>
+          <div style="display: flex; gap: 8px; max-width: 320px">
+            <div style="height: 48px; border-radius: 14px; background: #FFFFFF; padding: 0 12px; display: flex; align-items: center; font-weight: 600; font-size: 14px">COP $</div>
+            <input id="nv-per-pro" type="text" inputmode="numeric" placeholder="Valor de un profesional al mes" aria-describedby="nv-per-pro-help" style="height: 48px; flex-grow: 1; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <div id="nv-per-pro-help" style="font-size: 13px; color: #3E4C45; line-height: 1.45">Solo para cuentas con plan para equipos. Se congela con la versión, igual que el precio del plan.</div>
+        </div>
+        <sc-if value="{{created}}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="background: #EAF5F0; border-radius: 16px; padding: 12px 14px; font-size: 14px; font-weight: 600">Versión creada como borrador.</div>
+        </sc-if>
+        <button onClick="{{create}}" style="align-self: flex-start; height: 52px; padding: 0 28px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Crear versión</button>
+      </section>
+
+      <section style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Así se cobra un equipo</h2>
+        <div style="font-size: 14px; color: #3E4C45; line-height: 1.45">Ejemplo: Consultorio Sonríe, en Fundador, con 2 profesionales adicionales aprobados.</div>
+        <div style="background: #F3F6F4; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 8px"><span style="color: #3E4C45">Plan Fundador</span><strong>$5.000 al mes</strong></div>
+          <div style="display: flex; justify-content: space-between; gap: 8px"><span style="color: #3E4C45">2 profesionales adicionales</span><strong>2 × [VALOR]</strong></div>
+          <div style="border-top: 1px solid #CFDAD4; padding-top: 8px; display: flex; justify-content: space-between; gap: 8px"><span style="font-weight: 700">Total al mes</span><strong>[TOTAL]</strong></div>
+        </div>
+        <div style="font-size: 13px; color: #56645D; line-height: 1.45">Las cuentas sin equipo no ven este valor ni pagan por él.</div>
+      </section>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start">
+      <section style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Migrar profesionales a otro precio</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 14px; font-weight: 600">¿A quiénes?</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{targets}}" as="t" hint-placeholder-count="3">
+              <button onClick="{{t.pick}}" aria-pressed="{{t.selected}}" style="{{t.style}}">{{t.label}}</button>
+            </sc-for>
+          </div>
+          <div style="font-size: 13px; color: #56645D">{{targetHelp}}</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Desde</span>
+            <button style="height: 48px; padding: 0 14px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; color: #15241D; text-align: left; cursor: pointer">Mensual · $5.900</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Hacia</span>
+            <button style="height: 48px; padding: 0 14px; border-radius: 14px; border: 2px solid #0B6E4F; background: #EAF5F0; font: inherit; font-size: 15px; font-weight: 700; color: #15241D; text-align: left; cursor: pointer">Estándar · [PRECIO]</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="mig-date" style="font-size: 14px; font-weight: 600">Fecha efectiva</label>
+          <input id="mig-date" type="text" placeholder="Elige la fecha" style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          <div style="font-size: 13px; color: #56645D">Mínimo 30 días después del aviso. Si avisas hoy, la primera fecha posible es el 19 de noviembre. El cambio aplica en la siguiente renovación.</div>
+        </div>
+        <button style="height: 52px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">Programar y enviar aviso a {{targetCount}}</button>
+      </section>
+
+      <div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #56645D">Vista previa del aviso</div>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.5">
+            <strong style="font-size: 15px">Tu precio en Sepárame cambia el 1 de diciembre</strong>
+            <span style="color: #3E4C45">Hola, Felipe. Desde tu renovación del 1 de diciembre, tu plan pasa de $5.900 a [PRECIO] al mes. Hasta esa fecha todo sigue igual. Si tienes dudas, responde este correo.</span>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Programadas</h2>
+          <div style="background: #FFF4D1; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-weight: 700; font-size: 14px">Tutorías (3) · Mensual → Estándar</span>
+            <span style="font-size: 13px; color: #3E4C45">Aviso enviado 31 oct. · efectiva 1 dic.</span>
+          </div>
+          <div style="font-size: 13px; color: #56645D">Los precios fundador no se migran salvo que tú lo decidas.</div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ target: 0, created: false }, this.state || {});
+    const tag = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:2px solid;';
+    const targets = [
+      { label: 'Un grupo', help: 'Grupo «Tutorías»: 3 profesionales en Mensual.', count: '3 profesionales' },
+      { label: 'Profesionales elegidos', help: 'Selecciónalos desde la lista de Suscripciones.', count: 'los elegidos' },
+      { label: 'Todos los de una versión', help: 'Las 4 suscripciones que hoy están en Mensual.', count: '4 profesionales' }
+    ];
+    return {
+      versions: [
+        { name: 'Fundador', code: 'fundador-v1', amount: '$5.000 / mes', packs: '3 m $15.000 · 6 m $30.000 · 12 m $50.000', perPro: '[VALOR] / mes', tag: 'Activa', tagStyle: tag + 'background:#0B6E4F;color:#FFFFFF;', subs: '38', created: '1 oct. 2026' },
+        { name: 'Mensual', code: 'mensual-v1', amount: '$5.900 / mes', packs: 'Solo 1 mes', perPro: '[VALOR] / mes', tag: 'Activa', tagStyle: tag + 'background:#0B6E4F;color:#FFFFFF;', subs: '4', created: '1 oct. 2026' },
+        { name: 'Estándar', code: 'estandar-v1', amount: '[PRECIO] / mes', packs: '[POR DEFINIR]', perPro: '[POR DEFINIR]', tag: 'Borrador', tagStyle: tag + 'background:#F3F6F4;color:#3E4C45;', subs: '0', created: '18 oct. 2026' }
+      ],
+      targets: targets.map((t, i) => ({
+        label: t.label, selected: st.target === i,
+        pick: () => this.setState({ target: i }),
+        style: chip + (st.target === i ? 'background:#FFC93C;border-color:#FFC93C;color:#15241D;' : 'background:#FFFFFF;border-color:#E3E8E5;color:#15241D;')
+      })),
+      created: st.created,
+      create: () => this.setState({ created: true }),
+      targetHelp: targets[st.target].help,
+      targetCount: targets[st.target].count
+    };
+  }
+}
+</script>
+</body>
+</html>

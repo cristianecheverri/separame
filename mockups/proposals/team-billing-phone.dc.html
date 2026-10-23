@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Suscripción con equipo — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 1720px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column">
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center; justify-content: space-between">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+    <button aria-label="Abrir menú" style="width: 44px; height: 44px; margin-right: -8px; border-radius: 999px; border: 0; background: transparent; color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+  </header>
+
+  <main style="box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 22px">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Suscripción</h1>
+
+    <div role="status" style="background: #EAF5F0; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 2px">
+      <span style="font-weight: 800; font-size: 16px">Vigente hasta el 25 de febrero de 2027</span>
+      <span style="font-size: 14px; color: #3E4C45; line-height: 1.45">Consultorio Sonríe · 3 profesionales</span>
+    </div>
+
+    <section aria-labelledby="team-plan-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <h2 id="team-plan-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.25">Tu plan: Fundador + 2 profesionales adicionales</h2>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+        <div style="display: flex; justify-content: space-between; gap: 12px"><span style="color: #3E4C45">Plan Fundador</span><strong style="white-space: nowrap">$5.000 al mes</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px"><span style="color: #3E4C45">2 profesionales adicionales</span><strong style="white-space: nowrap">2 × [VALOR] al mes</strong></div>
+        <div style="border-top: 1px solid #E3E8E5; padding-top: 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+          <span style="font-weight: 700; font-size: 15px">Total al mes</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">[TOTAL]</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px">
+        <span style="font-size: 13px; color: #56645D">Usas 2 de 2 cupos adicionales</span>
+        <a href="team-request-form-phone.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; text-decoration: none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Solicitar más cupos
+        </a>
+      </div>
+    </section>
+
+    <section aria-labelledby="renew-title" style="display: flex; flex-direction: column; gap: 12px">
+      <h2 id="renew-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">Renueva tu plan</h2>
+      <div role="group" aria-label="Paquetes" style="display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+          <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">
+            <span style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0">
+              <span style="{{p.tagStyle}}">{{p.tag}}</span>
+              <span style="font-weight: 700; font-size: 16px">{{p.name}}</span>
+              <span style="font-size: 13px; color: #3E4C45">{{p.breakdown}}</span>
+            </span>
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.1; letter-spacing: -0.6px; flex-shrink: 0">{{p.total}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-label="Pago" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #56645D">Pagas hoy</span>
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.1; letter-spacing: -0.8px">[TOTAL]</span>
+        <span style="font-size: 14px; color: #3E4C45">Todo el equipo queda activo hasta el <strong style="color: #15241D">{{selUntil}}</strong></span>
+      </div>
+
+      <h3 style="margin: 0; font-weight: 700; font-size: 16px">Cómo pagar</h3>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{instructions}}" as="m" hint-placeholder-count="2">
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 10px 6px 10px 14px; display: flex; align-items: center; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+              <span style="font-size: 13px; font-weight: 700; color: #56645D">{{m.label}}</span>
+              <span style="font-weight: 700; font-size: 16px">{{m.detail}}</span>
+            </div>
+            <button aria-label="{{m.aria}}" style="height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; color: #0B6E4F; cursor: pointer; flex-shrink: 0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg>
+              Copiar
+            </button>
+          </div>
+        </sc-for>
+        <div style="font-size: 14px; color: #3E4C45">A nombre de <strong style="color: #15241D">Sepárame</strong></div>
+      </div>
+
+      <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="background: #EAF5F0; border-radius: 18px; padding: 14px; display: flex; gap: 12px; align-items: flex-start">
+          <span style="width: 32px; height: 32px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+          <div style="font-size: 15px; line-height: 1.45"><strong>Recibimos tu aviso.</strong> Te confirmamos por correo, normalmente el mismo día.</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{showForm}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div role="group" aria-labelledby="team-notice-method" style="display: flex; flex-direction: column; gap: 8px">
+            <div id="team-notice-method" style="font-size: 14px; font-weight: 600">¿Cómo pagaste?</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{methods}}" as="c" hint-placeholder-count="2">
+                <button onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="{{c.style}}">{{c.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="team-notice-ref" style="font-size: 14px; font-weight: 600">Referencia o comprobante (opcional)</label>
+            <input id="team-notice-ref" type="text" maxlength="200" placeholder="Número de comprobante o referencia" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 15px; color: #15241D">
+          </div>
+          <button onClick="{{send}}" style="height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 10px; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+            Ya pagué · avisar
+          </button>
+          <div style="font-size: 13px; color: #56645D; line-height: 1.5">Paga el valor exacto del paquete y avísanos aquí. Revisamos el pago y renovamos tu plan, normalmente el mismo día.</div>
+        </div>
+      </sc-if>
+    </section>
+
+    <div style="background: #FFF4D1; border-radius: 20px; padding: 16px; display: flex; gap: 12px; align-items: flex-start">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+      <div style="font-size: 14px; line-height: 1.5">Un solo vencimiento para todo el equipo: si el plan vence, ningún profesional recibe reservas nuevas. Las citas ya agendadas siguen igual.</div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ plan: 2, method: 0, sent: false }, this.state || {});
+    const plans = [
+      { name: '3 meses', breakdown: 'Plan $15.000 + equipo [VALOR]', tag: 'Precio fundador', until: '25 de mayo de 2027' },
+      { name: '6 meses', breakdown: 'Plan $30.000 + equipo [VALOR]', tag: 'Precio fundador', until: '25 de agosto de 2027' },
+      { name: '12 meses', breakdown: 'Plan $50.000 + equipo [VALOR]', tag: 'El más conveniente', until: '25 de febrero de 2028' }
+    ];
+    const card = 'width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;border-radius:22px;font:inherit;color:#15241D;text-align:left;cursor:pointer;border:2px solid;box-sizing:border-box;';
+    const tag = 'font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:2px;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;cursor:pointer;';
+    const methodLabels = ['Nequi', 'Transferencia'];
+    return {
+      plans: plans.map((p, i) => {
+        const selected = st.plan === i;
+        return {
+          name: p.name, breakdown: p.breakdown, tag: p.tag, total: '[TOTAL]', selected,
+          pick: () => this.setState({ plan: i, sent: false }),
+          style: card + (selected ? 'background:#EAF5F0;border-color:#0B6E4F;' : 'background:#FFFFFF;border-color:#FFFFFF;'),
+          tagStyle: tag + (i === 2 ? 'background:#0B6E4F;color:#FFFFFF;' : 'background:#F3F6F4;color:#3E4C45;')
+        };
+      }),
+      selUntil: plans[st.plan].until,
+      instructions: [
+        { label: 'Nequi', detail: '300 000 0000' },
+        { label: 'Bancolombia ahorros', detail: '123-456789-01' }
+      ].map((m) => Object.assign(m, { aria: 'Copiar ' + m.label + ': ' + m.detail })),
+      methods: methodLabels.map((label, i) => {
+        const selected = st.method === i;
+        return { label, selected, pick: () => this.setState({ method: i }), style: chip + (selected ? 'background:#FFC93C;border-color:#FFC93C;' : 'background:#FFFFFF;border-color:#E3E8E5;') };
+      }),
+      sent: st.sent,
+      showForm: !st.sent,
+      send: () => this.setState({ sent: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

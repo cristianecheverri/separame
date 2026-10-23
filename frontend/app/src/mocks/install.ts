@@ -3,7 +3,8 @@
  * Cognito, clock pinned to the mockups' day. Query switches (remembered for
  * the tab): ?as=admin | ?as=pro | ?as=guest, ?state=trial|active|grace|expired|onboarding,
  * ?billing=none|pending|rejected, ?install=android|ios|ios-other|installed|none,
- * ?delay=<ms>.
+ * ?team=none|pending|rejected|approved|seats (team plan: Consultorio Sonríe with Julián
+ * and Sara; «approved» uses its 2 of 2 seats, «seats» has one free), ?delay=<ms>.
  */
 import { setTransport } from '../lib/api';
 import { auth } from '../lib/auth';
@@ -12,7 +13,7 @@ import type { AuthClient } from '../lib/authClient';
 import { deviceLabel, push, type PushAdapter } from '../lib/push';
 import { installStore, type BeforeInstallPromptEvent, type InstallVariant } from '../lib/install';
 import { session } from '../lib/storage';
-import { MOCK_NOW, type BillingMockState, type MockState } from './fixtures';
+import { MOCK_NOW, type BillingMockState, type MockState, type TeamMockState } from './fixtures';
 import { mockTransport, resetMockDb } from './mockApi';
 
 const STATES: MockState[] = ['trial', 'active', 'grace', 'expired', 'onboarding'];
@@ -101,9 +102,10 @@ export function installMocks(): void {
   const as = param('as', ['pro', 'admin', 'guest'], 'pro');
   const state = param('state', STATES, 'trial') as MockState;
   const billing = param('billing', ['none', 'pending', 'rejected'], 'none') as BillingMockState;
+  const team = param('team', ['none', 'pending', 'rejected', 'approved', 'seats'], 'none') as TeamMockState;
   const delay = Number(new URL(window.location.href).searchParams.get('delay') ?? 150);
   pinClock(MOCK_NOW);
-  resetMockDb({ state, isAdmin: as === 'admin', billing });
+  resetMockDb({ state, isAdmin: as === 'admin', billing, team });
   setTransport((req) => mockTransport(req, Number.isFinite(delay) ? delay : 150));
   push.set(mockPushAdapter());
   const installParam = param('install', ['android', 'ios', 'ios-other', 'installed', 'none', 'real'], 'real');
@@ -112,7 +114,7 @@ export function installMocks(): void {
     installStore.override(variant, variant === 'prompt' ? fakeInstallPrompt() : undefined);
   }
   void auth.init(mockAuthClient(as === 'guest' ? null : 'laura@consultoriolaura.co'));
-  console.info(`[sepárame] mock mode · as=${as} · state=${state} · contraseña «incorrecta» = error, código 000000 = incorrecto`);
+  console.info(`[sepárame] mock mode · as=${as} · state=${state} · team=${team} · contraseña «incorrecta» = error, código 000000 = incorrecto`);
 }
 
 /** Fake PushManager for mock mode: subscribes instantly, no browser prompt. */

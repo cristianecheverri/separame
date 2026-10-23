@@ -9,6 +9,7 @@ import { log } from '../lib/logger';
 import { proPk, PUSH_PREFIX, pushKey } from '../lib/keys';
 import { getOptionalParam } from '../lib/ssm';
 import { sha256Hex } from '../lib/tokens';
+import { ownerIdOf } from './subscriptions';
 
 /**
  * Web push to the professional's devices (PWA). Subscriptions live in
@@ -103,7 +104,9 @@ export async function unsubscribe(proId: string, endpoint: string): Promise<void
 export async function pushToPro(proId: string, payload: PushPayload, now: Date = new Date()): Promise<number> {
   const keys = await vapidKeys();
   if (!keys) return 0;
-  const devices = await listDevices(proId);
+  // Team members have no user (no devices): their notices go to the owner's devices.
+  const target = (await ownerIdOf(proId)) ?? proId;
+  const devices = await listDevices(target);
   let delivered = 0;
   for (const device of devices) {
     const hash = endpointHash(device.endpoint);
@@ -114,13 +117,13 @@ export async function pushToPro(proId: string, payload: PushPayload, now: Date =
       });
       delivered++;
       await ddb.send(new UpdateCommand({
-        TableName: table(), Key: pushKey(proId, hash), UpdateExpression: 'SET lastSuccessAt = :at',
+        TableName: table(), Key: pushKey(target, hash), UpdateExpression: 'SET lastSuccessAt = :at',
         ConditionExpression: 'attribute_exists(PK)', ExpressionAttributeValues: { ':at': now.toISOString() },
       })).catch(() => undefined);
     } catch (err) {
       const status = err instanceof WebPushError ? err.statusCode : (err as { statusCode?: number }).statusCode;
       if (status === 404 || status === 410) {
-        await ddb.send(new DeleteCommand({ TableName: table(), Key: pushKey(proId, hash) }));
+        await ddb.send(new DeleteCommand({ TableName: table(), Key: pushKey(target, hash) }));
         log.info('push subscription expired; removed', { proId });
       } else {
         log.warn('push delivery failed', { proId, status, err });

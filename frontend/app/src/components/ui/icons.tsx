@@ -116,6 +116,13 @@ export const ShareIcon = make(
     <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
   </>,
 );
+export const InfoIcon = make(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 8h.01" />
+  </>,
+);
+export const MinusIcon = make(<path d="M5 12h14" />, { strokeWidth: 2.4, join: false });
 export const ClockIcon = make(
   <>
     <circle cx="12" cy="12" r="9" />

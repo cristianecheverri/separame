@@ -1,5 +1,6 @@
 /** Plan cards for the billing screen, derived from the pro's price version (never hardcoded). */
 import { formatCop } from '@shared/format';
+import { teamPackageAmount } from '@shared/subscription';
 import type { PriceVersion } from '@shared/types';
 
 export interface PlanOption {
@@ -9,6 +10,8 @@ export interface PlanOption {
   tag: string;
   best: boolean;
   monthlyText: string;
+  /** Team plan: the package alone and the additional professionals' part (`amountCop` = both). */
+  team?: { planCop: number; teamCop: number };
 }
 
 export function buildPlans(price: PriceVersion): PlanOption[] {
@@ -36,6 +39,18 @@ export function buildPlans(price: PriceVersion): PlanOption[] {
       if (free >= 1) monthlyText = `${free} ${free === 1 ? 'mes gratis' : 'meses gratis'} · ${monthly}`;
     }
     return { ...p, name: `${p.months} meses`, tag: best ? 'El más conveniente' : priceTag, best, monthlyText };
+  });
+}
+
+/**
+ * Team plan: the same packages with `seats` additional professionals added
+ * (`teamPackageAmount`, the amount the server records for a «Ya pagué» notice).
+ */
+export function withTeamSeats(plans: PlanOption[], seats: number, extraProfessionalCop: number | null): PlanOption[] {
+  if (seats <= 0) return plans;
+  return plans.map((p) => {
+    const amountCop = teamPackageAmount(p, seats, extraProfessionalCop);
+    return { ...p, amountCop, team: { planCop: p.amountCop, teamCop: amountCop - p.amountCop } };
   });
 }
 

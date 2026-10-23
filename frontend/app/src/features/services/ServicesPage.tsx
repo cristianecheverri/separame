@@ -17,7 +17,8 @@ import { api, errorMessage } from '../../lib/api';
 import { formatCopInput, parseCopInput } from '../../lib/format';
 import { listPriceText, PriceDisplayField } from './PriceDisplayField';
 import { usePro } from '../../lib/pro';
-import { keys, useServices } from '../../lib/queries';
+import { keys, useActing, useServices } from '../../lib/queries';
+import { ProSelector } from '../team/ProSelector';
 
 import { durationProblem } from './durations';
 import { DurationPicker } from './DurationPicker';
@@ -42,34 +43,41 @@ const toForm = (s: Service): FormState => ({
 
 function useServiceMutations() {
   const qc = useQueryClient();
+  const { proId, header } = useActing();
+  const acting = { actingProId: header };
+  const listKey = keys.services(proId);
   const save = useMutation({
     mutationFn: ({ id, body }: { id: string | null; body: UpsertServiceRequest }) =>
-      id ? api.put<ServiceResponse>(apiPaths.service(id), body) : api.post<ServiceResponse>(apiPaths.services(), body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.services }),
+      id ? api.put<ServiceResponse>(apiPaths.service(id), body, acting) : api.post<ServiceResponse>(apiPaths.services(), body, acting),
+    onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
   });
   const remove = useMutation({
-    mutationFn: (id: string) => api.del(apiPaths.service(id)),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.services }),
+    mutationFn: (id: string) => api.del(apiPaths.service(id), acting),
+    onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
   });
   const toggle = useMutation({
     mutationFn: (service: Service) =>
       api.put<ServiceResponse>(apiPaths.service(service.id), {
         name: service.name, durationMin: service.durationMin, priceCop: service.priceCop, priceDisplay: priceDisplayOf(service), description: service.description, visible: !service.visible,
-      }),
+      }, acting),
     onMutate: async (service) => {
-      await qc.cancelQueries({ queryKey: keys.services });
-      const previous = qc.getQueryData<ServicesResponse>(keys.services);
-      if (previous) qc.setQueryData<ServicesResponse>(keys.services, { services: previous.services.map((s) => (s.id === service.id ? { ...s, visible: !s.visible } : s)) });
+      await qc.cancelQueries({ queryKey: listKey });
+      const previous = qc.getQueryData<ServicesResponse>(listKey);
+      if (previous) qc.setQueryData<ServicesResponse>(listKey, { services: previous.services.map((s) => (s.id === service.id ? { ...s, visible: !s.visible } : s)) });
       return { previous };
     },
-    onError: (_e, _s, ctx) => ctx?.previous && qc.setQueryData(keys.services, ctx.previous),
-    onSettled: () => qc.invalidateQueries({ queryKey: keys.services }),
+    onError: (_e, _s, ctx) => ctx?.previous && qc.setQueryData(listKey, ctx.previous),
+    onSettled: () => qc.invalidateQueries({ queryKey: listKey }),
   });
   return { save, remove, toggle };
 }
 
-/** pro-services */
+/** pro-services; keyed by professional (team plan) so the selection starts over for each one. */
 export function ServicesPage() {
+  return <ServicesView key={useActing().proId} />;
+}
+
+function ServicesView() {
   const { readOnly } = usePro();
   const services = useServices();
   const toast = useToast();
@@ -102,6 +110,7 @@ export function ServicesPage() {
           Nuevo servicio
         </button>
       </div>
+      <ProSelector variant="inline" allowAll={false} className="hidden lg:flex" />
 
       <div className="flex flex-wrap gap-6 items-start">
         <section aria-label="Lista de servicios" className="flex-[999_1_420px] min-w-0 flex flex-col gap-3">

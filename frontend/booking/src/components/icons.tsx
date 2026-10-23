@@ -85,6 +85,14 @@ export const Alert = (p: IconProps) => (
     <path d="M12 7.5v5.5M12 16.5v.01" />
   </Svg>
 );
+export const Users = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+    <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8" />
+    <path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8" />
+  </Svg>
+);
 export const Download = (p: IconProps) => <Svg {...p}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Svg>;
 
 /** Brand marks for "Otros calendarios" (filled, 48×48 viewBox). */

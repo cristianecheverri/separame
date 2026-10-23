@@ -9,6 +9,7 @@ import { priceMigrationNoticeEmail } from './price-migration-notice';
 import { proNewBookingEmail } from './pro-new-booking';
 import { reminderEmail } from './reminder-24h';
 import { renewalNoticeEmail } from './renewal-notice';
+import { teamApprovedEmail } from './team';
 
 const pro = { name: 'Dra. Laura Pérez', title: 'Odontóloga', neighborhood: 'El Poblado', address: 'Cra. 43A #1-50, consultorio 302', city: 'Medellín', slug: 'dra-laura-perez' };
 const data: BookingEmailData = {
@@ -40,7 +41,7 @@ describe('booking confirmed (mockup copy)', () => {
     expect(email.html).toContain('Google Calendar');
     expect(email.html).toContain('Outlook');
     expect(email.html).toContain('¿Usas otro calendario? Abre el archivo .ics adjunto.');
-    expect(email.html).toContain('Te mandamos un recordatorio el <strong>miércoles 21 a las 10:00 a. m.</strong>, un día antes.');
+    expect(email.html).toContain('Te mandamos un recordatorio el <strong>miércoles 21 a las 10:00\u00a0a.\u00a0m.</strong>, un día antes.');
     expect(email.html).toContain('href="https://separame.app/c/tok.sig"');
     expect(email.html).toContain('Cancelar o reprogramar');
     expect(email.html).toContain('separaste una cita en separame.app/dra-laura-perez');
@@ -68,8 +69,27 @@ describe('other templates', () => {
   it('booking changed shows old and new dates', () => {
     const e = bookingChangedEmail({ ...data, previousStart: '2026-10-21T15:00:00.000Z' });
     expect(e.subject).toBe('Tu cita cambió · jue 22 oct., 10:00 a. m. · Dra. Laura Pérez');
-    expect(e.html).toContain('Miércoles 21 de octubre, 10:00 a. m.');
+    // The time never wraps inside "a. m." (non-breaking spaces).
+    expect(e.html).toContain('Miércoles 21 de octubre, 10:00\u00a0a.\u00a0m.');
     expect(e.html).toContain('line-through');
+    expect(e.html).not.toContain('a. m..');
+  });
+
+  it('a sentence ending in a time gets one period, not two', () => {
+    const pending = reminderEmail({ ...data, confirmUrl: 'x', clientConfirmation: 'pending' });
+    expect(pending.text).toContain('Tu cita es mañana a las 10:00 a. m. Cuéntanos');
+    expect(pending.text).not.toContain('a. m..');
+  });
+
+  it('team approved: greets without the title and shows the link without protocol', () => {
+    const e = teamApprovedEmail({
+      siteUrl: data.siteUrl, name: 'Ing. Cristian Echeverri', teamName: 'Consultorio Prueba',
+      teamUrl: 'https://separame.app/consultorio-prueba', seats: 2, extraProfessionalCop: 3900,
+    });
+    expect(e.text).toContain('Hola, Cristian. Aprobamos tu solicitud con 2 profesionales adicionales.');
+    expect(e.html).toContain('separame.app/consultorio-prueba');
+    expect(e.html).not.toContain('https://separame.app/consultorio-prueba</td>');
+    expect(e.html).toContain('padding:0 24px');
   });
 
   it('cancellation variants', () => {
@@ -101,6 +121,16 @@ describe('other templates', () => {
     expect(n.html).toContain('300 123 4567');
     expect(n.html).toContain('$60.000');
     expect(n.text).toContain('Celular');
+  });
+
+  it('a team member\'s appointment tells the owner whose agenda it is', () => {
+    const n = proNewBookingEmail({
+      siteUrl: data.siteUrl, pro: { ...pro, name: 'Dr. Julián Ortiz', agendaOf: 'Dr. Julián Ortiz' },
+      client: { name: 'Mariana Gómez', email: '', phone: '3001234567' }, serviceName: 'Valoración', durationMin: 30, priceCop: 60000, start: data.start,
+    });
+    expect(n.text).toContain('Agenda: Dr. Julián Ortiz');
+    expect(proNewBookingEmail({ siteUrl: data.siteUrl, pro, client: { name: 'X', email: '', phone: '' }, serviceName: 'V', durationMin: 30, priceCop: 1, start: data.start }).text)
+      .not.toContain('Agenda:');
   });
 
   it('"Nueva cita" leaves out contact rows the client did not give', () => {

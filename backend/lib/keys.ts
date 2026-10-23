@@ -51,6 +51,14 @@ export const remindPk = (remindAt: ISOInstant) => `REMIND#${bogotaDate(remindAt)
 export const remindPkForDate = (date: string) => `REMIND#${date}`;
 export const remindSk = (remindAt: ISOInstant, proId: string, apptId: string) => `${remindAt}#${proId}#${apptId}`;
 
+/** Team plan (docs/team-plan.md): the team and the latest request live on the owner's partition. */
+export const TEAM = 'TEAM';
+export const TEAM_REQUEST = 'TEAMREQ';
+export const teamKey = (ownerId: string) => ({ PK: proPk(ownerId), SK: TEAM });
+export const teamRequestKey = (ownerId: string) => ({ PK: proPk(ownerId), SK: TEAM_REQUEST });
+export const TEAMS_GSI1PK = 'TEAMS';
+export const TEAM_REQUESTS_GSI1PK = 'TEAMREQS';
+export const teamGsi1Sk = (createdAt: ISOInstant, ownerId: string) => `${createdAt}#${ownerId}`;
 export const slugKey = (slug: string) => ({ PK: `SLUG#${slug}`, SK: 'SLUG' });
 export const ownerKey = (cognitoSub: string) => ({ PK: `OWNER#${cognitoSub}`, SK: 'OWNER' });
 export const trialKey = (emailHash: string) => ({ PK: `TRIAL#${emailHash}`, SK: 'TRIAL' });

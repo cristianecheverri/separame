@@ -1,6 +1,7 @@
 /**
  * The /<slug> booking flow: Servicio → Día y hora → Tus datos → Confirmar
- * (3 steps when the professional offers a single service), then the
+ * (3 steps when the professional offers a single service; team pages start
+ * with «¿Con quién?», 5 steps — see lib/team.ts), then the
  * confirmation screen. Each step is a history entry (the browser back button
  * steps back), the half-filled form survives a reload (sessionStorage) and
  * `?service=<id>&date=<YYYY-MM-DD>` deep-links into "Día y hora" (the date is
@@ -8,8 +9,8 @@
  * free hours comes preselected). The email is optional here; the phone is not.
  * "Recordar mis datos" keeps name / phone / email in this browser for next time.
  */
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile, type PublicService } from '@shared/api';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile, type PublicService, type PublicTeam } from '@shared/api';
 import { normalizeEmail } from '@shared/contact';
 import { capitalize, formatDayLong, formatDayShort, formatDuration, formatInstantTime, formatServicePrice, MONTH_SHORT } from '@shared/format';
 import { bogotaDate } from '@shared/time';
@@ -22,6 +23,7 @@ import { newUuid } from '../lib/ids';
 import { formatPhone, fullAddress, joinDot, normalizePhone } from '../lib/text';
 import { useShortScreen } from '../lib/media';
 import { isDayBookable, resolveDay } from '../lib/slots';
+import { ANY_PRO, createTeamApi, profileForChoice, teamPageOf, type Offering, type TeamPage } from '../lib/team';
 import { timeLabel } from '../lib/when';
 import {
   CONTACT_FIELDS, contactBlockedLabel, fieldsFromApi, isContactFilled, validateContact, validateField,
@@ -32,12 +34,15 @@ import { FlowFooter, FlowHeader, FlowIntro, type SelectionChip, type StepId } fr
 import { FIELD_IDS, StepDetails } from './StepDetails';
 import { StepReview, type ReviewRow } from './StepReview';
 import { StepService } from './StepService';
-import { StepWhen, type AvailabilityState } from './StepWhen';
+import { StepWhen, type Assignee, type AvailabilityState } from './StepWhen';
+import { StepWho } from './StepWho';
 import { CaptchaHint, useCaptcha } from './useCaptcha';
 import { MissingScreen, Unavailable } from './Unavailable';
 import { WaitlistScreen } from './WaitlistScreen';
 
 interface Draft extends ContactForm {
+  /** Team pages: the member's slug or ANY_PRO («Cualquiera disponible»). */
+  who?: string | null;
   serviceId: string | null;
   day: string | null;
   start: string | null;
@@ -52,13 +57,14 @@ interface HistoryState {
   d: number;
 }
 
-const ALL_STEPS: StepId[] = ['service', 'when', 'details', 'review'];
+const ALL_STEPS: StepId[] = ['who', 'service', 'when', 'details', 'review'];
 const EMPTY_DRAFT: Draft = {
-  serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false, idempotencyKey: null, remember: false,
+  who: null, serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false, idempotencyKey: null, remember: false,
 };
 /** The phone is what the pro needs; the email only brings the confirmation and the reminder. */
 const CONTACT_RULES: ContactRules = { emailOptional: true };
 const BLOCKED_LABELS = {
+  who: 'Elige con quién',
   service: 'Elige un servicio',
   when: 'Elige día y hora',
   hour: 'Elige una hora',
@@ -71,6 +77,8 @@ type Screen = 'flow' | 'unavailable' | 'notfound' | 'error';
 interface Props {
   slug: string;
   initialProfile: PublicProfile | null;
+  /** Team plan: the consultorio page (first step «¿Con quién?»); `initialProfile` is then null. */
+  team?: PublicTeam | null;
   runtime: Runtime;
 }
 
@@ -78,12 +86,15 @@ function historyState(): Partial<HistoryState> {
   return (history.state as Partial<HistoryState> | null) ?? {};
 }
 
-function stepsFor(profile: PublicProfile | null): StepId[] {
-  return profile?.services.length === 1 ? ALL_STEPS.slice(1) : ALL_STEPS;
+/** Team pages always show the 5 steps (the service step too, even when the member offers one). */
+function stepsFor(profile: PublicProfile | null, teamPage: boolean): StepId[] {
+  if (teamPage) return ALL_STEPS;
+  return profile?.services.length === 1 ? ALL_STEPS.slice(2) : ALL_STEPS.slice(1);
 }
 
 /** Furthest step the draft supports (used when restoring after a reload or a back/forward jump). */
-function maxStep(draft: Draft): StepId {
+function maxStep(draft: Draft, steps: StepId[]): StepId {
+  if (steps[0] === 'who' && !draft.who) return 'who';
   if (!draft.serviceId) return 'service';
   if (!draft.start) return 'when';
   if (Object.keys(validateContact(draft, CONTACT_RULES)).length > 0) return 'details';
@@ -91,7 +102,7 @@ function maxStep(draft: Draft): StepId {
 }
 
 function clampStep(wanted: unknown, draft: Draft, steps: StepId[]): StepId {
-  const limit = ALL_STEPS.indexOf(maxStep(draft));
+  const limit = ALL_STEPS.indexOf(maxStep(draft, steps));
   const index = typeof wanted === 'string' ? ALL_STEPS.indexOf(wanted as StepId) : -1;
   const clamped = ALL_STEPS[Math.min(Math.max(index, 0), limit)];
   return steps.includes(clamped) ? clamped : steps[0];
@@ -112,15 +123,35 @@ function withSavedContact(draft: Draft): { draft: Draft; prefilled: boolean } {
   return saved ? { draft: { ...draft, ...saved, remember: true }, prefilled: true } : { draft, prefilled: false };
 }
 
+/** The only service of a profile comes preselected. */
+function withSingleService(draft: Draft, profile: PublicProfile | null): Draft {
+  return profile?.services.length === 1 && !draft.serviceId ? { ...draft, serviceId: profile.services[0].id } : draft;
+}
+
+/** A restored service the profile no longer offers is dropped (with its day and hour). */
+function withKnownService(draft: Draft, profile: PublicProfile | null): Draft {
+  const known = Boolean(draft.serviceId && profile?.services.some((s) => s.id === draft.serviceId));
+  return known ? draft : { ...draft, serviceId: null, day: null, start: null };
+}
+
+/** Team page: the restored «¿Con quién?» choice, if that member still exists, and its service. */
+function initialTeamDraft(restored: { draft: Draft; prefilled: boolean }, page: TeamPage): Boot {
+  let draft = restored.draft;
+  const profile = profileForChoice(page, draft.who);
+  if (!profile) draft = { ...draft, who: null };
+  draft = withSingleService(withKnownService(draft, profile), profile);
+  return { draft, deepLinked: false, date: null, prefilled: restored.prefilled };
+}
+
 /** Restored draft + saved contact + single-service preselection + `?service=&date=` deep link. */
-function initialDraft(key: string, profile: PublicProfile | null): Boot {
+function initialDraft(key: string, profile: PublicProfile | null, page: TeamPage | null = null): Boot {
   const restored = withSavedContact({ ...EMPTY_DRAFT, ...loadJson<Partial<Draft>>(key) });
+  if (page) return initialTeamDraft(restored, page);
   let draft = restored.draft;
   const boot = (deepLinked: boolean, date: string | null = null): Boot => ({ draft, deepLinked, date, prefilled: restored.prefilled });
   if (!profile) return boot(false);
   const known = (id: string | null) => Boolean(id && profile.services.some((s) => s.id === id));
-  if (!known(draft.serviceId)) draft = { ...draft, serviceId: null, day: null, start: null };
-  if (profile.services.length === 1 && !draft.serviceId) draft = { ...draft, serviceId: profile.services[0].id };
+  draft = withSingleService(withKnownService(draft, profile), profile);
 
   const params = new URLSearchParams(location.search);
   const serviceParam = params.get('service');
@@ -150,17 +181,24 @@ function serviceChip(service: PublicService): string {
   return joinDot(service.name, formatDuration(service.durationMin), formatServicePrice(service));
 }
 
-export function BookingApp({ slug, initialProfile, runtime }: Props) {
+/** Availability is cached per professional and service (team pages mix several professionals). */
+const availabilityKey = (slug: string, serviceId: string) => `${slug}|${serviceId}`;
+
+export function BookingApp({ slug, initialProfile, team = null, runtime }: Props) {
   const draftKey = `separame:booking:${slug}`;
   const doneKey = `${draftKey}:done`;
-  const { api, turnstileSiteKey } = runtime;
+  const { turnstileSiteKey } = runtime;
+  // Team page: «Cualquiera disponible» books through the team's slug, which this client fans out to the members.
+  const teamPage = useMemo(() => (team ? teamPageOf(team) : null), [team]);
+  const teamApi = useMemo(() => (teamPage ? createTeamApi(runtime.api, teamPage) : null), [teamPage, runtime.api]);
+  const api = teamApi ?? runtime.api;
 
-  const [boot] = useState(() => initialDraft(draftKey, initialProfile));
-  const [profile, setProfile] = useState(initialProfile);
+  const [boot] = useState(() => initialDraft(draftKey, initialProfile, teamPage));
+  const [fetchedProfile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>('flow');
   const [draft, setDraft] = useState<Draft>(boot.draft);
   const [step, setStep] = useState<StepId>(() =>
-    boot.deepLinked ? 'when' : clampStep(historyState().sep, boot.draft, stepsFor(initialProfile)),
+    boot.deepLinked ? 'when' : clampStep(historyState().sep, boot.draft, stepsFor(initialProfile, Boolean(teamPage))),
   );
   const [done, setDone] = useState<CreateBookingResponse | null>(() =>
     historyState().sep === 'done' ? loadJson<CreateBookingResponse>(doneKey) : null,
@@ -176,21 +214,29 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   const captcha = useCaptcha(turnstileSiteKey);
   const shortScreen = useShortScreen();
 
+  /** The profile the flow books with (on a team page: the picked member, «Cualquiera disponible» or none yet). */
+  const profile = teamPage ? profileForChoice(teamPage, draft.who) : fetchedProfile;
+  /** The band and header row: the consultorio on a team page. */
+  const shownProfile = teamPage?.header ?? fetchedProfile;
+  const steps = stepsFor(profile, Boolean(teamPage));
+
   const depthRef = useRef<number>(historyState().d ?? 0);
   const inflightRef = useRef(new Set<string>());
   const focusTitleRef = useRef(false);
   const scrollerRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const latestRef = useRef({ draft, done, profile });
+  const latestRef = useRef({ draft, done, steps });
 
-  const steps = stepsFor(profile);
   const stepIndex = Math.max(0, steps.indexOf(step));
   const apiSlug = profile?.slug ?? slug;
+  /** Analytics: the page's slug (the team's on a team page) and, there, whether the client chose someone. */
+  const trackSlug = team?.slug ?? apiSlug;
+  const proChoice = teamPage && draft.who ? { pro_choice: draft.who === ANY_PRO ? ('any' as const) : ('specific' as const) } : {};
   const service = profile?.services.find((s) => s.id === draft.serviceId) ?? null;
 
   // ── Profile (only fetched when the page wasn't generated with it embedded) ──
   useEffect(() => {
-    if (profile) return;
+    if (fetchedProfile || teamPage) return;
     let cancelled = false;
     api
       .getPro(slug)
@@ -201,7 +247,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         setProfile(res.profile);
         setDraft(next.draft);
         setPrefilled((was) => was || next.prefilled);
-        setStep(next.deepLinked ? 'when' : clampStep(historyState().sep, next.draft, stepsFor(res.profile)));
+        setStep(next.deepLinked ? 'when' : clampStep(historyState().sep, next.draft, stepsFor(res.profile, false)));
         if (!res.active) setScreen('unavailable');
       })
       .catch((error: unknown) => {
@@ -210,52 +256,57 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [api, slug, profile, draftKey]);
+  }, [api, slug, fetchedProfile, teamPage, draftKey]);
 
   const viewTrackedRef = useRef(false);
   useEffect(() => {
-    if (!profile) return;
+    if (!shownProfile) return;
     if (!viewTrackedRef.current) {
       viewTrackedRef.current = true;
-      track('booking_view', { pro_slug: profile.slug });
+      track('booking_view', { pro_slug: shownProfile.slug });
     }
     stripDeepLink();
-    if (!document.title) document.title = `${profile.name} · Separa tu cita · Sepárame`;
-  }, [profile]);
+    if (!document.title) document.title = `${shownProfile.name} · Separa tu cita · Sepárame`;
+  }, [shownProfile]);
 
   useEffect(() => {
-    if (screen === 'unavailable') track('booking_unavailable', { pro_slug: apiSlug });
-  }, [screen, apiSlug]);
+    if (screen === 'unavailable') track('booking_unavailable', { pro_slug: trackSlug });
+  }, [screen, trackSlug]);
 
-  // ── Availability: one call (14 days) per service; prefetch the first service ──
+  // ── Availability: one call (14 days) per professional and service; prefetch the first service ──
   const fetchAvailability = useCallback(
-    (serviceId: string) => {
-      if (inflightRef.current.has(serviceId)) return;
-      inflightRef.current.add(serviceId);
+    (fromSlug: string, serviceId: string) => {
+      const key = availabilityKey(fromSlug, serviceId);
+      if (inflightRef.current.has(key)) return;
+      inflightRef.current.add(key);
       api
-        .getAvailability(apiSlug, { serviceId, days: AVAILABILITY_DAYS })
+        .getAvailability(fromSlug, { serviceId, days: AVAILABILITY_DAYS })
         .then((data) => {
-          setAvailability((all) => ({ ...all, [serviceId]: { status: 'ready', data } }));
+          setAvailability((all) => ({ ...all, [key]: { status: 'ready', data } }));
           if (!data.active) setScreen('unavailable');
         })
         .catch((error: unknown) => {
-          setAvailability((all) => ({ ...all, [serviceId]: { status: 'error', message: errorMessage(error) } }));
+          setAvailability((all) => ({ ...all, [key]: { status: 'error', message: errorMessage(error) } }));
         })
-        .finally(() => inflightRef.current.delete(serviceId));
+        .finally(() => inflightRef.current.delete(key));
     },
-    [api, apiSlug],
+    [api],
   );
 
-  const wantedService = draft.serviceId ?? profile?.services[0]?.id ?? null;
+  // Before «¿Con quién?» is answered, the owner's first service tells whether the agenda is open.
+  const prefetchProfile = profile ?? team?.members[0] ?? null;
+  const wantedService = (profile ? draft.serviceId : null) ?? prefetchProfile?.services[0]?.id ?? null;
   useEffect(() => {
-    if (wantedService && !availability[wantedService]) fetchAvailability(wantedService);
-  }, [wantedService, availability, fetchAvailability]);
+    if (prefetchProfile && wantedService && !availability[availabilityKey(prefetchProfile.slug, wantedService)]) {
+      fetchAvailability(prefetchProfile.slug, wantedService);
+    }
+  }, [prefetchProfile, wantedService, availability, fetchAvailability]);
 
   // The first day with free hours comes preselected (or the deep-linked one, if it has free hours);
   // a closed / out-of-window day (stale draft) never stays selected. Resolved during render so the
   // hours paint together with the days; the effect then stores it in the draft.
-  const selectedServiceAvailability = draft.serviceId ? availability[draft.serviceId] : undefined;
-  const availableDays = selectedServiceAvailability?.status === 'ready' ? selectedServiceAvailability.data.days : null;
+  const serviceAvailability = service ? availability[availabilityKey(apiSlug, service.id)] : undefined;
+  const availableDays = serviceAvailability?.status === 'ready' ? serviceAvailability.data.days : null;
   const day = availableDays ? resolveDay(availableDays, draft.day, wantedDate) : draft.day;
   useEffect(() => {
     if (!availableDays) return;
@@ -270,15 +321,26 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   const refreshAvailability = (serviceId: string) =>
     setAvailability((all) => {
       const next = { ...all };
-      delete next[serviceId];
+      delete next[availabilityKey(apiSlug, serviceId)];
       return next;
     });
 
+  // ── Team page: who takes the appointment ──
+  /** «Cualquiera disponible»: the member the picked hour was assigned to (null until an hour is picked). */
+  const anyOffering: Offering | null =
+    draft.who === ANY_PRO && service && draft.start ? (teamApi?.assigneeOf(service.id, draft.start) ?? null) : null;
+  /** The professional of the appointment: the picked member, or the one assigned to the hour. */
+  const attendant: PublicProfile | null = teamPage ? (draft.who === ANY_PRO ? (anyOffering?.member ?? null) : profile) : null;
+  const assignee: Assignee | null =
+    anyOffering && team ? { name: anyOffering.member.name, initials: anyOffering.member.initials, index: anyOffering.index } : null;
+  /** What is booked: under «Cualquiera disponible», the assigned member's own service (their price). */
+  const bookedService = anyOffering?.service ?? service;
+
   // ── Persistence + history ──
   useEffect(() => {
-    latestRef.current = { draft, done, profile };
+    latestRef.current = { draft, done, steps };
     saveJson(draftKey, draft);
-  }, [draft, done, profile, draftKey]);
+  }, [draft, done, steps, draftKey]);
 
   useEffect(() => {
     if (historyState().sep === undefined) {
@@ -304,10 +366,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
         // Leaving the confirmation through "back" starts a fresh booking.
         setDone(null);
         removeKey(doneKey);
-        setStep(stepsFor(current.profile)[0]);
+        setStep(current.steps[0]);
         return;
       }
-      setStep(clampStep(state.sep, current.draft, stepsFor(current.profile)));
+      setStep(clampStep(state.sep, current.draft, current.steps));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -324,7 +386,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   }, [step, waitlistOpen]);
 
   const go = (next: StepId) => {
-    track('booking_step', { pro_slug: apiSlug, step: next });
+    track('booking_step', { pro_slug: trackSlug, step: next, ...proChoice });
     depthRef.current += 1;
     history.pushState({ sep: next, d: depthRef.current } satisfies HistoryState, '');
     focusTitleRef.current = true;
@@ -358,6 +420,13 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   };
 
   // ── Step actions ──
+  /** Another professional = other services: the service, day and hour start over. */
+  const pickWho = (who: string) =>
+    setDraft((d) => {
+      if (d.who === who || !teamPage) return d;
+      return withSingleService({ ...d, who, serviceId: null, day: null, start: null }, profileForChoice(teamPage, who));
+    });
+
   const pickService = (serviceId: string) =>
     setDraft((d) => (d.serviceId === serviceId ? d : { ...d, serviceId, day: null, start: null }));
 
@@ -382,11 +451,18 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
     setErrors((e) => ({ ...e, [field]: validateField(field, draft, CONTACT_RULES) }));
   };
 
-  const canNext = step === 'service' ? Boolean(service) : step === 'when' ? Boolean(draft.start) : isContactFilled(draft, CONTACT_RULES);
+  const canNext =
+    step === 'who'
+      ? Boolean(profile)
+      : step === 'service'
+        ? Boolean(service)
+        : step === 'when'
+          ? Boolean(draft.start)
+          : isContactFilled(draft, CONTACT_RULES);
   const dayHasHours = Boolean(availableDays?.some((d) => d.date === day && isDayBookable(d)));
   const blockedLabel =
-    step === 'service'
-      ? BLOCKED_LABELS.service
+    step === 'who' || step === 'service'
+      ? BLOCKED_LABELS[step]
       : step === 'when'
         ? BLOCKED_LABELS[dayHasHours ? 'hour' : 'when']
         : contactBlockedLabel(draft, CONTACT_RULES);
@@ -427,10 +503,10 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       history.replaceState({ sep: 'done', d: depthRef.current } satisfies HistoryState, '');
       setDraft(EMPTY_DRAFT);
       setDone(result);
-      track('booking_confirmed', { pro_slug: apiSlug, has_email: normalizeEmail(draft.email) ? 'yes' : 'no' });
+      track('booking_confirmed', { pro_slug: trackSlug, has_email: normalizeEmail(draft.email) ? 'yes' : 'no', ...proChoice });
     } catch (error) {
       const code = error instanceof ApiError ? error.code : 'internal';
-      track('booking_error', { pro_slug: apiSlug, reason: code });
+      track('booking_error', { pro_slug: trackSlug, reason: code });
       if (code === 'slot_taken') {
         setSlotNotice(SLOT_TAKEN_NOTICE);
         setDraft((d) => ({ ...d, start: null }));
@@ -478,12 +554,11 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       />
     );
   }
-  if (!profile) return <LoadingFrame />;
-  if (screen === 'unavailable') return <Unavailable profile={profile} />;
-  if (done) return <Confirmed result={done} icsUrl={api.icsUrl(done.manageToken)} />;
+  if (!shownProfile) return <LoadingFrame />;
+  if (screen === 'unavailable') return <Unavailable profile={shownProfile} />;
+  if (done) return <Confirmed result={done} icsUrl={api.icsUrl(done.manageToken)} agendaSlug={team?.slug} />;
 
-  const serviceAvailability = service ? availability[service.id] : undefined;
-  if (waitlistOpen && service && serviceAvailability?.status === 'ready') {
+  if (waitlistOpen && profile && service && serviceAvailability?.status === 'ready') {
     return (
       <WaitlistScreen
         api={api}
@@ -503,21 +578,23 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   }
 
   const singleService = steps.length === 3;
-  const chips: SelectionChip[] = [];
-  if (service && (step === 'when' || step === 'details')) {
-    const label = serviceChip(service);
-    chips.push(singleService ? { label, title: label } : { label, title: `Cambiar servicio: ${label}`, target: 'service' });
-  }
-  if (draft.start && step === 'details') {
-    const label = whenChip(draft.start);
-    chips.push({ label, title: `Cambiar día y hora: ${label}`, target: 'when' });
-  }
+  const chips = teamPage ? teamChips(step, draft, service, attendant) : soloChips(step, draft, service, singleService);
+  const teamName = team?.name ?? profile?.team?.name;
 
   const reviewRows: ReviewRow[] = [
+    ...(teamPage
+      ? [{
+          label: 'Te atiende',
+          value: attendant?.name ?? '—',
+          sub: attendant ? joinDot(attendant.title, draft.who === ANY_PRO && 'asignado por estar libre') : '',
+          step: 'who' as const,
+          changeLabel: 'Cambiar con quién',
+        }]
+      : []),
     {
       label: 'Servicio',
-      value: service ? joinDot(service.name, formatDuration(service.durationMin)) : '—',
-      sub: service ? formatServicePrice(service) : '',
+      value: bookedService ? joinDot(bookedService.name, formatDuration(bookedService.durationMin)) : '—',
+      sub: bookedService ? formatServicePrice(bookedService) : '',
       step: singleService ? null : 'service',
     },
     {
@@ -541,13 +618,23 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
   const titleAs = intro ? 'h2' : 'h1';
   const progress = { index: stepIndex, total: steps.length, step, chips, onChip: go };
   return (
-    <Frame label={`Separar cita con ${profile.name}`}>
-      {!intro && <FlowHeader {...progress} profile={profile} onBack={back} />}
+    <Frame label={`Separar cita con ${shownProfile.name}`}>
+      {!intro && <FlowHeader {...progress} profile={shownProfile} onBack={back} />}
       <main ref={scrollerRef} class="scroll-area">
-        {intro && <FlowIntro {...progress} profile={profile} />}
+        {intro && <FlowIntro {...progress} profile={shownProfile} members={team?.members} />}
         <div class={`min-h-full px-5 pb-4 flex flex-col fade-in short:pt-3 ${intro ? 'pt-[18px]' : 'pt-[22px]'}`} key={step}>
-          {step === 'service' && (
-            <StepService profile={profile} serviceId={draft.serviceId} onPick={pickService} titleRef={titleRef} titleAs={titleAs} />
+          {step === 'who' && team && (
+            <StepWho team={team} who={draft.who ?? null} onPick={pickWho} titleRef={titleRef} titleAs={titleAs} />
+          )}
+          {step === 'service' && profile && (
+            <StepService
+              profile={profile}
+              serviceId={draft.serviceId}
+              onPick={pickService}
+              titleRef={titleRef}
+              titleAs={titleAs}
+              title={teamPage ? '¿Qué servicio necesitas?' : undefined}
+            />
           )}
           {step === 'when' && (
             <StepWhen
@@ -562,6 +649,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
               onWaitlist={openWaitlist}
               titleRef={titleRef}
               titleAs={titleAs}
+              assignee={assignee}
             />
           )}
           {step === 'details' && (
@@ -579,7 +667,7 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
           {step === 'review' && (
             <StepReview
               rows={reviewRows}
-              address={fullAddress(profile, false)}
+              address={profile ? joinDot(teamName, fullAddress(profile, false)) : ''}
               error={submitError}
               onEdit={go}
               titleRef={titleRef}
@@ -609,6 +697,41 @@ export function BookingApp({ slug, initialProfile, runtime }: Props) {
       </FlowFooter>
     </Frame>
   );
+}
+
+/** A professional's page: the service (steps 2–3) and the day and hour (step 3). */
+function soloChips(step: StepId, draft: Draft, service: PublicService | null, singleService: boolean): SelectionChip[] {
+  const chips: SelectionChip[] = [];
+  if (service && (step === 'when' || step === 'details')) {
+    const label = serviceChip(service);
+    chips.push(singleService ? { label, title: label } : { label, title: `Cambiar servicio: ${label}`, target: 'service' });
+  }
+  if (draft.start && step === 'details') {
+    const label = whenChip(draft.start);
+    chips.push({ label, title: `Cambiar día y hora: ${label}`, target: 'when' });
+  }
+  return chips;
+}
+
+/**
+ * Team page (mockup team-booking-who): «Con … · Cambiar» on Servicio; who + service
+ * on Día y hora; who attends + day and hour on Tus datos.
+ */
+function teamChips(step: StepId, draft: Draft, service: PublicService | null, attendant: PublicProfile | null): SelectionChip[] {
+  if (!draft.who) return [];
+  const who = draft.who === ANY_PRO ? 'Cualquiera disponible' : attendant ? `Con ${attendant.name}` : '';
+  const whoChip = (label: string, shrink: boolean): SelectionChip => ({ label, title: `Cambiar con quién: ${label}`, target: 'who', shrink });
+  if (step === 'service' && who) return [{ ...whoChip(who, true), change: true }];
+  if (step === 'when' && who && service) {
+    const label = joinDot(service.name, formatDuration(service.durationMin));
+    return [whoChip(who, false), { label, title: `Cambiar servicio: ${label}`, target: 'service', shrink: true }];
+  }
+  if (step === 'details' && draft.start) {
+    const label = whenChip(draft.start);
+    const attending = attendant ? `Con ${attendant.name}` : who;
+    return [...(attending ? [whoChip(attending, true)] : []), { label, title: `Cambiar día y hora: ${label}`, target: 'when', shrink: false }];
+  }
+  return [];
 }
 
 /** Profile not embedded in the page (rare): the step-1 band shape while it loads. */

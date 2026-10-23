@@ -9,6 +9,8 @@ interface Props {
   onPick: (serviceId: string) => void;
   titleRef: preact.Ref<HTMLHeadingElement>;
   titleAs: 'h1' | 'h2';
+  /** Team pages ask «¿Qué servicio necesitas?» (the first question was «¿Con quién?»). */
+  title?: string;
 }
 
 /** "$60.000" / "Sin costo" in bold, "Precio a convenir" smaller on two lines, nothing when the pro hides it. */
@@ -23,10 +25,10 @@ function ServicePrice({ service }: { service: PricedItem }) {
   );
 }
 
-export function StepService({ profile, serviceId, onPick, titleRef, titleAs }: Props) {
+export function StepService({ profile, serviceId, onPick, titleRef, titleAs, title = '¿Qué necesitas?' }: Props) {
   return (
     <section class="flex flex-col gap-3">
-      <StepTitle titleRef={titleRef} as={titleAs} class="mb-1">¿Qué necesitas?</StepTitle>
+      <StepTitle titleRef={titleRef} as={titleAs} class="mb-1">{title}</StepTitle>
       {profile.services.map((service) => {
         const selected = service.id === serviceId;
         return (

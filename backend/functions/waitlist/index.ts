@@ -1,9 +1,9 @@
 import { joinWaitlistSchema } from '../../../shared/schemas';
-import { requirePro } from '../../lib/auth';
 import { ApiError, created, createApiHandler, noContent, ok, parseBody, pathParam, sourceIp } from '../../lib/http';
 import { hitRateLimit, RATE_RULES } from '../../lib/rate-limit';
 import { verifyTurnstile } from '../../lib/turnstile';
-import { proIdBySlug, requireProId } from '../../services/profiles';
+import { proIdBySlug } from '../../services/profiles';
+import { actingProId } from '../../services/teams';
 import { requireService } from '../../services/services';
 import { assertBookable, loadSubscription } from '../../services/subscriptions';
 import { deleteWaitlistEntry, joinWaitlist, leaveWaitlist, listWaitlist } from '../../services/waitlist';
@@ -35,12 +35,12 @@ export const handler = createApiHandler({
   },
 
   'GET /me/waitlist': async (event) => {
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     return ok({ entries: await listWaitlist(proId) });
   },
 
   'DELETE /me/waitlist/{entryId}': async (event) => {
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     await deleteWaitlistEntry(proId, pathParam(event, 'entryId'));
     return noContent();
   },

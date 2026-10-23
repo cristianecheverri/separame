@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { auth } from '../../lib/auth';
-import { useMe } from '../../lib/queries';
+import { useAdminTeams, useMe } from '../../lib/queries';
 import { cx } from '../ui/cx';
 import { CloseIcon, MenuIcon } from '../ui/icons';
 import { Drawer } from './Drawer';
@@ -25,6 +25,8 @@ const linkClass = (active: boolean) =>
 function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const { pathname } = useLocation();
   const { data: me } = useMe();
+  const teams = useAdminTeams();
+  const pendingTeams = teams.data?.requests.length ?? 0;
   const subsActive = pathname === '/admin' || pathname.startsWith('/admin/pros');
   return (
     <>
@@ -36,6 +38,15 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
       </NavLink>
       <NavLink to="/admin/prices" className={({ isActive }) => linkClass(isActive)} onClick={onNavigate}>
         Precios
+      </NavLink>
+      <NavLink to="/admin/teams" className={({ isActive }) => linkClass(isActive)} onClick={onNavigate}>
+        Equipos
+        {pendingTeams > 0 && (
+          <span className="ml-auto min-w-6 h-6 px-2 rounded-full bg-accent text-ink text-[12px] font-bold inline-flex items-center justify-center">
+            {pendingTeams}
+            <span className="sr-only"> por revisar</span>
+          </span>
+        )}
       </NavLink>
       <div className="mt-auto pt-4 flex flex-col gap-1">
         {me?.profile && (

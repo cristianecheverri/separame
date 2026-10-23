@@ -293,6 +293,8 @@ export const createPriceSchema = z
     name: name('El nombre', 40),
     monthlyCop: z.number().int().min(1).max(100_000_000).nullable(),
     packages: z.array(pricePackageSchema).max(6),
+    /** Team plan: monthly value per additional professional; null = no team pricing in this version. */
+    extraProfessionalCop: z.number().int().min(0).max(100_000_000).nullable().default(null),
     status: z.enum(['active', 'draft']),
     isDefault: z.boolean(),
   })
@@ -319,4 +321,30 @@ export const createMigrationSchema = z.object({
     z.object({ kind: z.literal('version') }),
   ]),
   effectiveDate: isoDateSchema,
+});
+
+// ── Team plan ───────────────────────────────────────────────────────────────
+
+/** Total professionals a team may ask for, counting the owner. */
+export const TEAM_MAX_PROFESSIONALS = 20;
+
+export const teamRequestSchema = z.object({
+  name: name('El nombre del consultorio', 60),
+  professionals: z.number().int().min(2, 'Un equipo son al menos 2 profesionales').max(TEAM_MAX_PROFESSIONALS),
+  message: z.string().trim().max(500, 'Máximo 500 caracteres').default(''),
+});
+
+export const updateTeamSchema = z.object({
+  name: name('El nombre del consultorio', 60),
+  slug: slugSchema,
+});
+
+export const teamMemberSchema = z.object({
+  name: name('El nombre'),
+  title: name('La profesión', 60),
+  slug: slugSchema,
+});
+
+export const approveTeamSchema = z.object({
+  seats: z.number().int().min(1).max(TEAM_MAX_PROFESSIONALS - 1),
 });

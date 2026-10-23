@@ -2,6 +2,9 @@ import { formatDayShort, formatInstantTime, MONTH_SHORT } from '../../../shared/
 import { bogotaDate, type ISODate, type ISOInstant } from '../../../shared/time';
 import { sendOnce } from '../../mail/sender';
 import type { AppointmentItem } from '../appointments';
+import { greetingName } from '../../mail/templates/common';
+import { getItem } from '../../lib/dynamo';
+import { profileKey } from '../../lib/keys';
 import { pushToPro, type PushPayload } from '../push';
 import type { WaitItem } from '../waitlist';
 
@@ -46,9 +49,15 @@ export function shortDay(date: ISODate): string {
 /** "Jue 22 oct · 10:00 a. m." */
 export const shortWhen = (instant: ISOInstant) => `${shortDay(bogotaDate(instant))} · ${formatInstantTime(instant)}`;
 
-export function appointmentPayload(kind: PushKind, appt: AppointmentItem): PushPayload {
+/** Team plan: the owner gets the members' notices, so they say whose agenda it is («Nueva cita · Julián»). */
+async function memberLabel(proId: string): Promise<string | undefined> {
+  const profile = await getItem<{ name?: string; ownerId?: string }>(profileKey(proId));
+  return profile?.ownerId && profile.name ? greetingName(profile.name) : undefined;
+}
+
+export function appointmentPayload(kind: PushKind, appt: AppointmentItem, member?: string): PushPayload {
   return {
-    title: TITLES[kind],
+    title: member ? `${TITLES[kind]} · ${member}` : TITLES[kind],
     body: `${shortWhen(appt.start)} · ${appt.client.name} · ${appt.serviceName}`,
     url: '/app/',
     tag: appt.id,
@@ -60,13 +69,19 @@ const isStale = (eventAt: Date, now: Date) => now.getTime() - eventAt.getTime() 
 export async function pushOnAppointment(before: AppointmentItem | undefined, after: AppointmentItem | undefined, eventAt: Date, now: Date): Promise<void> {
   const kind = decidePush(before, after);
   if (!kind || !after || isStale(eventAt, now)) return;
-  await sendOnce(`push#${after.id}#${kind}#${after.revision ?? 0}`, () => pushToPro(after.proId, appointmentPayload(kind, after), now), now, MARKER_TTL_DAYS);
+  await sendOnce(
+    `push#${after.id}#${kind}#${after.revision ?? 0}`,
+    async () => pushToPro(after.proId, appointmentPayload(kind, after, await memberLabel(after.proId)), now),
+    now,
+    MARKER_TTL_DAYS,
+  );
 }
 
 export async function pushOnWaitlistJoin(entry: WaitItem, eventAt: Date, now: Date): Promise<void> {
   if (entry.status !== 'waiting' || isStale(eventAt, now)) return;
+  const member = await memberLabel(entry.proId);
   const payload: PushPayload = {
-    title: 'Lista de espera',
+    title: member ? `Lista de espera · ${member}` : 'Lista de espera',
     body: `${entry.client.name} · ${entry.serviceName} · ${entry.dates.map(shortDay).join(', ')}`,
     url: '/app/',
     tag: `wait-${entry.id}`,

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda del consultorio — propuesta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 1040px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="10">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 15px; color: #56645D; font-weight: 600">Martes 20 de octubre · Consultorio Sonríe</div>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; letter-spacing: -0.8px">{{headline}}</h1>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <button onClick="{{copyTop}}" aria-label="Copiar enlace {{link}}" style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 8px; align-items: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+          {{topLinkLabel}}
+        </button>
+        <button style="height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: flex; gap: 8px; align-items: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Nueva cita
+        </button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-labelledby="agenda-title" style="flex: 999 1 480px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 6px">
+          <h2 id="agenda-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">{{agendaTitle}}</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <div style="display: flex; gap: 4px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+              <button aria-label="Día anterior" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <button aria-label="Día siguiente" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+            <div role="group" aria-label="Vista" style="display: flex; gap: 6px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+              <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 13px; color: #15241D; cursor: pointer">Día</button>
+              <button aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 13px; color: #3E4C45; cursor: pointer">Semana</button>
+            </div>
+          </div>
+        </div>
+        <div role="group" aria-label="Profesional" style="display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #E3E8E5; margin-bottom: 8px">
+          <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+            <button onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="{{c.style}}"><span aria-hidden="true" style="{{c.dotStyle}}"></span>{{c.label}}</button>
+          </sc-for>
+        </div>
+        <sc-for list="{{appts}}" as="a" hint-placeholder-count="8">
+          <div style="display: flex; gap: 16px; align-items: stretch">
+            <div style="width: 84px; flex-shrink: 0; padding-top: 14px; font-weight: 700; font-size: 14px; color: #3E4C45">{{a.time}}</div>
+            <div style="{{a.cardStyle}}">
+              <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0; flex-basis: 160px">
+                <div style="{{a.nameStyle}}">{{a.name}}</div>
+                <div style="font-size: 13px; color: #56645D; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px">
+                  <sc-if value="{{a.showTag}}" hint-placeholder-val="{{ true }}">
+                    <span style="{{a.tagStyle}}">{{a.pro}}</span>
+                  </sc-if>
+                  <span>{{a.detail}}</span>
+                  <sc-if value="{{a.hasAttendance}}" hint-placeholder-val="{{ false }}">
+                    <span style="{{a.attendanceStyle}}">{{a.attendance}}</span>
+                  </sc-if>
+                </div>
+              </div>
+              <span style="{{a.badgeStyle}}">{{a.badge}}</span>
+              <sc-if value="{{a.moveCancel}}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; gap: 4px; flex-shrink: 0">
+                  <button aria-label="Mover cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+                  <button aria-label="Cancelar cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+
+      <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section aria-labelledby="clinic-title" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; gap: 12px; align-items: flex-start">
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <h2 id="clinic-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Consultorio Sonríe</h2>
+              <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Tus clientes eligen con quién y ven las horas libres de todos.</span>
+            </div>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/consultorio-sonrie</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+            <button onClick="{{copyClinic}}" aria-label="Copiar el enlace del consultorio" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyClinicLabel}}</button>
+            <a href="team-members-desktop.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver equipo</a>
+          </div>
+          <div style="border-top: 1px solid #E3E8E5; padding-top: 10px; font-size: 13px; font-weight: 600; color: #3E4C45">3 profesionales · 2 de 2 cupos adicionales usados</div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Comparte tu agenda</h2>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <div aria-hidden="true" style="width: 88px; height: 88px; flex-shrink: 0; border-radius: 14px; background: #F3F6F4; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 10px; box-sizing: border-box">
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #0B6E4F; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #3E4C45; line-height: 1.4">
+              Ponlo en tu WhatsApp, Instagram o en la puerta del consultorio.
+              <button style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Descargar QR</button>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="ref-title" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; gap: 12px; align-items: flex-start">
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8"></path></svg></span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <h2 id="ref-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Invita y gana un mes</h2>
+              <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Si un colega se registra con tu enlace y paga su primer mes, te regalamos un mes gratis.</span>
+            </div>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/r/laura-perez</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button onClick="{{copyRef}}" aria-label="Copiar tu enlace de invitación" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyRefLabel}}</button>
+            <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ pro: 'all', copiedTop: false, copiedClinic: false, copiedRef: false }, this.state || {});
+    const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Equipo', 'Suscripción'];
+    const hrefs = ['team-owner-agenda-desktop.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'A-Servicios.dc.html', 'A-Disponibilidad.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'team-members-desktop.dc.html', 'A-Plan.dc.html'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const pros = {
+      laura: { label: 'Laura (tú)', first: 'Laura', bg: '#0B6E4F', fg: '#FFFFFF', link: 'separame.app/dra-laura-perez' },
+      julian: { label: 'Julián', first: 'Julián', bg: '#FFC93C', fg: '#15241D', link: 'separame.app/dr-julian-ortiz' },
+      sara: { label: 'Sara', first: 'Sara', bg: '#15241D', fg: '#FFFFFF', link: 'separame.app/dra-sara-gomez' }
+    };
+    const card = 'flex-grow:1;min-width:0;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 10px 10px 16px;border-radius:16px;min-height:64px;box-sizing:border-box;';
+    const badge = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const mini = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;';
+    const kinds = {
+      ok: { card: card + 'background:#EAF5F0;', badge: badge + 'background:#0B6E4F;color:#FFFFFF;', label: 'Confirmada' },
+      fresh: { card: card + 'background:#FFF4D1;', badge: badge + 'background:#FFC93C;color:#15241D;', label: 'Nueva' },
+      done: { card: card + 'background:#EAF5F0;', badge: badge + 'background:#FFFFFF;color:#0B6E4F;', label: 'Asistió' }
+    };
+    const rows = [
+      { time: '8:00 a. m.', name: 'Mariana Gómez', detail: 'Valoración · 30 min', pro: 'laura', k: 'done' },
+      { time: '8:00 a. m.', name: 'Andrés Zapata', detail: 'Control de brackets · 20 min', pro: 'julian', k: 'done' },
+      { time: '9:00 a. m.', name: 'Camila Arango', detail: 'Endodoncia · 90 min', pro: 'sara', k: 'done' },
+      { time: '10:00 a. m.', name: 'Sofía Castaño', detail: 'Limpieza dental · 45 min', pro: 'laura', k: 'fresh', confirmed: false },
+      { time: '10:30 a. m.', name: 'Felipe Montoya', detail: 'Ajuste de brackets · 30 min', pro: 'julian', k: 'ok', confirmed: true },
+      { time: '11:00 a. m.', name: 'Carlos Mejía', detail: 'Valoración · 30 min', pro: 'laura', k: 'ok', confirmed: true },
+      { time: '2:00 p. m.', name: 'Isabel Cardona', detail: 'Endodoncia · 90 min', pro: 'sara', k: 'ok', confirmed: false },
+      { time: '4:00 p. m.', name: 'Mateo Quintero', detail: 'Control de brackets · 20 min', pro: 'julian', k: 'fresh', confirmed: false }
+    ];
+    const all = st.pro === 'all';
+    const visible = rows.filter((r) => all || r.pro === st.pro);
+    const n = visible.length;
+    const sel = all ? null : pros[st.pro];
+    let headline = 'Hola, Laura. Hoy hay ' + n + ' citas en el consultorio.';
+    if (st.pro === 'laura') headline = 'Hola, Laura. Hoy tienes ' + n + ' citas.';
+    else if (sel) headline = sel.first + ' tiene ' + n + ' citas hoy.';
+    const link = sel ? sel.link : 'separame.app/consultorio-sonrie';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;border:2px solid;display:inline-flex;align-items:center;gap:8px;color:#15241D;';
+    const dot = 'width:12px;height:12px;border-radius:999px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(21,36,29,0.25);';
+    const chipDefs = [
+      { id: 'all', label: 'Todos', dot: dot + 'background:conic-gradient(#0B6E4F 0 33%, #FFC93C 0 66%, #15241D 0);' },
+      { id: 'laura', label: pros.laura.label, dot: dot + 'background:' + pros.laura.bg + ';' },
+      { id: 'julian', label: pros.julian.label, dot: dot + 'background:' + pros.julian.bg + ';' },
+      { id: 'sara', label: pros.sara.label, dot: dot + 'background:' + pros.sara.bg + ';' }
+    ];
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 0 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      headline,
+      agendaTitle: all ? 'Agenda de hoy' : 'Agenda de hoy · ' + sel.first,
+      link,
+      topLinkLabel: st.copiedTop ? '¡Copiado!' : link,
+      copyTop: () => this.setState({ copiedTop: true }),
+      chips: chipDefs.map((c) => ({
+        label: c.label,
+        selected: st.pro === c.id,
+        dotStyle: c.dot,
+        pick: () => this.setState({ pro: c.id, copiedTop: false }),
+        style: chip + (st.pro === c.id ? 'background:#EAF5F0;border-color:#0B6E4F;font-weight:700;' : 'background:#FFFFFF;border-color:#E3E8E5;font-weight:600;')
+      })),
+      appts: visible.map((r) => {
+        const k = kinds[r.k];
+        const p = pros[r.pro];
+        const upcoming = r.k !== 'done';
+        return {
+          time: r.time, name: r.name, detail: r.detail, pro: p.first,
+          showTag: all,
+          tagStyle: mini + 'background:' + p.bg + ';color:' + p.fg + ';',
+          cardStyle: k.card,
+          nameStyle: 'font-weight:700;font-size:15px;',
+          badge: k.label, badgeStyle: k.badge,
+          hasAttendance: upcoming,
+          attendance: r.confirmed ? 'Confirmó' : 'Sin confirmar',
+          attendanceStyle: mini + (r.confirmed ? 'background:#FFFFFF;color:#0B6E4F;' : 'background:rgba(255,255,255,0.7);color:#56645D;'),
+          moveCancel: upcoming
+        };
+      }),
+      copyClinic: () => this.setState({ copiedClinic: true }),
+      copyClinicLabel: st.copiedClinic ? '¡Copiado!' : 'Copiar enlace',
+      copyRef: () => this.setState({ copiedRef: true }),
+      copyRefLabel: st.copiedRef ? '¡Copiado!' : 'Copiar'
+    };
+  }
+}
+</script>
+</body>
+</html>

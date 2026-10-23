@@ -12,7 +12,7 @@ import type { SlugProblem } from './slug';
 import type {
   Appointment, AppointmentOutcome, AvailabilitySettings, Block, ClientConfirmation, ClientContact, ClientRecord, ISODate,
   ISOInstant, Payment, PaymentInstructions, PaymentMethod, PriceDisplay, PriceMigration, ProStats, WaitlistEntry, PricePackage, PriceVersion, PriceVersionStatus, ProProfile, Referral, Service, SubscriptionState,
-  SubscriptionStatus, BookingRules, WeeklySchedule,
+  SubscriptionStatus, BookingRules, WeeklySchedule, Team, TeamMember, TeamRequest,
 } from './types';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
@@ -83,6 +83,22 @@ export interface PublicProfile {
   phone: string | null;
   initials: string;
   services: PublicService[];
+  /** Team plan: the consultorio this professional belongs to («Parte de …»). */
+  team?: { name: string; slug: string };
+}
+
+/** Team plan: embedded in the static /<teamSlug> page (first step «¿Con quién?»). */
+export interface PublicTeam {
+  slug: string;
+  name: string;
+  /** The owner's place: the consultorio's city and address. */
+  city: string;
+  neighborhood: string;
+  address: string;
+  phone: string | null;
+  initials: string;
+  /** Owner first; each one is a regular professional with their own /<slug> endpoints. */
+  members: PublicProfile[];
 }
 
 export interface GetPublicProResponse {
@@ -245,6 +261,47 @@ export interface MeResponse {
   subscription: SubscriptionStatus | null;
   /** https://separame.app/<slug> */
   publicUrl: string | null;
+  /** Team plan: present once the admin approved it (members feed the professional selector). */
+  team: TeamView | null;
+  /** The latest team request (pending, approved or rejected), or null if they never asked. */
+  teamRequest: TeamRequest | null;
+}
+
+/**
+ * Team plan: the panel acts on a team member by sending this header with the member's proId
+ * on /me routes that support it (appointments, services, availability, clients, stats, waitlist).
+ */
+export const ACTING_PRO_HEADER = 'x-separame-pro';
+
+export interface TeamMemberView extends TeamMember {
+  publicUrl: string;
+}
+
+export interface TeamView extends Omit<Team, 'members'> {
+  publicUrl: string;
+  members: TeamMemberView[];
+}
+
+export interface TeamResponse {
+  team: TeamView | null;
+  request: TeamRequest | null;
+}
+
+export interface CreateTeamRequestBody {
+  name: string;
+  professionals: number;
+  message: string;
+}
+
+export interface UpdateTeamBody {
+  name: string;
+  slug: string;
+}
+
+export interface UpsertTeamMemberBody {
+  name: string;
+  title: string;
+  slug: string;
 }
 
 export interface UpdateProfileRequest {
@@ -460,6 +517,8 @@ export interface BillingResponse {
   payments: Payment[];
   /** How to pay (Nequi / transfer). `null` until the admin configures it. */
   instructions: PaymentInstructions | null;
+  /** Team plan: additional professionals paid on top of each package (0 without a team). */
+  teamSeats: number;
 }
 
 /** "Ya pagué": the professional reports a Nequi/transfer payment for an admin to confirm. */
@@ -545,10 +604,43 @@ export interface AdminProDetailResponse {
   payments: Payment[];
   upcomingAppointments: number;
   trialStartedAt: ISOInstant;
+  /** Team plan: approved additional professionals (0 without a team); package amounts include them. */
+  teamSeats: number;
   /** Who invited this professional (null = signed up without a referral link). */
   referredBy: { proId: string; name: string; code: string } | null;
   /** Their own referral program; `code` is null until they first open it in the panel. */
   referrals: Omit<ReferralSummary, 'code' | 'url'> & { code: string | null; url: string | null };
+}
+
+export interface AdminTeamRequestRow {
+  ownerId: string;
+  ownerName: string;
+  ownerTitle: string;
+  request: TeamRequest;
+  subscription: SubscriptionStatus;
+  priceName: string;
+}
+
+export interface AdminTeamRow {
+  ownerId: string;
+  ownerName: string;
+  name: string;
+  slug: string;
+  seats: number;
+  /** Additional professionals created (≤ seats). */
+  used: number;
+  priceName: string;
+  extraProfessionalCop: number | null;
+  accessUntil: ISOInstant;
+}
+
+export interface AdminTeamsResponse {
+  requests: AdminTeamRequestRow[];
+  teams: AdminTeamRow[];
+}
+
+export interface ApproveTeamBody {
+  seats: number;
 }
 
 /** Methods an admin can record by hand (card/PSE only arrive through a future gateway). */
@@ -588,6 +680,8 @@ export interface CreatePriceRequest {
   name: string;
   monthlyCop: number | null;
   packages: PricePackage[];
+  /** Team plan: monthly value per additional professional (null = none). Older clients omit it. */
+  extraProfessionalCop?: number | null;
   status: Exclude<PriceVersionStatus, 'inactive'>;
   isDefault: boolean;
 }
@@ -673,6 +767,10 @@ export const apiPaths = {
   billing: () => '/me/billing',
   paymentNotices: () => '/me/billing/payment-notices',
   referrals: () => '/me/referrals',
+  team: () => '/me/team',
+  teamRequest: () => '/me/team-request',
+  teamMembers: () => '/me/team/members',
+  teamMember: (proId: string) => `/me/team/members/${enc(proId)}`,
 
   adminStats: () => '/admin/stats',
   adminSubscriptions: (q?: ListSubscriptionsQuery) => `/admin/subscriptions${q ? qs({ ...q }) : ''}`,
@@ -684,6 +782,9 @@ export const apiPaths = {
   adminPrice: (id: string) => `/admin/prices/${enc(id)}`,
   adminMigrations: () => '/admin/price-migrations',
   adminCancelMigration: (id: string) => `/admin/price-migrations/${enc(id)}/cancel`,
+  adminTeams: () => '/admin/teams',
+  adminApproveTeam: (proId: string) => `/admin/team-requests/${enc(proId)}/approve`,
+  adminRejectTeam: (proId: string) => `/admin/team-requests/${enc(proId)}/reject`,
 };
 
 /**

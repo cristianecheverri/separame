@@ -1,7 +1,7 @@
 import { formatDuration } from '../../../shared/format';
 import type { ISOInstant } from '../../../shared/time';
 import { detailsCard, esc, outlineButton, paragraph, pillButton, renderLayout, stack, type RenderedEmail } from '../layout';
-import { clientFooter, firstName, proFooter, proWithTitle, subjectWhen, textRows, whenLong, type ProInfo } from './common';
+import { agendaRows, clientFooter, firstName, proFooter, type ProInfo, proWithTitle, subjectWhen, textRows, whenLong } from './common';
 
 /** Cancellation notices: to the client when the pro cancels, to the pro when the client cancels. */
 
@@ -47,6 +47,7 @@ export function proCancelledEmail(d: CancelledData): RenderedEmail {
   const subject = `Cita cancelada · ${subjectWhen(d.start)} · ${d.clientName}`;
   const heading = `${d.clientName} canceló su cita`;
   const rows: [string, string, { strike?: boolean }?][] = [
+    ...agendaRows(d.pro.agendaOf),
     ['Cliente', d.clientName],
     ['Servicio', `${d.serviceName} · ${formatDuration(d.durationMin)}`],
     ['Cuándo', whenLong(d.start), { strike: true }],

@@ -9,6 +9,7 @@ import { ui } from '../../components/ui/styles';
 import { formatPhone } from '../../lib/format';
 import { useClients } from '../../lib/queries';
 import { useDebounced } from '../../lib/useDebounced';
+import { ProSelector } from '../team/ProSelector';
 import { SearchBox, tableHead, th } from '../admin/adminUi';
 
 const dateOrDash = (iso: string | null) => (iso ? formatDateShort(bogotaDate(iso)) : '—');
@@ -43,6 +44,7 @@ export function ClientsPage() {
           <SearchBox id="clients-search" value={query} onChange={setQuery} placeholder="Buscar por nombre, correo o celular" />
         </div>
       </div>
+      <ProSelector variant="inline" allowAll={false} className="hidden lg:flex" />
 
       {clients.isPending ? (
         <div className="flex flex-col gap-2" aria-busy="true" aria-label="Cargando">

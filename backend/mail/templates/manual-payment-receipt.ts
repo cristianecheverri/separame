@@ -2,7 +2,7 @@ import { formatCop, formatDateShort, formatDayLongWithYear } from '../../../shar
 import { bogotaDate, type ISOInstant } from '../../../shared/time';
 import type { Payment, PriceVersion } from '../../../shared/types';
 import { detailsCard, esc, outlineButton, paragraph, renderLayout, stack, type RenderedEmail } from '../layout';
-import { firstName, proFooter, textRows } from './common';
+import { greetingName, proFooter, textRows } from './common';
 
 /** Optional receipt when the admin records a payment or approves a "Ya pagué" notice. */
 
@@ -41,7 +41,7 @@ export function manualPaymentReceiptEmail(d: ManualReceiptData): RenderedEmail {
     ['Meses gratis por referidos', extra > 0 ? `+${extra === 1 ? '1 mes' : `${extra} meses`}` : ''],
     ['Vigente hasta', until],
   ];
-  const intro = `Hola, ${firstName(d.name)}. Registramos tu pago y tu página ya está recibiendo reservas.`;
+  const intro = `Hola, ${greetingName(d.name)}. Registramos tu pago y tu página ya está recibiendo reservas.`;
   const billingUrl = `${d.siteUrl}/app/billing`;
   const footer = proFooter(d.siteUrl);
   const html = renderLayout({

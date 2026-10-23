@@ -4,9 +4,10 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '../app/router';
 import { ToastProvider } from '../components/ui/Toast';
 import { setTransport } from '../lib/api';
+import { resetActingSelection } from '../lib/actingPro';
 import { auth } from '../lib/auth';
 import { pinClock } from '../lib/clock';
-import { MOCK_NOW, type BillingMockState, type MockState } from '../mocks/fixtures';
+import { MOCK_NOW, type BillingMockState, type MockState, type TeamMockState } from '../mocks/fixtures';
 import { mockAuthClient, mockPushAdapter } from '../mocks/install';
 import { push } from '../lib/push';
 import { installStore } from '../lib/install';
@@ -17,12 +18,14 @@ interface Options {
   admin?: boolean;
   signedIn?: boolean;
   billing?: BillingMockState;
+  team?: TeamMockState;
 }
 
 /** Renders the whole app at `path` against the in-memory mock API. */
-export async function renderApp(path: string, { state = 'trial', admin = false, signedIn = true, billing = 'none' }: Options = {}) {
+export async function renderApp(path: string, { state = 'trial', admin = false, signedIn = true, billing = 'none', team = 'none' }: Options = {}) {
   pinClock(MOCK_NOW);
-  resetMockDb({ state, isAdmin: admin, billing });
+  resetMockDb({ state, isAdmin: admin, billing, team });
+  resetActingSelection();
   setTransport((req) => mockTransport(req, 0));
   push.set(mockPushAdapter());
   installStore.override(null);

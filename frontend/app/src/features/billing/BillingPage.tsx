@@ -16,7 +16,9 @@ import { api, errorMessage } from '../../lib/api';
 import { copyText } from '../../lib/clipboard';
 import { now } from '../../lib/clock';
 import { formatDateLong, formatDayMonth } from '../../lib/format';
-import { buildPlans, defaultPlanIndex, type PlanOption } from '../../lib/plans';
+import { buildPlans, defaultPlanIndex, withTeamSeats, type PlanOption } from '../../lib/plans';
+import { usePro } from '../../lib/pro';
+import { TeamPlanCard, TeamSingleExpiryNote } from '../team/TeamBilling';
 import { keys, useBilling } from '../../lib/queries';
 import { useReferrals } from '../referrals/queries';
 import { ReferralsSection } from '../referrals/ReferralsSection';
@@ -230,7 +232,9 @@ function ReferralHistoryItem({ payment }: { payment: Payment }) {
 }
 
 function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: number }) {
-  const plans = buildPlans(data.price);
+  // Team plan: each package plus the additional professionals (same amount the server records).
+  const plans = withTeamSeats(buildPlans(data.price), data.teamSeats, data.price.extraProfessionalCop);
+  const isTeam = data.teamSeats > 0;
   const [selected, setSelected] = useState(() => defaultPlanIndex(plans));
   const plan = plans[selected];
   const until = plan ? extendPaidUntil(data.subscription, plan.months, now()) : null;
@@ -256,7 +260,7 @@ function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: numb
               <span className={cx('text-[12px] font-bold py-1 px-[10px] rounded-full mb-1', p.best ? 'bg-primary text-white' : 'bg-surface text-ink-2')}>{p.tag}</span>
               <span className="font-bold text-[16px]">{p.name}</span>
               <span className="font-display font-extrabold text-[30px] tracking-[-0.8px] leading-[1.15]">{formatCop(p.amountCop)}</span>
-              <span className="text-[14px] text-ink-2">{p.monthlyText}</span>
+              <span className="text-[14px] text-ink-2">{p.team ? `Plan ${formatCop(p.team.planCop)} + equipo ${formatCop(p.team.teamCop)}` : p.monthlyText}</span>
             </button>
           );
         })}
@@ -270,7 +274,7 @@ function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: numb
               <span className="font-display font-extrabold text-[36px] tracking-[-1px] leading-[1.1]">{formatCop(plan.amountCop)}</span>
             </div>
             <div className="text-[15px] sm:text-right">
-              Tu agenda queda activa hasta el
+              {isTeam ? 'Todo el equipo queda activo hasta el' : 'Tu agenda queda activa hasta el'}
               <br />
               <strong>{until ? formatDateLong(bogotaDate(until)) : ''}</strong>
               {until && savedMonths > 0 && (
@@ -306,6 +310,7 @@ function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: numb
 
 /** pro-billing-plans (manual payments: instructions + "Ya pagué" notice). */
 export function BillingPage() {
+  const { me } = usePro();
   const billing = useBilling();
   const referrals = useReferrals();
   const data = billing.data;
@@ -346,7 +351,9 @@ export function BillingPage() {
               </div>
             </div>
           )}
+          {data.teamSeats > 0 && <TeamPlanCard price={data.price} seats={data.teamSeats} team={me.team} pending={me.teamRequest?.status === 'pending'} />}
           <Plans data={data} savedMonths={referrals.data?.monthsPending ?? 0} />
+          {data.teamSeats > 0 && <TeamSingleExpiryNote />}
           {!referrals.isError && <ReferralsSection data={referrals.data} />}
           <PaymentHistory payments={data.payments} />
         </>

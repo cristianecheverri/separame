@@ -2,7 +2,7 @@ import { computeSubscription } from '../../shared/subscription';
 import type { ISOInstant, Payment, SubscriptionStatus } from '../../shared/types';
 import { getItem, queryAll } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
-import { SUBS_GSI1PK, subGsi1Sk, subKey } from '../lib/keys';
+import { profileKey, SUBS_GSI1PK, subGsi1Sk, subKey } from '../lib/keys';
 import { GSI1 } from '../../shared/infra';
 
 /**
@@ -59,8 +59,22 @@ export async function loadSubItem(proId: string, consistent = true): Promise<Sub
   return getItem<SubItem>(subKey(proId), consistent);
 }
 
+/** Team plan: a team member's owner (members have no SUB of their own), or undefined. */
+export async function ownerIdOf(proId: string): Promise<string | undefined> {
+  const profile = await getItem<{ ownerId?: string }>(profileKey(proId), true);
+  return profile?.ownerId;
+}
+
+/**
+ * The subscription that governs a professional: their own, or their team owner's for a team
+ * member (one expiry for the whole team). `item.proId` is the paying professional.
+ */
 export async function loadSubscription(proId: string, now: Date = new Date()): Promise<{ item: SubItem; status: SubscriptionStatus }> {
-  const item = await loadSubItem(proId, true);
+  let item = await loadSubItem(proId, true);
+  if (!item) {
+    const ownerId = await ownerIdOf(proId);
+    if (ownerId) item = await loadSubItem(ownerId, true);
+  }
   if (!item) throw new ApiError('needs_onboarding');
   return { item, status: subscriptionStatus(item, now) };
 }
@@ -92,16 +106,16 @@ export async function listSubItems(): Promise<SubItem[]> {
   }, 20_000);
 }
 
-/** Slugs of the pros that can take bookings (graceUntil ≥ now): the sitemap's profile pages. */
-export async function listBookableSlugs(now: Date = new Date()): Promise<string[]> {
-  const items = await queryAll<Pick<SubItem, 'slug'>>({
+/** Pros that can take bookings (graceUntil ≥ now) with their slug: the sitemap's profile pages. */
+export async function listBookablePros(now: Date = new Date()): Promise<Pick<SubItem, 'proId' | 'slug'>[]> {
+  const items = await queryAll<Pick<SubItem, 'proId' | 'slug'>>({
     IndexName: GSI1.name,
     KeyConditionExpression: '#pk = :pk AND #sk >= :from',
-    ProjectionExpression: '#slug',
+    ProjectionExpression: 'proId, #slug',
     ExpressionAttributeNames: { '#pk': GSI1.pk, '#sk': GSI1.sk, '#slug': 'slug' },
     ExpressionAttributeValues: { ':pk': SUBS_GSI1PK, ':from': now.toISOString() },
   }, 50_000);
-  return items.map((item) => item.slug).filter(Boolean);
+  return items.filter((item) => item.slug);
 }
 
 /** Subscriptions whose graceUntil falls in [from, to] (GSI1 range — renewal notices). */

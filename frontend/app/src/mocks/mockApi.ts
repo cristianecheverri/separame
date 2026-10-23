@@ -3,21 +3,24 @@
  * and error codes as the real backend; validates bodies with shared/schemas.
  */
 import type { ZodType } from 'zod';
-import type {
-  AdminProDetailResponse, AdminSubscriptionRow, AppointmentsResponse, CreateAppointmentRequest, CreateBlockRequest,
+import {
+  ACTING_PRO_HEADER,
+  type AdminProDetailResponse, type AdminSubscriptionRow, type AdminTeamRequestRow, type AdminTeamRow, type AdminTeamsResponse, type TeamResponse, type TeamView,
+} from '@shared/api';
+import type { AppointmentsResponse, CreateAppointmentRequest, CreateBlockRequest,
   CreateMigrationRequest, CreatePriceRequest, ErrorCode, ManualPaymentRequest, MeResponse, OnboardingRequest,
   PaymentNoticeRequest, PushConfigResponse, PushSubscriptionRequest, PutAvailabilityRequest, RejectNoticeRequest, UpdatePriceRequest, UpsertServiceRequest,
 } from '@shared/api';
 import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
-  MAX_APPOINTMENTS_RANGE_DAYS, createAppointmentSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
+  MAX_APPOINTMENTS_RANGE_DAYS, approveTeamSchema, createAppointmentSchema, teamMemberSchema, teamRequestSchema, updateTeamSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
   moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
-import { computeSubscription, extendPaidUntil } from '@shared/subscription';
+import { computeSubscription, extendPaidUntil, teamPackageAmount } from '@shared/subscription';
 import { addDays, addMinutes, bogotaDate, diffDays, toInstant, todayBogota } from '@shared/time';
-import type { Appointment, Block, ClientRecord, Payment, PriceMigration, ProProfile, ProStats, Service, SubscriptionStatus, WaitlistEntry } from '@shared/types';
+import type { Appointment, Block, ClientRecord, Payment, PriceMigration, ProProfile, ProStats, Service, SubscriptionStatus, TeamRequest, WaitlistEntry } from '@shared/types';
 import { endpointHash } from '../lib/push';
 import type { HttpMethod, TransportRequest, TransportResponse } from '../lib/api';
 import { now } from '../lib/clock';
@@ -46,7 +49,19 @@ interface Db {
   waitlist: WaitlistEntry[];
   clientNotes: Record<string, string>;
   push: PushConfigResponse;
+  /** Team plan: the owner's team (members' agendas live in `members`). */
+  team: { name: string; slug: string; seats: number; memberIds: string[]; createdAt: string } | null;
+  teamRequest: TeamRequest | null;
+  members: Record<string, { profile: ProProfile; data: Scoped }>;
+  adminTeamRequests: AdminTeamRequestRow[];
+  adminTeams: AdminTeamRow[];
 }
+
+/** Per-professional data: the acting header swaps a member's into `db` while a /me route runs. */
+const SCOPED_FIELDS = ['services', 'schedule', 'rules', 'blocks', 'appointments', 'waitlist', 'clientNotes'] as const;
+type Scoped = Pick<Db, (typeof SCOPED_FIELDS)[number]>;
+/** Routes that act on the professional named in `ACTING_PRO_HEADER` (docs/team-plan.md). */
+const ACTING_ROUTES = /^\/me\/(appointments|slots|services|availability|blocks|clients|stats|waitlist)(\/|$)/;
 
 const clone = <T,>(v: T): T => structuredClone(v);
 let db: Db;
@@ -56,8 +71,28 @@ const newestFirst = (list: Payment[]) => [...list].sort((a, b) => b.createdAt.lo
 let idSeq = 1000;
 const newId = (prefix: string) => `${prefix}-${++idSeq}`;
 
-export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; billing: fx.BillingMockState; push?: boolean }) {
+function memberEntry(data: fx.MemberMockData) {
+  const scoped: Scoped = { services: data.services, schedule: data.schedule, rules: clone(fx.rules), blocks: [], appointments: data.appointments, waitlist: [], clientNotes: {} };
+  return { profile: data.profile, data: scoped };
+}
+
+function teamMock(state: fx.TeamMockState) {
+  const requestBase = { name: fx.TEAM_NAME, professionals: 3, message: '', createdAt: '2026-10-20T13:10:00.000Z', seatsApproved: null, rejectReason: null, reviewedAt: null };
+  if (state === 'pending') return { team: null, request: { ...requestBase, status: 'pending' as const } };
+  if (state === 'rejected') {
+    return { team: null, request: { ...requestBase, status: 'rejected' as const, reviewedAt: '2026-10-20T20:00:00.000Z', rejectReason: 'Por ahora el plan para equipos es para consultorios con agenda compartida.' } };
+  }
+  if (state === 'none') return { team: null, request: null };
+  const seats = state === 'seats' ? 3 : 2;
+  return {
+    team: { name: fx.TEAM_NAME, slug: fx.TEAM_SLUG, seats, memberIds: [fx.julianProfile.id, fx.saraProfile.id], createdAt: fx.TEAM_CREATED_AT },
+    request: { ...requestBase, status: 'approved' as const, seatsApproved: seats, reviewedAt: fx.TEAM_CREATED_AT },
+  };
+}
+
+export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; billing: fx.BillingMockState; push?: boolean; team?: fx.TeamMockState }) {
   const state = options.state;
+  const team = teamMock(state === 'onboarding' ? 'none' : (options.team ?? 'none'));
   const subInput = fx.subscriptionInputs[state === 'onboarding' ? 'trial' : state];
   const details: Db['details'] = {};
   for (const row of fx.adminRows) {
@@ -96,7 +131,13 @@ export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; bi
       vapidPublicKey: options.push === false ? null : fx.PUSH_VAPID_KEY,
       devices: [{ endpointHash: 'mac-chrome-demo', deviceLabel: 'Mac · Chrome', createdAt: '2026-10-18T15:00:00.000Z', lastSuccessAt: '2026-10-20T12:10:00.000Z' }],
     },
+    team: team.team,
+    teamRequest: team.request,
+    members: team.team ? { [fx.julianProfile.id]: memberEntry(fx.julianData()), [fx.saraProfile.id]: memberEntry(fx.saraData()) } : {},
+    adminTeamRequests: clone(fx.adminTeamRequests).map((r) => ({ ...r, subscription: subscriptionOfRow(r.ownerId) })),
+    adminTeams: clone(fx.adminActiveTeams),
   };
+  if (team.team) for (const slug of [fx.TEAM_SLUG, fx.julianProfile.slug, fx.saraProfile.slug]) db.takenSlugs.add(slug);
   // Referral program (boards referral-*).
   const laura = lauraReferrals(state);
   referralsDb = state === 'onboarding' ? null : clone(laura.summary);
@@ -119,6 +160,18 @@ function validate<T>(schema: ZodType<T>, body: unknown): T {
 }
 
 const subscription = (): SubscriptionStatus => computeSubscription(db.sub, now());
+
+/** Admin rows' subscription (for the team requests list). */
+function subscriptionOfRow(proId: string): SubscriptionStatus {
+  const row = fx.adminRows.find((r) => r.proId === proId)!;
+  const paid = row.state !== 'trial';
+  return computeSubscription({ trialEndsAt: paid ? '2026-07-08T15:00:00.000Z' : row.accessUntil, paidUntil: paid ? row.accessUntil : null, priceVersionId: row.price.id }, now());
+}
+
+const teamSeats = () => db.team?.seats ?? 0;
+/** The professional a /me route acts on (owner, or the member named in the acting header). */
+let actingId: string | null = null;
+const currentProId = () => actingId ?? db.profile!.id;
 const priceOf = (id: string) => db.prices.find((p) => p.id === id)!;
 const stripUsage = <T extends { subscriptions: number }>({ subscriptions: _s, ...rest }: T) => rest;
 
@@ -145,7 +198,43 @@ function me(): MeResponse {
     profile: db.profile,
     subscription: db.profile ? subscription() : null,
     publicUrl: db.profile ? `${siteUrl}/${db.profile.slug}` : null,
+    team: teamView(),
+    teamRequest: db.teamRequest,
   };
+}
+
+function teamView(): TeamView | null {
+  if (!db.team || !db.profile) return null;
+  const member = (p: ProProfile, isOwner: boolean) => ({ proId: p.id, name: p.name, title: p.title, slug: p.slug, isOwner, publicUrl: `${siteUrl}/${p.slug}` });
+  return {
+    name: db.team.name, slug: db.team.slug, seats: db.team.seats, createdAt: db.team.createdAt, publicUrl: `${siteUrl}/${db.team.slug}`,
+    members: [member(db.profile, true), ...db.team.memberIds.map((id) => member(db.members[id].profile, false))],
+  };
+}
+
+const teamResponse = (): TeamResponse => ({ team: teamView(), request: db.teamRequest });
+
+function requireTeam() {
+  requireWritable();
+  if (!db.team) throw new HttpError(404, 'not_found', 'Tu cuenta todavía no tiene plan para equipos.');
+  return db.team;
+}
+
+/** Runs `fn` with the member's agenda swapped into `db` (the owner's when `proId` is null). */
+function withActing<T>(proId: string | null, fn: () => T): T {
+  if (!proId || proId === db.profile?.id) return fn();
+  const member = db.members[proId];
+  if (!member || !db.team?.memberIds.includes(proId)) throw new HttpError(403, 'forbidden', 'Ese profesional no está en tu equipo.');
+  const owner = Object.fromEntries(SCOPED_FIELDS.map((f) => [f, db[f]])) as Scoped;
+  Object.assign(db, member.data);
+  actingId = proId;
+  try {
+    return fn();
+  } finally {
+    member.data = Object.fromEntries(SCOPED_FIELDS.map((f) => [f, db[f]])) as Scoped;
+    Object.assign(db, owner);
+    actingId = null;
+  }
 }
 
 function slugCheck(raw: string) {
@@ -188,6 +277,7 @@ function proDetail(proId: string): AdminProDetailResponse {
     price: stripUsage(priceOf(d.priceId)),
     payments: d.payments,
     upcomingAppointments: d.upcoming,
+    teamSeats: proId === 'pro-laura' ? teamSeats() : db.adminTeams.find((t) => t.ownerId === proId)?.seats ?? 0,
     trialStartedAt: d.trialStartedAt,
     ...adminReferrals(proId),
   };
@@ -233,11 +323,13 @@ function paymentNotice(body: PaymentNoticeRequest) {
   requireProfile();
   const data = validate(paymentNoticeSchema, body);
   if (db.payments.some((p) => p.status === 'pending' && p.source === 'pro_notice')) throw new HttpError(409, 'conflict', 'Ya tienes un aviso en revisión');
-  const pkg = priceOf(db.sub.priceVersionId).packages.find((p) => p.months === data.months);
+  const price = priceOf(db.sub.priceVersionId);
+  const pkg = price.packages.find((p) => p.months === data.months);
   if (!pkg) throw new HttpError(400, 'validation', 'Ese paquete no existe');
+  const amountCop = teamPackageAmount(pkg, teamSeats(), price.extraProfessionalCop);
   const at = now().toISOString();
   const payment: Payment = {
-    id: newId('pay'), proId: db.profile!.id, method: data.method, status: 'pending', source: 'pro_notice', amountCop: pkg.amountCop,
+    id: newId('pay'), proId: db.profile!.id, method: data.method, status: 'pending', source: 'pro_notice', amountCop,
     months: data.months, paidAt: at, until: null, reference: data.reference, priceVersionId: db.sub.priceVersionId, createdAt: at,
   };
   db.payments = [payment, ...db.payments];
@@ -412,7 +504,7 @@ on('POST', '/me/appointments', (_p, body) => {
   const service = assertBookable(data.serviceId, data.start);
   const at = now().toISOString();
   const appointment: Appointment = {
-    id: newId('apt'), proId: db.profile!.id, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin, priceCop: service.priceCop,
+    id: newId('apt'), proId: currentProId(), serviceId: service.id, serviceName: service.name, durationMin: service.durationMin, priceCop: service.priceCop,
     start: new Date(data.start).toISOString(), end: addMinutes(data.start, service.durationMin), status: 'confirmed', client: data.client,
     createdBy: 'pro', createdAt: at, updatedAt: at, clientConfirmation: 'pending', revision: 0, clientKey: clientKeyOf(data.client),
   };
@@ -542,7 +634,7 @@ on('POST', '/me/calendar-sync/rotate', () => {
 
 on('GET', '/me/billing', () => {
   requireProfile();
-  return { subscription: subscription(), price: stripUsage(priceOf(db.sub.priceVersionId)), payments: db.payments, instructions: fx.instructions };
+  return { subscription: subscription(), price: stripUsage(priceOf(db.sub.priceVersionId)), payments: db.payments, instructions: fx.instructions, teamSeats: teamSeats() };
 });
 on('POST', '/me/billing/payment-notices', (_p, body) => paymentNotice(body as PaymentNoticeRequest));
 on('GET', '/me/referrals', () => {
@@ -620,6 +712,75 @@ on('POST', '/admin/price-migrations/{id}/cancel', ([id]) => {
   return { migration: next };
 });
 
+// ── Team plan ──
+function claimSlug(slug: string, current: string | null) {
+  if (slug === current) return;
+  if (!slugCheck(slug).available) throw new HttpError(409, 'slug_taken', 'Ese enlace ya está ocupado');
+  if (current) db.takenSlugs.delete(current);
+  db.takenSlugs.add(slug);
+}
+
+on('GET', '/me/team', () => (requireProfile(), teamResponse()));
+on('POST', '/me/team-request', (_p, body) => {
+  requireProfile();
+  const data = validate(teamRequestSchema, body);
+  if (db.teamRequest?.status === 'pending') throw new HttpError(409, 'conflict', 'Ya tienes una solicitud en revisión. Te avisamos por correo.');
+  db.teamRequest = { status: 'pending', name: data.name, professionals: data.professionals, message: data.message, seatsApproved: null, rejectReason: null, createdAt: now().toISOString(), reviewedAt: null };
+  return teamResponse();
+});
+on('PUT', '/me/team', (_p, body) => {
+  const team = requireTeam();
+  const data = validate(updateTeamSchema, body);
+  claimSlug(data.slug, team.slug);
+  db.team = { ...team, name: data.name, slug: data.slug };
+  return teamResponse();
+});
+on('POST', '/me/team/members', (_p, body) => {
+  const team = requireTeam();
+  const data = validate(teamMemberSchema, body);
+  if (team.memberIds.length >= team.seats) throw new HttpError(409, 'conflict', 'Usaste todos tus cupos. Solicita más desde «Equipo».');
+  claimSlug(data.slug, null);
+  const at = now().toISOString();
+  const profile: ProProfile = { ...db.profile!, id: newId('pro'), ...data, createdAt: at, updatedAt: at };
+  db.members[profile.id] = { profile, data: { services: [], schedule: clone(db.schedule), rules: clone(db.rules), blocks: [], appointments: [], waitlist: [], clientNotes: {} } };
+  db.team = { ...team, memberIds: [...team.memberIds, profile.id] };
+  return teamResponse();
+});
+on('PUT', '/me/team/members/{id}', ([id], body) => {
+  const team = requireTeam();
+  const data = validate(teamMemberSchema, body);
+  const member = team.memberIds.includes(id) ? db.members[id] : undefined;
+  if (!member) throw new HttpError(404, 'not_found', 'Ese profesional no está en tu equipo.');
+  claimSlug(data.slug, member.profile.slug);
+  member.profile = { ...member.profile, ...data, updatedAt: now().toISOString() };
+  return teamResponse();
+});
+
+on('GET', '/admin/teams', (): AdminTeamsResponse => (requireAdmin(), { requests: db.adminTeamRequests, teams: db.adminTeams }));
+function reviewTeamRequest(ownerId: string) {
+  const row = db.adminTeamRequests.find((r) => r.ownerId === ownerId);
+  if (!row) throw new HttpError(404, 'not_found', 'Esa solicitud ya no está pendiente.');
+  db.adminTeamRequests = db.adminTeamRequests.filter((r) => r.ownerId !== ownerId);
+  return row;
+}
+on('POST', '/admin/team-requests/{id}/approve', ([id], body) => {
+  requireAdmin();
+  const { seats } = validate(approveTeamSchema, body);
+  const row = reviewTeamRequest(id);
+  const price = db.prices.find((p) => p.name === row.priceName);
+  db.adminTeams = [
+    { ownerId: id, ownerName: row.ownerName, name: row.request.name, slug: slugCheck(row.request.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')).slug, seats, used: 0, priceName: row.priceName, extraProfessionalCop: price?.extraProfessionalCop ?? null, accessUntil: row.subscription.accessUntil },
+    ...db.adminTeams,
+  ];
+  return null;
+});
+on('POST', '/admin/team-requests/{id}/reject', ([id], body) => {
+  requireAdmin();
+  validate(rejectNoticeSchema, body);
+  reviewTeamRequest(id);
+  return null;
+});
+
 export async function mockTransport(req: TransportRequest, delayMs: number): Promise<TransportResponse> {
   await new Promise((r) => setTimeout(r, delayMs));
   const url = new URL(req.path, 'https://mock.local');
@@ -627,7 +788,9 @@ export async function mockTransport(req: TransportRequest, delayMs: number): Pro
     const match = method === req.method && re.exec(url.pathname);
     if (!match) continue;
     try {
-      const body = await handler(match.slice(1).map(decodeURIComponent), clone(req.body ?? null), url.searchParams);
+      const run = () => handler(match.slice(1).map(decodeURIComponent), clone(req.body ?? null), url.searchParams);
+      const acting = ACTING_ROUTES.test(url.pathname) ? (req.headers?.[ACTING_PRO_HEADER] ?? null) : null;
+      const body = await withActing(acting, run);
       return { status: 200, body: clone(body) };
     } catch (e) {
       if (e instanceof HttpError) return { status: e.status, body: { error: { code: e.code, message: e.message, fields: e.fields } } };

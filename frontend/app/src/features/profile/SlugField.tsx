@@ -43,16 +43,20 @@ interface Props {
   check: ReturnType<typeof useSlugCheck>;
   host: string;
   disabled?: boolean;
+  /** «Tu enlace» by default (team plan: a member's or the team page's link). */
+  label?: string;
+  /** Status line for the slug already saved (default: «Es tu enlace actual.»). */
+  currentText?: string;
 }
 
 /** "separame.app/<slug>" input with live availability. */
-export function SlugField({ value, onChange, check, host, disabled }: Props) {
+export function SlugField({ value, onChange, check, host, disabled, label = 'Tu enlace', currentText = 'Es tu enlace actual.' }: Props) {
   const id = useId();
   const { status, message, suggestion } = check;
   return (
     <div className="flex flex-col gap-[6px] min-w-0">
       <label htmlFor={id} className={ui.label}>
-        Tu enlace
+        {label}
       </label>
       <div className={cx('flex items-center h-12 rounded-[14px] border-2 bg-white min-w-0 focus-within:shadow-[0_0_0_3px_rgba(11,110,79,0.15)]', status === 'invalid' || status === 'taken' ? 'border-warn' : 'border-line focus-within:border-primary', disabled && 'bg-surface')}>
         <span className="pl-[14px] text-[15px] font-semibold text-muted whitespace-nowrap shrink-0">{host}/</span>
@@ -74,7 +78,7 @@ export function SlugField({ value, onChange, check, host, disabled }: Props) {
       <div id={`${id}-status`} aria-live="polite" className="text-[13px] min-h-[18px]">
         {status === 'checking' && <span className="text-muted">Revisando…</span>}
         {status === 'available' && <span className="font-semibold text-primary">¡Está libre!</span>}
-        {status === 'current' && <span className="text-muted">Es tu enlace actual.</span>}
+        {status === 'current' && <span className="text-muted">{currentText}</span>}
         {message && (
           <span className="font-semibold text-warn-ink">
             {message}

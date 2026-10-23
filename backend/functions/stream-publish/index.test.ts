@@ -6,7 +6,7 @@ import type { DynamoDBStreamEvent } from 'aws-lambda';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { SITE_PATHS } from '../../../shared/infra';
-import { profileKey } from '../../lib/keys';
+import { profileKey, teamKey } from '../../lib/keys';
 import { clearTemplateCache } from '../../services/publish';
 import { PRO_ID, profile, service, setTestEnv } from '../../testing/fixtures';
 import { handler } from './index';
@@ -32,6 +32,7 @@ beforeEach(() => {
   s3.reset();
   cf.reset();
   clearTemplateCache();
+  ddb.on(GetCommand).resolves({});
   ddb.on(GetCommand, { Key: profileKey(PRO_ID) }).resolves({ Item: profile });
   ddb.on(QueryCommand).resolves({ Items: [{ ...service }] });
   s3.on(PutObjectCommand).resolves({});
@@ -53,6 +54,50 @@ describe('stream-publish', () => {
     const paths = cf.commandCalls(CreateInvalidationCommand).flatMap((c) => c.args[0].input.InvalidationBatch!.Paths!.Items!);
     expect(paths).toContain('/dra-laura-perez/index.html');
     expect(paths).toContain('/laura-perez/index.html');
+  });
+
+  it('a team member: their page says «Parte de …» and the team page is regenerated too', async () => {
+    s3.on(GetObjectCommand).resolves({
+      Body: { transformToString: async () => `<head>${SITE_PATHS.templateHeadMarker}</head><body>${SITE_PATHS.templateDataMarker}</body>` },
+    } as never);
+    const member = { ...profile, id: 'member-1', slug: 'dr-julian-ortiz', name: 'Dr. Julián Ortiz', ownerId: PRO_ID };
+    ddb.on(GetCommand, { Key: profileKey('member-1') }).resolves({ Item: member });
+    ddb.on(GetCommand, { Key: teamKey(PRO_ID) }).resolves({
+      Item: { ownerId: PRO_ID, name: 'Consultorio Sonríe', slug: 'consultorio-sonrie', seats: 2, memberIds: ['member-1'], memberSlugs: ['dr-julian-ortiz'] },
+    });
+    const memberRecord = {
+      eventID: '1', eventName: 'MODIFY',
+      dynamodb: { SequenceNumber: '1', Keys: { PK: { S: 'PRO#member-1' }, SK: { S: 'PROFILE' } }, NewImage: marshall(member) },
+    };
+    const res = await handler({ Records: [memberRecord] } as unknown as DynamoDBStreamEvent);
+    expect(res.batchItemFailures).toEqual([]);
+    const puts = s3.commandCalls(PutObjectCommand).map((c) => c.args[0].input);
+    expect(puts.map((p) => p.Key)).toEqual(['dr-julian-ortiz/index.html', 'consultorio-sonrie/index.html']);
+    expect(String(puts[0].Body)).toContain('"team":{"name":"Consultorio Sonríe","slug":"consultorio-sonrie"}');
+    const teamPage = String(puts[1].Body);
+    expect(teamPage).toContain('Agenda de Consultorio Sonríe · Sepárame');
+    expect(teamPage).toContain('"members":[');
+    expect(teamPage).toContain('Dr. Julián Ortiz');
+  });
+
+  it('a new or renamed team republishes the team page and every member page', async () => {
+    s3.on(GetObjectCommand).resolves({
+      Body: { transformToString: async () => `<head>${SITE_PATHS.templateHeadMarker}</head><body>${SITE_PATHS.templateDataMarker}</body>` },
+    } as never);
+    const teamItem = { ownerId: PRO_ID, name: 'Consultorio Sonríe', slug: 'consultorio-sonrie', seats: 2, memberIds: [], memberSlugs: [] };
+    ddb.on(GetCommand, { Key: teamKey(PRO_ID) }).resolves({ Item: teamItem });
+    const teamRecord = (oldName: string | null) => ({
+      eventID: '1', eventName: oldName ? 'MODIFY' : 'INSERT',
+      dynamodb: {
+        SequenceNumber: '1', Keys: { PK: { S: `PRO#${PRO_ID}` }, SK: { S: 'TEAM' } },
+        NewImage: marshall(teamItem), ...(oldName ? { OldImage: marshall({ ...teamItem, name: oldName }) } : {}),
+      },
+    });
+    await handler({ Records: [teamRecord(null)] } as unknown as DynamoDBStreamEvent);
+    expect(s3.commandCalls(PutObjectCommand).map((c) => c.args[0].input.Key)).toEqual(['consultorio-sonrie/index.html', 'dra-laura-perez/index.html']);
+    s3.resetHistory();
+    await handler({ Records: [teamRecord('Consultorio Sonríe')] } as unknown as DynamoDBStreamEvent);
+    expect(s3.commandCalls(PutObjectCommand).map((c) => c.args[0].input.Key)).toEqual(['consultorio-sonrie/index.html']);
   });
 
   it('skips (without failing) when the template is not deployed yet', async () => {

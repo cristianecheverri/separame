@@ -53,17 +53,29 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
 
 ### Fase 2 — Plan para equipos (decidido el 21-oct)
 Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
-- [ ] Mockups (escritorio + celular):
+- [x] Mockups (escritorio + celular) — 23-oct, en «Propuestas» del lienzo y en `mockups/proposals/team-*`, **aprobados**:
   - tarjeta "¿Trabajas con más profesionales?" y formulario de solicitud;
   - admin: aprobar con número de cupos o rechazar con motivo;
   - panel del dueño: selector de profesional en agenda, servicios y disponibilidad;
   - página del consultorio con el paso "¿Con quién?" (incluye "Cualquiera disponible");
   - precio por profesional adicional en las versiones de precio y en Suscripción.
-- [ ] Implementación: solicitud → aprobación, cupos, profesionales sin usuario, agendas por
-      profesional, página del consultorio + enlace propio de cada uno, un solo vencimiento,
-      precio adicional congelado, tests y despliegue a dev → prod.
-- [ ] Quitar en la página principal el enlace temporal "Solicita el plan para equipos" (hoy
-      lleva al registro) y apuntarlo a la solicitud real.
+- [x] Implementación (23-oct, `docs/team-plan.md`): solicitud → aprobación, cupos, profesionales
+      sin usuario, agendas por profesional, página del consultorio + enlace propio de cada uno, un
+      solo vencimiento, $3.900 por profesional adicional en las versiones actuales, correos, revisión
+      de seguridad y casos borde, tests y despliegue a dev → prod.
+- [x] El enlace «Solicita el plan para equipos» de la página principal lleva a la solicitud real.
+- [ ] Lienzo: pasar los tableros de equipos a «Línea A» con lo que cambió al implementar (pastilla
+      «Tú · cuenta principal», selección inicial = el dueño, «Editar» del dueño → Perfil público,
+      admin sin «Deshacer», «Nueva versión» sigue en su modal).
+- [ ] Pendientes menores de la revisión (bajo impacto):
+  - Historial de solicitudes (hoy una nueva reemplaza la anterior; guardar `TEAMREQ#<fecha>`).
+  - En los formularios del equipo, el chequeo del enlace dice «libre» para el enlace propio del
+    dueño (el servidor sí lo rechaza).
+  - «Cualquiera disponible»: precio del primer profesional en la lista de servicios (la
+    confirmación muestra el real); la lista de espera anota con el primero que ofrece el servicio;
+    el feed de calendario del dueño no incluye las citas del equipo.
+  - Si el equipo crece mucho, una ruta pública `/public/teams/{slug}/availability` haría la mezcla
+    en una sola Lambda (hoy son hasta 4 consultas a la vez desde el navegador).
 
 ### Detalles pendientes de la ronda del 21-oct
 - [ ] "Olvidar mis datos" en la reserva. Lo pospusiste; confirmar si va esta semana.

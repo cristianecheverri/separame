@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { auth } from '../../lib/auth';
 import { usePriceHeadline, usePro } from '../../lib/pro';
+import { ProSelector, selectorFor } from '../../features/team/ProSelector';
 import { cx } from '../ui/cx';
 import { CloseIcon } from '../ui/icons';
 import { InstallListener } from '../install/InstallListener';
@@ -25,14 +26,18 @@ const TAB_NAV: NavItem[] = [
   { to: '/clients', label: 'Clientes' },
 ];
 
-const MORE_NAV: NavItem[] = [
-  { to: '/stats', label: 'Estadísticas' },
-  { to: '/services', label: 'Servicios' },
-  { to: '/availability', label: 'Disponibilidad' },
-  { to: '/calendar-sync', label: 'Tu calendario' },
-  { to: '/profile', label: 'Perfil público' },
-  { to: '/billing', label: 'Suscripción' },
-];
+/** «Equipo» (team plan) goes right after «Perfil público», only once the admin approved the team. */
+function moreNav(hasTeam: boolean): NavItem[] {
+  return [
+    { to: '/stats', label: 'Estadísticas' },
+    { to: '/services', label: 'Servicios' },
+    { to: '/availability', label: 'Disponibilidad' },
+    { to: '/calendar-sync', label: 'Tu calendario' },
+    { to: '/profile', label: 'Perfil público' },
+    ...(hasTeam ? [{ to: '/team', label: 'Equipo' }] : []),
+    { to: '/billing', label: 'Suscripción' },
+  ];
+}
 
 const navLink = ({ isActive }: { isActive: boolean }) =>
   cx(
@@ -44,7 +49,7 @@ const navLink = ({ isActive }: { isActive: boolean }) =>
 function SidebarContent({ onNavigate, more = false }: { onNavigate?: () => void; more?: boolean }) {
   const { me, subscription } = usePro();
   const { monthlyCop } = usePriceHeadline();
-  const nav = more ? MORE_NAV : [...TAB_NAV, ...MORE_NAV];
+  const nav = more ? moreNav(!!me.team) : [...TAB_NAV, ...moreNav(!!me.team)];
   const items = me.isAdmin ? [...nav, { to: '/admin', label: 'Administración' }] : nav;
   return (
     <>
@@ -65,7 +70,7 @@ function SidebarContent({ onNavigate, more = false }: { onNavigate?: () => void;
 
 /** Professional panel layout: sidebar ≥ 1024 px; below, a top bar with the wordmark and the bottom TabBar. */
 export function ProShell() {
-  const { subscription, readOnly } = usePro();
+  const { subscription, readOnly, me } = usePro();
   const { price, minPackageCop } = usePriceHeadline();
   const location = useLocation();
   /** Path where the "Más" sheet was opened: navigating anywhere closes it. */
@@ -74,6 +79,7 @@ export function ProShell() {
   const closeMore = () => setMoreOpenAt(null);
   const onBilling = location.pathname === '/billing';
   const showBanner = readOnly && subscription && !onBilling;
+  const selector = selectorFor(location.pathname);
 
   return (
     <div className="min-h-dvh bg-surface lg:flex">
@@ -89,9 +95,12 @@ export function ProShell() {
         </div>
       </nav>
 
-      <header className="on-dark lg:hidden sticky top-0 z-30 h-[60px] bg-primary text-white px-4 flex items-center justify-between">
+      <header className="on-dark lg:hidden sticky top-0 z-30 h-[60px] bg-primary text-white px-4 flex items-center justify-between gap-3">
         <Wordmark size={22} />
+        {me.team && <span className="text-[13px] font-semibold text-white/90 whitespace-nowrap overflow-hidden text-ellipsis min-w-0">{me.team.name}</span>}
       </header>
+      {/* Team plan, phones and tablets: the professional selector right under the header (board team-owner-agenda-phone). */}
+      {selector && <ProSelector variant="bar" allowAll={selector.allowAll} className="lg:hidden" />}
       <Drawer open={moreOpen} onClose={closeMore} label="Más opciones" placement="bottom" className="bg-primary text-white px-4 pt-[10px] pb-[18px] flex flex-col gap-[6px]">
         <span aria-hidden="true" className="self-center w-10 h-1 rounded-full bg-white/40 shrink-0" />
         <div className="flex items-center justify-between pt-1 pb-[6px] pl-3">

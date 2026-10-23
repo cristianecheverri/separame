@@ -1,8 +1,8 @@
 import { formatDuration, formatServicePrice } from '../../../shared/format';
 import type { ISOInstant } from '../../../shared/time';
 import type { PriceDisplay } from '../../../shared/types';
-import { detailsCard, outlineButton, paragraph, renderLayout, stack, type RenderedEmail } from '../layout';
-import { proFooter, subjectWhen, textRows, whenLong, type ProInfo } from './common';
+import { detailsCard, outlineButton, paragraph, type RenderedEmail, renderLayout, sentence, stack } from '../layout';
+import { agendaRows, proFooter, type ProInfo, subjectWhen, textRows, whenLong } from './common';
 
 /** "Nueva cita" to the professional when a client books from the public page. */
 
@@ -30,6 +30,7 @@ export function proNewBookingEmail(d: ProNewBookingData): RenderedEmail {
   const subject = `Nueva cita · ${subjectWhen(d.start)} · ${d.client.name}`;
   const heading = 'Tienes una cita nueva';
   const rows: [string, string][] = [
+    ...agendaRows(d.pro.agendaOf),
     ['Cliente', d.client.name],
     ...contactRows(d.client),
     ['Servicio', `${d.serviceName} · ${formatDuration(d.durationMin)}`],
@@ -41,7 +42,7 @@ export function proNewBookingEmail(d: ProNewBookingData): RenderedEmail {
   const intro = 'Ya quedó en tu agenda y le mandamos la confirmación con recordatorio.';
   const html = renderLayout({
     title: subject,
-    preheader: `${d.client.name} separó ${d.serviceName} para el ${whenLong(d.start)}.`,
+    preheader: sentence(`${d.client.name} separó ${d.serviceName} para el ${whenLong(d.start)}`),
     heading,
     body: stack([paragraph(intro), detailsCard(rows), outlineButton(agendaUrl, 'Ver mi agenda')]),
     footer: footer.html,

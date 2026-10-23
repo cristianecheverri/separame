@@ -1,13 +1,15 @@
 /** Header (profile band or row + progress + selection chips) and sticky footer of the booking flow. */
 import type { ComponentChildren } from 'preact';
 import type { PublicProfile } from '@shared/api';
-import { Avatar, Wordmark } from '../components/ui';
-import { ChevronLeft, Phone, Pin } from '../components/icons';
+import { Avatar, MemberAvatar, Wordmark } from '../components/ui';
+import { ChevronLeft, Phone, Pin, Users } from '../components/icons';
 import { formatPhone, joinDot, placeLine, telHref } from '../lib/text';
 
-export type StepId = 'service' | 'when' | 'details' | 'review';
+/** `who` («¿Con quién?») only exists on team pages. */
+export type StepId = 'who' | 'service' | 'when' | 'details' | 'review';
 
 export const STEP_LABELS: Record<StepId, string> = {
+  who: '¿Con quién?',
   service: 'Servicio',
   when: 'Día y hora',
   details: 'Tus datos',
@@ -20,6 +22,10 @@ export interface SelectionChip {
   title: string;
   /** Step the chip jumps back to (static chip when absent). */
   target?: StepId;
+  /** Shows «· Cambiar» after the label (team pages: the «¿Con quién?» choice). */
+  change?: boolean;
+  /** Whether it truncates to make room; by default only the first chip does. */
+  shrink?: boolean;
 }
 
 const CHIP =
@@ -41,10 +47,16 @@ function Chips({ chips, onChip }: { chips: SelectionChip[]; onChip: (step: StepI
     >
       {/* The service chip truncates first; the date chip stays whole. */}
       {chips.map((chip, i) => (
-        <span key={chip.label} role="listitem" class={`flex min-w-0 short:shrink-0 ${i > 0 ? 'shrink-0' : 'shrink'}`}>
+        <span key={chip.label} role="listitem" class={`flex min-w-0 short:shrink-0 ${(chip.shrink ?? i === 0) ? 'shrink' : 'shrink-0'}`}>
           {chip.target ? (
             <button type="button" onClick={() => chip.target && onChip(chip.target)} aria-label={chip.title} class={`${CHIP} ${CHIP_HIT_AREA} border-0 hover:bg-mint`}>
               <span class="truncate">{chip.label}</span>
+              {chip.change && (
+                <>
+                  <span aria-hidden="true" class="shrink-0 mx-1.5">·</span>
+                  <span class="shrink-0 underline">Cambiar</span>
+                </>
+              )}
             </button>
           ) : (
             <span class={CHIP} title={chip.title}>
@@ -57,9 +69,11 @@ function Chips({ chips, onChip }: { chips: SelectionChip[]; onChip: (step: StepI
   );
 }
 
+const BAR_COLUMNS: Record<number, string> = { 3: 'grid-cols-3', 4: 'grid-cols-4', 5: 'grid-cols-5' };
+
 function ProgressBars({ index, total, class: className = '' }: { index: number; total: number; class?: string }) {
   return (
-    <div class={`grid ${total === 3 ? 'grid-cols-3' : 'grid-cols-4'} ${className}`} aria-hidden="true">
+    <div class={`grid ${BAR_COLUMNS[total] ?? 'grid-cols-4'} ${className}`} aria-hidden="true">
       {Array.from({ length: total }, (_, i) => (
         <span key={i} class={`block rounded-full transition-colors ${i <= index ? 'bg-primary' : 'bg-line'}`} />
       ))}
@@ -107,10 +121,10 @@ export function FlowHeader({ profile, onBack, ...progress }: HeaderProps) {
 }
 
 /** First step on regular screens: the full profile band, then the progress, all scrolling with the step. */
-export function FlowIntro({ profile, ...progress }: ProgressProps & { profile: PublicProfile }) {
+export function FlowIntro({ profile, members, ...progress }: ProgressProps & { profile: PublicProfile; members?: PublicProfile[] }) {
   return (
     <div>
-      <ProfileBand profile={profile} details />
+      <ProfileBand profile={profile} members={members} details />
       <div class="pt-[18px] px-5">
         <Progress {...progress} />
       </div>
@@ -118,8 +132,37 @@ export function FlowIntro({ profile, ...progress }: ProgressProps & { profile: P
   );
 }
 
+/** Team page band: the members' avatars overlapped + "3 profesionales". */
+function MembersLine({ members }: { members: PublicProfile[] }) {
+  return (
+    <div class="flex gap-2.5 items-center">
+      <div class="flex" aria-hidden="true">
+        {members.map((m, i) => (
+          <MemberAvatar key={m.slug} initials={m.initials} index={i} size={32} class={i > 0 ? '-ml-2' : ''} />
+        ))}
+      </div>
+      <span class="text-[14px] text-mint">
+        {members.length} {members.length === 1 ? 'profesional' : 'profesionales'}
+      </span>
+    </div>
+  );
+}
+
+/** A team member's own page: «Parte de <consultorio>», linking to the team page. */
+function TeamLink({ team }: { team: NonNullable<PublicProfile['team']> }) {
+  return (
+    <a
+      href={`/${encodeURIComponent(team.slug)}`}
+      class="self-start min-h-11 -mt-2.5 -mb-3 inline-flex items-center gap-1.5 text-[14px] font-semibold text-white underline underline-offset-[3px] hover:text-mint"
+    >
+      <Users size={16} class="shrink-0" />
+      <span class="min-w-0 break-words">Parte de {team.name}</span>
+    </a>
+  );
+}
+
 /** Green profile band: booking step 1 (with address and "Llamar") and the unavailable page. */
-export function ProfileBand({ profile, details = false }: { profile: PublicProfile; details?: boolean }) {
+export function ProfileBand({ profile, members, details = false }: { profile: PublicProfile; members?: PublicProfile[]; details?: boolean }) {
   const address = details ? joinDot(profile.address?.trim(), profile.neighborhood?.trim()) : '';
   const phone = details && profile.phone ? profile.phone.replace(/\D/g, '') : '';
   return (
@@ -131,8 +174,10 @@ export function ProfileBand({ profile, details = false }: { profile: PublicProfi
           <div class="flex flex-col gap-1 min-w-0">
             <h1 class="m-0 font-display font-extrabold text-[26px] leading-[1.1] tracking-[-0.5px] break-words line-clamp-2">{profile.name}</h1>
             <div class="text-[15px] text-mint">{joinDot(profile.title, profile.city)}</div>
+            {profile.team && <TeamLink team={profile.team} />}
           </div>
         </div>
+        {members && members.length > 0 && <MembersLine members={members} />}
         {address && (
           <div class="flex gap-2 items-start text-[14px] text-mint leading-[1.4]">
             <Pin size={18} class="shrink-0 mt-px" />

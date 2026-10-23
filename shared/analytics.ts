@@ -20,6 +20,8 @@ export const analyticsEnabledFor = (hostname: string): boolean => hostname === S
 
 type ProSlug = { pro_slug: string };
 type YesNo = 'yes' | 'no';
+/** Team pages only: the client picked a professional or «Cualquiera disponible». */
+type ProChoice = { pro_choice?: 'specific' | 'any' };
 
 /** Every event the frontends may send, with its params (GA4 snake_case, low cardinality). */
 export interface AnalyticsEvents {
@@ -27,8 +29,9 @@ export interface AnalyticsEvents {
   cta_click: { location: 'hero' | 'teams' | 'final' };
   // Public booking page (the pro's clients)
   booking_view: ProSlug;
-  booking_step: ProSlug & { step: 'service' | 'when' | 'details' | 'review' };
-  booking_confirmed: ProSlug & { has_email: YesNo };
+  /** On a team page `pro_slug` is the team's and `who` is «¿Con quién?». */
+  booking_step: ProSlug & ProChoice & { step: 'who' | 'service' | 'when' | 'details' | 'review' };
+  booking_confirmed: ProSlug & ProChoice & { has_email: YesNo };
   booking_error: ProSlug & { reason: string };
   booking_unavailable: ProSlug;
   waitlist_joined: ProSlug;

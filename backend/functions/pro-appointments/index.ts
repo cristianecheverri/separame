@@ -3,13 +3,12 @@ import {
   moveAppointmentSchema, setOutcomeSchema,
 } from '../../../shared/schemas';
 import { diffDays } from '../../../shared/time';
-import { requirePro } from '../../lib/auth';
 import { created, createApiHandler, ok, parseBody, parseQuery, pathParam, validationError } from '../../lib/http';
 import {
   cancelAppointment, createAppointment, listAppointments, moveAppointment, requireAppointmentItem, setOutcome, toAppointment,
 } from '../../services/appointments';
 import { availabilityFor } from '../../services/availability';
-import { requireProId } from '../../services/profiles';
+import { actingProId } from '../../services/teams';
 import { requireService } from '../../services/services';
 import { loadSubscription, requireWritable } from '../../services/subscriptions';
 
@@ -26,13 +25,13 @@ export const handler = createApiHandler({
   'GET /me/appointments': async (event) => {
     const query = parseQuery(event, listAppointmentsQuerySchema);
     if (diffDays(query.from, query.to) > MAX_APPOINTMENTS_RANGE_DAYS) throw validationError({ to: `El rango puede ser de máximo ${MAX_APPOINTMENTS_RANGE_DAYS} días` });
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     return ok({ appointments: await listAppointments(proId, query.from, query.to) });
   },
 
   'POST /me/appointments': async (event) => {
     const input = parseBody(event, createAppointmentSchema);
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     const now = new Date();
     await requireWritable(proId, now);
     const service = await requireService(proId, input.serviceId);
@@ -44,7 +43,7 @@ export const handler = createApiHandler({
 
   'PATCH /me/appointments/{appointmentId}': async (event) => {
     const input = parseBody(event, moveAppointmentSchema);
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     const now = new Date();
     await requireWritable(proId, now);
     const appt = await requireAppointmentItem(proId, pathParam(event, 'appointmentId'));
@@ -54,7 +53,7 @@ export const handler = createApiHandler({
 
   'POST /me/appointments/{appointmentId}/cancel': async (event) => {
     const input = parseBody(event, cancelAppointmentSchema);
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     const appt = await requireAppointmentItem(proId, pathParam(event, 'appointmentId'));
     const cancelled = await cancelAppointment({ appt, actor: 'pro', reason: input.reason, now: new Date() });
     return ok({ appointment: toAppointment(cancelled) });
@@ -62,14 +61,14 @@ export const handler = createApiHandler({
 
   'POST /me/appointments/{appointmentId}/outcome': async (event) => {
     const { outcome } = parseBody(event, setOutcomeSchema);
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     const appt = await requireAppointmentItem(proId, pathParam(event, 'appointmentId'));
     return ok({ appointment: toAppointment(await setOutcome(appt, outcome, new Date())) });
   },
 
   'GET /me/slots': async (event) => {
     const query = parseQuery(event, availabilityQuerySchema);
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     const now = new Date();
     const [service, sub] = await Promise.all([requireService(proId, query.serviceId), loadSubscription(proId, now)]);
     return ok(await availabilityFor({

@@ -8,6 +8,7 @@ import { ensureDefaultPrices, requirePrice } from './prices';
 import { getProfile } from './profiles';
 import { adminReferralInfo } from './referrals';
 import { listSubItems, loadSubItem, subscriptionStatus, type SubItem } from './subscriptions';
+import { teamSeats } from './teams';
 
 /** Admin read models over the GSI1 `SUBS` listing (in-memory filtering/sorting is fine at this scale). */
 
@@ -53,8 +54,8 @@ export async function adminSubscriptions(query: ListSubscriptionsQuery, now: Dat
 export async function adminProDetail(proId: string, now: Date = new Date()): Promise<AdminProDetailResponse> {
   const [profile, sub] = await Promise.all([getProfile(proId, true), loadSubItem(proId, true)]);
   if (!profile || !sub) throw new ApiError('not_found', 'No encontramos ese profesional.');
-  const [price, payments, upcomingAppointments, referralInfo] = await Promise.all([
-    requirePrice(sub.priceVersionId), listPayments(proId), countUpcoming(proId, now), adminReferralInfo(sub, now),
+  const [price, payments, upcomingAppointments, referralInfo, seats] = await Promise.all([
+    requirePrice(sub.priceVersionId), listPayments(proId), countUpcoming(proId, now), adminReferralInfo(sub, now), teamSeats(proId),
   ]);
   return {
     profile,
@@ -63,6 +64,7 @@ export async function adminProDetail(proId: string, now: Date = new Date()): Pro
     payments,
     upcomingAppointments,
     trialStartedAt: sub.trialStartedAt ?? sub.createdAt,
+    teamSeats: seats,
     ...referralInfo,
   };
 }

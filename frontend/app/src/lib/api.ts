@@ -3,7 +3,8 @@
  * on 401 (then signs out) and turns `{ error: { code, message } }` bodies into
  * `ApiError`s. Mock mode swaps the transport for the in-memory API.
  */
-import type { ApiErrorBody, ErrorCode } from '@shared/api';
+import { ACTING_PRO_HEADER, type ApiErrorBody, type ErrorCode } from '@shared/api';
+import { defaultActingHeader } from './actingPro';
 import { auth } from './auth';
 import { getConfig } from './config';
 
@@ -26,6 +27,17 @@ export interface TransportRequest {
   path: string;
   body?: unknown;
   token: string | null;
+  /** Extra headers (team plan: `ACTING_PRO_HEADER`). */
+  headers?: Record<string, string>;
+}
+
+/** Per-call options. */
+export interface RequestOptions {
+  /**
+   * Team plan: the member to act on (`ACTING_PRO_HEADER`); `null` = the owner (no header).
+   * Omitted = the professional picked in the selector (lib/actingPro.ts).
+   */
+  actingProId?: string | null;
 }
 
 export interface TransportResponse {
@@ -43,12 +55,13 @@ function parseJson(text: string): unknown {
   }
 }
 
-const fetchTransport: Transport = async ({ method, path, body, token }) => {
+const fetchTransport: Transport = async ({ method, path, body, token, headers }) => {
   const res = await fetch(`${getConfig().apiUrl}${path}`, {
     method,
     headers: {
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -69,19 +82,25 @@ function toError(status: number, body: unknown): ApiError {
   return new ApiError(status, code, '');
 }
 
-async function send(method: HttpMethod, path: string, body?: unknown): Promise<TransportResponse> {
+function actingHeaders(options: RequestOptions | undefined): Record<string, string> | undefined {
+  const acting = options?.actingProId !== undefined ? options.actingProId : defaultActingHeader();
+  return acting ? { [ACTING_PRO_HEADER]: acting } : undefined;
+}
+
+async function send(method: HttpMethod, path: string, body: unknown, headers: Record<string, string> | undefined): Promise<TransportResponse> {
   try {
-    return await transport({ method, path, body, token: await auth.getIdToken() });
+    return await transport({ method, path, body, token: await auth.getIdToken(), ...(headers ? { headers } : {}) });
   } catch {
     throw new ApiError(0, 'network', '');
   }
 }
 
-export async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
-  let res = await send(method, path, body);
+export async function request<T>(method: HttpMethod, path: string, body?: unknown, options?: RequestOptions): Promise<T> {
+  const headers = actingHeaders(options);
+  let res = await send(method, path, body, headers);
   if (res.status === 401) {
     const refreshed = await auth.forceRefresh();
-    if (refreshed) res = await send(method, path, body);
+    if (refreshed) res = await send(method, path, body, headers);
     if (res.status === 401) {
       void auth.signOut();
       throw toError(401, res.body);
@@ -92,11 +111,11 @@ export async function request<T>(method: HttpMethod, path: string, body?: unknow
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {}),
-  put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
-  patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
-  del: <T>(path: string) => request<T>('DELETE', path),
+  get: <T>(path: string, options?: RequestOptions) => request<T>('GET', path, undefined, options),
+  post: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('POST', path, body ?? {}, options),
+  put: <T>(path: string, body: unknown, options?: RequestOptions) => request<T>('PUT', path, body, options),
+  patch: <T>(path: string, body: unknown, options?: RequestOptions) => request<T>('PATCH', path, body, options),
+  del: <T>(path: string, options?: RequestOptions) => request<T>('DELETE', path, undefined, options),
 };
 
 /** User-facing Spanish message for any error thrown by the API layer. */

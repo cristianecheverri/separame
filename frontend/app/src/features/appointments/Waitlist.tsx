@@ -12,7 +12,8 @@ import { Modal } from '../../components/ui/Modal';
 import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
-import { keys, useWaitlist } from '../../lib/queries';
+import { actingHeaderFor } from '../../lib/actingPro';
+import { keys, useActing, useWaitlist } from '../../lib/queries';
 
 const waiting = (entries: WaitlistEntry[] | undefined) => (entries ?? []).filter((e) => e.status === 'waiting');
 const datesText = (e: WaitlistEntry) => e.dates.map(formatDayShort).join(' · ');
@@ -171,11 +172,13 @@ export function WaitlistSection({ onSchedule, readOnly = false }: { onSchedule?:
   const list = useWaitlist();
   const qc = useQueryClient();
   const toast = useToast();
+  const { ownerId } = useActing();
   const [removing, setRemoving] = useState<WaitlistEntry | null>(null);
   const remove = useMutation({
-    mutationFn: (id: string) => api.del(apiPaths.waitlistEntry(id)),
+    // Team plan: removed from its own professional's list (also under «Todos»).
+    mutationFn: (entry: WaitlistEntry) => api.del(apiPaths.waitlistEntry(entry.id), { actingProId: actingHeaderFor(entry.proId, ownerId) }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.waitlist });
+      void qc.invalidateQueries({ queryKey: keys.waitlistAll });
       toast.success('Lo quitaste de la lista de espera.');
     },
     onError: (e) => toast.error(errorMessage(e)),
@@ -226,7 +229,7 @@ export function WaitlistSection({ onSchedule, readOnly = false }: { onSchedule?:
               type="button"
               className="h-12 px-6 rounded-full bg-ink text-white font-bold text-[15px] grow sm:grow-0"
               onClick={() => {
-                if (removing) remove.mutate(removing.id);
+                if (removing) remove.mutate(removing);
                 setRemoving(null);
               }}
             >

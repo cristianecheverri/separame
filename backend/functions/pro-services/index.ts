@@ -1,21 +1,20 @@
 import { upsertServiceSchema } from '../../../shared/schemas';
-import { requirePro } from '../../lib/auth';
 import { created, createApiHandler, noContent, ok, parseBody, pathParam, type ApiEvent } from '../../lib/http';
-import { requireProId } from '../../services/profiles';
+import { actingProId } from '../../services/teams';
 import { createService, deleteService, listServices, updateService } from '../../services/services';
 import { requireWritable } from '../../services/subscriptions';
 
 /** The professional's services (CRUD). Writes need a non-expired subscription. */
 
 async function writableProId(event: ApiEvent): Promise<string> {
-  const proId = await requireProId(requirePro(event));
+  const proId = await actingProId(event);
   await requireWritable(proId);
   return proId;
 }
 
 export const handler = createApiHandler({
   'GET /me/services': async (event) => {
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     return ok({ services: await listServices(proId, true) });
   },
 

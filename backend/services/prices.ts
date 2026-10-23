@@ -1,5 +1,6 @@
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import type { CreatePriceRequest, PriceWithUsage, UpdatePriceRequest } from '../../shared/api';
+import { LEGACY_EXTRA_PROFESSIONAL_COP } from '../../shared/subscription';
 import type { PricePackage, PriceVersion } from '../../shared/types';
 import {
   ddb, getItem, isConditionalFailure, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem,
@@ -27,6 +28,7 @@ export const DEFAULT_PRICE_SEEDS: Omit<PriceVersion, 'createdAt'>[] = [
       { months: 6, amountCop: 30000 },
       { months: 12, amountCop: 50000 },
     ],
+    extraProfessionalCop: LEGACY_EXTRA_PROFESSIONAL_COP,
     status: 'active',
     isDefault: true,
   },
@@ -37,14 +39,20 @@ export const DEFAULT_PRICE_SEEDS: Omit<PriceVersion, 'createdAt'>[] = [
     currency: 'COP',
     monthlyCop: 5900,
     packages: [{ months: 1, amountCop: 5900 }],
+    extraProfessionalCop: LEGACY_EXTRA_PROFESSIONAL_COP,
     status: 'active',
     isDefault: false,
   },
 ];
 
 export function toPrice(item: Item): PriceVersion {
-  const { id, code, name, currency, monthlyCop, packages, status, isDefault, createdAt } = stripKeys<PriceVersion>(item);
-  return { id, code, name, currency, monthlyCop: monthlyCop ?? null, packages: packages ?? [], status, isDefault: !!isDefault, createdAt };
+  const { id, code, name, currency, monthlyCop, packages, extraProfessionalCop, status, isDefault, createdAt } = stripKeys<PriceVersion>(item);
+  return {
+    id, code, name, currency, monthlyCop: monthlyCop ?? null, packages: packages ?? [],
+    // Versions stored before the team plan have no attribute: they carry the value decided for them.
+    extraProfessionalCop: extraProfessionalCop === undefined ? LEGACY_EXTRA_PROFESSIONAL_COP : extraProfessionalCop,
+    status, isDefault: !!isDefault, createdAt,
+  };
 }
 
 export async function listPrices(consistent = false): Promise<PriceVersion[]> {
@@ -141,6 +149,7 @@ export async function createPrice(input: CreatePriceRequest, now: Date = new Dat
     currency: 'COP',
     monthlyCop: input.monthlyCop,
     packages: [...input.packages].sort((a, b) => a.months - b.months),
+    extraProfessionalCop: input.extraProfessionalCop ?? null,
     status: input.status,
     isDefault: input.isDefault,
     createdAt: now.toISOString(),

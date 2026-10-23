@@ -128,7 +128,20 @@ describe('bootstrap', () => {
     expect(data.profile?.slug).toBe('dra');
     expect(data.config.apiUrl).toBe('https://x');
     document.body.innerHTML = '';
-    expect(readEmbeddedData()).toEqual({ profile: null, config: {} });
+    expect(readEmbeddedData()).toEqual({ profile: null, team: null, config: {} });
+  });
+
+  it('reads an embedded team page (team plan) instead of a profile', () => {
+    const team = { slug: 'consultorio-sonrie', name: 'Consultorio Sonríe', members: [{ slug: 'dra' }] };
+    document.body.innerHTML = `<script type="application/json" id="separame-data">${JSON.stringify({ team, config: {} })}</script>`;
+    const data = readEmbeddedData();
+    expect(data.profile).toBeNull();
+    expect(data.team?.slug).toBe('consultorio-sonrie');
+    expect(data.team?.members[0].slug).toBe('dra');
+    // A malformed team (no members) is ignored rather than crashing the page.
+    document.body.innerHTML = '<script type="application/json" id="separame-data">{"team":{"slug":"x"},"config":{}}</script>';
+    expect(readEmbeddedData().team).toBeNull();
+    document.body.innerHTML = '';
   });
 
   it('derives the slug and the manage token from the URL', () => {

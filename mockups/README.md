@@ -127,6 +127,17 @@ Los enlaces a pantallas de la línea A apuntan a `../line-a/`.
 | `proposals/referral-signup-invited-{desktop,phone}.dc.html` | **Aprobada.** Referidos · Registro con «Te invitó Dra. Laura Pérez» |
 | `proposals/referral-email-month-earned.dc.html` | **Aprobada.** Referidos · Correo «¡Ganaste un mes gratis!» (tweak: plan vencido → mes guardado) |
 | `proposals/referral-admin-pro-detail.dc.html` | **Aprobada.** Referidos · Admin: «Referido por…», sus referidos y «Mes gratis por referido» en el historial |
+| `proposals/team-request-card-desktop.dc.html` | **Aprobada.** Equipos 1/4 · Tarjeta «¿Trabajas con más profesionales?» en la agenda (tweak: sin pedir · en revisión · rechazada) |
+| `proposals/team-request-form-phone.dc.html` | **Aprobada.** Equipos 1/4 · Formulario de solicitud: consultorio, cuántos profesionales, mensaje (tweak: enviada) |
+| `proposals/team-owner-agenda-{desktop,phone}.dc.html` | **Aprobada.** Equipos 2/4 · Agenda del dueño con selector de profesional («Todos» con etiqueta de color por cita) |
+| `proposals/team-members-desktop.dc.html` | **Aprobada.** Equipos 2/4 · Página «Equipo»: profesionales, cupos, editar y página del consultorio |
+| `proposals/team-booking-who-phone.dc.html` | **Aprobada.** Equipos 3/4 · Página del consultorio con «¿Con quién?» y «Cualquiera disponible» (5 pasos; tweak: paso) |
+| `proposals/team-booking-pro-link-phone.dc.html` | **Aprobada.** Equipos 3/4 · Enlace propio de un profesional del equipo («Parte de Consultorio Sonríe») |
+| `proposals/team-admin-requests-desktop.dc.html` | **Aprobada.** Equipos 4/4 · Admin «Equipos»: aprobar con cupos o rechazar con motivo; equipos activos (tweak: rechazo abierto) |
+| `proposals/team-admin-price-desktop.dc.html` | **Aprobada.** Equipos 4/4 · Admin «Precios»: valor por profesional adicional en cada versión |
+| `proposals/team-billing-phone.dc.html` | **Aprobada.** Equipos 4/4 · Suscripción del dueño: plan + profesionales adicionales (valor `[VALOR]` por definir) |
+| `proposals/team-email-request-result.dc.html` | Equipos · Correos de la solicitud: aviso al admin, aprobada y rechazada (tweak: variante) |
+| `proposals/proposal-footer-links-{before,after,after-desktop}.dc.html` | **Aprobada.** Pie de la página principal con «Cómo funciona · Precios · Preguntas» también en el celular (sitelinks; la página sigue siendo una sola) |
 
 ## Exploración (líneas B y C)
 

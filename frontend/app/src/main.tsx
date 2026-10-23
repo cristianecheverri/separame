@@ -6,6 +6,7 @@ import './index.css';
 import { FatalError } from './app/Splash';
 import { createRouter } from './app/router';
 import { ToastProvider } from './components/ui/Toast';
+import { resetActingSelection } from './lib/actingPro';
 import { ApiError } from './lib/api';
 import { auth } from './lib/auth';
 import { createAmplifyAuth } from './lib/amplifyAuth';
@@ -27,7 +28,10 @@ const queryClient = new QueryClient({
     },
   },
 });
-auth.onSignOut(() => queryClient.clear());
+auth.onSignOut(() => {
+  queryClient.clear();
+  resetActingSelection();
+});
 
 captureInstallEvents();
 initAnalytics();

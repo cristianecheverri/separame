@@ -22,7 +22,7 @@ describe('WorkersStack', () => {
     template.resourceCountIs('AWS::SQS::Queue', 2);
   });
 
-  it('filters stream-appointments to APPT# / WAIT# items and stream-publish to PROFILE / SERVICE# items', () => {
+  it('filters stream-appointments to APPT# / WAIT# items and stream-publish to PROFILE / TEAM / SERVICE# items', () => {
     const patterns = mappings.map(filtersOf);
     expect(patterns).toContainEqual([
       { dynamodb: { Keys: { SK: { S: [{ prefix: 'APPT#' }] } } } },
@@ -30,6 +30,7 @@ describe('WorkersStack', () => {
     ]);
     expect(patterns).toContainEqual([
       { dynamodb: { Keys: { SK: { S: ['PROFILE'] } } } },
+      { dynamodb: { Keys: { SK: { S: ['TEAM'] } } } },
       { dynamodb: { Keys: { SK: { S: [{ prefix: 'SERVICE#' }] } } } },
     ]);
   });

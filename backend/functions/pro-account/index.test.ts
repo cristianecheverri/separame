@@ -81,6 +81,6 @@ describe('POST /me/onboarding', () => {
 describe('GET /me', () => {
   it('returns profile null until onboarding, with the admin flag', async () => {
     const res = await handler(apiEvent('GET /me', { claims: { ...proClaims, 'cognito:groups': '[admin]' } }));
-    expect(parse(res)).toEqual({ email: 'laura@correo.com', isAdmin: true, profile: null, subscription: null, publicUrl: null });
+    expect(parse(res)).toEqual({ email: 'laura@correo.com', isAdmin: true, profile: null, subscription: null, publicUrl: null, team: null, teamRequest: null });
   });
 });

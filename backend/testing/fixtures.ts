@@ -26,6 +26,7 @@ export interface EventInput {
   path?: Record<string, string>;
   query?: Record<string, string>;
   claims?: Record<string, unknown>;
+  headers?: Record<string, string>;
   ip?: string;
 }
 
@@ -36,7 +37,7 @@ export function apiEvent(routeKey: string, input: EventInput = {}): ApiEvent {
     routeKey,
     rawPath,
     rawQueryString: '',
-    headers: {},
+    headers: input.headers ?? {},
     queryStringParameters: input.query,
     pathParameters: input.path,
     body: input.body === undefined ? undefined : typeof input.body === 'string' ? input.body : JSON.stringify(input.body),

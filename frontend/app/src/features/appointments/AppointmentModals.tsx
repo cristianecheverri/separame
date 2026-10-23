@@ -14,7 +14,9 @@ import { focusFirstError } from '../../lib/focusError';
 import { endSentence, formatPhone, formatWhenInline } from '../../lib/format';
 import { telHref } from '../../components/ContactActions';
 import { now } from '../../lib/clock';
-import { useAvailability, useServices, useSlots } from '../../lib/queries';
+import { ActingScope } from '../../lib/actingPro';
+import { useActing, useAvailability, useServices, useSlots } from '../../lib/queries';
+import { PickProModal } from '../team/PickProModal';
 import { ClientNameField } from './ClientNameField';
 import { useCancelAppointment, useCreateAppointment, useMoveAppointment } from './mutations';
 import { SlotPicker, SLOT_PICKER_DAYS } from './SlotPicker';
@@ -22,7 +24,8 @@ import { formatTimeRange } from './slotFormat';
 
 export type AppointmentModalState =
   /** `start` preselects the time (an agenda gap of `freeMinutes`); `serviceId` the service (waitlist). */
-  | { kind: 'new'; date?: ISODate; client?: ClientContact; start?: string; freeMinutes?: number; serviceId?: string }
+  /** `proId` (team plan): whose agenda; under «Todos» without it, the modal asks first. */
+  | { kind: 'new'; date?: ISODate; client?: ClientContact; start?: string; freeMinutes?: number; serviceId?: string; proId?: string }
   | { kind: 'move'; appointment: Appointment }
   | { kind: 'cancel'; appointment: Appointment }
   | null;
@@ -352,10 +355,25 @@ function NoticeText({ client, sent }: { client: ClientContact; sent: string }) {
   return <>Este cliente no dejó correo ni celular: avísale tú.</>;
 }
 
-/** Renders the open appointment modal, if any. */
+type NewState = Extract<AppointmentModalState, { kind: 'new' }>;
+
+/** «Nueva cita»; under «Todos» (team plan) it first asks with whom, then books on that agenda. */
+function NewAppointmentFlow({ state, onClose }: { state: NewState; onClose: () => void }) {
+  const { isAll } = useActing();
+  const [picked, setPicked] = useState<string | null>(null);
+  const proId = state.proId ?? picked;
+  const modal = <NewAppointmentModal date={state.date} client={state.client} start={state.start} freeMinutes={state.freeMinutes} serviceId={state.serviceId} onClose={onClose} />;
+  if (proId) return <ActingScope proId={proId}>{modal}</ActingScope>;
+  return isAll ? <PickProModal onPick={setPicked} onClose={onClose} /> : modal;
+}
+
+/** Renders the open appointment modal, if any (moving or cancelling acts on the appointment's own professional). */
 export function AppointmentModals({ state, onClose }: { state: AppointmentModalState; onClose: () => void }) {
   if (!state) return null;
-  if (state.kind === 'new') return <NewAppointmentModal date={state.date} client={state.client} start={state.start} freeMinutes={state.freeMinutes} serviceId={state.serviceId} onClose={onClose} />;
-  if (state.kind === 'move') return <MoveAppointmentModal appointment={state.appointment} onClose={onClose} />;
-  return <CancelAppointmentModal appointment={state.appointment} onClose={onClose} />;
+  if (state.kind === 'new') return <NewAppointmentFlow state={state} onClose={onClose} />;
+  return (
+    <ActingScope proId={state.appointment.proId}>
+      {state.kind === 'move' ? <MoveAppointmentModal appointment={state.appointment} onClose={onClose} /> : <CancelAppointmentModal appointment={state.appointment} onClose={onClose} />}
+    </ActingScope>
+  );
 }

@@ -1,10 +1,11 @@
+import { Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import type { AvailabilityResponse } from '@shared/api';
 import type { DayAvailability } from '@shared/availability';
 import { capitalize, DAY_SHORT, formatDayLong, formatDayShort, formatInstantTime } from '@shared/format';
 import { jsWeekday } from '@shared/time';
 import { Bell, ChevronRight } from '../components/icons';
-import { DayPill, FullDot, Notice, SkeletonPills, SkeletonSlots, SlotGroup, WeekNav } from '../components/ui';
+import { DayPill, FullDot, MemberAvatar, Notice, SkeletonPills, SkeletonSlots, SlotGroup, WeekNav } from '../components/ui';
 import { chunk, DAYS_PER_WEEK, isDayBookable, monthLabel, splitSlots, weekOf } from '../lib/slots';
 import { StepTitle } from './FlowChrome';
 
@@ -24,6 +25,27 @@ interface Props {
   onWaitlist: () => void;
   titleRef: preact.Ref<HTMLHeadingElement>;
   titleAs: 'h1' | 'h2';
+  /** «Cualquiera disponible»: who takes the picked hour, shown under its grid. */
+  assignee?: Assignee | null;
+}
+
+export interface Assignee {
+  name: string;
+  initials: string;
+  /** Position in the team (avatar color). */
+  index: number;
+}
+
+/** «Te atiende: Dra. Sara Gómez (libre a esa hora)» under the grid that holds the picked hour. */
+function AssigneeNote({ assignee }: { assignee: Assignee }) {
+  return (
+    <div role="status" class="flex gap-2 items-center text-[14px] text-ink-2 min-h-6 -mt-1 fade-in">
+      <MemberAvatar initials={assignee.initials} index={assignee.index} size={24} />
+      <span>
+        Te atiende: <strong class="font-bold text-ink">{assignee.name}</strong> <span class="text-[13px] text-muted">(libre a esa hora)</span>
+      </span>
+    </div>
+  );
 }
 
 /** Screen-reader label: a closed day ("no hay atención") must not sound like a full one ("sin horas libres"). */
@@ -71,7 +93,7 @@ export function WaitlistCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, onWaitlist, titleRef, titleAs }: Props) {
+export function StepWhen({ availability, day, start, notice, onPickDay, onPickSlot, onRetry, onWaitlist, titleRef, titleAs, assignee = null }: Props) {
   const days = availability?.status === 'ready' ? availability.data.days : [];
   const weeks = chunk(days, DAYS_PER_WEEK);
   // Only open days can be selected: a closed one (deep link, stale draft) never shows the waitlist.
@@ -140,8 +162,15 @@ export function StepWhen({ availability, day, start, notice, onPickDay, onPickSl
         selectedDay.slots.length > 0 ? (
           <div class="flex flex-col gap-3.5 fade-in" key={selectedDay.date}>
             <div class="mt-1 text-[15px] font-bold">{capitalize(formatDayLong(selectedDay.date))}</div>
-            <SlotGroup title="Mañana" slots={splitSlots(selectedDay.slots).morning} start={start} onPickSlot={onPickSlot} format={formatInstantTime} />
-            <SlotGroup title="Tarde" slots={splitSlots(selectedDay.slots).afternoon} start={start} onPickSlot={onPickSlot} format={formatInstantTime} />
+            {(['morning', 'afternoon'] as const).map((part) => {
+              const slots = splitSlots(selectedDay.slots)[part];
+              return (
+                <Fragment key={part}>
+                  <SlotGroup title={part === 'morning' ? 'Mañana' : 'Tarde'} slots={slots} start={start} onPickSlot={onPickSlot} format={formatInstantTime} />
+                  {assignee && start && slots.includes(start) && <AssigneeNote assignee={assignee} />}
+                </Fragment>
+              );
+            })}
           </div>
         ) : (
           <>

@@ -28,8 +28,11 @@ import { loadSubItem, requireWritable, subIndexAttrs, subscriptionStatus, type S
 const DAY_MS = 86_400_000;
 
 export function toProfile(item: Item): ProProfile {
-  const { id, slug, name, title, city, neighborhood, address, phone, email, createdAt, updatedAt } = stripKeys<ProProfile>(item);
-  return { id, slug, name, title, city, neighborhood: neighborhood ?? '', address: address ?? '', phone: phone ?? null, email, createdAt, updatedAt };
+  const { id, slug, name, title, city, neighborhood, address, phone, email, ownerId, createdAt, updatedAt } = stripKeys<ProProfile>(item);
+  return {
+    id, slug, name, title, city, neighborhood: neighborhood ?? '', address: address ?? '', phone: phone ?? null, email, createdAt, updatedAt,
+    ...(ownerId ? { ownerId } : {}),
+  };
 }
 
 export const publicUrl = (slug: string): string => `${env.siteUrl()}/${slug}`;
@@ -82,10 +85,12 @@ export async function proIdBySlug(slug: string): Promise<string | undefined> {
 export async function getMe(user: AuthUser, now: Date = new Date()): Promise<MeResponse> {
   const proId = await proIdForUser(user.sub);
   const base = { email: user.email, isAdmin: user.isAdmin };
-  if (!proId) return { ...base, profile: null, subscription: null, publicUrl: null };
+  // Team data is filled in by the /me handler (services/teams.ts depends on this module).
+  const empty = { ...base, profile: null, subscription: null, publicUrl: null, team: null, teamRequest: null };
+  if (!proId) return empty;
   const [profile, sub] = await Promise.all([getProfile(proId, true), loadSubItem(proId, true)]);
-  if (!profile || !sub) return { ...base, profile: null, subscription: null, publicUrl: null };
-  return { ...base, profile, subscription: subscriptionStatus(sub, now), publicUrl: publicUrl(profile.slug) };
+  if (!profile || !sub) return empty;
+  return { ...base, profile, subscription: subscriptionStatus(sub, now), publicUrl: publicUrl(profile.slug), team: null, teamRequest: null };
 }
 
 /** Maps a failed onboarding / profile transaction to the right API error. */

@@ -1,9 +1,10 @@
 /**
  * Runtime inputs of the page: the JSON the backend embeds in every profile
- * page (`<script type="application/json" id="separame-data">`), the slug or
- * manage token from the URL, and the API client to use.
+ * page (`<script type="application/json" id="separame-data">`: `{ profile }`
+ * on a professional's page, `{ team }` on a team page), the slug or manage
+ * token from the URL, and the API client to use.
  */
-import { apiBaseFor, type PublicProfile } from '@shared/api';
+import { apiBaseFor, type PublicProfile, type PublicTeam } from '@shared/api';
 import { SITE_PATHS, TURNSTILE_TEST_KEYS } from '@shared/infra';
 import { createHttpApi, type ApiClient } from './api';
 
@@ -14,18 +15,33 @@ export interface SiteConfig {
 
 export interface EmbeddedData {
   profile: PublicProfile | null;
+  /** Team plan: the consultorio page (/<teamSlug>) embeds this instead of `profile`. */
+  team: PublicTeam | null;
   config: SiteConfig;
 }
 
+const NO_DATA: EmbeddedData = { profile: null, team: null, config: {} };
+
 export function readEmbeddedData(doc: Document = document): EmbeddedData {
   const node = doc.getElementById(SITE_PATHS.dataScriptId);
-  if (!node?.textContent) return { profile: null, config: {} };
+  if (!node?.textContent) return NO_DATA;
   try {
     const data = JSON.parse(node.textContent) as Partial<EmbeddedData>;
-    return { profile: data.profile ?? null, config: data.config ?? {} };
+    const team = data.team && Array.isArray(data.team.members) ? data.team : null;
+    return { profile: team ? null : (data.profile ?? null), team, config: data.config ?? {} };
   } catch {
-    return { profile: null, config: {} };
+    return NO_DATA;
   }
+}
+
+/**
+ * Dev mock: there is no public team endpoint (the data only lives in the
+ * generated page), so the mock provides the embedded team for its slug.
+ */
+export async function withMockPage(data: EmbeddedData, slug: string): Promise<EmbeddedData> {
+  if (!import.meta.env.DEV || !isMockMode() || data.profile || data.team) return data;
+  const { mockTeamFor } = await import('../mock/fixtures');
+  return { ...data, team: mockTeamFor(slug) };
 }
 
 /** `/dra-laura-perez` → "dra-laura-perez"; `?slug=` wins (local dev). */

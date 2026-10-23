@@ -21,7 +21,7 @@ import { now } from '../../lib/clock';
 import { firstName, formatCopInput, formatDayMonth, parseCopInput, plural } from '../../lib/format';
 import { keys, useAdminMigrations, useAdminPrices, useAdminSubscriptions } from '../../lib/queries';
 import { tableHead, th } from './adminUi';
-import { monthlyText, packagesShort, STATUS_TAG } from './priceText';
+import { extraProfessionalText, monthlyText, packagesShort, STATUS_TAG } from './priceText';
 
 type TargetKind = 'group' | 'pros' | 'version';
 const TARGETS: { kind: TargetKind; label: string }[] = [
@@ -77,12 +77,13 @@ export function AdminPricesPage() {
 
       <section className="bg-white rounded-[24px] pt-2 px-2 pb-3" aria-label="Versiones de precio" aria-busy={prices.isPending}>
         <div className="overflow-x-auto relative">
-          <table className="w-full min-w-[760px] border-collapse text-[14px]">
+          <table className="w-full min-w-[880px] border-collapse text-[14px]">
             <thead>
               <tr className={tableHead}>
                 <th className={cx(th, 'px-[14px]')}>Versión</th>
                 <th className={cx(th, 'px-[10px]')}>Precio</th>
                 <th className={cx(th, 'px-[10px]')}>Paquetes</th>
+                <th className={cx(th, 'px-[10px]')}>Profesional adicional</th>
                 <th className={cx(th, 'px-[10px]')}>Estado</th>
                 <th className={cx(th, 'px-[10px]')}>Suscripciones</th>
                 <th className={cx(th, 'px-[10px]')}>Creada</th>
@@ -95,7 +96,7 @@ export function AdminPricesPage() {
               {prices.isPending &&
                 [0, 1, 2].map((i) => (
                   <tr key={i} className="border-t border-line">
-                    <td colSpan={7} className="px-[14px] py-3">
+                    <td colSpan={8} className="px-[14px] py-3">
                       <div className="skeleton h-9" />
                     </td>
                   </tr>
@@ -108,6 +109,7 @@ export function AdminPricesPage() {
                   </td>
                   <td className="px-[10px] py-3 whitespace-nowrap font-bold">{monthlyText(p)}</td>
                   <td className="px-[10px] py-3 text-ink-2">{packagesShort(p)}</td>
+                  <td className="px-[10px] py-3 whitespace-nowrap font-bold">{extraProfessionalText(p)}</td>
                   <td className="px-[10px] py-3">
                     <span className={cx(ui.badge, STATUS_TAG[p.status].className)}>{STATUS_TAG[p.status].label}</span>
                   </td>
@@ -333,6 +335,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
     { months: 6, amount: '' },
     { months: 12, amount: '' },
   ]);
+  const [extra, setExtra] = useState('');
   const [status, setStatus] = useState<'active' | 'draft'>('draft');
   const [isDefault, setIsDefault] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -355,6 +358,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
       name,
       monthlyCop: parseCopInput(monthly),
       packages: packages.filter((p) => p.amount).map((p) => ({ months: p.months, amountCop: parseCopInput(p.amount) ?? 0 })),
+      extraProfessionalCop: parseCopInput(extra),
       status,
       isDefault: status === 'active' && isDefault,
     };
@@ -434,6 +438,7 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
             </button>
           )}
         </div>
+        <TeamPriceField value={extra} onChange={setExtra} monthly={parseCopInput(monthly)} />
         <div className="flex flex-col gap-2" role="group" aria-labelledby="np-status">
           <div id="np-status" className={ui.label}>
             Estado
@@ -460,5 +465,30 @@ function NewPriceModal({ onClose }: { onClose: () => void }) {
         )}
       </form>
     </Modal>
+  );
+}
+
+/** Team plan: monthly value of each additional professional (board team-admin-price-desktop). */
+function TeamPriceField({ value, onChange, monthly }: { value: string; onChange: (v: string) => void; monthly: number | null }) {
+  const extra = parseCopInput(value);
+  return (
+    <div className="bg-primary-soft rounded-[18px] p-4 flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="np-extra" className={ui.label}>
+          Valor por profesional adicional (al mes, COP)
+        </label>
+        <span className="text-[11px] font-bold py-1 px-2 rounded-full bg-primary text-white">Nuevo</span>
+      </div>
+      <div className="flex gap-2 max-w-[320px]">
+        <div className={cx(ui.prefix, 'bg-white')} aria-hidden="true">
+          COP $
+        </div>
+        <input id="np-extra" inputMode="numeric" aria-describedby="np-extra-help" className={cx(ui.input, 'grow')} value={value} onChange={(e) => onChange(formatCopInput(e.target.value))} placeholder="Valor de un profesional al mes" />
+      </div>
+      <div id="np-extra-help" className="text-[13px] text-ink-2 leading-[1.45]">
+        Solo para cuentas con plan para equipos. Se congela con la versión, igual que el precio del plan.
+        {monthly && extra ? ` Ejemplo: con 2 profesionales adicionales, ${formatCop(monthly)} + 2 × ${formatCop(extra)} = ${formatCop(monthly + 2 * extra)} al mes.` : ''}
+      </div>
+    </div>
   );
 }

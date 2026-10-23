@@ -34,6 +34,12 @@ export function wordmark(size = 22): string {
 }
 
 /** Soft-green card of label / value rows ("Con", "Servicio", "Cuándo", "Dónde"). Values are plain text. */
+/** "10:00 a. m." never wraps inside the time (non-breaking spaces). */
+export const keepTimeTogether = (text: string): string => text.replace(/(\d{1,2}:\d{2}) ([ap])\. m\./g, '$1\u00a0$2.\u00a0m.');
+
+/** Ends a sentence once: a time like "10:00 a. m." already ends with a period. */
+export const sentence = (text: string): string => (text.endsWith('.') ? text : `${text}.`);
+
 export function detailsCard(rows: [label: string, value: string, opts?: { strike?: boolean }][]): string {
   const visible = rows.filter(([, value]) => value);
   const cells = visible
@@ -42,7 +48,7 @@ export function detailsCard(rows: [label: string, value: string, opts?: { strike
       const strike = opts?.strike ? `text-decoration:line-through;color:${C.muted};font-weight:600;` : '';
       return `<tr>
 <td valign="top" style="padding:12px 0;${border}font-family:${BODY_FONT};font-size:15px;color:${C.ink2};white-space:nowrap;padding-right:16px">${esc(label)}</td>
-<td valign="top" align="right" style="padding:12px 0;${border}font-family:${BODY_FONT};font-size:15px;font-weight:700;color:${C.ink};text-align:right;${strike}">${esc(value)}</td>
+<td valign="top" align="right" style="padding:12px 0;${border}font-family:${BODY_FONT};font-size:15px;font-weight:700;color:${C.ink};text-align:right;overflow-wrap:anywhere;word-break:break-word;${strike}">${esc(keepTimeTogether(value))}</td>
 </tr>`;
     })
     .join('');
@@ -54,8 +60,8 @@ export function detailsCard(rows: [label: string, value: string, opts?: { strike
 /** Solid green pill button. */
 export function pillButton(href: string, label: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td align="center" bgcolor="${C.green}" style="background:${C.green};border-radius:999px;height:50px">
-<a href="${esc(href)}" style="display:block;line-height:50px;font-family:${BODY_FONT};font-weight:700;font-size:15px;color:${C.white};text-decoration:none;border-radius:999px">${esc(label)}</a>
+<td align="center" bgcolor="${C.green}" style="background:${C.green};border-radius:999px;height:50px;padding:0 24px">
+<a href="${esc(href)}" style="display:block;line-height:50px;font-family:${BODY_FONT};font-weight:700;font-size:15px;color:${C.white};text-decoration:none;border-radius:999px;white-space:nowrap">${esc(label)}</a>
 </td></tr></table>`;
 }
 
@@ -77,7 +83,7 @@ export interface CalendarButton {
 /** White bordered pill with a logo ("Google Calendar", "Outlook"), as on the booking confirmation screen. */
 export function calendarButton(b: CalendarButton): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td align="center" bgcolor="${C.white}" style="background:${C.white};border:2px solid ${C.line};border-radius:999px;height:48px">
+<td align="center" bgcolor="${C.white}" style="background:${C.white};border:2px solid ${C.line};border-radius:999px;height:48px;padding:0 16px">
 <a href="${esc(b.href)}" style="display:block;line-height:48px;font-family:${BODY_FONT};font-weight:700;font-size:15px;color:${C.ink};text-decoration:none;border-radius:999px;white-space:nowrap">
 <img src="${esc(b.iconUrl)}" width="24" height="24" alt="" style="display:inline-block;width:24px;height:24px;border:0;outline:none;vertical-align:middle;margin:-3px 8px 0 0">${esc(b.label)}</a>
 </td></tr></table>`;
@@ -102,14 +108,14 @@ export function outlineButton(href: string, label: string): string {
 /** Yellow note ("Te mandamos un recordatorio…"). Takes safe HTML. */
 export function note(html: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="background:${C.yellowSoft};border-radius:18px;padding:16px 20px;font-family:${BODY_FONT};font-size:15px;line-height:1.5;color:${C.ink}">${html}</td>
+<td style="background:${C.yellowSoft};border-radius:18px;padding:16px 20px;font-family:${BODY_FONT};font-size:15px;line-height:1.5;color:${C.ink}">${keepTimeTogether(html)}</td>
 </tr></table>`;
 }
 
 /** Paragraph. Takes safe HTML. */
 export function paragraph(html: string, opts: { muted?: boolean; size?: number; bold?: boolean } = {}): string {
   const color = opts.muted ? C.muted : C.ink2;
-  return `<div style="font-family:${BODY_FONT};font-size:${opts.size ?? 15}px;line-height:1.5;color:${opts.bold ? C.ink : color};${opts.bold ? 'font-weight:700;' : ''}">${html}</div>`;
+  return `<div style="font-family:${BODY_FONT};font-size:${opts.size ?? 15}px;line-height:1.5;color:${opts.bold ? C.ink : color};${opts.bold ? 'font-weight:700;' : ''}">${keepTimeTogether(html)}</div>`;
 }
 
 /** Big sign-in code box (Cognito). */

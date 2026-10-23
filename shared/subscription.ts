@@ -47,6 +47,22 @@ export function computeSubscription(sub: SubscriptionInput, now: Date = new Date
 }
 
 /**
+ * Team plan: monthly value per additional professional of the price versions created before
+ * teams existed (Fundador, Mensual), decided on 2026-10-23. Versions created afterwards store
+ * their own value (`PriceVersion.extraProfessionalCop`).
+ */
+export const LEGACY_EXTRA_PROFESSIONAL_COP = 3900;
+
+/**
+ * Team plan: what a package costs with `seats` additional professionals. The
+ * per-professional value is monthly, so it is multiplied by the package months;
+ * a version without team pricing (`null`) charges only the package.
+ */
+export function teamPackageAmount(pkg: { months: number; amountCop: number }, seats: number, extraProfessionalCop: number | null): number {
+  return pkg.amountCop + Math.max(0, seats) * (extraProfessionalCop ?? 0) * pkg.months;
+}
+
+/**
  * New `paidUntil` after paying `months`: counted from the end of the current
  * trial/paid period, or from now if that already passed ("si el plan ya
  * venció, los meses se cuentan desde hoy"). Used when an admin records or approves a payment.

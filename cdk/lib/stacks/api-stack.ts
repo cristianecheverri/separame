@@ -12,6 +12,7 @@ import type * as cognito from 'aws-cdk-lib/aws-cognito';
 import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import type * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ACTING_PRO_HEADER } from '../../../shared/api';
 import { HOSTED_ZONE_ID, ROOT_DOMAIN } from '../../../shared/infra';
 import { API_FUNCTIONS, ROUTES, routeKey, type ApiFunctionKey } from '../../../shared/routes';
 import type { StageConfig } from '../config';
@@ -77,7 +78,7 @@ export class ApiStack extends cdk.Stack {
       disableExecuteApiEndpoint: true,
       corsPreflight: {
         allowOrigins: config.corsOrigins,
-        allowHeaders: ['content-type', 'authorization'],
+        allowHeaders: ['content-type', 'authorization', ACTING_PRO_HEADER],
         allowMethods: [
           apigwv2.CorsHttpMethod.GET,
           apigwv2.CorsHttpMethod.POST,

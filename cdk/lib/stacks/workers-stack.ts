@@ -79,10 +79,11 @@ export class WorkersStack extends cdk.Stack {
     const streamPublish = createFunction(this, { config, def: BACKGROUND_FUNCTIONS.streamPublish, environment });
     table.grantReadData(streamPublish); // profile + services of the changed pro
     grantSitePublishing(streamPublish, siteBucket, distribution); // template read, page write, invalidation
-    // Filters are ORed: the PROFILE item, or any SERVICE#<id> item.
+    // Filters are ORed: the PROFILE item, any SERVICE#<id> item, or a team (team plan page).
     streamPublish.addEventSource(
       this.streamSource(config, table, BACKGROUND_FUNCTIONS.streamPublish, [
         lambda.FilterCriteria.filter({ dynamodb: { Keys: { SK: { S: lambda.FilterRule.isEqual('PROFILE') } } } }),
+        lambda.FilterCriteria.filter({ dynamodb: { Keys: { SK: { S: lambda.FilterRule.isEqual('TEAM') } } } }),
         lambda.FilterCriteria.filter({ dynamodb: { Keys: { SK: { S: lambda.FilterRule.beginsWith('SERVICE#') } } } }),
       ]),
     );

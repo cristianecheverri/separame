@@ -17,7 +17,7 @@ import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
 import { now } from '../../lib/clock';
-import { formatCopInput, formatMonthShortYear, formatPhone, parseCopInput } from '../../lib/format';
+import { formatCopInput, formatMonthShortYear, formatPhone, parseCopInput, plural } from '../../lib/format';
 import { keys, useAdminPro } from '../../lib/queries';
 import { METHOD_LABEL, paymentDot, paymentTitle, STATUS_LABEL } from '../billing/paymentLabels';
 import { AdminReferralsCard, ReferredByLine } from '../referrals/AdminReferrals';
@@ -123,11 +123,12 @@ function Detail({ proId, data }: { proId: string; data: AdminProDetailResponse }
   const months = PERIODS[period].months;
   const isExact = months === 0;
   const courtesy = method === 'courtesy';
-  const suggestion = isExact ? null : suggestedAmount(price, months);
+  const suggestion = isExact ? null : suggestedAmount(price, months, data.teamSeats);
   const untilDate = isExact ? exactDate : bogotaDate(extendPaidUntil(subscription, months, now()));
   const expiredBefore = new Date(subscription.accessUntil).getTime() < now().getTime();
   const badge = statusBadge(done?.result.subscription ?? subscription);
-  const priceLine = `${price.name} · ${price.monthlyCop ? `${formatCop(price.monthlyCop)}/mes` : 'por definir'}`;
+  const priceLine = `${price.name} · ${price.monthlyCop ? `${formatCop(price.monthlyCop)}/mes` : 'por definir'}`
+    + (data.teamSeats > 0 ? ` + ${plural(data.teamSeats, 'profesional adicional', 'profesionales adicionales')}` : '');
 
   const record = useMutation({
     mutationFn: (body: ManualPaymentRequest) => api.post<ManualPaymentResponse>(apiPaths.adminManualPayment(proId), body),

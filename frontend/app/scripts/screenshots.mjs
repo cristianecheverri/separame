@@ -56,6 +56,25 @@ const SCREENS = [
     await p.getByText('Pago registrado.').waitFor();
   }],
   ['admin-prices', '/admin/prices?as=admin&state=trial'],
+  // Team plan (boards team-*).
+  ['team-request-card', '/?as=pro&state=trial&team=none'],
+  ['team-request-card-pending', '/?as=pro&state=trial&team=pending'],
+  ['team-request-card-rejected', '/?as=pro&state=trial&team=rejected'],
+  ['team-request-form', '/team/request?as=pro&state=trial&team=none'],
+  ['team-agenda-owner', '/?as=pro&state=trial&team=approved'],
+  ['team-agenda-all', '/?as=pro&state=trial&team=approved', async (p) => p.getByRole('button', { name: 'Todos', exact: true }).filter({ visible: true }).first().click()],
+  ['team-agenda-member', '/?as=pro&state=trial&team=approved', async (p) => p.getByRole('button', { name: 'Julián', exact: true }).filter({ visible: true }).first().click()],
+  ['team-new-appointment', '/?as=pro&state=trial&team=approved', async (p) => {
+    await p.getByRole('button', { name: 'Todos', exact: true }).filter({ visible: true }).first().click();
+    await p.getByRole('button', { name: 'Nueva cita' }).filter({ visible: true }).first().click();
+  }],
+  ['team-appointments', '/appointments?as=pro&state=trial&team=approved', async (p) => p.getByRole('button', { name: 'Todos', exact: true }).filter({ visible: true }).first().click()],
+  ['team-services', '/services?as=pro&state=trial&team=approved'],
+  ['team-members', '/team?as=pro&state=trial&team=approved'],
+  ['team-members-seats', '/team?as=pro&state=trial&team=seats'],
+  ['team-billing', '/billing?as=pro&state=active&team=approved'],
+  ['admin-teams', '/admin/teams?as=admin&state=trial'],
+  ['admin-teams-reject', '/admin/teams?as=admin&state=trial', async (p) => p.getByRole('button', { name: 'Rechazar' }).first().click()],
   ['drawer', '/?as=pro&state=trial', async (p) => {
     const menu = p.getByRole('button', { name: 'Abrir menú' });
     if (await menu.isVisible()) await menu.click();
@@ -84,7 +103,7 @@ for (const [name, path, action] of SCREENS) {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) problems.push(`${name}@${width}: horizontal overflow ${overflow}px`);
     // Overlays (drawer, modals) are fixed to the viewport: capture just the viewport.
-    await page.screenshot({ path: `${out}${name}-${width}.png`, fullPage: !['drawer', 'agenda-new-modal', 'agenda-install-ios'].includes(name) });
+    await page.screenshot({ path: `${out}${name}-${width}.png`, fullPage: !['drawer', 'agenda-new-modal', 'agenda-install-ios', 'team-new-appointment'].includes(name) });
     await context.close();
   }
   console.log(`✓ ${name}`);

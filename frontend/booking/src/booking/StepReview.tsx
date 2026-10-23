@@ -9,6 +9,8 @@ export interface ReviewRow {
   sub: string;
   /** Step to jump back to; null hides "Cambiar" (e.g. the only service). */
   step: StepId | null;
+  /** Screen-reader label of "Cambiar" (default: "Cambiar <label>"). */
+  changeLabel?: string;
 }
 
 interface Props {
@@ -36,7 +38,7 @@ export function StepReview({ rows, address, error, onEdit, captcha, titleRef }: 
             <button
               type="button"
               onClick={() => row.step && onEdit(row.step)}
-              aria-label={`Cambiar ${row.label.toLowerCase()}`}
+              aria-label={row.changeLabel ?? `Cambiar ${row.label.toLowerCase()}`}
               class="h-11 px-3 border-0 bg-transparent font-bold text-[14px] text-primary shrink-0 rounded-full hover:text-primary-dark"
             >
               Cambiar

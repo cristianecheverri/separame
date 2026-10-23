@@ -2,7 +2,7 @@ import { formatCop, formatDateShort } from '../../../shared/format';
 import { bogotaDate } from '../../../shared/time';
 import type { Payment, PriceVersion, ProProfile } from '../../../shared/types';
 import { detailsCard, esc, note, outlineButton, paragraph, pillButton, renderLayout, stack, type RenderedEmail } from '../layout';
-import { firstName, proFooter, textRows } from './common';
+import { greetingName, proFooter, textRows } from './common';
 import { METHOD_LABELS } from './manual-payment-receipt';
 
 /** "Ya pagué" flow: alert to the operator, receipt of the notice and rejection, both to the professional. */
@@ -42,7 +42,7 @@ export function noticeReceivedEmail(d: { siteUrl: string; name: string; payment:
     ['Método', METHOD_LABELS[d.payment.method]],
     ['Referencia', d.payment.reference],
   ];
-  const intro = `Hola, ${firstName(d.name)}. Vamos a verificar tu pago y te escribimos apenas tu plan quede activo, normalmente el mismo día.`;
+  const intro = `Hola, ${greetingName(d.name)}. Vamos a verificar tu pago y te escribimos apenas tu plan quede activo, normalmente el mismo día.`;
   const billingUrl = `${d.siteUrl}/app/billing`;
   const footer = proFooter(d.siteUrl);
   const html = renderLayout({
@@ -59,7 +59,7 @@ export function noticeRejectedEmail(d: { siteUrl: string; name: string; payment:
   const subject = 'No pudimos confirmar tu pago';
   const heading = 'No pudimos confirmar tu pago';
   const when = formatDateShort(bogotaDate(d.payment.createdAt));
-  const intro = `Hola, ${firstName(d.name)}. Revisamos tu aviso del ${when} por ${formatCop(d.payment.amountCop)} y no lo pudimos confirmar.`;
+  const intro = `Hola, ${greetingName(d.name)}. Revisamos tu aviso del ${when} por ${formatCop(d.payment.amountCop)} y no lo pudimos confirmar.`;
   const reason = d.payment.rejectReason ?? '';
   const billingUrl = `${d.siteUrl}/app/billing`;
   const footer = proFooter(d.siteUrl);

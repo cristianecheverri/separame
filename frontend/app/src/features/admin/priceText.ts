@@ -1,4 +1,5 @@
 import { formatCop } from '@shared/format';
+import { teamPackageAmount } from '@shared/subscription';
 import type { PriceVersion, PriceVersionStatus } from '@shared/types';
 
 export const STATUS_TAG: Record<PriceVersionStatus, { label: string; className: string }> = {
@@ -27,9 +28,11 @@ export function packagesLong(p: PriceVersion & { subscriptions: number }): strin
   return `${list}. ${p.subscriptions ? `Congelado para ${subs(p.subscriptions)}` : 'Sin suscripciones todavía'}.`;
 }
 
-/** Amount suggested for a manual payment of `months`. */
-export function suggestedAmount(price: PriceVersion, months: number): number | null {
-  const pkg = price.packages.find((x) => x.months === months);
-  if (pkg) return pkg.amountCop;
-  return price.monthlyCop ? price.monthlyCop * months : null;
+/** «$3.900 / mes» or «Por definir» (team plan: value of each additional professional). */
+export const extraProfessionalText = (p: Pick<PriceVersion, 'extraProfessionalCop'>) => (p.extraProfessionalCop !== null && p.extraProfessionalCop !== undefined ? `${formatCop(p.extraProfessionalCop)} / mes` : 'Por definir');
+
+/** Amount suggested for a manual payment of `months`, with the team's additional professionals (`teamSeats`). */
+export function suggestedAmount(price: PriceVersion, months: number, teamSeats = 0): number | null {
+  const pkg = price.packages.find((x) => x.months === months) ?? (price.monthlyCop ? { months, amountCop: price.monthlyCop * months } : null);
+  return pkg ? teamPackageAmount(pkg, teamSeats, price.extraProfessionalCop) : null;
 }

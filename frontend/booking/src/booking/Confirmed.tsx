@@ -86,7 +86,12 @@ function CalendarButtons({ event, icsUrl }: { event: CalendarEvent; icsUrl: stri
   );
 }
 
-export function Confirmed({ result, icsUrl }: { result: CreateBookingResponse; icsUrl: string }) {
+export function Confirmed({ result, icsUrl, agendaSlug }: {
+  result: CreateBookingResponse;
+  icsUrl: string;
+  /** "Volver a la agenda" target: the team page when booked from it (default: the professional's page). */
+  agendaSlug?: string;
+}) {
   const { booking, manageToken } = result;
   const { pro } = booking;
   const manageUrl = manageUrlFor(manageToken);
@@ -147,7 +152,7 @@ export function Confirmed({ result, icsUrl }: { result: CreateBookingResponse; i
             Cancelar o reprogramar
           </a>
           <div class="flex flex-col items-center gap-1">
-            <a href={`/${encodeURIComponent(pro.slug)}`} class={`${BOTTOM_LINK} text-[14px] text-muted hover:text-ink-2`}>
+            <a href={`/${encodeURIComponent(agendaSlug ?? pro.slug)}`} class={`${BOTTOM_LINK} text-[14px] text-muted hover:text-ink-2`}>
               Volver a la agenda
             </a>
             <LegalLinks />

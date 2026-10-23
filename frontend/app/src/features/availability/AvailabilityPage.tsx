@@ -19,7 +19,8 @@ import { focusFirstError } from '../../lib/focusError';
 import { now } from '../../lib/clock';
 import { formatBlockRange, formatDayShortMonth, isFullDayBlock } from '../../lib/format';
 import { usePro } from '../../lib/pro';
-import { keys, useAvailability } from '../../lib/queries';
+import { keys, useActing, useAvailability } from '../../lib/queries';
+import { ProSelector } from '../team/ProSelector';
 import { formatTime } from '@shared/format';
 import { scheduleErrors, timeStepsWith, toDraft, toSchedule, type ScheduleDraft } from './scheduleModel';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
@@ -43,6 +44,7 @@ const AHEAD = [7, 14, 30, 60, 90, 120, 180, 365].map((v) => ({ value: v, label: 
 /** pro-availability */
 export function AvailabilityPage() {
   const availability = useAvailability();
+  const { proId } = useActing();
   if (!availability.data) {
     return (
       <div className="flex flex-col gap-6">
@@ -57,13 +59,16 @@ export function AvailabilityPage() {
       </div>
     );
   }
-  return <AvailabilityForm data={availability.data} />;
+  // Keyed by professional (team plan): another member's schedule starts a fresh draft.
+  return <AvailabilityForm key={proId} data={availability.data} />;
 }
 
 function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
   const { readOnly } = usePro();
   const toast = useToast();
   const qc = useQueryClient();
+  const { proId, header } = useActing();
+  const acting = { actingProId: header };
   const [baseline, setBaseline] = useState<Pick<AvailabilitySettings, 'schedule' | 'rules'>>(() => ({ schedule: data.settings.schedule, rules: data.settings.rules }));
   const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(data.settings.schedule));
   const [rules, setRules] = useState<BookingRules>(data.settings.rules);
@@ -75,9 +80,9 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
   const hasErrors = Object.keys(errors).length > 0;
 
   const save = useMutation({
-    mutationFn: (body: PutAvailabilityRequest) => api.put<AvailabilitySettingsResponse>(apiPaths.availability(), body),
+    mutationFn: (body: PutAvailabilityRequest) => api.put<AvailabilitySettingsResponse>(apiPaths.availability(), body, acting),
     onSuccess: (res) => {
-      qc.setQueryData(keys.availability, res);
+      qc.setQueryData(keys.availability(proId), res);
       void qc.invalidateQueries({ queryKey: keys.slotsAll });
       setBaseline({ schedule: res.settings.schedule, rules: res.settings.rules });
       setDraft(toDraft(res.settings.schedule));
@@ -89,11 +94,11 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
   });
 
   const refreshBlocks = () => {
-    void qc.invalidateQueries({ queryKey: keys.availability });
+    void qc.invalidateQueries({ queryKey: keys.availability(proId) });
     void qc.invalidateQueries({ queryKey: keys.slotsAll });
   };
   const restoreBlock = useMutation({
-    mutationFn: (block: Block) => api.post<BlockResponse>(apiPaths.blocks(), { label: block.label, start: block.start, end: block.end }),
+    mutationFn: (block: Block) => api.post<BlockResponse>(apiPaths.blocks(), { label: block.label, start: block.start, end: block.end }, acting),
     onSuccess: (_res, block) => {
       refreshBlocks();
       toast.success(`Volviste a bloquear «${block.label}».`);
@@ -101,7 +106,7 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
     onError: (error) => toast.error(errorMessage(error)),
   });
   const removeBlock = useMutation({
-    mutationFn: (block: Block) => api.del(apiPaths.block(block.id)),
+    mutationFn: (block: Block) => api.del(apiPaths.block(block.id), acting),
     onSuccess: (_res, block) => {
       refreshBlocks();
       toast.show(`Quitaste «${block.label}». Ya se puede reservar en esas fechas.`, 'success', { label: 'Deshacer', onClick: () => restoreBlock.mutate(block) });
@@ -152,6 +157,7 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
           {saveButton}
         </div>
       </div>
+      <ProSelector variant="inline" allowAll={false} className="hidden lg:flex" />
 
       <div className="flex flex-wrap gap-6 items-start">
         <section className={cx(ui.card, 'flex-[999_1_480px] min-w-0 gap-1')}>
@@ -260,6 +266,7 @@ function BlockItem({ block, readOnly, onRemove }: { block: Block; readOnly: bool
 
 function BlockModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
+  const { proId, header } = useActing();
   const toast = useToast();
   const today = todayBogota(now());
   const [label, setLabel] = useState('');
@@ -276,9 +283,9 @@ function BlockModal({ onClose }: { onClose: () => void }) {
   };
 
   const create = useMutation({
-    mutationFn: (body: { label: string; start: string; end: string }) => api.post<BlockResponse>(apiPaths.blocks(), body),
+    mutationFn: (body: { label: string; start: string; end: string }) => api.post<BlockResponse>(apiPaths.blocks(), body, { actingProId: header }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.availability });
+      void qc.invalidateQueries({ queryKey: keys.availability(proId) });
       void qc.invalidateQueries({ queryKey: keys.slotsAll });
       toast.success('Bloqueo agregado.');
       onClose();

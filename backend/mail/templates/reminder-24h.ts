@@ -1,6 +1,6 @@
 import { formatInstantTime } from '../../../shared/format';
 import type { ClientConfirmation } from '../../../shared/types';
-import { detailsCard, esc, outlineButton, paragraph, pillButton, renderLayout, stack, type RenderedEmail } from '../layout';
+import { detailsCard, esc, outlineButton, paragraph, pillButton, type RenderedEmail, renderLayout, sentence, stack } from '../layout';
 import { bookingRows, type BookingEmailData } from './booking-confirmed';
 import { clientFooter, firstName, subjectWhen, textRows, whenLong } from './common';
 
@@ -24,8 +24,8 @@ export function reminderEmail(d: ReminderData): RenderedEmail {
   const rows = bookingRows(d);
   const footer = clientFooter(d.siteUrl, d.pro.slug);
   const intro = confirmed
-    ? `Te esperamos mañana a las ${formatInstantTime(d.start)}. Gracias por confirmar.`
-    : `Hola, ${firstName(d.clientName)}. Tu cita es mañana a las ${formatInstantTime(d.start)}. Cuéntanos si vas para que ${d.pro.name} te espere.`;
+    ? `${sentence(`Te esperamos mañana a las ${formatInstantTime(d.start)}`)} Gracias por confirmar.`
+    : `Hola, ${firstName(d.clientName)}. ${sentence(`Tu cita es mañana a las ${formatInstantTime(d.start)}`)} Cuéntanos si vas para que ${d.pro.name} te espere.`;
   const html = renderLayout({
     title: subject,
     preheader: `${whenLong(d.start)} con ${d.pro.name}.`,

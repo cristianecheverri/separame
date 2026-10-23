@@ -1,10 +1,9 @@
 import { upcomingHolidays } from '../../../shared/holidays';
 import { createBlockSchema, putAvailabilitySchema } from '../../../shared/schemas';
 import { todayBogota } from '../../../shared/time';
-import { requirePro } from '../../lib/auth';
 import { created, createApiHandler, noContent, ok, parseBody, pathParam, type ApiEvent } from '../../lib/http';
 import { addBlock, deleteBlock, getAvailabilitySettings, putSettings } from '../../services/availability';
-import { requireProId } from '../../services/profiles';
+import { actingProId } from '../../services/teams';
 import { requireWritable } from '../../services/subscriptions';
 
 /** Weekly schedule, booking rules and blocked periods. */
@@ -12,14 +11,14 @@ import { requireWritable } from '../../services/subscriptions';
 const HOLIDAYS_SHOWN = 8;
 
 async function writableProId(event: ApiEvent): Promise<string> {
-  const proId = await requireProId(requirePro(event));
+  const proId = await actingProId(event);
   await requireWritable(proId);
   return proId;
 }
 
 export const handler = createApiHandler({
   'GET /me/availability': async (event) => {
-    const proId = await requireProId(requirePro(event));
+    const proId = await actingProId(event);
     return ok({ settings: await getAvailabilitySettings(proId), upcomingHolidays: upcomingHolidays(todayBogota(), HOLIDAYS_SHOWN) });
   },
 

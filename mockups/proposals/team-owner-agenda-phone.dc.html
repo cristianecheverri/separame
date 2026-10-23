@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda del consultorio — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 1740px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; position: relative; padding-bottom: 68px">
+
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+    <span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Consultorio Sonríe</span>
+  </header>
+
+  <div role="group" aria-label="Profesional" style="flex-shrink: 0; background: #FFFFFF; border-bottom: 1px solid #E3E8E5; padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; white-space: nowrap">
+    <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+      <button onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="{{c.style}}"><span aria-hidden="true" style="{{c.dotStyle}}"></span>{{c.label}}</button>
+    </sc-for>
+  </div>
+
+  <main style="box-sizing: border-box; padding: 20px 16px 96px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.2; letter-spacing: -0.6px; min-width: 0">{{headline}}</h1>
+      <button aria-label="Compartir {{link}}" style="height: 44px; padding: 0 14px; flex-shrink: 0; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 6px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 10px">
+        <div style="display: flex; align-items: center; gap: 2px">
+          <button aria-label="Día anterior" style="width: 40px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px; white-space: nowrap">Mar 20 oct.</h2>
+          <button aria-label="Día siguiente" style="width: 40px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+        </div>
+        <div role="group" aria-label="Vista" style="display: flex; gap: 6px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+          <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 13px; color: #15241D; cursor: pointer">Día</button>
+          <button aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 13px; color: #3E4C45; cursor: pointer">Semana</button>
+        </div>
+      </div>
+      <sc-for list="{{appts}}" as="a" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="font-weight: 700; font-size: 13px; color: #3E4C45">{{a.time}}</div>
+          <div style="{{a.cardStyle}}">
+            <div style="display: flex; flex-direction: column; gap: 3px; flex: 1 1 0; min-width: 0">
+              <div style="font-weight: 700; font-size: 15px">{{a.name}}</div>
+              <div style="font-size: 13px; color: #56645D">{{a.detail}}</div>
+              <div style="padding-top: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px">
+                <sc-if value="{{a.showTag}}" hint-placeholder-val="{{ true }}">
+                  <span style="{{a.tagStyle}}">{{a.pro}}</span>
+                </sc-if>
+                <span style="{{a.badgeStyle}}">{{a.badge}}</span>
+              </div>
+            </div>
+            <sc-if value="{{a.moveCancel}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 2px; flex-shrink: 0">
+                <button aria-label="Mover cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+                <button aria-label="Cancelar cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-labelledby="clinic-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 12px; align-items: flex-start">
+        <span style="width: 40px; height: 40px; border-radius: 12px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <h2 id="clinic-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Consultorio Sonríe</h2>
+          <span style="font-size: 13px; font-weight: 600; color: #3E4C45">3 profesionales · 2 de 2 cupos adicionales usados</span>
+        </div>
+      </div>
+      <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/consultorio-sonrie</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+        <button onClick="{{copyClinic}}" aria-label="Copiar el enlace del consultorio" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyClinicLabel}}</button>
+        <a href="team-members-desktop.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver equipo</a>
+      </div>
+    </section>
+  </main>
+
+  <a href="../line-a/pro-new-appointment-phone.dc.html" aria-label="Nueva cita" style="position: absolute; right: 16px; bottom: 84px; width: 56px; height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(21,36,29,0.22); z-index: 2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></a>
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; z-index: 2">
+    <a href="team-owner-agenda-phone.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+      <span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Agenda</span>
+    </a>
+    <a href="../line-a/pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span>
+    </a>
+    <a href="../line-a/pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span>
+    </a>
+    <a href="../line-a/pro-more-sheet-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":1740}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ pro: 'all', copiedClinic: false }, this.state || {});
+    const pros = {
+      laura: { label: 'Laura (tú)', first: 'Laura', bg: '#0B6E4F', fg: '#FFFFFF', link: 'separame.app/dra-laura-perez' },
+      julian: { label: 'Julián', first: 'Julián', bg: '#FFC93C', fg: '#15241D', link: 'separame.app/dr-julian-ortiz' },
+      sara: { label: 'Sara', first: 'Sara', bg: '#15241D', fg: '#FFFFFF', link: 'separame.app/dra-sara-gomez' }
+    };
+    const card = 'display:flex;align-items:flex-start;gap:8px;padding:12px 8px 12px 16px;border-radius:16px;min-height:64px;box-sizing:border-box;';
+    const badge = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const tag = 'font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;';
+    const kinds = {
+      ok: { card: card + 'background:#EAF5F0;', badge: badge + 'background:#0B6E4F;color:#FFFFFF;', label: 'Confirmada' },
+      fresh: { card: card + 'background:#FFF4D1;', badge: badge + 'background:#FFC93C;color:#15241D;', label: 'Nueva' },
+      done: { card: card + 'background:#EAF5F0;', badge: badge + 'background:#FFFFFF;color:#0B6E4F;', label: 'Asistió' }
+    };
+    const rows = [
+      { time: '8:00 a. m.', name: 'Mariana Gómez', detail: 'Valoración · 30 min', pro: 'laura', k: 'done' },
+      { time: '8:00 a. m.', name: 'Andrés Zapata', detail: 'Control de brackets · 20 min', pro: 'julian', k: 'done' },
+      { time: '9:00 a. m.', name: 'Camila Arango', detail: 'Endodoncia · 90 min', pro: 'sara', k: 'done' },
+      { time: '10:00 a. m.', name: 'Sofía Castaño', detail: 'Limpieza dental · 45 min', pro: 'laura', k: 'fresh' },
+      { time: '10:30 a. m.', name: 'Felipe Montoya', detail: 'Ajuste de brackets · 30 min', pro: 'julian', k: 'ok' },
+      { time: '11:00 a. m.', name: 'Carlos Mejía', detail: 'Valoración · 30 min', pro: 'laura', k: 'ok' },
+      { time: '2:00 p. m.', name: 'Isabel Cardona', detail: 'Endodoncia · 90 min', pro: 'sara', k: 'ok' },
+      { time: '4:00 p. m.', name: 'Mateo Quintero', detail: 'Control de brackets · 20 min', pro: 'julian', k: 'fresh' }
+    ];
+    const all = st.pro === 'all';
+    const visible = rows.filter((r) => all || r.pro === st.pro);
+    const n = visible.length;
+    const sel = all ? null : pros[st.pro];
+    let headline = 'Hola, Laura · ' + n + ' citas en el consultorio';
+    if (st.pro === 'laura') headline = 'Hola, Laura · ' + n + ' citas hoy';
+    else if (sel) headline = sel.first + ' · ' + n + ' citas hoy';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;border:2px solid;display:inline-flex;align-items:center;gap:8px;flex-shrink:0;color:#15241D;';
+    const dot = 'width:12px;height:12px;border-radius:999px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(21,36,29,0.25);';
+    const chipDefs = [
+      { id: 'all', label: 'Todos', dot: dot + 'background:conic-gradient(#0B6E4F 0 33%, #FFC93C 0 66%, #15241D 0);' },
+      { id: 'laura', label: pros.laura.label, dot: dot + 'background:' + pros.laura.bg + ';' },
+      { id: 'julian', label: pros.julian.label, dot: dot + 'background:' + pros.julian.bg + ';' },
+      { id: 'sara', label: pros.sara.label, dot: dot + 'background:' + pros.sara.bg + ';' }
+    ];
+    return {
+      headline,
+      link: sel ? sel.link : 'separame.app/consultorio-sonrie',
+      chips: chipDefs.map((c) => ({
+        label: c.label,
+        selected: st.pro === c.id,
+        dotStyle: c.dot,
+        pick: () => this.setState({ pro: c.id }),
+        style: chip + (st.pro === c.id ? 'background:#EAF5F0;border-color:#0B6E4F;font-weight:700;' : 'background:#FFFFFF;border-color:#E3E8E5;font-weight:600;')
+      })),
+      appts: visible.map((r) => {
+        const k = kinds[r.k];
+        const p = pros[r.pro];
+        return {
+          time: r.time, name: r.name, detail: r.detail, pro: p.first,
+          showTag: all,
+          tagStyle: tag + 'background:' + p.bg + ';color:' + p.fg + ';',
+          cardStyle: k.card,
+          badge: k.label, badgeStyle: k.badge,
+          moveCancel: r.k !== 'done'
+        };
+      }),
+      copyClinic: () => this.setState({ copiedClinic: true }),
+      copyClinicLabel: st.copiedClinic ? '¡Copiado!' : 'Copiar enlace'
+    };
+  }
+}
+</script>
+</body>
+</html>

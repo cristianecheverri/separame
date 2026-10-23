@@ -187,16 +187,16 @@ export const prices: (PriceVersion & { subscriptions: number })[] = [
   {
     id: 'price-fundador', code: 'fundador-v1', name: 'Fundador', currency: 'COP', monthlyCop: 5000,
     packages: [{ months: 3, amountCop: 15000 }, { months: 6, amountCop: 30000 }, { months: 12, amountCop: 50000 }],
-    status: 'active', isDefault: true, createdAt: '2026-10-01T15:00:00.000Z', subscriptions: 38,
+    extraProfessionalCop: 3900, status: 'active', isDefault: true, createdAt: '2026-10-01T15:00:00.000Z', subscriptions: 38,
   },
   {
     id: 'price-mensual', code: 'mensual-v1', name: 'Mensual', currency: 'COP', monthlyCop: 5900,
     packages: [{ months: 1, amountCop: 5900 }],
-    status: 'active', isDefault: false, createdAt: '2026-10-01T15:00:00.000Z', subscriptions: 4,
+    extraProfessionalCop: 3900, status: 'active', isDefault: false, createdAt: '2026-10-01T15:00:00.000Z', subscriptions: 4,
   },
   {
     id: 'price-estandar', code: 'estandar-v1', name: 'Estándar', currency: 'COP', monthlyCop: null,
-    packages: [], status: 'draft', isDefault: false, createdAt: '2026-10-18T15:00:00.000Z', subscriptions: 0,
+    packages: [], extraProfessionalCop: null, status: 'draft', isDefault: false, createdAt: '2026-10-18T15:00:00.000Z', subscriptions: 0,
   },
 ];
 
@@ -310,3 +310,106 @@ export function waitlistEntries(): WaitlistEntry[] {
 }
 
 export const PUSH_VAPID_KEY = 'BMockVapidPublicKey_onlyForMockMode_not-real-0123456789abcdefghijklmnopqrstuvwxyzABCDEFG';
+
+// ── Team plan (boards team-*): Consultorio Sonríe = Laura + Julián + Sara ───────
+
+/** ?team=none | pending | rejected | approved (2 of 2 seats used) | seats (2 of 3: one free). */
+export type TeamMockState = 'none' | 'pending' | 'rejected' | 'approved' | 'seats';
+
+export const TEAM_NAME = 'Consultorio Sonríe';
+export const TEAM_SLUG = 'consultorio-sonrie';
+export const TEAM_CREATED_AT = '2026-10-21T15:00:00.000Z';
+
+const memberProfile = (id: string, slug: string, name: string, title: string): ProProfile => ({
+  ...lauraProfile, id, slug, name, title, createdAt: TEAM_CREATED_AT, updatedAt: TEAM_CREATED_AT,
+});
+
+export const julianProfile = memberProfile('pro-julian', 'dr-julian-ortiz', 'Dr. Julián Ortiz', 'Ortodoncista');
+export const saraProfile = memberProfile('pro-sara', 'dra-sara-gomez', 'Dra. Sara Gómez', 'Endodoncista');
+
+export interface MemberMockData {
+  profile: ProProfile;
+  services: Service[];
+  schedule: WeeklySchedule;
+  appointments: Appointment[];
+}
+
+const DAY = (start: string, end: string) => [{ start, end }];
+
+function memberAppointment(proId: string, service: Service, date: ISODate, time: string, client: string, extra: Partial<Appointment> = {}): Appointment {
+  const start = toInstant(date, time);
+  const slug = client.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.');
+  return {
+    id: `apt-${proId}-${date}-${time.replace(':', '')}`, proId, serviceId: service.id, serviceName: service.name, durationMin: service.durationMin,
+    priceCop: service.priceCop, start, end: new Date(new Date(start).getTime() + service.durationMin * 60_000).toISOString(), status: 'confirmed',
+    client: { name: client, email: `${slug}@correo.co`, phone: `310${String(client.length * 104729).padStart(7, '0').slice(0, 7)}` },
+    createdBy: 'client', createdAt: '2026-10-15T16:00:00.000Z', updatedAt: '2026-10-15T16:00:00.000Z', clientConfirmation: 'confirmed', revision: 0,
+    clientKey: `c-${slug}`, ...extra,
+  };
+}
+
+const freshToday = { createdAt: '2026-10-20T12:30:00.000Z', updatedAt: '2026-10-20T12:30:00.000Z', clientConfirmation: 'pending' as const };
+const attended = { outcome: 'attended' as const, outcomeAt: '2026-10-20T13:40:00.000Z', reminderSentAt: '2026-10-19T13:00:00.000Z' };
+
+export function julianData(): MemberMockData {
+  const control: Service = { id: 'svc-julian-control', name: 'Control de brackets', durationMin: 20, priceCop: 50000, description: 'Pacientes en tratamiento', visible: true, order: 0 };
+  const adjust: Service = { id: 'svc-julian-ajuste', name: 'Ajuste de brackets', durationMin: 30, priceCop: 90000, description: '', visible: true, order: 1 };
+  const id = julianProfile.id;
+  return {
+    profile: clone(julianProfile),
+    services: [control, adjust],
+    schedule: { mon: DAY('08:00', '18:00'), tue: DAY('08:00', '18:00'), wed: DAY('08:00', '18:00'), thu: DAY('08:00', '18:00'), fri: DAY('08:00', '18:00'), sat: [], sun: [] },
+    appointments: [
+      memberAppointment(id, control, TODAY, '08:00', 'Andrés Zapata', attended),
+      memberAppointment(id, adjust, TODAY, '10:30', 'Felipe Montoya'),
+      memberAppointment(id, control, TODAY, '16:00', 'Mateo Quintero', freshToday),
+      memberAppointment(id, adjust, addDays(TODAY, 1), '09:00', 'Luisa Fernanda Ríos'),
+      memberAppointment(id, control, addDays(TODAY, 2), '15:00', 'Simón Betancur'),
+      memberAppointment(id, control, addDays(TODAY, -1), '11:00', 'Valeria Muñoz', { outcome: 'attended', outcomeAt: '2026-10-19T16:30:00.000Z' }),
+    ],
+  };
+}
+
+export function saraData(): MemberMockData {
+  const endo: Service = { id: 'svc-sara-endodoncia', name: 'Endodoncia', durationMin: 90, priceCop: 380000, description: 'Tratamiento de conducto', visible: true, order: 0 };
+  const valuation: Service = { id: 'svc-sara-valoracion', name: 'Valoración', durationMin: 30, priceCop: 60000, description: 'Primera vez', visible: true, order: 1 };
+  const id = saraProfile.id;
+  return {
+    profile: clone(saraProfile),
+    services: [endo, valuation],
+    schedule: { mon: [], tue: DAY('08:00', '16:00'), wed: [], thu: DAY('08:00', '16:00'), fri: [], sat: [], sun: [] },
+    appointments: [
+      memberAppointment(id, endo, TODAY, '09:00', 'Camila Arango', attended),
+      memberAppointment(id, endo, TODAY, '14:00', 'Isabel Cardona', { clientConfirmation: 'pending' }),
+      memberAppointment(id, valuation, addDays(TODAY, 2), '10:00', 'Ricardo Salinas'),
+    ],
+  };
+}
+
+function clone<T>(value: T): T {
+  return structuredClone(value);
+}
+
+/** Admin board team-admin-requests: two pending requests and three active teams. */
+export const adminTeamRequests = [
+  {
+    ownerId: 'pro-laura', ownerName: 'Dra. Laura Pérez', ownerTitle: 'Odontóloga', priceName: 'Fundador',
+    request: {
+      status: 'pending' as const, name: TEAM_NAME, professionals: 3, seatsApproved: null, rejectReason: null, reviewedAt: null, createdAt: '2026-10-20T13:10:00.000Z',
+      message: 'Somos tres odontólogos en el mismo consultorio. Queremos que los pacientes reserven con cualquiera de nosotros desde un solo enlace y yo manejar las tres agendas.',
+    },
+  },
+  {
+    ownerId: 'pro-lua', ownerName: 'Estudio Lúa', ownerTitle: 'Estética', priceName: 'Fundador',
+    request: {
+      status: 'pending' as const, name: 'Estudio Lúa', professionals: 4, seatsApproved: null, rejectReason: null, reviewedAt: null, createdAt: '2026-10-19T18:00:00.000Z',
+      message: 'Somos cuatro en el estudio y cada una tiene sus propios servicios. Nos sirve que las clientas elijan con quién y que yo vea todo junto.',
+    },
+  },
+];
+
+export const adminActiveTeams = [
+  { ownerId: 'pro-andres', ownerName: 'Andrés Restrepo', name: 'Bufete Restrepo', slug: 'bufete-restrepo', seats: 1, used: 1, priceName: 'Fundador', extraProfessionalCop: 3900, accessUntil: '2027-01-14T14:00:00.000Z' },
+  { ownerId: 'pro-camilo', ownerName: 'Camilo Arango', name: 'Entrena Arango', slug: 'entrena-arango', seats: 3, used: 2, priceName: 'Fundador', extraProfessionalCop: 3900, accessUntil: '2027-04-03T14:00:00.000Z' },
+  { ownerId: 'pro-felipe', ownerName: 'Felipe Mora', name: 'Tutorías Mora', slug: 'tutorias-mora', seats: 2, used: 2, priceName: 'Mensual', extraProfessionalCop: 3900, accessUntil: '2026-11-30T14:00:00.000Z' },
+];

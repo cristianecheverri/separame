@@ -41,6 +41,8 @@ export const API_FUNCTIONS = {
   proNotifications: fn('pro-notifications', 'Web push subscriptions of the professional (PWA)'),
   adminSubscriptions: fn('admin-subscriptions', 'Admin: stats, subscriptions, pro detail, manual payments'),
   adminPrices: fn('admin-prices', 'Admin: price versions and price migrations'),
+  proTeam: fn('pro-team', 'Team plan (owner): request, team, members'),
+  adminTeams: fn('admin-teams', 'Admin: team plan requests (approve with seats / reject) and active teams'),
 } as const;
 
 export type ApiFunctionKey = keyof typeof API_FUNCTIONS;
@@ -137,6 +139,12 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/me/billing/payment-notices', fn: 'proBilling', auth: 'pro' },
   { method: 'GET', path: '/me/referrals', fn: 'proBilling', auth: 'pro' },
 
+  { method: 'GET', path: '/me/team', fn: 'proTeam', auth: 'pro' },
+  { method: 'PUT', path: '/me/team', fn: 'proTeam', auth: 'pro' },
+  { method: 'POST', path: '/me/team-request', fn: 'proTeam', auth: 'pro' },
+  { method: 'POST', path: '/me/team/members', fn: 'proTeam', auth: 'pro' },
+  { method: 'PUT', path: '/me/team/members/{memberId}', fn: 'proTeam', auth: 'pro' },
+
   // Admin — Cognito JWT + `admin` group (checked in the handler)
   { method: 'GET', path: '/admin/stats', fn: 'adminSubscriptions', auth: 'admin' },
   { method: 'GET', path: '/admin/subscriptions', fn: 'adminSubscriptions', auth: 'admin' },
@@ -150,6 +158,10 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/admin/price-migrations', fn: 'adminPrices', auth: 'admin' },
   { method: 'POST', path: '/admin/price-migrations', fn: 'adminPrices', auth: 'admin' },
   { method: 'POST', path: '/admin/price-migrations/{migrationId}/cancel', fn: 'adminPrices', auth: 'admin' },
+
+  { method: 'GET', path: '/admin/teams', fn: 'adminTeams', auth: 'admin' },
+  { method: 'POST', path: '/admin/team-requests/{proId}/approve', fn: 'adminTeams', auth: 'admin' },
+  { method: 'POST', path: '/admin/team-requests/{proId}/reject', fn: 'adminTeams', auth: 'admin' },
 ];
 
 export const routeKey = (r: Pick<RouteDef, 'method' | 'path'>) => `${r.method} ${r.path}`;

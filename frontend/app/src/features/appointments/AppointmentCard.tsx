@@ -22,6 +22,8 @@ interface Props {
   title?: 'client' | 'service';
   /** Briefly outlined (picked from the week view). */
   highlighted?: boolean;
+  /** Team plan, «Todos»: whose appointment it is (small tag in that professional's color). */
+  member?: { label: string; bg: string; fg: string };
 }
 
 const CARD = 'grow min-w-0 flex gap-2 items-start rounded-[16px] min-h-16 box-border';
@@ -45,7 +47,7 @@ function detailOf(row: DayRow, title: 'client' | 'service'): string {
 const pill = 'hit-44 h-10 px-3 rounded-full text-[13px] font-bold inline-flex items-center justify-center gap-[6px] whitespace-nowrap transition-colors disabled:opacity-60';
 
 /** One row of the agenda (pro-agenda-day / pro-expired-read-only): one status line, actions always top-right. */
-export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, onOutcome, actions = true, timeLabel, title = 'client', highlighted }: Props) {
+export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, onOutcome, actions = true, timeLabel, title = 'client', highlighted, member }: Props) {
   const [editing, setEditing] = useState(false);
   const appointment = row.appointment;
   const active = row.kind === 'confirmed' || row.kind === 'new';
@@ -78,13 +80,19 @@ export function AppointmentCard({ row, now, readOnly, onMove, onCancel, onFree, 
     onOutcome?.(appointment!, value);
   };
 
-  const hasStatus = !!badgeLabel || !!attendance;
+  const hasStatus = !!badgeLabel || !!attendance || !!member;
   const body = (
     <div className="flex flex-col gap-1 grow basis-0 min-w-0">
       <div className={cx('text-[15px] [overflow-wrap:anywhere]', lockedView ? 'font-bold' : kind.name)}>{name}</div>
       <div className="text-[13px] text-muted">{detailOf(row, title)}</div>
       {hasStatus && (
         <div className="flex flex-wrap items-center gap-2 pt-[2px] min-h-6">
+          {member && (
+            <span className={cx(ui.badge, 'py-1')} style={{ background: member.bg, color: member.fg }}>
+              <span className="sr-only">Con </span>
+              {member.label}
+            </span>
+          )}
           {badgeLabel && <span className={cx(ui.badge, 'py-1', badgeClass)}>{badgeLabel}</span>}
           {attendance === 'confirmed' && (
             <span className="inline-flex items-center gap-[5px] text-[13px] font-bold text-primary">

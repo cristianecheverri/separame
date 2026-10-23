@@ -1,7 +1,7 @@
 import { formatDuration } from '../../../shared/format';
 import type { ISOInstant } from '../../../shared/time';
 import { detailsCard, paragraph, renderLayout, stack, type RenderedEmail } from '../layout';
-import { proFooter, subjectWhen, textRows, whenLong } from './common';
+import { agendaRows, proFooter, subjectWhen, textRows, whenLong } from './common';
 
 /**
  * Short line-A emails that carry the calendar invitation when the pro made
@@ -18,10 +18,13 @@ const COPY: Record<ProCalendarKind, { title: string; intro: string }> = {
 
 export function proCalendarEmail(d: {
   siteUrl: string; kind: ProCalendarKind; clientName: string; serviceName: string; durationMin: number; start: ISOInstant;
+  /** Team plan: whose agenda (a member's appointment, sent to the owner). */
+  agendaOf?: string;
 }): RenderedEmail {
   const copy = COPY[d.kind];
   const subject = `${copy.title} · ${subjectWhen(d.start)} · ${d.clientName}`;
   const rows: [string, string, { strike?: boolean }?][] = [
+    ...agendaRows(d.agendaOf),
     ['Cliente', d.clientName],
     ['Servicio', `${d.serviceName} · ${formatDuration(d.durationMin)}`],
     ['Cuándo', whenLong(d.start), { strike: d.kind === 'removed' }],

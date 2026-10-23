@@ -41,4 +41,14 @@ describe('api client', () => {
     expect(error).toMatchObject({ status: 409, code: 'slot_taken' });
     expect(errorMessage(error)).toBe('Ese horario se acaba de ocupar. Elige otro.');
   });
+
+  it('sends the team acting header only for a member (per-call override)', async () => {
+    await auth.init(client(['init', 't', 't', 't']));
+    const transport = vi.fn(async () => ({ status: 200, body: {} }));
+    setTransport(transport);
+    await api.get('/me/services', { actingProId: 'pro-julian' });
+    await api.get('/me/services', { actingProId: null });
+    await api.get('/me/services');
+    expect(transport.mock.calls.map((c) => (c as unknown as [{ headers?: Record<string, string> }])[0].headers)).toEqual([{ 'x-separame-pro': 'pro-julian' }, undefined, undefined]);
+  });
 });

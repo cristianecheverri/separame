@@ -31,6 +31,7 @@ export const LANDING_DEFAULT_PRICE: PriceVersion = {
     { months: 6, amountCop: 30000 },
     { months: 12, amountCop: 50000 },
   ],
+  extraProfessionalCop: 3900,
   status: 'active',
   isDefault: true,
   createdAt: '2026-01-01T00:00:00.000Z',

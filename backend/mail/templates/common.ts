@@ -11,7 +11,12 @@ export interface ProInfo {
   address: string;
   city: string;
   slug: string;
+  /** Team plan: a member's agenda; the owner gets these emails, so they say whose agenda it is. */
+  agendaOf?: string;
 }
+
+/** «Agenda: Dr. Julián Ortiz» first, only for a team member's appointment. */
+export const agendaRows = (agendaOf: string | undefined): [string, string][] => (agendaOf ? [['Agenda', agendaOf]] : []);
 
 /** "jue 22 oct., 10:00 a. m." — the subject-line date. */
 export function subjectWhen(instant: ISOInstant): string {
