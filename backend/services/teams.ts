@@ -13,7 +13,7 @@ import { batchGetAll, ddb, failedConditionIndex, getItem, queryAll, stripKeys, t
 import { ApiError, validationError, type ApiEvent } from '../lib/http';
 import { newId } from '../lib/ids';
 import {
-  profileKey, settingsKey, slugKey, subKey, TEAM_REQUESTS_GSI1PK, teamGsi1Sk, teamKey, teamRequestKey, TEAMS_GSI1PK,
+  profileKey, settingsKey, slugKey, subKey, TEAM_REQUESTS_GSI1PK, teamGsi1Sk, teamKey, teamRequestHistoryKey, teamRequestKey, TEAMS_GSI1PK,
 } from '../lib/keys';
 import { log } from '../lib/logger';
 import { sendTeamApproved, sendTeamRejected, sendTeamRequestToAdmin } from '../mail/notifications';
@@ -61,6 +61,13 @@ export async function teamSeats(ownerId: string): Promise<number> {
   return (await getTeamItem(ownerId, true))?.seats ?? 0;
 }
 
+/** Public team page: its owner, or undefined (unknown slug, or a professional's slug). */
+export async function teamOwnerBySlug(slug: string): Promise<string | undefined> {
+  if (slugProblem(slug)) return undefined;
+  const item = await getItem<{ teamOwnerId?: string }>(slugKey(slug));
+  return item?.teamOwnerId;
+}
+
 // ── Acting professional ─────────────────────────────────────────────────────
 
 /**
@@ -102,13 +109,21 @@ export async function getTeamResponse(ownerId: string): Promise<TeamResponse> {
 // ── Request (owner) ──────────────────────────────────────────────────────────
 
 export async function createTeamRequest(ownerId: string, body: CreateTeamRequestBody, now: Date = new Date()): Promise<TeamResponse> {
-  const [profile, current] = await Promise.all([requireProfile(ownerId, true), getTeamRequest(ownerId, true)]);
-  if (current?.status === 'pending') throw new ApiError('conflict', 'Ya tienes una solicitud en revisión. Te avisamos por correo.');
+  const [profile, previous] = await Promise.all([requireProfile(ownerId, true), getItem(teamRequestKey(ownerId), true)]);
+  if (previous?.status === 'pending') throw new ApiError('conflict', 'Ya tienes una solicitud en revisión. Te avisamos por correo.');
   const at = now.toISOString();
   const request: TeamRequest = {
     status: 'pending', name: body.name, professionals: body.professionals, message: body.message ?? '',
     seatsApproved: null, rejectReason: null, createdAt: at, reviewedAt: null,
   };
+  // The reviewed request it replaces stays as an immutable history item (who approved what, when).
+  const archive: TransactItem[] = previous ? [{
+    Put: {
+      TableName: table(),
+      Item: { ...previous, ...teamRequestHistoryKey(ownerId, previous.createdAt as ISOInstant) },
+      ConditionExpression: 'attribute_not_exists(PK)',
+    },
+  }] : [];
   await transactWrite([{
     Put: {
       TableName: table(),
@@ -118,8 +133,8 @@ export async function createTeamRequest(ownerId: string, body: CreateTeamRequest
       ExpressionAttributeNames: { '#s': 'status' },
       ExpressionAttributeValues: { ':pending': 'pending' },
     },
-  }]).catch((err: unknown) => {
-    if (failedConditionIndex(err) === 0) throw new ApiError('conflict', 'Ya tienes una solicitud en revisión. Te avisamos por correo.');
+  }, ...archive]).catch((err: unknown) => {
+    if (failedConditionIndex(err) >= 0) throw new ApiError('conflict', 'Ya tienes una solicitud en revisión. Te avisamos por correo.');
     throw err;
   });
   await sendTeamRequestToAdmin({ profile, request }).catch((err: unknown) => log.error('team request alert failed', { ownerId, err }));

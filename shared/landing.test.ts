@@ -21,6 +21,7 @@ const template = [
   '<p>Desde <!--price:from-->$1<!--/price:from--> al mes</p>',
   '<!--price:founder--><div class="founder">Precio fundador: <!--price:from-->$1<!--/price:from--></div><!--/price:founder-->',
   '<div class="plans"><!--price:plans--><article>old</article><!--/price:plans--></div>',
+  '<p>Tu plan + <!--price:extra-->$1<!--/price:extra--> por profesional</p>',
 ].join('\n');
 
 describe('toPublicPrices', () => {
@@ -37,6 +38,7 @@ describe('toPublicPrices', () => {
         { months: 6, amountCop: 30000, monthlyCop: 5000, freeMonths: 0, best: false },
         { months: 12, amountCop: 50000, monthlyCop: 4167, freeMonths: 2, best: true },
       ],
+      extraProfessionalCop: 3900,
     });
   });
 
@@ -66,7 +68,7 @@ describe('renderLandingPrices', () => {
     expect(html).not.toContain('old');
     expect(html).toContain('<article class="plan"><span class="plan-tag">Precio fundador</span><h3 class="plan-name">3 meses</h3><div class="plan-amount">$15.000</div><div class="plan-monthly">$5.000 al mes</div></article>');
     expect(html).toContain('<article class="plan plan-best"><span class="plan-tag">El más conveniente</span><h3 class="plan-name">12 meses</h3><div class="plan-amount">$50.000</div><div class="plan-monthly">$4.167 al mes · 2 meses gratis</div></article>');
-    expect([...landingSlotsIn(html)].sort()).toEqual(['founder', 'from', 'jsonld', 'plans']);
+    expect([...landingSlotsIn(html)].sort()).toEqual(['extra', 'founder', 'from', 'jsonld', 'plans']);
   });
 
   it('writes SoftwareApplication JSON-LD with the price range', () => {
@@ -84,6 +86,12 @@ describe('renderLandingPrices', () => {
     expect(html).toContain('Precio estándar &lt;b&gt;');
     expect(html).toContain('<h3 class="plan-name">Mes a mes</h3><div class="plan-amount">$7.900</div><div class="plan-monthly">Sin compromiso</div>');
     expect(html).toContain('Desde <!--price:from-->$7.000<!--/price:from-->');
+  });
+
+  it('fills the team value per additional professional, keeping the text when a version has none', () => {
+    expect(renderLandingPrices(template, toPublicPrices(LANDING_DEFAULT_PRICE))).toContain('Tu plan + <!--price:extra-->$3.900<!--/price:extra--> por profesional');
+    const none = renderLandingPrices(template, toPublicPrices({ ...LANDING_DEFAULT_PRICE, extraProfessionalCop: null }));
+    expect(none).toContain('<!--price:extra-->$1<!--/price:extra-->');
   });
 
   it('can render its own output again', () => {

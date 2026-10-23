@@ -60,7 +60,14 @@ export function defaultPlanIndex(plans: PlanOption[]): number {
 }
 
 /** Smallest package amount: "Renovar desde $15.000". */
-export function minPackageAmount(price: PriceVersion | null | undefined): number | null {
+/** Cheapest package, including the team's additional professionals (team plan). */
+export function minPackageAmount(price: PriceVersion | null | undefined, teamSeats = 0): number | null {
   if (!price || price.packages.length === 0) return null;
-  return Math.min(...price.packages.map((p) => p.amountCop));
+  return Math.min(...price.packages.map((p) => teamPackageAmount(p, teamSeats, price.extraProfessionalCop)));
+}
+
+/** Monthly headline («desde $X/mes»), including the team's additional professionals. */
+export function monthlyAmount(price: PriceVersion | null | undefined, teamSeats = 0): number | null {
+  if (price?.monthlyCop == null) return null;
+  return price.monthlyCop + Math.max(0, teamSeats) * (price.extraProfessionalCop ?? 0);
 }

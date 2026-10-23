@@ -31,6 +31,7 @@
  *  PRO#<ownerId>                    TEAM                       { name, slug, seats, memberIds[], memberSlugs[], createdAt, updatedAt } — team plan
  *                                                              GSI1PK=TEAMS  GSI1SK=<createdAt>#<ownerId>  (admin list, sitemap)
  *  PRO#<ownerId>                    TEAMREQ                    TeamRequest (latest one); GSI1PK=TEAMREQS GSI1SK=<createdAt>#<ownerId> only while pending
+ *  PRO#<ownerId>                    TEAMREQ#<createdAt>        immutable copy of a reviewed request replaced by a newer one (audit)
  *  PRO#<memberId>                   PROFILE                    a team member: ProProfile + ownerId, no OWNER/SUB/TRIAL items (pays and is managed
  *                                                              through the owner; docs/team-plan.md)
  *  PRO#<proId>                      CALSYNC                    { token, invitesEnabled, createdAt } — calendar sync settings
@@ -70,7 +71,8 @@
  *  `clientsBackfillVersion`: when it is behind CLIENTS_BACKFILL_VERSION the next clients-page visit
  *  re-keys appointments/WAIT items and rebuilds the records (notes carried over).
  *
- *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, IDEMP, REFSIGNUP, WAIT (after its last date), and LOCK once its slot is in the
+ *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, IDEMP, REFSIGNUP, WAIT (after its last date), BLOCK (30 days after it
+ *  ended: a past block never affects availability, so the blocks query stays bounded), and LOCK once its slot is in the
  *  past (a past slot can never be booked again, so the lock is no longer needed). Appointments,
  *  payments and subscriptions never expire.
  */

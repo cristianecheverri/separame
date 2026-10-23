@@ -73,6 +73,7 @@ export const handler = createApiHandler({
     const [service, sub] = await Promise.all([requireService(proId, query.serviceId), loadSubscription(proId, now)]);
     return ok(await availabilityFor({
       proId, service, from: query.from, days: query.days, active: !sub.status.readOnly, now, ignoreMinNotice: true,
+      excludeAppointmentId: query.excludeAppointmentId,
     }));
   },
 });

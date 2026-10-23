@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Suscripción del consultorio — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 3550px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; position: relative; padding-bottom: 68px">
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+    <span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Consultorio Sonríe</span>
+  </header>
+
+  <main style="box-sizing: border-box; padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 15px; color: #56645D; font-weight: 600">Tu plan está activo hasta el jueves 25 de febrero · incluye 2 meses ganados por referidos</div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Sigue recibiendo citas sin parar</h1>
+    </div>
+
+    <div style="background: #FFC93C; border-radius: 20px; padding: 16px 20px; display: flex; gap: 12px; align-items: center">
+      <span style="width: 40px; height: 40px; border-radius: 12px; background: #15241D; color: #FFC93C; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg></span>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-weight: 800; font-size: 16px">Precio fundador: $5.000 al mes</span>
+        <span style="font-size: 14px">Lo conservas mientras sigas renovando, aunque el precio suba para los nuevos.</span>
+      </div>
+    </div>
+
+    <section aria-labelledby="team-plan-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #3E4C45; overflow-wrap: anywhere">Consultorio Sonríe · 3 profesionales</span>
+        <h2 id="team-plan-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.25">Tu plan: Fundador + 2 profesionales adicionales</h2>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+        <div style="display: flex; justify-content: space-between; gap: 12px"><span style="color: #3E4C45">Plan Fundador</span><strong style="white-space: nowrap">$5.000 al mes</strong></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px"><span style="color: #3E4C45">2 profesionales adicionales</span><strong style="white-space: nowrap">2 × $3.900 al mes</strong></div>
+        <div style="border-top: 1px solid #E3E8E5; padding-top: 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px">
+          <span style="font-weight: 700; font-size: 15px">Total al mes</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px">$12.800</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px">
+        <span style="font-size: 13px; color: #56645D">Usas 2 de 2 cupos adicionales</span>
+        <a href="pro-team-request-form-phone.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; text-decoration: none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Solicitar más cupos
+        </a>
+      </div>
+    </section>
+
+    <div role="group" aria-label="Paquetes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px">
+      <sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+        <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">
+          <span style="{{p.tagStyle}}">{{p.tag}}</span>
+          <span style="font-weight: 700; font-size: 16px">{{p.name}}</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.15; letter-spacing: -0.8px">{{p.total}}</span>
+          <span style="font-size: 14px; color: #3E4C45">{{p.breakdown}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <section aria-label="Pago" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: baseline">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 14px; color: #56645D">Pagas hoy</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 36px; line-height: 1.1; letter-spacing: -1px">{{selTotal}}</span>
+        </div>
+        <div style="font-size: 15px">Todo el equipo queda activo hasta el<br><strong>{{selUntil}}</strong></div>
+      </div>
+
+      <h2 style="margin: 0; padding-top: 4px; font-weight: 700; font-size: 16px">Cómo pagar</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{instructions}}" as="m" hint-placeholder-count="2">
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 8px 12px 16px; display: flex; align-items: center; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+              <span style="font-size: 13px; font-weight: 700; color: #56645D">{{m.label}}</span>
+              <span style="font-weight: 700; font-size: 17px; overflow-wrap: anywhere">{{m.detail}}</span>
+            </div>
+            <button aria-label="{{m.aria}}" style="height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; color: #0B6E4F; cursor: pointer; flex-shrink: 0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg>
+              Copiar
+            </button>
+          </div>
+        </sc-for>
+        <div style="font-size: 14px; color: #3E4C45">A nombre de <strong style="color: #15241D">Sepárame</strong></div>
+        <div style="font-size: 13px; color: #56645D; line-height: 1.45">Envía el valor exacto del plan. Activamos tu plan el mismo día hábil.</div>
+      </div>
+
+      <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="background: #EAF5F0; border-radius: 18px; padding: 16px; display: flex; gap: 12px; align-items: flex-start">
+          <span style="width: 32px; height: 32px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+          <div style="font-size: 15px; line-height: 1.45"><strong>Recibimos tu aviso.</strong> Te confirmamos por correo, normalmente el mismo día.</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{showForm}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <div role="group" aria-labelledby="notice-method" style="display: flex; flex-direction: column; gap: 8px">
+            <div id="notice-method" style="font-size: 14px; font-weight: 600">¿Cómo pagaste?</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{methods}}" as="c" hint-placeholder-count="2">
+                <button onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="{{c.style}}">{{c.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="notice-ref" style="font-size: 14px; font-weight: 600">Referencia o comprobante (opcional)</label>
+            <input id="notice-ref" type="text" maxlength="200" placeholder="Número de comprobante o referencia" style="height: 48px; width: 100%; min-width: 0; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D">
+          </div>
+          <button onClick="{{send}}" style="height: 56px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 10px; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+            Ya pagué · avisar
+          </button>
+          <div style="font-size: 13px; color: #56645D; line-height: 1.5">{{formNote}}</div>
+        </div>
+      </sc-if>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">¿Y si no renuevo a tiempo?</h2>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; color: #3E4C45">
+        <span>Tienes <strong style="color: #15241D">3 días de gracia</strong> con todo funcionando.</span>
+        <span>Después, tu página dice «Agenda no disponible temporalmente» y nadie puede reservar.</span>
+        <span>Tus citas ya agendadas siguen en pie, con recordatorio. Puedes entrar a verlas cuando quieras.</span>
+        <span>Cuando confirmamos tu pago, todo vuelve a funcionar al instante.</span>
+      </div>
+    </section>
+
+    <div style="background: #FFF4D1; border-radius: 20px; padding: 16px; display: flex; gap: 12px; align-items: flex-start">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+      <div style="font-size: 14px; line-height: 1.5">Un solo vencimiento para todo el equipo: si el plan vence, ningún profesional recibe reservas nuevas. Las citas ya agendadas siguen igual.</div>
+    </div>
+
+    <section aria-labelledby="referidos-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px">
+        <div style="display: flex; gap: 12px; align-items: flex-start; min-width: 0; flex: 1 1 260px">
+          <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8"></path></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+            <h2 id="referidos-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Referidos</h2>
+            <span style="font-size: 14px; color: #3E4C45; line-height: 1.45">Comparte tu enlace con colegas: cuando alguien se registra con él y paga su primer mes, te sumamos 1 mes gratis al final de tu plan.</span>
+          </div>
+        </div>
+        <div style="background: #EAF5F0; border-radius: 18px; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0">
+          <span style="font-size: 13px; font-weight: 700; color: #0B6E4F">Meses ganados</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; line-height: 1.1; letter-spacing: -0.8px; color: #0B6E4F">2</span>
+          <span style="font-size: 12px; color: #3E4C45">ya sumados a tu plan</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 14px; font-weight: 600">Tu enlace de invitación</span>
+        <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/r/laura-perez</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button onClick="{{copy}}" aria-label="Copiar tu enlace de invitación" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyLabel}}</button>
+          <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h3 style="margin: 0; font-weight: 700; font-size: 16px">Personas que invitaste (3)</h3>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <sc-for list="{{people}}" as="r" hint-placeholder-count="3">
+            <li style="{{r.rowStyle}}">
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 160px">
+                <span style="font-weight: 700; font-size: 15px">{{r.name}}</span>
+                <span style="font-size: 13px; color: #56645D">{{r.detail}}</span>
+              </div>
+              <span style="{{r.badgeStyle}}">{{r.badge}}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </div>
+      <div style="font-size: 13px; color: #56645D; line-height: 1.5">Un mes por cada cuenta que pague, sin límite. La prueba gratis no cuenta y no vale registrarte tú mismo. Si tu plan está vencido, el mes queda guardado y se aplica en tu próximo pago.</div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Historial de pagos</h2>
+      <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{history}}" as="h" hint-placeholder-count="2">
+          <li style="display: flex; gap: 12px; align-items: flex-start">
+            <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #FFC93C; flex-shrink: 0; margin-top: 5px"></span>
+            <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+              <div style="display: flex; justify-content: space-between; gap: 8px">
+                <span style="font-weight: 700; font-size: 14px">{{h.title}}</span>
+                <span style="font-weight: 700; font-size: 14px; white-space: nowrap">+1 mes</span>
+              </div>
+              <span style="font-size: 13px; color: #56645D">{{h.detail}}</span>
+            </div>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </main>
+
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; z-index: 2">
+    <a href="pro-team-agenda-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Agenda</span>
+    </a>
+    <a href="pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span>
+    </a>
+    <a href="pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span>
+    </a>
+    <a href="pro-more-sheet-phone.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":375,"height":3550}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ plan: 2, method: 0, sent: false, copied: false }, this.state || {});
+    // Each package plus 2 additional professionals × $3.900 × months (the amount the server records).
+    const plans = [
+      { name: '3 meses', total: '$38.400', breakdown: 'Plan $15.000 + equipo $23.400', tag: 'Precio fundador', until: '25 de mayo de 2027' },
+      { name: '6 meses', total: '$76.800', breakdown: 'Plan $30.000 + equipo $46.800', tag: 'Precio fundador', until: '25 de agosto de 2027' },
+      { name: '12 meses', total: '$143.600', breakdown: 'Plan $50.000 + equipo $93.600', tag: 'El más conveniente', until: '25 de febrero de 2028' }
+    ];
+    const card = 'display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px;border-radius:22px;font:inherit;color:#15241D;text-align:left;cursor:pointer;border:2px solid;min-height:150px;box-sizing:border-box;';
+    const tag = 'font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:4px;';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;cursor:pointer;';
+    const badge = 'display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;line-height:1.3;';
+    const sel = plans[st.plan];
+    const methodLabels = ['Nequi', 'Transferencia'];
+    const people = [
+      { name: 'Andrés Restrepo', detail: 'Abogado · se registró el 15 oct. · prueba hasta el 25 oct.', badge: 'Se registró · en prueba', style: badge + 'background:#FFF4D1;color:#5C4300;' },
+      { name: 'Camilo Arango', detail: 'Entrenador · pagó 6 meses el 14 oct.', badge: 'Pagó · ganaste 1 mes ✓', style: badge + 'background:#0B6E4F;color:#FFFFFF;' },
+      { name: 'Estudio Lúa', detail: 'Estética · pagó 3 meses el 2 oct.', badge: 'Pagó · ganaste 1 mes ✓', style: badge + 'background:#0B6E4F;color:#FFFFFF;' }
+    ];
+    return {
+      plans: plans.map((p, i) => {
+        const selected = st.plan === i;
+        return Object.assign({}, p, {
+          selected,
+          pick: () => this.setState({ plan: i, sent: false }),
+          style: card + (selected ? 'background:#EAF5F0;border-color:#0B6E4F;' : 'background:#FFFFFF;border-color:#FFFFFF;'),
+          tagStyle: tag + (i === 2 ? 'background:#0B6E4F;color:#FFFFFF;' : 'background:#F3F6F4;color:#3E4C45;')
+        });
+      }),
+      selTotal: sel.total,
+      selUntil: sel.until,
+      instructions: [
+        { label: 'Nequi', detail: '300 000 0000' },
+        { label: 'Bancolombia ahorros', detail: '123-456789-01' }
+      ].map((m) => Object.assign(m, { aria: 'Copiar ' + m.label + ': ' + m.detail })),
+      methods: methodLabels.map((label, i) => {
+        const selected = st.method === i;
+        return { label, selected, pick: () => this.setState({ method: i }), style: chip + (selected ? 'background:#FFC93C;border-color:#FFC93C;' : 'background:#FFFFFF;border-color:#E3E8E5;') };
+      }),
+      sent: st.sent,
+      showForm: !st.sent,
+      send: () => this.setState({ sent: true }),
+      formNote: 'Paga ' + sel.total + ' por Nequi o transferencia y avísanos aquí. Revisamos el pago y activamos tu plan, normalmente el mismo día. Tres días antes de vencer te mandamos un correo para renovar.',
+      copy: () => this.setState({ copied: true }),
+      copyLabel: st.copied ? '¡Copiado!' : 'Copiar',
+      people: people.map((r, i) => ({ name: r.name, detail: r.detail, badge: r.badge, badgeStyle: r.style, rowStyle: 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:12px 0;' + (i > 0 ? 'border-top:1px solid #E3E8E5;' : '') })),
+      history: [
+        { title: 'Mes gratis por referido · Camilo Arango', detail: '14 oct. 2026 · tu plan pasó del 25 ene. al 25 feb. 2027' },
+        { title: 'Mes gratis por referido · Estudio Lúa', detail: '2 oct. 2026 · tu plan pasó del 25 dic. 2026 al 25 ene. 2027' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

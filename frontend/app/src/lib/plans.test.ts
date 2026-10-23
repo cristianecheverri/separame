@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PriceVersion } from '@shared/types';
-import { buildPlans, defaultPlanIndex, minPackageAmount } from './plans';
+import { buildPlans, defaultPlanIndex, minPackageAmount, monthlyAmount } from './plans';
 import { prices } from '../mocks/fixtures';
 
 const fundador = prices[0] as PriceVersion;
@@ -24,5 +24,20 @@ describe('plans from a price version', () => {
   it('computes "Renovar desde"', () => {
     expect(minPackageAmount(fundador)).toBe(15000);
     expect(minPackageAmount({ ...fundador, packages: [] })).toBeNull();
+  });
+});
+
+describe('team headline amounts', () => {
+  const fundador = {
+    id: 'fundador-v1', code: 'fundador-v1', name: 'Fundador', currency: 'COP' as const, monthlyCop: 5000,
+    packages: [{ months: 3, amountCop: 15000 }, { months: 12, amountCop: 50000 }], extraProfessionalCop: 3900,
+    status: 'active' as const, isDefault: true, createdAt: '2026-10-01T00:00:00.000Z',
+  };
+
+  it('«Renovar desde» and «desde $X/mes» include the additional professionals', () => {
+    expect(minPackageAmount(fundador)).toBe(15000);
+    expect(minPackageAmount(fundador, 2)).toBe(15000 + 2 * 3900 * 3);
+    expect(monthlyAmount(fundador)).toBe(5000);
+    expect(monthlyAmount(fundador, 2)).toBe(12800);
   });
 });

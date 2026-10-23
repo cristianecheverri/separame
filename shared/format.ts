@@ -86,6 +86,8 @@ export function formatCop(amount: number | null | undefined): string {
 export interface PricedItem {
   priceCop: number | null;
   priceDisplay?: PriceDisplay;
+  /** Team page «Cualquiera disponible»: professionals charge differently; `priceCop` is the lowest. */
+  priceFrom?: boolean;
 }
 
 /** The price display option, deriving it for items saved before it existed (null or 0 → "Sin costo"). */
@@ -107,7 +109,7 @@ export const PRICE_DISPLAY_TEXT = {
  */
 export function formatServicePrice(item: PricedItem): string {
   const display = priceDisplayOf(item);
-  if (display === 'fixed') return formatCop(item.priceCop);
+  if (display === 'fixed') return item.priceFrom ? `Desde ${formatCop(item.priceCop)}` : formatCop(item.priceCop);
   if (display === 'hidden') return '';
   return PRICE_DISPLAY_TEXT[display];
 }

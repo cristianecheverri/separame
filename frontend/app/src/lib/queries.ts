@@ -25,7 +25,8 @@ export const keys = {
   appointmentsAll: ['appointments'] as const,
   appointments: (from: ISODate, to: ISODate, proId: string) => ['appointments', from, to, proId] as const,
   slotsAll: ['slots'] as const,
-  slots: (serviceId: string, from: ISODate, days: number, proId: string) => ['slots', serviceId, from, days, proId] as const,
+  slots: (serviceId: string, from: ISODate, days: number, proId: string, excludeAppointmentId = '') =>
+    ['slots', serviceId, from, days, excludeAppointmentId, proId] as const,
   billing: ['billing'] as const,
   calendarSync: ['calendar-sync'] as const,
   clientsAll: ['clients'] as const,
@@ -129,11 +130,11 @@ export function useTeamMemberSettings(members: { proId: string }[]) {
   });
 }
 
-export function useSlots(serviceId: string | null, from: ISODate, days: number) {
+export function useSlots(serviceId: string | null, from: ISODate, days: number, excludeAppointmentId?: string) {
   const { proId, header } = useActing();
   return useQuery({
-    queryKey: keys.slots(serviceId ?? '', from, days, proId),
-    queryFn: () => api.get<ProSlotsResponse>(apiPaths.slots({ serviceId: serviceId!, from, days }), { actingProId: header }),
+    queryKey: keys.slots(serviceId ?? '', from, days, proId, excludeAppointmentId),
+    queryFn: () => api.get<ProSlotsResponse>(apiPaths.slots({ serviceId: serviceId!, from, days, excludeAppointmentId }), { actingProId: header }),
     enabled: !!serviceId,
     staleTime: 15_000,
   });

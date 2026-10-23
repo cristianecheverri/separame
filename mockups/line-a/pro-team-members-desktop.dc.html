@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Equipo — profesionales y página del consultorio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 1050px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="10">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+        <a href="pro-billing-plans.dc.html" style="min-height: 44px; padding: 4px 12px; box-sizing: border-box; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+      </div>
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; letter-spacing: -0.8px">Equipo</h1>
+        <div style="font-size: 15px; color: #56645D">Las agendas que manejas desde tu cuenta.</div>
+      </div>
+      <span style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F; font-weight: 700; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg> {{seatsText}}</span>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-label="Profesionales del equipo" style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="3">
+          <div style="{{m.cardStyle}}">
+            <sc-if value="{{m.isOwner}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; gap: 16px; min-width: 0; min-height: 44px">
+                <span aria-hidden="true" style="{{m.avatarStyle}}">{{m.initials}}</span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px">
+                    <span style="font-weight: 700; font-size: 16px; overflow-wrap: anywhere">{{m.name}}</span>
+                    <span style="font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F; white-space: nowrap">Tú · cuenta principal</span>
+                  </span>
+                  <span style="font-size: 14px; color: #3E4C45; overflow-wrap: anywhere">{{m.profession}} · {{m.link}}</span>
+                  <span style="font-size: 13px; color: #56645D">{{m.summary}}</span>
+                </span>
+              </div>
+            </sc-if>
+            <sc-if value="{{m.isMember}}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{m.pick}}" aria-pressed="{{m.selected}}" aria-label="{{m.pickLabel}}" style="display: flex; align-items: center; gap: 16px; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 0; min-height: 44px; min-width: 0">
+                <span aria-hidden="true" style="{{m.avatarStyle}}">{{m.initials}}</span>
+                <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <span style="font-weight: 700; font-size: 16px; overflow-wrap: anywhere">{{m.name}}</span>
+                  <span style="font-size: 14px; color: #3E4C45; overflow-wrap: anywhere">{{m.profession}} · {{m.link}}</span>
+                  <span style="font-size: 13px; color: #56645D">{{m.summary}}</span>
+                </span>
+              </button>
+            </sc-if>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto">
+              <sc-if value="{{m.isOwner}}" hint-placeholder-val="{{ false }}">
+                <a href="pro-public-profile.dc.html" aria-label="Editar tu perfil público" style="height: 44px; padding: 0 16px; box-sizing: border-box; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; align-items: center; text-decoration: none">Editar</a>
+              </sc-if>
+              <sc-if value="{{m.isMember}}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{m.pick}}" aria-label="{{m.editLabel}}" style="height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Editar</button>
+              </sc-if>
+              <button onClick="{{m.copy}}" aria-label="{{m.copyAria}}" style="height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{m.copyLabel}}</button>
+            </div>
+          </div>
+        </sc-for>
+
+        <div style="background: #FFFFFF; border-radius: 20px; border: 2px dashed #CFDAD4; padding: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
+          <button onClick="{{addNew}}" disabled="{{seatsFull}}" aria-describedby="seats-note" style="{{addStyle}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+            Agregar profesional
+          </button>
+          <sc-if value="{{seatsFull}}" hint-placeholder-val="{{ true }}">
+            <span id="seats-note" style="font-size: 14px; color: #3E4C45; line-height: 1.45; flex: 1 1 240px">Usaste todos tus cupos. ¿Necesitas más? <a href="pro-team-request-form-phone.dc.html" style="font-weight: 700; text-underline-offset: 2px">Solicitar más cupos</a></span>
+          </sc-if>
+          <sc-if value="{{seatsLeft}}" hint-placeholder-val="{{ false }}">
+            <span id="seats-note" style="font-size: 14px; color: #3E4C45; line-height: 1.45; flex: 1 1 240px">Te queda 1 cupo para agregar profesionales.</span>
+          </sc-if>
+        </div>
+
+        <div style="background: #FFF4D1; border-radius: 20px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+          <span>Los profesionales del equipo no tienen usuario: tú administras sus agendas. Si tu plan vence, nadie del equipo recibe reservas nuevas.</span>
+        </div>
+      </section>
+
+      <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section aria-labelledby="clinic-title" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 13px; font-weight: 700; color: #56645D">Página del consultorio</span>
+            <h2 id="clinic-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; overflow-wrap: anywhere">Consultorio Sonríe</h2>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/consultorio-sonrie</div>
+          <span style="font-size: 14px; color: #3E4C45; line-height: 1.45">Tus clientes eligen con quién y ven las horas libres de todos.</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button onClick="{{copyClinic}}" aria-label="Copiar el enlace del consultorio" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyClinicLabel}}</button>
+            <a href="client-booking-team-who-phone.dc.html" style="height: 44px; padding: 0 18px; box-sizing: border-box; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: inline-flex; gap: 8px; align-items: center; font-weight: 700; font-size: 14px; text-decoration: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg> Ver página</a>
+          </div>
+          <sc-if value="{{clinicView}}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{editClinic}}" style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Cambiar nombre o enlace</button>
+          </sc-if>
+          <sc-if value="{{clinicEdit}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px; border-top: 1px solid #E3E8E5; padding-top: 16px">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="clinic-name" style="font-size: 14px; font-weight: 600">Nombre del consultorio</label>
+                <input id="clinic-name" type="text" value="Consultorio Sonríe" placeholder="Nombre del consultorio" style="height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+                <label for="clinic-slug" style="font-size: 14px; font-weight: 600">Enlace del consultorio</label>
+                <div style="display: flex; align-items: center; height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; min-width: 0">
+                  <span style="padding-left: 14px; font-size: 15px; font-weight: 600; color: #56645D; white-space: nowrap; flex-shrink: 0">separame.app/</span>
+                  <input id="clinic-slug" type="text" value="consultorio-sonrie" placeholder="enlace" autocapitalize="none" spellcheck="false" style="height: 100%; flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 0 14px 0 0; font: inherit; font-size: 15px; font-weight: 600; color: #15241D">
+                </div>
+                <span style="font-size: 12px; color: #56645D">Es su enlace actual.</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <button onClick="{{closeClinic}}" style="height: 44px; padding: 0 20px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer">Guardar</button>
+                <button onClick="{{closeClinic}}" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; color: #15241D; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer">Cancelar</button>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+
+        <section aria-labelledby="member-form-title" style="background: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h2 id="member-form-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">{{form.title}}</h2>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="member-name" style="font-size: 14px; font-weight: 600">Nombre</label>
+            <input id="member-name" type="text" value="{{form.name}}" placeholder="Nombre del profesional" style="height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="member-profession" style="font-size: 14px; font-weight: 600">Profesión</label>
+            <input id="member-profession" type="text" value="{{form.profession}}" placeholder="Profesión o especialidad" style="height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+            <label for="member-slug" style="font-size: 14px; font-weight: 600">Enlace propio</label>
+            <div style="display: flex; align-items: center; height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; min-width: 0">
+              <span style="padding-left: 14px; font-size: 15px; font-weight: 600; color: #56645D; white-space: nowrap; flex-shrink: 0">separame.app/</span>
+              <input id="member-slug" type="text" value="{{form.slug}}" placeholder="enlace" autocapitalize="none" spellcheck="false" style="height: 100%; flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; padding: 0 14px 0 0; font: inherit; font-size: 15px; font-weight: 600; color: #15241D">
+            </div>
+            <sc-if value="{{form.current}}" hint-placeholder-val="{{ true }}">
+              <span style="font-size: 12px; color: #56645D">Es su enlace actual.</span>
+            </sc-if>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 16px; padding: 12px 14px; font-size: 13px; color: #3E4C45; line-height: 1.5">{{form.note}}</div>
+          <button style="height: 48px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer">{{form.submit}}</button>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seats":{"editor":"enum","options":["full","free"],"default":"full"},"$preview":{"width":1280,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ sel: 1, copied: null, copiedClinic: false, clinicEdit: false }, this.state || {});
+    const full = (this.props.seats || 'full') === 'full';
+    const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Equipo', 'Suscripción'];
+    const hrefs = ['pro-team-agenda-desktop.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'A-Servicios.dc.html', 'A-Disponibilidad.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'pro-team-members-desktop.dc.html', 'A-Plan.dc.html'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const people = [
+      { name: 'Dra. Laura Pérez', first: 'Laura', initials: 'LP', profession: 'Odontóloga', slug: 'dra-laura-perez', summary: '3 servicios · Lun a vie, 8:00 a. m. – 5:00 p. m.', bg: '#0B6E4F', fg: '#FFFFFF', owner: true },
+      { name: 'Dr. Julián Ortiz', first: 'Julián', initials: 'JO', profession: 'Ortodoncista', slug: 'dr-julian-ortiz', summary: '2 servicios · Lun, mié y vie, 9:00 a. m. – 6:00 p. m.', bg: '#FFC93C', fg: '#15241D' },
+      { name: 'Dra. Sara Gómez', first: 'Sara', initials: 'SG', profession: 'Endodoncista', slug: 'dra-sara-gomez', summary: '2 servicios · Mar y jue, 8:00 a. m. – 4:00 p. m.', bg: '#15241D', fg: '#FFFFFF' }
+    ];
+    const card = 'display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px;border-radius:20px;background:#FFFFFF;border:2px solid;';
+    const avatar = 'width:52px;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:18px;';
+    const isNew = st.sel === 'new' && !full;
+    const sel = isNew ? null : people[st.sel === 'new' ? 1 : st.sel];
+    const addBase = 'height:46px;padding:0 20px;border-radius:999px;border:0;font:inherit;font-weight:700;font-size:14px;display:inline-flex;gap:8px;align-items:center;';
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 8 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      seatsText: full ? '2 de 2 cupos adicionales usados' : '2 de 3 cupos adicionales usados',
+      seatsFull: full,
+      seatsLeft: !full,
+      addNew: () => { if (!full) this.setState({ sel: 'new' }); },
+      addStyle: addBase + (full ? 'background:#DCE3DF;color:#56645D;cursor:not-allowed;' : 'background:#0B6E4F;color:#FFFFFF;cursor:pointer;'),
+      members: people.map((p, i) => {
+        const selected = !p.owner && st.sel === i;
+        return {
+          name: p.name, initials: p.initials, profession: p.profession, summary: p.summary,
+          link: 'separame.app/' + p.slug,
+          isOwner: !!p.owner,
+          isMember: !p.owner,
+          selected,
+          pickLabel: 'Elegir a ' + p.name,
+          editLabel: 'Editar a ' + p.name,
+          copyAria: 'Copiar el enlace de ' + p.name,
+          cardStyle: card + (selected ? 'border-color:#0B6E4F;' : 'border-color:#FFFFFF;'),
+          avatarStyle: avatar + 'background:' + p.bg + ';color:' + p.fg + ';',
+          pick: () => this.setState({ sel: i }),
+          copy: () => this.setState({ copied: i }),
+          copyLabel: st.copied === i ? '¡Copiado!' : 'Copiar enlace'
+        };
+      }),
+      form: isNew ? {
+        title: 'Agregar profesional', name: '', profession: '', slug: '', current: false,
+        note: 'Empieza con tu dirección y tu horario. Sus servicios los agregas en Servicios eligiéndolo en el selector.',
+        submit: 'Agregar profesional'
+      } : {
+        title: 'Editar profesional', name: sel.name, profession: sel.profession, slug: sel.slug, current: true,
+        note: 'Sus servicios y su horario se editan en Servicios y Disponibilidad eligiendo a ' + sel.first + ' en el selector.',
+        submit: 'Guardar cambios'
+      },
+      clinicView: !st.clinicEdit,
+      clinicEdit: st.clinicEdit,
+      editClinic: () => this.setState({ clinicEdit: true }),
+      closeClinic: () => this.setState({ clinicEdit: false }),
+      copyClinic: () => this.setState({ copiedClinic: true }),
+      copyClinicLabel: st.copiedClinic ? '¡Copiado!' : 'Copiar enlace'
+    };
+  }
+}
+</script>
+</body>
+</html>

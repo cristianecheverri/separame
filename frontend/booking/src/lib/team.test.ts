@@ -32,6 +32,16 @@ describe('mergeServices', () => {
     expect(other).toHaveLength(2);
   });
 
+  it('shows «Desde <lowest>» when professionals charge differently for the same service', () => {
+    const svc = (priceCop: number | null, priceDisplay?: 'fixed' | 'agreed') => ({ ...laura.services[0], name: 'Valoración', durationMin: 30, priceCop, priceDisplay });
+    const [differ] = mergeServices([{ ...laura, services: [svc(60000)] }, { ...sara, services: [svc(80000)] }]);
+    expect(differ).toMatchObject({ priceCop: 60000, priceDisplay: 'fixed', priceFrom: true });
+    const [same] = mergeServices([{ ...laura, services: [svc(60000)] }, { ...sara, services: [svc(60000)] }]);
+    expect(same.priceFrom).toBeUndefined();
+    const [noFixed] = mergeServices([{ ...laura, services: [svc(null, 'agreed')] }, { ...sara, services: [svc(0)] }]);
+    expect(noFixed).toMatchObject({ priceDisplay: 'hidden' });
+  });
+
   it('builds the «Cualquiera disponible» profile with the team slug', () => {
     const page = teamPageOf(MOCK_TEAM);
     expect(profileForChoice(page, ANY_PRO)?.slug).toBe('consultorio-sonrie');
@@ -103,6 +113,22 @@ describe('createTeamApi', () => {
     // A member's own slug goes straight through.
     await api.createBooking('dr-julian-ortiz', { ...body, serviceId: 'jo-retenedor', idempotencyKey: 'k2', start: '2026-10-22T16:00:00.000Z' });
     expect(createBooking).toHaveBeenLastCalledWith('dr-julian-ortiz', expect.objectContaining({ serviceId: 'jo-retenedor' }));
+  });
+});
+
+describe('«Cualquiera disponible» waitlist', () => {
+  it('sends one request to the team route with every member offering the service', async () => {
+    const base = createMockApi(new URLSearchParams());
+    const joinTeamWaitlist = vi.spyOn(base, 'joinTeamWaitlist');
+    const page = teamPageOf(MOCK_TEAM);
+    const api = createTeamApi(base, page);
+    const valoracion = mergeServices(MOCK_TEAM.members).find((s) => s.name === 'Valoración')!;
+    await api.joinWaitlist(MOCK_TEAM.slug, {
+      serviceId: valoracion.id, dates: ['2026-10-22'], client: { name: 'Cliente', email: 'c@correo.com', phone: '3000000000' }, consent: true, turnstileToken: 't',
+    });
+    expect(joinTeamWaitlist).toHaveBeenCalledWith('consultorio-sonrie', expect.objectContaining({
+      offerings: [{ slug: 'dra-laura-perez', serviceId: 'valoracion' }, { slug: 'dra-sara-gomez', serviceId: 'sg-valoracion' }],
+    }));
   });
 });
 

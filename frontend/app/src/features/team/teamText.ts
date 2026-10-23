@@ -29,13 +29,25 @@ function joinDays(names: string[]): string {
 export function scheduleSummary(schedule: WeeklySchedule): string {
   const open = ORDER.map((d, i) => ({ d, i, ranges: schedule[d] ?? [] })).filter((x) => x.ranges.length > 0);
   if (open.length === 0) return 'Sin horario';
-  const consecutive = open.every((x, k) => k === 0 || x.i === open[k - 1].i + 1);
   const label = (d: keyof WeeklySchedule, lower: boolean) => (lower ? SHORT[d].toLowerCase() : SHORT[d]);
-  const days = consecutive && open.length >= 3
-    ? `${label(open[0].d, false)} a ${label(open[open.length - 1].d, true)}`
-    : joinDays(open.map((x, k) => label(x.d, k > 0)));
-  const ranges = open.flatMap((x) => x.ranges);
-  const start = ranges.reduce((min, r) => (r.start < min ? r.start : min), ranges[0].start);
-  const end = ranges.reduce((max, r) => (r.end > max ? r.end : max), ranges[0].end);
-  return `${days}, ${formatTime(start)} – ${formatTime(end)}`;
+  const span = (ranges: { start: string; end: string }[]) => {
+    const start = ranges.reduce((min, r) => (r.start < min ? r.start : min), ranges[0].start);
+    const end = ranges.reduce((max, r) => (r.end > max ? r.end : max), ranges[0].end);
+    return `${formatTime(start)} – ${formatTime(end)}`;
+  };
+  // Days with the same hours go together: «Lun a vie, 8:00 a. m. – 6:00 p. m. · Sáb, 8:00 a. m. – 12:00 p. m.».
+  const groups: { days: typeof open; hours: string }[] = [];
+  for (const day of open) {
+    const hours = span(day.ranges);
+    const last = groups.at(-1);
+    if (last && last.hours === hours) last.days.push(day);
+    else groups.push({ days: [day], hours });
+  }
+  return groups.map(({ days, hours }) => {
+    const consecutive = days.every((x, k) => k === 0 || x.i === days[k - 1].i + 1);
+    const names = consecutive && days.length >= 3
+      ? `${label(days[0].d, false)} a ${label(days[days.length - 1].d, true)}`
+      : joinDays(days.map((x, k) => label(x.d, k > 0)));
+    return `${names}, ${hours}`;
+  }).join(' · ');
 }

@@ -69,6 +69,8 @@ export interface PublicService {
   priceCop: number | null;
   /** Missing in pages generated before the option existed (derive with `priceDisplayOf`). */
   priceDisplay?: PriceDisplay;
+  /** Team page «Cualquiera disponible» only (set client-side): prices differ, `priceCop` is the lowest. */
+  priceFrom?: boolean;
   description: string;
 }
 
@@ -113,6 +115,8 @@ export interface AvailabilityQuery {
   from?: ISODate;
   /** 1–31; defaults to AVAILABILITY_DAYS. */
   days?: number;
+  /** Panel only (/me/slots): the appointment being moved, so its own time doesn't block nearby slots. */
+  excludeAppointmentId?: string;
 }
 
 export interface AvailabilityResponse {
@@ -208,6 +212,11 @@ export interface JoinWaitlistRequest {
   turnstileToken: string;
 }
 
+/** «Cualquiera disponible»: the same request for every member offering the service (team page). */
+export interface JoinTeamWaitlistRequest extends Omit<JoinWaitlistRequest, 'serviceId'> {
+  offerings: { slug: string; serviceId: string }[];
+}
+
 export interface JoinWaitlistResponse {
   entry: Pick<WaitlistEntry, 'id' | 'dates' | 'serviceName'>;
 }
@@ -249,6 +258,8 @@ export interface PublicPricesResponse {
   trialDays: number;
   /** Multi-month packages by length, a 1-month package (if any) last. */
   packages: PublicPricePackage[];
+  /** Team plan: monthly value per additional professional (null = this version has no team pricing). */
+  extraProfessionalCop: number | null;
 }
 
 // ── Professional ───────────────────────────────────────────────────────────
@@ -733,6 +744,7 @@ export const apiPaths = {
   /** The client's .ics file (a plain navigation/download, not a fetch). */
   publicAppointmentIcs: (token: string) => `/public/appointments/${enc(token)}/ics`,
   publicWaitlist: (slug: string) => `/public/pros/${enc(slug)}/waitlist`,
+  publicTeamWaitlist: (teamSlug: string) => `/public/teams/${enc(teamSlug)}/waitlist`,
   publicLeaveWaitlist: (token: string) => `/public/waitlist/${enc(token)}/leave`,
   publicPrices: () => '/public/prices',
   publicReferral: (code: string) => `/public/referrals/${enc(code)}`,

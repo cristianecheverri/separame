@@ -84,6 +84,8 @@ export const availabilityQuerySchema = z.object({
   serviceId: z.string().min(1).max(64),
   from: isoDateSchema.optional(),
   days: z.coerce.number().int().min(1).max(31).optional(),
+  /** Panel only (/me/slots): the appointment being moved doesn't block its own neighbouring times. */
+  excludeAppointmentId: z.string().min(1).max(64).optional(),
 });
 
 export const createBookingSchema = z.object({
@@ -347,4 +349,12 @@ export const teamMemberSchema = z.object({
 
 export const approveTeamSchema = z.object({
   seats: z.number().int().min(1).max(TEAM_MAX_PROFESSIONALS - 1),
+});
+
+/** «Cualquiera disponible» waitlist: one captcha, one entry per team member offering the service. */
+export const joinTeamWaitlistSchema = joinWaitlistSchema.omit({ serviceId: true }).extend({
+  offerings: z
+    .array(z.object({ slug: z.string().trim().toLowerCase().min(3).max(40), serviceId: z.string().min(1).max(64) }))
+    .min(1)
+    .max(TEAM_MAX_PROFESSIONALS),
 });

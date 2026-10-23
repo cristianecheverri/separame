@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Solicitar plan para equipos — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 870px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; position: relative; padding-bottom: 68px">
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+  </header>
+
+  <sc-if value="{{isForm}}" hint-placeholder-val="{{ true }}">
+    <main style="box-sizing: border-box; padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 20px">
+      <a href="pro-team-request-card-desktop.dc.html" style="align-self: flex-start; display: flex; gap: 6px; align-items: center; min-height: 44px; margin-bottom: -8px; font-weight: 700; font-size: 14px; text-decoration: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Agenda</a>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Plan para equipos</h1>
+        <div style="font-size: 15px; color: #3E4C45; line-height: 1.45">Cuéntanos de tu consultorio y te habilitamos los cupos.</div>
+      </div>
+
+      <section aria-label="Solicitud" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="team-name" style="font-size: 14px; font-weight: 600">Nombre del consultorio o estudio</label>
+          <input id="team-name" type="text" maxlength="60" placeholder="Nombre del consultorio" autocomplete="organization" style="height: 48px; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div id="team-count-label" style="font-size: 14px; font-weight: 600">¿Cuántos profesionales son, contándote?</div>
+          <div role="group" aria-labelledby="team-count-label" aria-describedby="team-count-help" style="display: flex; align-items: center; gap: 12px">
+            <button onClick="{{dec}}" disabled="{{atMin}}" aria-label="Quitar un profesional" style="{{decStyle}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+            <output aria-live="polite" style="min-width: 64px; height: 48px; box-sizing: border-box; border-radius: 14px; background: #F3F6F4; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">{{count}}</output>
+            <button onClick="{{inc}}" disabled="{{atMax}}" aria-label="Agregar un profesional" style="{{incStyle}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+          </div>
+          <div id="team-count-help" style="font-size: 13px; color: #56645D">{{helper}}</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="team-message" style="font-size: 14px; font-weight: 600">Mensaje (opcional)</label>
+          <textarea id="team-message" rows="3" maxlength="500" placeholder="Cuéntanos cómo trabajan" style="border-radius: 14px; border: 2px solid #E3E8E5; padding: 12px 14px; font: inherit; font-size: 16px; color: #15241D; background: #FFFFFF; resize: none"></textarea>
+        </div>
+      </section>
+
+      <div style="background: #FFF4D1; border-radius: 20px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #15241D">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+        <span><strong style="font-weight: 700">Precio:</strong> tu plan + <strong style="font-weight: 700">$3.900</strong> al mes por cada profesional adicional. Un solo pago y un solo vencimiento para todo el equipo.</span>
+      </div>
+
+      <button onClick="{{submit}}" style="width: 100%; height: 52px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer">Enviar solicitud</button>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{isSent}}" hint-placeholder-val="{{ false }}">
+    <main style="box-sizing: border-box; padding: 44px 16px 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center">
+      <span style="width: 72px; height: 72px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+      <div role="status">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Recibimos tu solicitud</h1>
+      </div>
+      <p style="margin: 0; font-size: 15px; color: #3E4C45; line-height: 1.5">Te escribimos a <strong style="font-weight: 700; color: #15241D; overflow-wrap: anywhere">laura@correo.com</strong> cuando la revisemos. Mientras tanto, tu agenda sigue igual.</p>
+      <div style="align-self: stretch; background: #FFFFFF; border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; text-align: left">
+        <span style="font-weight: 700; font-size: 15px; overflow-wrap: anywhere">Consultorio Sonríe</span>
+        <span style="font-size: 14px; color: #56645D">{{count}} profesionales, contándote</span>
+      </div>
+      <a href="pro-team-request-card-desktop.dc.html" style="align-self: stretch; height: 52px; box-sizing: border-box; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; text-decoration: none; margin-top: 8px">Volver a mi agenda</a>
+    </main>
+  </sc-if>
+
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; z-index: 2">
+    <a href="pro-agenda-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Agenda</span>
+    </a>
+    <a href="pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span>
+    </a>
+    <a href="pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span>
+    </a>
+    <a href="pro-more-sheet-phone.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["form","sent"],"default":"form"},"$preview":{"width":375,"height":870}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ count: 3, sent: false }, this.state || {});
+    const sent = this.props.state === 'sent' || st.sent;
+    const min = 2;
+    const max = 20;
+    const others = st.count - 1;
+    const step = 'width:48px;height:48px;border-radius:999px;border:2px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    const on = step + 'border-color:#CFDAD4;background:#FFFFFF;color:#15241D;cursor:pointer;';
+    const off = step + 'border-color:#E3E8E5;background:#F3F6F4;color:#56645D;cursor:not-allowed;';
+    return {
+      isForm: !sent,
+      isSent: sent,
+      count: st.count,
+      atMin: st.count <= min,
+      atMax: st.count >= max,
+      decStyle: st.count <= min ? off : on,
+      incStyle: st.count >= max ? off : on,
+      dec: () => this.setState({ count: Math.max(min, st.count - 1) }),
+      inc: () => this.setState({ count: Math.min(max, st.count + 1) }),
+      helper: 'Tú y ' + others + (others === 1 ? ' profesional más' : ' profesionales más'),
+      submit: () => this.setState({ sent: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

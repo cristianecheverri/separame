@@ -11,7 +11,7 @@ import { InfoIcon } from '../../components/ui/icons';
 import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
-import { firstName, plural } from '../../lib/format';
+import { plural } from '../../lib/format';
 import { useAdminTeams } from '../../lib/queries';
 import { Stepper } from '../team/Stepper';
 import { tableHead, th } from './adminUi';
@@ -138,7 +138,7 @@ function RequestCard({ row, decision, onDone }: { row: AdminTeamRequestRow; deci
               {decision.kind === 'approved' ? `Aprobada con ${seatsLabel(decision.seats)}` : 'Rechazada'}
             </span>
             <span className="text-[14px] text-ink-2 leading-[1.45]">
-              {decision.kind === 'approved' ? `Le enviamos un correo a ${firstName(row.ownerName)}. Desde hoy ve «Equipo» en su panel.` : `Le enviamos el motivo por correo a ${firstName(row.ownerName)}.`}
+              {decision.kind === 'approved' ? `Le enviamos un correo a ${row.ownerName}. Desde hoy ve «Equipo» en su panel.` : `Le enviamos el motivo por correo a ${row.ownerName}.`}
             </span>
           </div>
         ) : (

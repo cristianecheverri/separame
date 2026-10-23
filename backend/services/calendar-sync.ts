@@ -11,8 +11,10 @@ import { calFeedKey, calSyncKey } from '../lib/keys';
 import { ownerIdOf } from './subscriptions';
 import { log } from '../lib/logger';
 import { buildCalendar, type IcsEvent, type IcsMethod } from '../mail/ics';
-import { whereText } from '../mail/templates/common';
+import { greetingName, whereText } from '../mail/templates/common';
 import { appointmentItemsBetween, revisionOf, type AppointmentItem } from './appointments';
+import { getProfile } from './profiles';
+import { getTeamItem } from './teams';
 
 /**
  * Calendar sync for the professional, without OAuth:
@@ -192,10 +194,19 @@ export async function buildFeed(pro: ProProfile, now: Date = new Date()): Promis
   const from = toInstant(addDays(today, -CALENDAR_FEED_PAST_DAYS), '00:00');
   const to = toInstant(addDays(today, CALENDAR_FEED_FUTURE_DAYS + 1), '00:00');
   const cancelledSince = new Date(now.getTime() - CALENDAR_FEED_PAST_DAYS * DAY_MS).toISOString();
-  const items = await appointmentItemsBetween(pro.id, from, to, 10_000);
-  const events = items
-    .filter((a) => (a.status === 'confirmed' || (a.status === 'cancelled' && a.updatedAt >= cancelledSince)))
-    .map((a) => proEvent(a, pro, now));
+  const inFeed = (a: AppointmentItem) => a.status === 'confirmed' || (a.status === 'cancelled' && a.updatedAt >= cancelledSince);
+  const own = (await appointmentItemsBetween(pro.id, from, to, 10_000)).filter(inFeed).map((a) => proEvent(a, pro, now));
+  // Team plan: the owner's feed also carries the members' appointments, titled with whose agenda it is.
+  const team = await getTeamItem(pro.id, true);
+  const members = await Promise.all((team?.memberIds ?? []).map(async (memberId) => {
+    const [member, items] = await Promise.all([getProfile(memberId), appointmentItemsBetween(memberId, from, to, 10_000)]);
+    if (!member) return [];
+    return items.filter(inFeed).map((a) => {
+      const event = proEvent(a, member, now);
+      return { ...event, summary: `${greetingName(member.name)} · ${event.summary}` };
+    });
+  }));
+  const events = [...own, ...members.flat()];
   return buildCalendar({
     method: 'PUBLISH',
     prodId: '-//Sepárame//Agenda//ES',

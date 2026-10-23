@@ -9,6 +9,7 @@
  */
 import type { AvailabilityResponse, PublicProfile, PublicService, PublicTeam } from '@shared/api';
 import type { DayAvailability } from '@shared/availability';
+import { formatServicePrice, priceDisplayOf } from '@shared/format';
 import { ApiError, type ApiClient } from './api';
 
 /** `draft.who` for «Cualquiera disponible» (never a slug: slugs are lowercase letters, digits and dashes). */
@@ -52,7 +53,20 @@ export function mergeServices(members: PublicProfile[]): MergedService[] {
       byKey.set(id, entry);
     }
   });
-  return [...byKey.values()];
+  return [...byKey.values()].map(withMergedPrice);
+}
+
+/**
+ * The price a merged service shows: the shared one when every professional shows the same; else
+ * «Desde <lowest>» if any has a fixed price, or no price at all (the review shows the real one).
+ */
+function withMergedPrice(merged: MergedService): MergedService {
+  const prices = new Set(merged.offerings.map((o) => formatServicePrice(o.service)));
+  if (prices.size <= 1) return merged;
+  const fixed = merged.offerings.map((o) => o.service).filter((s) => priceDisplayOf(s) === 'fixed').map((s) => s.priceCop ?? 0);
+  return fixed.length
+    ? { ...merged, priceCop: Math.min(...fixed), priceDisplay: 'fixed', priceFrom: true }
+    : { ...merged, priceDisplay: 'hidden', priceFrom: false };
 }
 
 export function teamPageOf(team: PublicTeam): TeamPage {
@@ -180,9 +194,10 @@ export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
     },
     async joinWaitlist(slug, body) {
       if (!isAny(slug)) return base.joinWaitlist(slug, body);
-      // One captcha token = one request: the waitlist of the first member offering the service.
-      const [offering] = mergedService(body.serviceId).offerings;
-      return base.joinWaitlist(offering.member.slug, { ...body, serviceId: offering.service.id });
+      // One captcha token = one request: the server joins every member offering the service.
+      const { serviceId, ...rest } = body;
+      const offerings = mergedService(serviceId).offerings.map((o) => ({ slug: o.member.slug, serviceId: o.service.id }));
+      return base.joinTeamWaitlist(page.team.slug, { ...rest, offerings });
     },
     assigneeOf(serviceId, start) {
       return assigneesByService.get(serviceId)?.get(start) ?? null;

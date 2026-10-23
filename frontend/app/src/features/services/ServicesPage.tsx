@@ -14,7 +14,7 @@ import { ui } from '../../components/ui/styles';
 import { Switch } from '../../components/ui/Switch';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
-import { formatCopInput, parseCopInput } from '../../lib/format';
+import { firstName, formatCopInput, parseCopInput } from '../../lib/format';
 import { listPriceText, PriceDisplayField } from './PriceDisplayField';
 import { usePro } from '../../lib/pro';
 import { keys, useActing, useServices } from '../../lib/queries';
@@ -78,7 +78,11 @@ export function ServicesPage() {
 }
 
 function ServicesView() {
-  const { readOnly } = usePro();
+  const { readOnly, me } = usePro();
+  // Team plan: acting on a member, the copy talks about their page, not «tu página».
+  const actingId = useActing().proId;
+  const member = me.team?.members.find((m) => m.proId === actingId && !m.isOwner);
+  const memberName = member ? firstName(member.name) : null;
   const services = useServices();
   const toast = useToast();
   const { save, remove, toggle } = useServiceMutations();
@@ -103,7 +107,9 @@ function ServicesView() {
       <div className="flex flex-wrap gap-4 justify-between items-end">
         <div className="flex flex-col gap-1">
           <h1 className={ui.h1}>Servicios</h1>
-          <div className="text-[15px] text-muted">Lo que tus clientes pueden reservar desde tu página.</div>
+          <div className="text-[15px] text-muted">
+            {memberName ? `Lo que los clientes pueden reservar desde la página de ${memberName}.` : 'Lo que tus clientes pueden reservar desde tu página.'}
+          </div>
         </div>
         <button type="button" disabled={readOnly} onClick={() => pick('new')} className={cx(ui.btnPrimary, readOnly && ui.btnLocked)}>
           {readOnly ? <LockIcon size={16} /> : <PlusIcon />}
@@ -126,7 +132,11 @@ function ServicesView() {
             ))}
           {services.data && list.length === 0 && (
             <div className="bg-white rounded-[20px] p-4">
-              <EmptyState title="Aún no tienes servicios">Crea el primero a la derecha: nombre, duración y precio de referencia. Así tus clientes ya pueden reservarte.</EmptyState>
+              <EmptyState title={memberName ? `${memberName} aún no tiene servicios` : 'Aún no tienes servicios'}>
+                {memberName
+                  ? `Crea el primero a la derecha: nombre, duración y precio de referencia. Así ${memberName} aparece en la página del consultorio.`
+                  : 'Crea el primero a la derecha: nombre, duración y precio de referencia. Así tus clientes ya pueden reservarte.'}
+              </EmptyState>
             </div>
           )}
           {list.map((s) => {

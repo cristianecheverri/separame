@@ -120,3 +120,23 @@ describe('name-only appointments (pro-created, no email and no phone)', () => {
     expect(parse(marked).appointment).toMatchObject({ outcome: 'attended', clientKey: '' });
   });
 });
+
+describe('GET /me/slots', () => {
+  const slots = async (query: Record<string, string>) => {
+    vi.setSystemTime(new Date('2026-10-20T13:00:00.000Z'));
+    ddb.on(GetCommand).resolves({});
+    ddb.on(GetCommand, { Key: ownerKey(SUB_ID) }).resolves({ Item: { proId: PRO_ID } });
+    ddb.on(GetCommand, { Key: subKey(PRO_ID) }).resolves({ Item: subItem({ trialEndsAt: '2027-01-01T00:00:00.000Z' }) });
+    ddb.on(GetCommand, { Key: serviceKey(PRO_ID, service.id) }).resolves({ Item: service });
+    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) }).resolves({ Item: settings });
+    ddb.on(QueryCommand).resolves({ Items: [] });
+    ddb.on(QueryCommand, { IndexName: 'lsi1-start' }).resolves({ Items: [legacy] });
+    const res = await handler(apiEvent('GET /me/slots', { claims: proClaims, query: { serviceId: service.id, from: '2026-10-21', days: '1', ...query } }));
+    return (parse(res).days[0]?.slots ?? []) as string[];
+  };
+
+  it('moving an appointment: its own time does not block the slots around it', async () => {
+    expect(await slots({})).not.toContain(START);
+    expect(await slots({ excludeAppointmentId: 'appt1' })).toContain(START);
+  });
+});

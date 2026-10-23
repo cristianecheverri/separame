@@ -86,11 +86,16 @@ function CalendarButtons({ event, icsUrl }: { event: CalendarEvent; icsUrl: stri
   );
 }
 
-export function Confirmed({ result, icsUrl, agendaSlug }: {
+export function Confirmed({ result, icsUrl, agendaSlug, onRestart }: {
   result: CreateBookingResponse;
   icsUrl: string;
   /** "Volver a la agenda" target: the team page when booked from it (default: the professional's page). */
   agendaSlug?: string;
+  /**
+   * The link points to this very page, whose history state says "done": navigating would show the
+   * confirmation again. The booking app starts a fresh booking instead (the href stays for new tabs).
+   */
+  onRestart?: () => void;
 }) {
   const { booking, manageToken } = result;
   const { pro } = booking;
@@ -152,7 +157,15 @@ export function Confirmed({ result, icsUrl, agendaSlug }: {
             Cancelar o reprogramar
           </a>
           <div class="flex flex-col items-center gap-1">
-            <a href={`/${encodeURIComponent(agendaSlug ?? pro.slug)}`} class={`${BOTTOM_LINK} text-[14px] text-muted hover:text-ink-2`}>
+            <a
+              href={`/${encodeURIComponent(agendaSlug ?? pro.slug)}`}
+              class={`${BOTTOM_LINK} text-[14px] text-muted hover:text-ink-2`}
+              onClick={(event) => {
+                if (!onRestart || event.metaKey || event.ctrlKey || event.shiftKey) return;
+                event.preventDefault();
+                onRestart();
+              }}
+            >
               Volver a la agenda
             </a>
             <LegalLinks />

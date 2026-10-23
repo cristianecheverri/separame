@@ -50,7 +50,12 @@ SLUG#<teamSlug> SLUG        { teamOwnerId }      (same uniqueness space as profe
 | `POST /me/team/members` | pro | create a member (name, title, slug); copies the owner's address and schedule |
 | `PUT /me/team/members/{proId}` | pro | edit a member's name, title, slug |
 | `GET /admin/teams` | admin | pending requests + active teams |
-| `POST /admin/team-requests/{proId}/approve` | admin | `{ seats }` → TEAM created/updated, SUB.team.seats, email |
+| `POST /admin/team-requests/{proId}/approve` | admin | `{ seats }` → TEAM created or its seats updated (seats live only in TEAM), email |
 | `POST /admin/team-requests/{proId}/reject` | admin | `{ reason }` → email |
+| `POST /public/teams/{slug}/waitlist` | public | «Cualquiera disponible»: one captcha, one entry per member offering the service (only the first sends «Te avisaremos») |
+
+Also: a new request keeps the reviewed one as `TEAMREQ#<createdAt>` (audit); the owner's calendar feed includes the
+members' appointments («Julián · Valoración · …»); member notices (push, emails, invitations) go to the owner and say
+whose agenda it is; a merged «Cualquiera disponible» service with different prices shows «Desde <lowest>».
 
 `MeResponse.team` carries the summary the panel needs on every screen (members for the selector, seats).

@@ -58,6 +58,10 @@ export async function getAvailabilitySettings(proId: string): Promise<Availabili
   return { ...settings, blocks };
 }
 
+/** A block that already ended never affects availability again: DynamoDB drops it 30 days later (bounded reads). */
+export const BLOCK_RETENTION_DAYS = 30;
+export const blockExpiry = (end: ISOInstant): number => Math.floor(Date.parse(end) / 1000) + BLOCK_RETENTION_DAYS * 86_400;
+
 export async function addBlock(proId: string, input: CreateBlockRequest, now: Date = new Date()): Promise<Block> {
   const block: Block = {
     id: newId(now),
@@ -67,7 +71,7 @@ export async function addBlock(proId: string, input: CreateBlockRequest, now: Da
   };
   await ddb.send(new PutCommand({
     TableName: table(),
-    Item: { ...blockKey(proId, block.id), ...block, proId, createdAt: now.toISOString() },
+    Item: { ...blockKey(proId, block.id), ...block, proId, createdAt: now.toISOString(), ttl: blockExpiry(block.end) },
   }));
   return block;
 }
@@ -135,12 +139,14 @@ export async function loadContext(opts: ContextOptions): Promise<AvailabilityCon
 /** AvailabilityResponse for a service; `active: false` → no days (expired subscription). */
 export async function availabilityFor(input: {
   proId: string; service: Service; from?: ISODate; days?: number; active: boolean; now: Date; ignoreMinNotice?: boolean;
+  excludeAppointmentId?: string;
 }): Promise<AvailabilityResponse> {
   const from = input.from ?? todayBogota(input.now);
   const days = input.days ?? AVAILABILITY_DAYS;
   if (!input.active) return { active: false, serviceId: input.service.id, from, days: [] };
   const ctx = await loadContext({
     proId: input.proId, durationMin: input.service.durationMin, from, days, now: input.now, ignoreMinNotice: input.ignoreMinNotice,
+    excludeAppointmentId: input.excludeAppointmentId,
   });
   return { active: true, serviceId: input.service.id, from, days: computeAvailability(from, days, ctx) };
 }

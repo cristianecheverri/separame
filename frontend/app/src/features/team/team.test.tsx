@@ -211,6 +211,10 @@ describe('Equipo', () => {
     await user.type(within(form).getByLabelText('Profesión'), 'Periodoncista');
     await user.type(within(form).getByLabelText('Enlace propio'), 'dra-sara-gomez');
     expect(await within(form).findByText('Ese enlace ya lo tiene otra persona.', {}, { timeout: 2000 })).toBeInTheDocument();
+    // The owner's own link: the server calls it free for them, but a member can't take it.
+    await user.clear(within(form).getByLabelText('Enlace propio'));
+    await user.type(within(form).getByLabelText('Enlace propio'), 'dra-laura-perez');
+    expect(await within(form).findByText('Ese es tu propio enlace: elige otro.')).toBeInTheDocument();
     await user.clear(within(form).getByLabelText('Enlace propio'));
     await user.type(within(form).getByLabelText('Enlace propio'), 'dra-ana-rios');
     expect(await within(form).findByText('¡Está libre!', {}, { timeout: 2000 })).toBeInTheDocument();

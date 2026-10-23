@@ -58,6 +58,17 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `client-waitlist-joined.dc.html` | Lista de espera: listo, te avisaremos | `client-waitlist-joined` |
 | `client-manage-confirm-attendance.dc.html` | Gestionar cita con el botón "Confirmar asistencia" (abierto desde el correo: resaltado en amarillo, no confirma solo) | `client-manage-confirm-attendance` |
 | `client-manage-attendance-confirmed.dc.html` | "¡Gracias! Confirmaste tu asistencia" (y el menú después de confirmar) | `client-manage-attendance-confirmed` |
+| `pro-team-request-card-desktop.dc.html` | Plan para equipos · Agenda con la tarjeta «¿Trabajas con más profesionales?» (tweak: sin pedir · en revisión · rechazada) | `pro-team-request-card-desktop` |
+| `pro-team-request-form-phone.dc.html` | Plan para equipos · Solicitud en el celular (tweak: enviada) | `pro-team-request-form-phone` |
+| `pro-team-agenda-desktop.dc.html` | Plan para equipos · Agenda del dueño con selector (tweak: dueño · Todos · integrante) | `pro-team-agenda-desktop` |
+| `pro-team-agenda-phone.dc.html` | Plan para equipos · Agenda del dueño con selector en el celular | `pro-team-agenda-phone` |
+| `pro-team-members-desktop.dc.html` | Plan para equipos · Página «Equipo» (tweak: cupos llenos o libres) | `pro-team-members-desktop` |
+| `pro-team-billing-phone.dc.html` | Plan para equipos · Suscripción del dueño (plan + profesionales adicionales a $3.900) | `pro-team-billing-phone` |
+| `admin-teams.dc.html` | Admin: «Equipos» — aprobar con cupos o rechazar con motivo; equipos activos (tweak: rechazo) | `admin-teams` |
+| `admin-prices-team.dc.html` | Admin: precios con «Profesional adicional» y el campo en «Nueva versión» (tweak: modal) | `admin-prices-team` |
+| `client-booking-team-who-phone.dc.html` | Reserva en la página del consultorio: «¿Con quién?» y «Cualquiera disponible» (tweak: paso) | `client-booking-team-who-phone` |
+| `client-booking-team-member-phone.dc.html` | Reserva en el enlace propio de un integrante («Parte de …») | `client-booking-team-member-phone` |
+| `email-team-request.dc.html` | Correos del plan para equipos: aviso al admin, aprobada y rechazada (tweak: variante) | `email-team-request` |
 | `client-waitlist-leave.dc.html` | Salir de la lista de espera (`/w/`): pregunta «¿Quieres salir de la lista de espera?» con «Sí, sácame de la lista» | `client-waitlist-leave` |
 | `client-waitlist-left.dc.html` | Lista de espera: ya saliste | `client-waitlist-left` |
 | `email-reminder-confirm-attendance.dc.html` | Correo de recordatorio "¿Confirmas tu asistencia?" con "Sí, voy" (tweak: ya confirmó) | `email-reminder-confirm-attendance` |
@@ -138,6 +149,7 @@ Los enlaces a pantallas de la línea A apuntan a `../line-a/`.
 | `proposals/team-billing-phone.dc.html` | **Aprobada.** Equipos 4/4 · Suscripción del dueño: plan + profesionales adicionales (valor `[VALOR]` por definir) |
 | `proposals/team-email-request-result.dc.html` | Equipos · Correos de la solicitud: aviso al admin, aprobada y rechazada (tweak: variante) |
 | `proposals/proposal-footer-links-{before,after,after-desktop}.dc.html` | **Aprobada.** Pie de la página principal con «Cómo funciona · Precios · Preguntas» también en el celular (sitelinks; la página sigue siendo una sola) |
+| `proposals/proposal-landing-teams-{desktop,phone}.dc.html` | **Aprobada.** Página principal: sección «Para consultorios y equipos» después de Precios, con «¿Con quién?» ilustrado y el botón «Solicitar plan para equipos» |
 
 ## Exploración (líneas B y C)
 

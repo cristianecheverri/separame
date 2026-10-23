@@ -56,6 +56,8 @@ export const TEAM = 'TEAM';
 export const TEAM_REQUEST = 'TEAMREQ';
 export const teamKey = (ownerId: string) => ({ PK: proPk(ownerId), SK: TEAM });
 export const teamRequestKey = (ownerId: string) => ({ PK: proPk(ownerId), SK: TEAM_REQUEST });
+/** Immutable copy of a reviewed request, kept when a new one replaces it (audit of seat changes). */
+export const teamRequestHistoryKey = (ownerId: string, createdAt: ISOInstant) => ({ PK: proPk(ownerId), SK: `${TEAM_REQUEST}#${createdAt}` });
 export const TEAMS_GSI1PK = 'TEAMS';
 export const TEAM_REQUESTS_GSI1PK = 'TEAMREQS';
 export const teamGsi1Sk = (createdAt: ISOInstant, ownerId: string) => `${createdAt}#${ownerId}`;

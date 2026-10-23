@@ -201,7 +201,8 @@ export function OnboardingPage() {
   };
 
   const url = publicUrl ?? me?.publicUrl ?? '';
-  const host = linkLabel(url).split('/')[0] || 'separame.app';
+  // Before the profile exists there is no public URL yet: the panel runs on the same site (dev or prod).
+  const host = linkLabel(url).split('/')[0] || (window.location.hostname === 'localhost' ? 'separame.app' : window.location.host);
 
   return (
     <Shell step={step}>

@@ -19,12 +19,14 @@ interface Props {
   initialDate?: ISODate;
   /** Instant to hide (the appointment being moved). */
   exclude?: string;
+  /** The appointment being moved: its own time doesn't block the slots around it. */
+  excludeAppointmentId?: string;
 }
 
 /** Day grid (7 per page) + "Mañana" / "Tarde" slot chips, from GET /me/slots. */
-export function SlotPicker({ serviceId, value, onChange, initialDate, exclude }: Props) {
+export function SlotPicker({ serviceId, value, onChange, initialDate, exclude, excludeAppointmentId }: Props) {
   const today = todayBogota(now());
-  const slots = useSlots(serviceId, today, SLOT_PICKER_DAYS);
+  const slots = useSlots(serviceId, today, SLOT_PICKER_DAYS, excludeAppointmentId);
   const [page, setPage] = useState(() => (initialDate ? Math.min(WEEKS - 1, Math.max(0, Math.floor((Date.parse(initialDate) - Date.parse(today)) / (7 * 86_400_000)))) : 0));
   const [picked, setPicked] = useState<ISODate | null>(initialDate ?? null);
 

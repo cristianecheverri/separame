@@ -67,15 +67,11 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
 - [ ] Lienzo: pasar los tableros de equipos a «Línea A» con lo que cambió al implementar (pastilla
       «Tú · cuenta principal», selección inicial = el dueño, «Editar» del dueño → Perfil público,
       admin sin «Deshacer», «Nueva versión» sigue en su modal).
-- [ ] Pendientes menores de la revisión (bajo impacto):
-  - Historial de solicitudes (hoy una nueva reemplaza la anterior; guardar `TEAMREQ#<fecha>`).
-  - En los formularios del equipo, el chequeo del enlace dice «libre» para el enlace propio del
-    dueño (el servidor sí lo rechaza).
-  - «Cualquiera disponible»: precio del primer profesional en la lista de servicios (la
-    confirmación muestra el real); la lista de espera anota con el primero que ofrece el servicio;
-    el feed de calendario del dueño no incluye las citas del equipo.
-  - Si el equipo crece mucho, una ruta pública `/public/teams/{slug}/availability` haría la mezcla
-    en una sola Lambda (hoy son hasta 4 consultas a la vez desde el navegador).
+- [x] Pendientes de la revisión (23-oct): historial de solicitudes (`TEAMREQ#<fecha>`), el chequeo del
+      enlace en los formularios del equipo, «Desde $X» cuando los profesionales cobran distinto, lista de
+      espera con todos los que ofrecen el servicio, y las citas del equipo en el calendario del dueño.
+- [ ] Solo si los equipos crecen mucho: una ruta pública `/public/teams/{slug}/availability` que haga la
+      mezcla en una sola Lambda (hoy son hasta 4 consultas a la vez desde el navegador).
 
 ### Detalles pendientes de la ronda del 21-oct
 - [ ] "Olvidar mis datos" en la reserva. Lo pospusiste; confirmar si va esta semana.

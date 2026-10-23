@@ -13,6 +13,7 @@ import {
   type CreateBookingResponse,
   type ErrorCode,
   type GetPublicProResponse,
+  type JoinTeamWaitlistRequest,
   type JoinWaitlistRequest,
   type JoinWaitlistResponse,
   type LeaveWaitlistResponse,
@@ -44,6 +45,8 @@ export interface ApiClient {
   /** "Sí, voy" — idempotent, allowed until the start. */
   confirmAppointment(token: string): Promise<BookingMutationResponse>;
   joinWaitlist(slug: string, body: JoinWaitlistRequest): Promise<JoinWaitlistResponse>;
+  /** Team page «Cualquiera disponible»: one request for every member offering the service. */
+  joinTeamWaitlist(teamSlug: string, body: JoinTeamWaitlistRequest): Promise<JoinWaitlistResponse>;
   leaveWaitlist(token: string): Promise<LeaveWaitlistResponse>;
   /** Where the confirmation screen's "Descargar archivo .ics" link points (a download, not a fetch). */
   icsUrl(token: string): string;
@@ -85,6 +88,7 @@ export function createHttpApi(baseUrl: string): ApiClient {
     rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), 'POST', body),
     confirmAppointment: (token) => request(apiPaths.publicConfirm(token), 'POST', {}),
     joinWaitlist: (slug, body) => request(apiPaths.publicWaitlist(slug), 'POST', body),
+    joinTeamWaitlist: (teamSlug, body) => request(apiPaths.publicTeamWaitlist(teamSlug), 'POST', body),
     leaveWaitlist: (token) => request(apiPaths.publicLeaveWaitlist(token), 'POST', {}),
     icsUrl: (token) => baseUrl + apiPaths.publicAppointmentIcs(token),
   };

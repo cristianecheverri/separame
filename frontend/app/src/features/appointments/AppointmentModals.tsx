@@ -292,7 +292,7 @@ export function MoveAppointmentModal({ appointment, onClose }: { appointment: Ap
         </>
       }
     >
-      <SlotPicker key={key} serviceId={appointment.serviceId} value={start} onChange={setStart} exclude={appointment.start} />
+      <SlotPicker key={key} serviceId={appointment.serviceId} value={start} onChange={setStart} exclude={appointment.start} excludeAppointmentId={appointment.id} />
       <div className="text-[13px] text-muted [overflow-wrap:anywhere]">
         <NoticeText client={appointment.client} sent="Le avisamos por correo a" />
       </div>

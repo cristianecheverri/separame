@@ -27,6 +27,18 @@ export function toSchedule(draft: ScheduleDraft): WeeklySchedule {
   return Object.fromEntries(WEEKDAYS.map((d) => [d, draft[d].open ? sortRanges(draft[d].ranges) : []])) as WeeklySchedule;
 }
 
+/** JSON with object keys sorted: the API returns days alphabetically and ranges as {end,start}. */
+export function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)))
+      : v);
+}
+
+/** Same weekly hours, whatever the key order or range order of either side. */
+export const sameSchedule = (a: WeeklySchedule, b: WeeklySchedule): boolean =>
+  stableJson(toSchedule(toDraft(a))) === stableJson(toSchedule(toDraft(b)));
+
 export function sortRanges(ranges: TimeRange[]): TimeRange[] {
   return [...ranges].sort((a, b) => minutesOf(a.start) - minutesOf(b.start));
 }

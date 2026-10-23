@@ -204,6 +204,14 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       const service = services.find((s) => s.id === body.serviceId) ?? services[0];
       return { entry: { id: `wait-${Date.now()}`, dates: body.dates, serviceName: service.name } };
     },
+    async joinTeamWaitlist(_teamSlug, body) {
+      await wait();
+      if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
+      takeFailure();
+      const [first] = body.offerings;
+      const service = mockProfileFor(first.slug).services.find((s) => s.id === first.serviceId);
+      return { entry: { id: `wait-${Date.now()}`, dates: body.dates, serviceName: service?.name ?? '' } };
+    },
     async leaveWaitlist(token) {
       await wait();
       if (token === 'invalid') throw new ApiError('not_found', 'No existe', 404);

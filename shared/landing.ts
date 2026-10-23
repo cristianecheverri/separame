@@ -75,6 +75,7 @@ export function toPublicPrices(price: PriceVersion, trialDays: number = TRIAL_DA
     fromMonthlyCop: reference ?? lowestMonthly,
     trialDays,
     packages,
+    extraProfessionalCop: price.extraProfessionalCop,
   };
 }
 
@@ -86,9 +87,10 @@ export function toPublicPrices(price: PriceVersion, trialDays: number = TRIAL_DA
  *  - `plans`    the package cards
  *  - `founder`  the "Precio fundador" banner, dropped for non-founder versions
  *  - `jsonld`   the SoftwareApplication JSON-LD block (in <head>)
+ *  - `extra`    "$3.900", the team plan's value per additional professional (keeps the build text if none)
  * Markers survive rendering, so the output can be rendered again.
  */
-export const LANDING_SLOT_NAMES = ['from', 'plans', 'founder', 'jsonld'] as const;
+export const LANDING_SLOT_NAMES = ['from', 'plans', 'founder', 'jsonld', 'extra'] as const;
 export type LandingSlot = (typeof LANDING_SLOT_NAMES)[number];
 
 const SLOT_RE = /<!--price:([a-z]+)-->([\s\S]*?)<!--\/price:\1-->/g;
@@ -165,6 +167,8 @@ export function renderLandingPrices(html: string, prices: PublicPricesResponse):
           return wrap(prices.founder ? fill(content) : '');
         case 'jsonld':
           return wrap(renderJsonLd(prices));
+        case 'extra':
+          return wrap(prices.extraProfessionalCop ? formatCop(prices.extraProfessionalCop) : content);
         default:
           return wrap(fill(content));
       }

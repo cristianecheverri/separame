@@ -16,11 +16,15 @@ const PROBLEM: Record<string, string> = {
 
 export type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'current';
 
-/** Live availability of a slug (debounced GET /me/slug-check). */
-export function useSlugCheck(slug: string, currentSlug: string | null) {
+/**
+ * Live availability of a slug (debounced GET /me/slug-check). `ownSlug` (team forms): the signed-in
+ * professional's own link, which the server reports as free for them but a member/team can't use.
+ */
+export function useSlugCheck(slug: string, currentSlug: string | null, ownSlug: string | null = null) {
   const debounced = useDebounced(slug, 400);
   const problem = slugProblem(slug);
   const isCurrent = !!currentSlug && slug === currentSlug;
+  const isOwn = !!ownSlug && slug === ownSlug && !isCurrent;
   const check = useQuery({
     queryKey: ['slug-check', debounced],
     queryFn: () => api.get<SlugCheckResponse>(apiPaths.slugCheck(debounced)),
@@ -28,13 +32,19 @@ export function useSlugCheck(slug: string, currentSlug: string | null) {
     staleTime: 30_000,
   });
   let status: SlugStatus;
-  if (problem) status = 'invalid';
+  if (!slug) status = 'idle';
+  else if (problem) status = 'invalid';
   else if (isCurrent) status = 'current';
+  else if (isOwn) status = 'taken';
   else if (debounced !== slug || check.isFetching || !check.data) status = 'checking';
   else status = check.data.available ? 'available' : check.data.problem === 'taken' ? 'taken' : 'invalid';
   const message =
-    status === 'invalid' ? PROBLEM[problem ?? check.data?.problem ?? 'invalid'] : status === 'taken' ? 'Ese enlace ya lo tiene otra persona.' : null;
-  return { status, message, suggestion: status === 'taken' ? (check.data?.suggestion ?? null) : null };
+    status === 'invalid'
+      ? PROBLEM[problem ?? check.data?.problem ?? 'invalid']
+      : isOwn
+        ? 'Ese es tu propio enlace: elige otro.'
+        : status === 'taken' ? 'Ese enlace ya lo tiene otra persona.' : null;
+  return { status, message, suggestion: status === 'taken' && !isOwn ? (check.data?.suggestion ?? null) : null };
 }
 
 interface Props {

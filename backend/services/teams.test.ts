@@ -66,6 +66,16 @@ describe('team request', () => {
     expect(subjects).toEqual(['Solicitud de plan para equipos · Consultorio Sonríe']);
   });
 
+  it('a new request keeps the reviewed one as immutable history', async () => {
+    const reviewed = { ...teamRequestKey(PRO_ID), ...pending, status: 'approved', seatsApproved: 2, reviewedBy: 'admin@separame.app' };
+    ddb.on(GetCommand, { Key: teamRequestKey(PRO_ID) }).resolves({ Item: reviewed });
+    await createTeamRequest(PRO_ID, { name: 'Consultorio Sonríe', professionals: 5, message: 'Más cupos' }, NOW);
+    const [current, history] = tx();
+    expect(current.Put!.Item).toMatchObject({ status: 'pending', professionals: 5 });
+    expect(history.Put!.Item).toMatchObject({ PK: `PRO#${PRO_ID}`, SK: `TEAMREQ#${pending.createdAt}`, status: 'approved', reviewedBy: 'admin@separame.app' });
+    expect(history.Put!.ConditionExpression).toBe('attribute_not_exists(PK)');
+  });
+
   it('only one at a time', async () => {
     ddb.on(GetCommand, { Key: teamRequestKey(PRO_ID) }).resolves({ Item: pending });
     await expect(createTeamRequest(PRO_ID, { name: 'Otro', professionals: 2, message: '' }, NOW)).rejects.toMatchObject({ code: 'conflict' });

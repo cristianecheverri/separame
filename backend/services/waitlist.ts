@@ -39,6 +39,8 @@ export interface WaitItem extends WaitlistEntry {
   /** Bogotá date → last time that day was offered to this entry. */
   offeredAt: Record<ISODate, ISOInstant>;
   ttl: number;
+  /** Team plan: a sibling entry of a «Cualquiera disponible» join; only the first one sends «Te avisaremos». */
+  quietJoin?: boolean;
 }
 
 export function toEntry(item: Item): WaitlistEntry {
@@ -68,7 +70,9 @@ export async function leaveLinkFor(entry: Pick<WaitItem, 'proId' | 'id' | 'dates
 }
 
 /** Validated join (the handler did zod, rate limits, Turnstile and the subscription gate). */
-export async function joinWaitlist(proId: string, input: JoinWaitlistRequest, serviceName: string, now: Date = new Date()): Promise<JoinWaitlistResponse> {
+export async function joinWaitlist(
+  proId: string, input: JoinWaitlistRequest, serviceName: string, now: Date = new Date(), opts: { quietJoin?: boolean } = {},
+): Promise<JoinWaitlistResponse> {
   const today = todayBogota(now);
   const settings = await getSettings(proId, true);
   const last = addDays(today, settings.rules.maxDaysAhead);
@@ -84,6 +88,7 @@ export async function joinWaitlist(proId: string, input: JoinWaitlistRequest, se
   const entry: WaitItem = {
     id: newId(now), proId, serviceId: input.serviceId, serviceName, dates, client: input.client, status: 'waiting',
     createdAt: now.toISOString(), notifiedCount: 0, lastNotifiedAt: null, clientKey, offeredAt: {}, ttl: entryExpiry(dates),
+    ...(opts.quietJoin ? { quietJoin: true } : {}),
   };
   await ddb.send(new PutCommand({ TableName: table(), Item: { ...waitKey(proId, entry.id), ...entry }, ConditionExpression: 'attribute_not_exists(PK)' }));
   log.info('waitlist joined', { proId, entryId: entry.id, dates: dates.length });
@@ -143,7 +148,7 @@ export async function deleteWaitlistEntriesOf(proId: string, clientKey: string):
 
 /** WAIT INSERT: "Te avisaremos si se libera un cupo" (once per entry). */
 export async function onWaitlistJoined(entry: WaitItem, pro: ProProfile, now: Date = new Date()): Promise<void> {
-  if (entry.status !== 'waiting' || !entry.client.email) return;
+  if (entry.status !== 'waiting' || !entry.client.email || entry.quietJoin) return;
   await sendOnce(`wait-joined#${entry.id}`, async () => sendWaitlistJoined({ entry, pro, leaveUrl: await leaveLinkFor(entry) }), now);
 }
 

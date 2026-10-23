@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { calFeedKey, calSyncKey, ownerKey, profileKey, subKey } from '../../lib/keys';
+import { calFeedKey, calSyncKey, ownerKey, profileKey, subKey, teamKey } from '../../lib/keys';
 import type { AppointmentItem } from '../../services/appointments';
 import { apiEvent, parse, PRO_ID, proClaims, profile, setTestEnv, SUB_ID, subItem } from '../../testing/fixtures';
 import { handler } from './index';
@@ -63,6 +63,16 @@ describe('GET /public/calendar/{file}', () => {
     expect(ics).toContain('UID:appt2@separame.app');
     expect(ics.split('BEGIN:VEVENT')[2]).toContain('STATUS:CANCELLED');
     expect(ics).not.toContain('UID:appt3@separame.app');
+  });
+
+  it("the owner's feed also carries the team members' appointments, titled with the member", async () => {
+    ddb.on(GetCommand, { Key: teamKey(PRO_ID) }).resolves({ Item: { ownerId: PRO_ID, memberIds: ['m1'], memberSlugs: ['dr-julian-ortiz'], seats: 1 } });
+    ddb.on(GetCommand, { Key: profileKey('m1') }).resolves({ Item: { ...profile, id: 'm1', name: 'Dr. Julián Ortiz', ownerId: PRO_ID } });
+    ddb.on(QueryCommand, { ExpressionAttributeValues: { ':pk': 'PRO#m1' } }).resolves({ Items: [{ ...base, id: 'appt9', proId: 'm1' }] });
+    const ics = unfold((await handler(feed(`${TOKEN}.ics`))).body!);
+    expect(ics).toContain('UID:appt1@separame.app');
+    expect(ics).toContain('UID:appt9@separame.app');
+    expect(ics).toContain('SUMMARY:Julián · Valoración · Mariana Gómez');
   });
 
   it('queries LSI1 over [today − 30 d, today + 365 d]', async () => {

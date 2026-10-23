@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda del consultorio — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 375px; min-height: 3320px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; position: relative; padding-bottom: 68px">
+
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+    <span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Consultorio Sonríe</span>
+  </header>
+
+  <div role="group" aria-label="Profesional" style="flex-shrink: 0; background: #FFFFFF; border-bottom: 1px solid #E3E8E5; padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none">
+    <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+      <button onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="{{c.style}}"><span aria-hidden="true" style="{{c.dotStyle}}"></span>{{c.label}}</button>
+    </sc-for>
+  </div>
+
+  <main style="box-sizing: border-box; padding: 20px 16px 96px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; line-height: 1.2; letter-spacing: -0.6px; min-width: 0">{{headline}}</h1>
+      <button aria-label="{{shareAria}}" style="height: 44px; padding: 0 14px; flex-shrink: 0; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 6px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+    </div>
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 10px">
+        <div style="display: flex; align-items: center; gap: 2px">
+          <button aria-label="Día anterior" style="width: 40px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px; white-space: nowrap">Mar 20 oct.</h2>
+          <button aria-label="Día siguiente" style="width: 40px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #15241D; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+        </div>
+        <div role="group" aria-label="Vista" style="display: flex; gap: 6px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+          <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 13px; color: #15241D; cursor: pointer">Día</button>
+          <button aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 13px; color: #3E4C45; cursor: pointer">Semana</button>
+        </div>
+      </div>
+      <sc-for list="{{appts}}" as="a" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="font-weight: 700; font-size: 13px; color: #3E4C45">{{a.time}}</div>
+          <div style="{{a.cardStyle}}">
+            <div style="display: flex; flex-direction: column; gap: 3px; flex: 1 1 0; min-width: 0">
+              <div style="{{a.nameStyle}}">{{a.name}}</div>
+              <div style="font-size: 13px; color: #56645D">{{a.detail}}</div>
+              <sc-if value="{{a.hasMeta}}" hint-placeholder-val="{{ true }}">
+                <div style="padding-top: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+                  <sc-if value="{{a.hasTag}}" hint-placeholder-val="{{ false }}">
+                    <span style="{{a.tagStyle}}"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Con </span>{{a.tag}}</span>
+                  </sc-if>
+                  <sc-if value="{{a.hasPill}}" hint-placeholder-val="{{ true }}">
+                    <span style="{{a.badgeStyle}}">{{a.badge}}</span>
+                  </sc-if>
+                  <sc-if value="{{a.confirmed}}" hint-placeholder-val="{{ false }}">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: #0B6E4F"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Confirmó asistencia</span>
+                  </sc-if>
+                  <sc-if value="{{a.noAnswer}}" hint-placeholder-val="{{ false }}">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #56645D"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Sin respuesta</span>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{a.showChange}}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{a.change}}" style="height: 44px; padding: 0 4px; flex-shrink: 0; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Cambiar</button>
+            </sc-if>
+            <sc-if value="{{a.moveCancel}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 2px; flex-shrink: 0">
+                <button aria-label="Mover cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+                <button aria-label="Cancelar cita de {{a.name}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+              </div>
+            </sc-if>
+            <sc-if value="{{a.outcomeButtons}}" hint-placeholder-val="{{ false }}">
+              <div role="group" aria-label="Asistencia de {{a.name}}" style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0">
+                <button onClick="{{a.attended}}" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg> Asistió</button>
+                <button onClick="{{a.noShow}}" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; color: #15241D; font: inherit; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg> No asistió</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <sc-if value="{{showInstall}}" hint-placeholder-val="{{ true }}">
+      <section aria-label="Instalar la app" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-wrap: wrap; column-gap: 14px; row-gap: 12px; align-items: center">
+        <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink: 0"><rect width="64" height="64" rx="16" fill="#0B6E4F"></rect><path d="M40.5 22.5c-1.9-2.6-5-4-8.7-4-5.4 0-9.1 2.9-9.1 7.1 0 4.1 3.2 5.8 8.2 6.9 4 .9 5.3 1.6 5.3 3.2 0 1.7-1.7 2.8-4.4 2.8-3 0-5.3-1.3-6.8-3.6l-4.5 3.3c2.3 3.5 6.2 5.4 11.1 5.4 6.2 0 10.4-3.1 10.4-7.8 0-4.3-3.1-6-8.6-7.2-3.6-.8-4.8-1.4-4.8-2.8 0-1.3 1.4-2.2 3.5-2.2 2.2 0 3.9.9 5 2.5z" fill="#FFFFFF"></path><circle cx="46" cy="44" r="4.2" fill="#FFC93C"></circle></svg>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px">
+          <span style="font-weight: 700; font-size: 16px">Instala Sepárame en tu celular</span>
+          <span style="font-size: 14px; color: #56645D; line-height: 1.4">Ábrela como una app, con su ícono, y recibe avisos de tus citas.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-left: auto">
+          <button onClick="{{hideInstall}}" style="height: 44px; padding: 0 12px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #3E4C45; cursor: pointer">Ahora no</button>
+          <a href="pro-ios-install-sheet-phone.dc.html" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; font-weight: 700; font-size: 14px; display: flex; align-items: center; text-decoration: none">Instalar</a>
+        </div>
+      </section>
+    </sc-if>
+
+    <section aria-labelledby="clinic-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 12px; align-items: flex-start">
+        <span style="width: 40px; height: 40px; border-radius: 12px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <h2 id="clinic-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px; overflow-wrap: anywhere">Consultorio Sonríe</h2>
+          <span style="font-size: 13px; font-weight: 600; color: #3E4C45">3 profesionales · 2 de 2 cupos adicionales usados</span>
+        </div>
+      </div>
+      <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/consultorio-sonrie</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+        <button onClick="{{copyClinic}}" aria-label="Copiar el enlace del consultorio" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyClinicLabel}}</button>
+        <a href="pro-team-members-desktop.dc.html" style="min-height: 44px; padding: 0 4px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver equipo</a>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Comparte tu agenda</h2>
+      <div style="display: flex; gap: 14px; align-items: center">
+        <div aria-hidden="true" style="width: 88px; height: 88px; flex-shrink: 0; border-radius: 14px; background: #F3F6F4; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 10px; box-sizing: border-box">
+          <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+          <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+          <span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #0B6E4F; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span>
+          <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+          <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #3E4C45; line-height: 1.4">
+          Ponlo en tu WhatsApp, Instagram o en la puerta del consultorio.
+          <button style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Descargar QR</button>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="ref-title" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 12px; align-items: flex-start">
+        <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8"></path></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <h2 id="ref-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Invita y gana un mes</h2>
+          <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Si un colega se registra con tu enlace y paga su primer mes, te regalamos un mes gratis.</span>
+        </div>
+      </div>
+      <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/r/laura-perez</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <button onClick="{{copyRef}}" aria-label="Copiar tu enlace de invitación" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyRefLabel}}</button>
+        <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid #E3E8E5; padding-top: 10px">
+        <sc-if value="{{hasEarned}}" hint-placeholder-val="{{ false }}">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg> {{earnedLabel}}</span>
+        </sc-if>
+        <a href="pro-billing-plans.dc.html" style="margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver referidos</a>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Próximos días</h2>
+      <sc-for list="{{week}}" as="w" hint-placeholder-count="4">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 6px 0">
+          <span style="font-weight: 600">{{w.day}}</span>
+          <span style="{{w.style}}">{{w.count}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">{{waitlistTitle}}</h2>
+        <sc-if value="{{hasWaitlist}}" hint-placeholder-val="{{ true }}">
+          <a href="pro-appointments-waitlist.dc.html" style="font-weight: 700; font-size: 14px; text-underline-offset: 2px; min-height: 44px; display: inline-flex; align-items: center">Ver todas</a>
+        </sc-if>
+      </div>
+      <sc-if value="{{hasWaitlist}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{waitlist}}" as="e" hint-placeholder-count="3">
+            <div style="background: #F3F6F4; border-radius: 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-weight: 700; font-size: 14px">{{e.name}}</span>
+              <span style="font-size: 13px; color: #3E4C45">{{e.detail}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{noWaitlist}}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 14px; color: #56645D; line-height: 1.45">Nadie está esperando. Si tu agenda se llena, tus clientes pueden anotarse para que les avisemos si se libera un espacio.</div>
+      </sc-if>
+    </section>
+
+    <section style="background: #FFF4D1; border-radius: 24px; padding: 18px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
+      <span>{{reminder}}</span>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">¿Ves tus citas en Google Calendar?</h2>
+      <a href="pro-calendar-sync-phone.dc.html" style="align-self: flex-start; font-weight: 700; font-size: 14px; text-underline-offset: 2px; min-height: 44px; display: inline-flex; align-items: center">Sincroniza tu calendario →</a>
+      <div style="border-top: 1px solid #E3E8E5; padding-top: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Recibe un aviso en este celular cuando te separen una cita.</span>
+        <a href="pro-calendar-sync-phone.dc.html" style="align-self: flex-start; font-weight: 700; font-size: 14px; text-underline-offset: 2px; min-height: 44px; display: inline-flex; align-items: center">Activar avisos →</a>
+      </div>
+    </section>
+  </main>
+  <a href="pro-new-appointment-phone.dc.html" aria-label="Nueva cita" style="position: absolute; right: 16px; bottom: 84px; width: 56px; height: 56px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(21,36,29,0.22); z-index: 2"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></a>
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; z-index: 2">
+    <a href="pro-team-agenda-phone.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>
+      <span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Agenda</span>
+    </a>
+    <a href="pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span>
+    </a>
+    <a href="pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span>
+    </a>
+    <a href="pro-more-sheet-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none">
+      <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span>
+      <span style="font-size: 12px; color: #56645D; font-weight: 600">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"pro":{"editor":"enum","options":["owner","all","julian","sara"],"default":"owner"},"earnedMonths":{"editor":"int","default":2,"min":0,"max":12},"$preview":{"width":375,"height":3320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ pro: null, install: true, outcomes: { mariana: 'attended', andres: 'attended', camila: 'attended' }, editing: {}, copied: false, copiedClinic: false }, this.state || {});
+    const pro = st.pro || this.props.pro || 'owner';
+    const earned = Number(this.props.earnedMonths ?? 2);
+    const pros = {
+      owner: { chip: 'Laura (tú)', first: 'Laura', bg: '#0B6E4F', fg: '#FFFFFF', link: 'separame.app/dra-laura-perez' },
+      julian: { chip: 'Julián', first: 'Julián', bg: '#FFC93C', fg: '#15241D', link: 'separame.app/dr-julian-ortiz' },
+      sara: { chip: 'Sara', first: 'Sara', bg: '#15241D', fg: '#FFFFFF', link: 'separame.app/dra-sara-gomez' }
+    };
+    const card = 'display:flex;align-items:flex-start;gap:8px;padding:12px 8px 12px 16px;border-radius:16px;min-height:64px;box-sizing:border-box;';
+    const badge = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const kinds = {
+      ok: { card: card + 'background:#EAF5F0;', name: 'font-weight:700;font-size:15px;' },
+      fresh: { card: card + 'background:#FFF4D1;', name: 'font-weight:700;font-size:15px;', pill: 'Nueva', pillStyle: badge + 'background:#FFC93C;color:#15241D;' },
+      free: { card: card + 'background:#FFFFFF;border:2px dashed #CFDAD4;', name: 'font-weight:600;font-size:15px;color:#56645D;', pill: 'Libre', pillStyle: badge + 'background:#F3F6F4;color:#3E4C45;' },
+      off: { card: card + 'background:#F3F6F4;', name: 'font-weight:600;font-size:15px;color:#56645D;text-decoration:line-through;', pill: 'Cancelada', pillStyle: badge + 'background:#FFFFFF;color:#3E4C45;' }
+    };
+    // The day of the whole consultorio, in time order. «Todos» leaves out the free gaps.
+    const rows = [
+      { id: 'mariana', pro: 'owner', time: '8:00 a. m.', name: 'Mariana Gómez', detail: 'Valoración · 30 min', k: 'ok', past: true },
+      { id: 'andres', pro: 'julian', time: '8:00 a. m.', name: 'Andrés Zapata', detail: 'Control de brackets · 20 min', k: 'ok', past: true },
+      { id: 'juan', pro: 'owner', time: '8:30 a. m.', name: 'Juan Esteban Ruiz', detail: 'Control · 15 min', k: 'ok', past: true },
+      { id: 'camila', pro: 'sara', time: '9:00 a. m.', name: 'Camila Arango', detail: 'Endodoncia · 1 h 30 min', k: 'ok', past: true },
+      { id: 'free-laura', pro: 'owner', time: '9:30 a. m.', name: 'Espacio libre', detail: '30 min disponibles', k: 'free' },
+      { id: 'free-julian', pro: 'julian', time: '9:30 a. m.', name: 'Espacio libre', detail: '60 min disponibles', k: 'free' },
+      { id: 'sofia', pro: 'owner', time: '10:00 a. m.', name: 'Sofía Castaño', detail: 'Limpieza dental · 45 min', k: 'fresh', confirmed: false, email: true },
+      { id: 'felipe', pro: 'julian', time: '10:30 a. m.', name: 'Felipe Montoya', detail: 'Ajuste de brackets · 30 min', k: 'ok', confirmed: true, email: true },
+      { id: 'carlos', pro: 'owner', time: '11:00 a. m.', name: 'Carlos Mejía', detail: 'Valoración · 30 min', k: 'ok', confirmed: true, email: true },
+      { id: 'free-sara', pro: 'sara', time: '11:00 a. m.', name: 'Espacio libre', detail: '120 min disponibles', k: 'free' },
+      { id: 'isabel', pro: 'sara', time: '2:00 p. m.', name: 'Isabel Cardona', detail: 'Endodoncia · 1 h 30 min', k: 'ok', confirmed: false, email: true },
+      { id: 'valentina', pro: 'owner', time: '2:00 p. m.', name: 'Valentina Osorio', detail: 'Control · canceló desde el correo', k: 'off' },
+      { id: 'daniela', pro: 'owner', time: '3:00 p. m.', name: 'Daniela Herrera', detail: 'Limpieza dental · 45 min', k: 'ok', confirmed: true, email: true },
+      { id: 'tomas', pro: 'owner', time: '4:00 p. m.', name: 'Tomás Rendón', detail: 'Control · 15 min', k: 'ok', email: false },
+      { id: 'mateo', pro: 'julian', time: '4:00 p. m.', name: 'Mateo Quintero', detail: 'Control de brackets · 20 min', k: 'fresh', confirmed: false, email: true }
+    ];
+    const all = pro === 'all';
+    const visible = rows.filter((r) => (all ? r.k !== 'free' : r.pro === pro));
+    const count = visible.filter((r) => r.k !== 'free' && r.k !== 'off').length;
+    const sel = all ? null : pros[pro];
+    let headline = 'Hola, Laura · ' + count + ' citas en el consultorio';
+    if (pro === 'owner') headline = 'Hola, Laura · ' + count + ' citas hoy';
+    else if (sel) headline = sel.first + ' · ' + count + ' citas hoy';
+    const link = sel ? sel.link : 'separame.app/consultorio-sonrie';
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;border:2px solid;display:inline-flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap;color:#15241D;';
+    const dot = 'width:12px;height:12px;border-radius:999px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(21,36,29,0.25);';
+    const chipDefs = [
+      { id: 'all', label: 'Todos', bg: 'conic-gradient(#0B6E4F 0% 33.33%, #FFC93C 33.33% 66.67%, #15241D 66.67% 100%)' },
+      { id: 'owner', label: pros.owner.chip, bg: pros.owner.bg },
+      { id: 'julian', label: pros.julian.chip, bg: pros.julian.bg },
+      { id: 'sara', label: pros.sara.chip, bg: pros.sara.bg }
+    ];
+    const countStyle = 'font-weight:700;padding:4px 10px;border-radius:999px;';
+    const on = countStyle + 'background:#EAF5F0;color:#0B6E4F;';
+    const none = countStyle + 'background:#F3F6F4;color:#3E4C45;';
+    const weeks = {
+      owner: [['6 citas', on], ['7 citas', on], ['3 citas', on]],
+      all: [['8 citas', on], ['9 citas', on], ['3 citas', on]],
+      julian: [['1 cita', on], ['1 cita', on], ['Sin citas', none]],
+      sara: [['1 cita', on], ['1 cita', on], ['Sin citas', none]]
+    };
+    const reminders = {
+      owner: 'Mañana sale el recordatorio por correo a tus 5 clientes del miércoles.',
+      all: 'Mañana sale el recordatorio por correo a tus 6 clientes del miércoles.',
+      julian: 'Mañana sale el recordatorio por correo a tu cliente del miércoles.',
+      sara: 'Mañana sale el recordatorio por correo a tu cliente del miércoles.'
+    };
+    const ownWaitlist = pro === 'owner' || all;
+    const setOutcome = (id, v) => this.setState({ outcomes: Object.assign({}, st.outcomes, { [id]: v }), editing: Object.assign({}, st.editing, { [id]: false }) });
+    return {
+      headline,
+      shareAria: 'Compartir enlace ' + link,
+      chips: chipDefs.map((c) => ({
+        label: c.label,
+        selected: pro === c.id,
+        dotStyle: dot + 'background:' + c.bg + ';',
+        pick: () => this.setState({ pro: c.id, editing: {} }),
+        style: chip + (pro === c.id ? 'background:#EAF5F0;border-color:#0B6E4F;font-weight:700;' : 'background:#FFFFFF;border-color:#E3E8E5;font-weight:600;')
+      })),
+      showInstall: st.install,
+      hideInstall: () => this.setState({ install: false }),
+      hasEarned: earned > 0,
+      earnedLabel: earned === 1 ? 'Has ganado 1 mes' : 'Has ganado ' + earned + ' meses',
+      copyRefLabel: st.copied ? '¡Copiado!' : 'Copiar',
+      copyRef: () => this.setState({ copied: true }),
+      copyClinic: () => this.setState({ copiedClinic: true }),
+      copyClinicLabel: st.copiedClinic ? '¡Copiado!' : 'Copiar enlace',
+      appts: visible.map((r) => {
+        const k = kinds[r.k];
+        const p = pros[r.pro];
+        const active = r.k === 'ok' || r.k === 'fresh';
+        const outcome = r.past ? st.outcomes[r.id] : undefined;
+        const editing = !!st.editing[r.id];
+        let pill = k.pill, pillStyle = k.pillStyle;
+        if (outcome && !editing) {
+          pill = outcome === 'attended' ? 'Asistió' : 'No asistió';
+          pillStyle = badge + (outcome === 'attended' ? 'background:#FFFFFF;color:#0B6E4F;' : 'background:#FFE6CC;color:#7A3E00;');
+        }
+        const upcoming = active && !r.past;
+        const confirmed = upcoming && r.email && r.confirmed === true;
+        const noAnswer = upcoming && r.email && !r.confirmed;
+        return {
+          time: r.time, name: r.name, detail: r.detail, cardStyle: k.card, nameStyle: k.name,
+          hasTag: all,
+          tag: p.first,
+          tagStyle: 'font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;position:relative;background:' + p.bg + ';color:' + p.fg + ';',
+          hasPill: !!pill, badge: pill || '', badgeStyle: pillStyle || '',
+          confirmed, noAnswer, hasMeta: !!pill || confirmed || noAnswer || all,
+          showChange: !!outcome && !editing,
+          change: () => this.setState({ editing: Object.assign({}, st.editing, { [r.id]: true }) }),
+          moveCancel: upcoming,
+          outcomeButtons: active && !!r.past && (!outcome || editing),
+          attended: () => setOutcome(r.id, 'attended'),
+          noShow: () => setOutcome(r.id, 'no_show')
+        };
+      }),
+      week: ['Miércoles 21', 'Jueves 22', 'Viernes 23'].map((day, i) => ({ day, count: weeks[pro][i][0], style: weeks[pro][i][1] })).concat([{ day: 'Lunes 2 nov.', count: 'Festivo', style: countStyle + 'background:#FFF4D1;color:#15241D;' }]),
+      waitlistTitle: ownWaitlist ? 'Lista de espera (4)' : 'Lista de espera (0)',
+      hasWaitlist: ownWaitlist,
+      noWaitlist: !ownWaitlist,
+      waitlist: [
+        { name: 'Paula Restrepo', detail: 'Limpieza dental · Jue 22 · Vie 23' },
+        { name: 'Esteban Gil', detail: 'Valoración · Mié 21' },
+        { name: 'Lina Marcela Ruiz', detail: 'Control · Lun 26 · Mar 27 · Mié 28' }
+      ],
+      reminder: reminders[pro]
+    };
+  }
+}
+</script>
+</body>
+</html>

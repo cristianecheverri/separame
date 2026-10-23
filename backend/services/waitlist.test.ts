@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCom
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clientKeyOf } from '../../shared/clients';
-import { profileKey, serviceKey, settingsKey, slugKey, subKey } from '../lib/keys';
+import { profileKey, serviceKey, settingsKey, slugKey, subKey, teamKey } from '../lib/keys';
 import { signWaitlistToken } from '../lib/tokens';
 import { apiEvent, conditionalFailure, parse, PRO_ID, profile, service, settings, setTestEnv, subItem } from '../testing/fixtures';
 import { handler } from '../functions/waitlist/index';
@@ -143,5 +143,36 @@ describe('offers', () => {
     const appt = { proId: PRO_ID, clientKey: KEY } as AppointmentItem;
     expect(await markBookedFor(appt, '2026-10-21')).toBe(1);
     expect(ddb.commandCalls(UpdateCommand)[0].args[0].input).toMatchObject({ ConditionExpression: '#st = :waiting', ExpressionAttributeValues: { ':booked': 'booked', ':waiting': 'waiting' } });
+  });
+});
+
+describe('team page «Cualquiera disponible»', () => {
+  const joinTeam = (offerings: { slug: string; serviceId: string }[]) => handler(apiEvent('POST /public/teams/{slug}/waitlist', {
+    path: { slug: 'consultorio-sonrie' },
+    body: { offerings, dates: ['2026-10-21'], client, consent: true, turnstileToken: 'tok' },
+  }));
+
+  beforeEach(() => {
+    ddb.on(GetCommand, { Key: slugKey('consultorio-sonrie') }).resolves({ Item: { teamOwnerId: PRO_ID } });
+    ddb.on(GetCommand, { Key: teamKey(PRO_ID) }).resolves({ Item: { ownerId: PRO_ID, memberIds: ['m1'], memberSlugs: ['dr-julian-ortiz'], seats: 1 } });
+    ddb.on(GetCommand, { Key: slugKey('dr-julian-ortiz') }).resolves({ Item: { proId: 'm1' } });
+    ddb.on(GetCommand, { Key: serviceKey('m1', 'svc-m1') }).resolves({ Item: { ...service, id: 'svc-m1' } });
+    ddb.on(GetCommand, { Key: settingsKey('m1') }).resolves({ Item: settings });
+  });
+
+  it('one captcha joins every member offering the service; only the first sends «Te avisaremos»', async () => {
+    const res = await joinTeam([{ slug: profile.slug, serviceId: service.id }, { slug: 'dr-julian-ortiz', serviceId: 'svc-m1' }]);
+    expect(res.statusCode).toBe(201);
+    const items = ddb.commandCalls(PutCommand).map((c) => c.args[0].input.Item!);
+    expect(items.map((i) => i.PK)).toEqual([`PRO#${PRO_ID}`, 'PRO#m1']);
+    expect(items[0].quietJoin).toBeUndefined();
+    expect(items[1].quietJoin).toBe(true);
+  });
+
+  it('refuses a professional that is not in the team', async () => {
+    ddb.on(GetCommand, { Key: slugKey('otra-persona') }).resolves({ Item: { proId: 'stranger' } });
+    const res = await joinTeam([{ slug: 'otra-persona', serviceId: 'x' }]);
+    expect(res.statusCode).toBe(404);
+    expect(ddb.commandCalls(PutCommand)).toHaveLength(0);
   });
 });

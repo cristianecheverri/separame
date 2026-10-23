@@ -540,6 +540,16 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
     );
   };
 
+  /** «Volver a la agenda» from the confirmation: a fresh booking on this same page. */
+  const restart = () => {
+    removeKey(doneKey);
+    depthRef.current = 0;
+    history.replaceState({ sep: steps[0], d: 0 } satisfies HistoryState, '');
+    focusTitleRef.current = true;
+    setDone(null);
+    setStep(steps[0]);
+  };
+
   // ── Screens ──
   if (screen === 'notfound') {
     return <MissingScreen title="Esta agenda no existe" text="Revisa el enlace o pídele a quien te lo compartió que te lo envíe de nuevo." />;
@@ -556,7 +566,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   }
   if (!shownProfile) return <LoadingFrame />;
   if (screen === 'unavailable') return <Unavailable profile={shownProfile} />;
-  if (done) return <Confirmed result={done} icsUrl={api.icsUrl(done.manageToken)} agendaSlug={team?.slug} />;
+  if (done) return <Confirmed result={done} icsUrl={api.icsUrl(done.manageToken)} agendaSlug={team?.slug} onRestart={restart} />;
 
   if (waitlistOpen && profile && service && serviceAvailability?.status === 'ready') {
     return (

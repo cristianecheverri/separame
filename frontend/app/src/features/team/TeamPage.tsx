@@ -100,7 +100,8 @@ interface MemberFormProps {
   member: TeamMemberView | null;
   host: string;
   readOnly: boolean;
-  onSaved: () => void;
+  /** Receives the saved professional's id (a new one stays selected). */
+  onSaved: (proId: string | null) => void;
 }
 
 /** «Editar profesional» / «Agregar profesional»: name, title and own link (with the live slug check). */
@@ -112,7 +113,8 @@ function MemberForm({ member, host, readOnly, onSaved }: MemberFormProps) {
   const [title, setTitle] = useState(member?.title ?? '');
   const [slug, setSlug] = useState(member?.slug ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const check = useSlugCheck(slug, member?.slug ?? null);
+  const { profile } = usePro();
+  const check = useSlugCheck(slug, member?.slug ?? null, profile?.slug ?? null);
   const isNew = !member;
 
   const submit = (e: FormEvent) => {
@@ -129,9 +131,9 @@ function MemberForm({ member, host, readOnly, onSaved }: MemberFormProps) {
     save.mutate(
       { proId: member?.proId ?? null, body: parsed.data },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
           toast.success(isNew ? `Listo, agregaste a ${firstName(parsed.data.name)}. Agrega sus servicios en «Servicios».` : 'Cambios guardados. Su página se actualiza en unos segundos.');
-          onSaved();
+          onSaved(res.team?.members.find((m) => m.slug === parsed.data.slug)?.proId ?? null);
         },
         onError: (error) => {
           if (error instanceof ApiError && error.fields) setErrors(error.fields);
@@ -175,7 +177,8 @@ function TeamPageCard({ team, host, readOnly }: { team: TeamView; host: string; 
   const [name, setName] = useState(team.name);
   const [slug, setSlug] = useState(team.slug);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const check = useSlugCheck(slug, team.slug);
+  const { profile } = usePro();
+  const check = useSlugCheck(slug, team.slug, profile?.slug ?? null);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -317,7 +320,7 @@ export function TeamPage() {
 
         <div ref={formRef} className="flex-[1_1_340px] min-w-0 flex flex-col gap-5 scroll-mt-20">
           <TeamPageCard team={team} host={host} readOnly={readOnly} />
-          {showForm && <MemberForm key={current ?? ''} member={member} host={host} readOnly={readOnly} onSaved={() => setEditing(null)} />}
+          {showForm && <MemberForm key={current ?? ''} member={member} host={host} readOnly={readOnly} onSaved={(proId) => setEditing(proId)} />}
         </div>
       </div>
     </div>

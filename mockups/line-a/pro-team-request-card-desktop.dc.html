@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda con la tarjeta del plan para equipos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="min-height: 2150px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Menú principal" style="flex: 1 1 220px; box-sizing: border-box; background: #0B6E4F; color: #FFFFFF; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; padding: 0 12px 20px">sepárame<span style="color: #FFC93C">.</span></div>
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
+      <a href="{{n.href}}" style="{{n.style}}">{{n.label}}</a>
+    </sc-for>
+    <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div style="background: #FFC93C; color: #15241D; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 13px; font-weight: 700">Prueba gratis</div>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; line-height: 1.1">Te quedan 5 días</div>
+        <a href="pro-billing-plans.dc.html" style="min-height: 44px; padding: 4px 12px; box-sizing: border-box; border-radius: 999px; background: #15241D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.2; text-decoration: none">Elegir plan · desde $5.000/mes</a>
+      </div>
+      <button style="min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); cursor: pointer">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 15px; color: #56645D; font-weight: 600">Martes 20 de octubre</div>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 34px; line-height: 1.2; letter-spacing: -0.8px">Hola, Laura. Hoy tienes 6 citas.</h1>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <button aria-label="Copiar mi enlace separame.app/dra-laura-perez" style="height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: flex; gap: 8px; align-items: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+          Copiar mi enlace
+        </button>
+        <button style="height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: flex; gap: 8px; align-items: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Nueva cita
+        </button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-labelledby="agenda-title" style="flex: 999 1 480px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 10px">
+          <h2 id="agenda-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">Agenda de hoy</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+            <div style="display: flex; gap: 4px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+              <button aria-label="Día anterior" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <button aria-label="Día siguiente" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+            </div>
+            <div role="group" aria-label="Vista" style="display: flex; gap: 6px; background: #F3F6F4; border-radius: 999px; padding: 4px">
+              <button aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 13px; color: #15241D; cursor: pointer">Día</button>
+              <button aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 13px; color: #3E4C45; cursor: pointer">Semana</button>
+            </div>
+          </div>
+        </div>
+        <sc-for list="{{appts}}" as="a" hint-placeholder-count="8">
+          <div style="display: flex; gap: 16px; align-items: stretch">
+            <div style="width: 84px; flex-shrink: 0; padding-top: 14px; font-weight: 700; font-size: 14px; color: #3E4C45">{{a.time}}</div>
+            <div style="{{a.cardStyle}}">
+              <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0">
+                <div style="{{a.nameStyle}}">{{a.name}}</div>
+                <div style="font-size: 13px; color: #56645D">{{a.detail}}</div>
+                <sc-if value="{{a.hasMeta}}" hint-placeholder-val="{{ true }}">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 4px">
+                    <sc-if value="{{a.hasPill}}" hint-placeholder-val="{{ false }}">
+                      <span style="{{a.badgeStyle}}">{{a.badge}}</span>
+                    </sc-if>
+                    <sc-if value="{{a.confirmed}}" hint-placeholder-val="{{ false }}">
+                      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #0B6E4F"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Confirmó asistencia</span>
+                    </sc-if>
+                    <sc-if value="{{a.noReply}}" hint-placeholder-val="{{ false }}">
+                      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #56645D"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Sin respuesta</span>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0">
+                <sc-if value="{{a.canChange}}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{a.change}}" aria-label="{{a.changeLabel}}" style="min-height: 44px; padding: 0 2px; border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Cambiar</button>
+                </sc-if>
+                <sc-if value="{{a.moveCancel}}" hint-placeholder-val="{{ true }}">
+                  <button aria-label="{{a.moveLabel}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3L4 7l4 4"></path><path d="M4 7h16"></path><path d="M16 21l4-4-4-4"></path><path d="M20 17H4"></path></svg></button>
+                  <button aria-label="{{a.cancelLabel}}" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; color: #3E4C45; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                </sc-if>
+                <sc-if value="{{a.outcomeButtons}}" hint-placeholder-val="{{ false }}">
+                  <div role="group" aria-label="{{a.outcomeLabel}}" style="display: flex; gap: 8px; flex-shrink: 0">
+                    <button onClick="{{a.attended}}" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 0; background: #0B6E4F; color: #FFFFFF; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg> Asistió</button>
+                    <button onClick="{{a.noShow}}" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; color: #3E4C45; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg> No asistió</button>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+
+      <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <sc-if value="{{showInstall}}" hint-placeholder-val="{{ true }}">
+          <section aria-label="Instalar la app" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center">
+            <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink: 0"><rect width="64" height="64" rx="16" fill="#0B6E4F"></rect><path d="M40.5 22.5c-1.9-2.6-5-4-8.7-4-5.4 0-9.1 2.9-9.1 7.1 0 4.1 3.2 5.8 8.2 6.9 4 .9 5.3 1.6 5.3 3.2 0 1.7-1.7 2.8-4.4 2.8-3 0-5.3-1.3-6.8-3.6l-4.5 3.3c2.3 3.5 6.2 5.4 11.1 5.4 6.2 0 10.4-3.1 10.4-7.8 0-4.3-3.1-6-8.6-7.2-3.6-.8-4.8-1.4-4.8-2.8 0-1.3 1.4-2.2 3.5-2.2 2.2 0 3.9.9 5 2.5z" fill="#fff"></path><circle cx="46" cy="44" r="4.2" fill="#FFC93C"></circle></svg>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex-grow: 1; flex-basis: 180px">
+              <span style="font-weight: 700; font-size: 16px">Instala Sepárame en tu celular</span>
+              <span style="font-size: 14px; color: #56645D; line-height: 1.4">Ábrela como una app, con su ícono, y recibe avisos de tus citas.</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-left: auto">
+              <button onClick="{{dismissInstall}}" style="height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #3E4C45; cursor: pointer">Ahora no</button>
+              <a href="pro-ios-install-sheet-phone.dc.html" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-decoration: none">Instalar</a>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Comparte tu agenda</h2>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <div aria-hidden="true" style="width: 88px; height: 88px; border-radius: 14px; background: #F3F6F4; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 10px; box-sizing: border-box">
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #0B6E4F; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span>
+              <span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span><span></span><span style="background: #15241D; border-radius: 2px"></span><span style="background: #15241D; border-radius: 2px"></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #3E4C45; line-height: 1.4">
+              Ponlo en tu WhatsApp, Instagram o en la puerta del consultorio.
+              <button style="align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; text-decoration: underline; text-underline-offset: 2px; cursor: pointer">Descargar QR</button>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="ref-title" style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; gap: 12px; align-items: flex-start">
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFC93C; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"></rect><path d="M12 8v13M3 12.5h18"></path><path d="M12 8C10.5 5 7 4.5 7 6.5S10 8 12 8c2 0 5-.5 5-1.5S13.5 5 12 8"></path></svg></span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <h2 id="ref-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Invita y gana un mes</h2>
+              <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Si un colega se registra con tu enlace y paga su primer mes, te regalamos un mes gratis.</span>
+            </div>
+          </div>
+          <div style="background: #F3F6F4; border-radius: 14px; padding: 12px 14px; font-weight: 700; font-size: 15px; overflow-wrap: anywhere">separame.app/r/laura-perez</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button onClick="{{copy}}" aria-label="Copiar tu enlace de invitación" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> {{copyLabel}}</button>
+            <button style="height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 14px; color: #FFFFFF; display: inline-flex; gap: 8px; align-items: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg> Compartir</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #E3E8E5; padding-top: 10px">
+            <a href="pro-billing-plans.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver referidos</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="team-title" style="{{teamStyle}}">
+          <sc-if value="{{reqNone}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 12px; align-items: flex-start">
+              <span style="width: 40px; height: 40px; border-radius: 12px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                <h2 id="team-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">¿Trabajas con más profesionales?</h2>
+                <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Maneja la agenda de todo tu consultorio desde tu cuenta: cada profesional con su enlace y una página para el consultorio.</span>
+              </div>
+            </div>
+            <a href="pro-team-request-form-phone.dc.html" style="align-self: flex-start; height: 44px; padding: 0 18px; box-sizing: border-box; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font-weight: 700; font-size: 14px; color: #15241D; display: inline-flex; align-items: center; text-decoration: none">Solicitar plan para equipos</a>
+          </sc-if>
+          <sc-if value="{{reqPending}}" hint-placeholder-val="{{ false }}">
+            <div role="status" style="display: flex; gap: 12px; align-items: flex-start">
+              <span style="width: 40px; height: 40px; border-radius: 12px; background: #FFFFFF; color: #15241D; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                <h2 id="team-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Solicitud en revisión</h2>
+                <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Te avisamos por correo cuando la revisemos.</span>
+                <span style="font-size: 13px; color: #3E4C45; font-weight: 600; padding-top: 2px; overflow-wrap: anywhere">Consultorio Sonríe · 3 profesionales · enviada hoy</span>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{reqRejected}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 12px; align-items: flex-start">
+              <span style="width: 40px; height: 40px; border-radius: 12px; background: #F3F6F4; color: #3E4C45; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                <h2 id="team-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">No pudimos aprobar tu solicitud</h2>
+                <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Este es el motivo que nos dejó el equipo de Sepárame:</span>
+              </div>
+            </div>
+            <blockquote style="margin: 0; background: #F3F6F4; border-left: 4px solid #CFDAD4; border-radius: 4px 14px 14px 4px; padding: 12px 14px; font-size: 14px; color: #3E4C45; line-height: 1.45">«Por ahora el plan para equipos es para consultorios con agenda compartida.»</blockquote>
+            <a href="pro-team-request-form-phone.dc.html" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-decoration: underline; text-underline-offset: 2px">Enviar otra solicitud</a>
+          </sc-if>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Próximos días</h2>
+          <sc-for list="{{week}}" as="w" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 6px 0">
+              <span style="font-weight: 600">{{w.day}}</span>
+              <span style="{{w.style}}">{{w.count}}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Lista de espera (4)</h2>
+            <a href="pro-appointments-waitlist.dc.html" style="min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Ver todas</a>
+          </div>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px">
+            <sc-for list="{{waitlist}}" as="w" hint-placeholder-count="3">
+              <li style="background: #F3F6F4; border-radius: 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 700; font-size: 14px">{{w.name}}</span>
+                <span style="font-size: 13px; color: #3E4C45">{{w.detail}}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+
+        <section style="background: #FFF4D1; border-radius: 24px; padding: 18px 22px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
+          <span>Mañana sale el recordatorio por correo a tus 5 clientes del miércoles.</span>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">¿Ves tus citas en Google Calendar?</h2>
+          <a href="pro-calendar-sync.dc.html" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Sincroniza tu calendario →</a>
+          <div style="border-top: 1px solid #E3E8E5; padding-top: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 14px; color: #3E4C45; line-height: 1.4">Recibe un aviso en este celular cuando te separen una cita.</span>
+            <a href="pro-calendar-sync.dc.html" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; text-underline-offset: 2px">Activar avisos →</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"request":{"editor":"enum","options":["none","pending","rejected"],"default":"none"},"$preview":{"width":1280,"height":2150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ outcomes: { 0: 'attended' }, editing: null, installHidden: false, copied: false }, this.state || {});
+    const navItems = ['Agenda', 'Citas', 'Clientes', 'Estadísticas', 'Servicios', 'Disponibilidad', 'Tu calendario', 'Perfil público', 'Suscripción'];
+    const hrefs = ['A-Profesional.dc.html', 'pro-appointments-waitlist.dc.html', 'pro-clients.dc.html', 'pro-stats.dc.html', 'A-Servicios.dc.html', 'A-Disponibilidad.dc.html', 'pro-calendar-sync.dc.html', 'pro-public-profile.dc.html', 'A-Plan.dc.html'];
+    const navBase = 'display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;';
+    const card = 'flex-grow:1;min-width:0;display:flex;gap:12px;align-items:flex-start;padding:12px 12px 12px 16px;border-radius:16px;min-height:64px;box-sizing:border-box;';
+    const badge = 'font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;';
+    const mini = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;';
+    const kinds = {
+      ok: { card: card + 'background:#EAF5F0;', name: 'font-weight:700;font-size:15px;', badge: badge + 'background:#0B6E4F;color:#FFFFFF;', label: 'Confirmada' },
+      fresh: { card: card + 'background:#FFF4D1;', name: 'font-weight:700;font-size:15px;', badge: badge + 'background:#FFC93C;color:#15241D;', label: 'Nueva' },
+      free: { card: card + 'background:#FFFFFF;border:2px dashed #CFDAD4;', name: 'font-weight:600;font-size:15px;color:#56645D;', badge: badge + 'background:#F3F6F4;color:#3E4C45;', label: 'Libre' },
+      off: { card: card + 'background:#F3F6F4;', name: 'font-weight:600;font-size:15px;color:#56645D;text-decoration:line-through;', badge: badge + 'background:#FFFFFF;color:#3E4C45;', label: 'Cancelada' }
+    };
+    const rows = [
+      { time: '8:00 a. m.', name: 'Mariana Gómez', detail: 'Valoración · 30 min', k: 'ok', past: true },
+      { time: '8:30 a. m.', name: 'Juan Esteban Ruiz', detail: 'Control · 15 min', k: 'ok', past: true },
+      { time: '9:30 a. m.', name: 'Espacio libre', detail: '30 min disponibles', k: 'free' },
+      { time: '10:00 a. m.', name: 'Sofía Castaño', detail: 'Limpieza dental · 45 min', k: 'fresh', confirmed: false },
+      { time: '11:00 a. m.', name: 'Carlos Mejía', detail: 'Valoración · 30 min', k: 'ok', confirmed: true },
+      { time: '2:00 p. m.', name: 'Valentina Osorio', detail: 'Control · canceló desde el correo', k: 'off' },
+      { time: '3:00 p. m.', name: 'Daniela Herrera', detail: 'Limpieza dental · 45 min', k: 'ok', confirmed: true },
+      { time: '4:00 p. m.', name: 'Tomás Rendón', detail: 'Control · 15 min', k: 'ok' }
+    ];
+    const countStyle = 'font-weight:700;padding:4px 10px;border-radius:999px;';
+    const req = this.props.request || 'none';
+    const teamBase = 'border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:14px;';
+    const setOutcome = (i, v) => { const o = Object.assign({}, st.outcomes); o[i] = v; this.setState({ outcomes: o, editing: null }); };
+    return {
+      nav: navItems.map((label, i) => ({ label, href: hrefs[i], style: navBase + (i === 0 ? 'background:#FFFFFF;color:#0B6E4F;' : 'color:#FFFFFF;') })),
+      appts: rows.map((r, i) => {
+        const k = kinds[r.k];
+        const active = r.k === 'ok' || r.k === 'fresh';
+        const outcome = r.past ? st.outcomes[i] : undefined;
+        const editing = st.editing === i;
+        let badgeLabel = k.label;
+        let badgeStyle = k.badge;
+        if (outcome && !editing) {
+          badgeLabel = outcome === 'attended' ? 'Asistió' : 'No asistió';
+          badgeStyle = badge + (outcome === 'attended' ? 'background:#FFFFFF;color:#0B6E4F;' : 'background:#FFE6CC;color:#7A3E00;');
+        }
+        const status = active && !r.past;
+        const hasPill = r.k === 'fresh' || r.k === 'off' || r.k === 'free' || (!!outcome && !editing);
+        return {
+          time: r.time, name: r.name, detail: r.detail, cardStyle: k.card, nameStyle: k.name,
+          badge: badgeLabel, badgeStyle,
+          hasPill,
+          confirmed: status && r.confirmed === true,
+          noReply: status && r.confirmed === false,
+          hasMeta: hasPill || status,
+          moveCancel: active && !r.past,
+          outcomeButtons: !!r.past && (!outcome || editing),
+          canChange: !!r.past && !!outcome && !editing,
+          change: () => this.setState({ editing: i }),
+          changeLabel: 'Cambiar asistencia de ' + r.name,
+          attended: () => setOutcome(i, 'attended'),
+          noShow: () => setOutcome(i, 'no_show'),
+          outcomeLabel: 'Asistencia de ' + r.name,
+          moveLabel: 'Mover cita de ' + r.name,
+          cancelLabel: 'Cancelar cita de ' + r.name
+        };
+      }),
+      reqNone: req === 'none',
+      reqPending: req === 'pending',
+      reqRejected: req === 'rejected',
+      teamStyle: teamBase + (req === 'pending' ? 'background:#FFF4D1;' : 'background:#FFFFFF;'),
+      showInstall: !st.installHidden,
+      copy: () => this.setState({ copied: true }),
+      copyLabel: st.copied ? '¡Copiado!' : 'Copiar',
+      dismissInstall: () => this.setState({ installHidden: true }),
+      week: [
+        { day: 'Miércoles 21', count: '5 citas', style: countStyle + 'background:#EAF5F0;color:#0B6E4F;' },
+        { day: 'Jueves 22', count: '7 citas', style: countStyle + 'background:#EAF5F0;color:#0B6E4F;' },
+        { day: 'Viernes 23', count: '3 citas', style: countStyle + 'background:#EAF5F0;color:#0B6E4F;' },
+        { day: 'Lunes 2 nov.', count: 'Festivo', style: countStyle + 'background:#FFF4D1;color:#15241D;' }
+      ],
+      waitlist: [
+        { name: 'Paula Restrepo', detail: 'Limpieza dental · Jue 22 · Vie 23' },
+        { name: 'Esteban Gil', detail: 'Valoración · Mié 21' },
+        { name: 'Lina Marcela Ruiz', detail: 'Control · Lun 26 · Mar 27 · Mié 28' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -85,6 +85,7 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/public/appointments/{token}/reschedule', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/appointments/{token}/confirm', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/pros/{slug}/waitlist', fn: 'waitlist', auth: 'public', throttle: 'booking' },
+  { method: 'POST', path: '/public/teams/{slug}/waitlist', fn: 'waitlist', auth: 'public', throttle: 'booking' },
   { method: 'POST', path: '/public/waitlist/{token}/leave', fn: 'waitlist', auth: 'public' },
   // Secret-URL calendar feed that Google/Outlook/Apple poll: /public/calendar/<token>.ics
   { method: 'GET', path: '/public/calendar/{file}', fn: 'calendarSync', auth: 'public' },

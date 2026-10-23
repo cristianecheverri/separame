@@ -100,6 +100,10 @@ describe('Team page', () => {
     expect(createBooking).toHaveBeenCalledWith('dra-sara-gomez', expect.objectContaining({ serviceId: 'sg-valoracion', start: '2026-10-22T14:00:00.000Z' }));
     expect(screen.getByText('Dra. Sara Gómez')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Volver a la agenda' }).getAttribute('href')).toBe('/consultorio-sonrie');
+    // Same page, whose history says "done": the link starts a fresh booking instead of showing it again.
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la agenda' }));
+    expect(await screen.findByText('Paso 1 de 5 · ¿Con quién?')).toBeTruthy();
+    expect(history.state).toMatchObject({ sep: 'who', d: 0 });
   });
 
   it('restores the «¿Con quién?» choice after a reload', async () => {

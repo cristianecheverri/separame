@@ -22,7 +22,7 @@ import { usePro } from '../../lib/pro';
 import { keys, useActing, useAvailability } from '../../lib/queries';
 import { ProSelector } from '../team/ProSelector';
 import { formatTime } from '@shared/format';
-import { scheduleErrors, timeStepsWith, toDraft, toSchedule, type ScheduleDraft } from './scheduleModel';
+import { sameSchedule, type ScheduleDraft, scheduleErrors, stableJson, timeStepsWith, toDraft, toSchedule } from './scheduleModel';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 
 const withCurrent = (options: { value: number; label: string }[], value: number, label: (v: number) => string) =>
@@ -75,7 +75,7 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
   const [showErrors, setShowErrors] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
 
-  const dirty = JSON.stringify(toSchedule(draft)) !== JSON.stringify(baseline.schedule) || JSON.stringify(rules) !== JSON.stringify(baseline.rules);
+  const dirty = !sameSchedule(toSchedule(draft), baseline.schedule) || stableJson(rules) !== stableJson(baseline.rules);
   const errors = scheduleErrors(draft);
   const hasErrors = Object.keys(errors).length > 0;
 
