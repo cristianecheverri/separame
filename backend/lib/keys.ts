@@ -73,6 +73,8 @@ export const calFeedKey = (token: string) => ({ PK: `CALFEED#${token}`, SK: 'CAL
 export const PRICE_PK = 'PRICE';
 export const PRICE_PREFIX = 'PRICE#';
 export const priceKey = (priceId: string) => ({ PK: PRICE_PK, SK: `${PRICE_PREFIX}${priceId}` });
+/** Singleton: when each hashed site asset was last used by a live build (backend/services/site-assets.ts). */
+export const SITE_ASSETS_KEY = { PK: 'SITEASSETS', SK: 'SITEASSETS' } as const;
 
 export const MIGRATION_PK = 'MIGRATION';
 export const MIGRATION_PREFIX = 'MIGRATION#';

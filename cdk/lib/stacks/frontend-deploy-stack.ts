@@ -44,9 +44,12 @@ const APP_CONFIG_FILE = path.posix.basename(SITE_PATHS.appConfig); // 'config.js
  *    profile template), plus the stage's robots.txt (shared/seo.ts). `prune: false` is CRITICAL: the root also holds the
  *    backend-generated `/<slug>/index.html` profile pages, which a deploy must
  *    never delete.
- *  - frontend/app → `app/` (prune limited to that prefix), plus
- *    `app/config.json` with the API URL and Cognito ids, so the SPA needs no
- *    build-time configuration.
+ *  - frontend/app → `app/`, plus `app/config.json` with the API URL and Cognito
+ *    ids, so the SPA needs no build-time configuration. Never pruned either:
+ *    a tab or installed app still running the previous deploy lazy-loads its
+ *    own hashed chunks, and the service worker drops its old cache as soon as
+ *    the new one activates, so deleting them broke screens mid-session.
+ *    Old chunks are a few hundred KB per deploy.
  *
  * Cache-Control, two passes per frontend (as in Cartazos): everything is first
  * uploaded `no-cache` (HTML shells and the stable `b/booking.*` entries are
@@ -98,13 +101,11 @@ export class FrontendDeployStack extends cdk.Stack {
       cacheControl: [IMMUTABLE],
     });
 
-    // config.json ships in the same deployment as the SPA: a separate one
-    // would be deleted by this deployment's prune.
     const appBase = new s3deploy.BucketDeployment(this, 'AppDeployment', {
       ...common,
       sources: [...app, s3deploy.Source.jsonData(APP_CONFIG_FILE, runtimeConfig)],
       destinationKeyPrefix: APP_PREFIX,
-      prune: true, // only within app/
+      prune: false, // keep the previous deploys' chunks (see above)
       cacheControl: [NO_CACHE],
     });
     const appAssets = new s3deploy.BucketDeployment(this, 'AppAssetsImmutable', {

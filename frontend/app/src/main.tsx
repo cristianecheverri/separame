@@ -10,8 +10,10 @@ import { ApiError } from './lib/api';
 import { auth } from './lib/auth';
 import { createAmplifyAuth } from './lib/amplifyAuth';
 import { initAnalytics, trackPageView } from './lib/analytics';
+import { keepAppUpdated } from './lib/appUpdates';
 import { loadConfig } from './lib/config';
 import { captureInstallEvents } from './lib/install';
+import { reloadForStaleChunk } from './lib/staleChunks';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +31,10 @@ auth.onSignOut(() => queryClient.clear());
 
 captureInstallEvents();
 initAnalytics();
+// Vite's module preload failed (chunk of a previous deploy): reload once instead of breaking the screen.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadForStaleChunk((event as Event & { payload?: unknown }).payload)) event.preventDefault();
+});
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -56,6 +62,7 @@ async function boot() {
   }
   const router = createRouter();
   measurePageViews(router);
+  keepAppUpdated(router);
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

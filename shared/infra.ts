@@ -43,6 +43,8 @@
  *  REFSIGNUP#<sha256(email)>        REFSIGNUP                  { code, at } — referral code a sign-up came with (pre sign-up trigger,
  *                                                              Cognito clientMetadata), read at onboarding (TTL: 30 days)
  *  PRICE                            PRICE#<priceId>            PriceVersion
+ *  SITEASSETS                       SITEASSETS                 { builds: { <assetDir>: buildId }, lastUsed: { <bucketKey>: ISO }, checkedAt,
+ *                                                              cleanedAt } — old hashed site assets cleanup (shared/site-assets.ts)
  *  MIGRATION                        MIGRATION#<id>             PriceMigration
  *  EMAIL#<key>                      SENT                       email idempotency marker (TTL)
  *  IDEMP#<proId>#<idempotencyKey>   IDEMP                      { apptId, start, serviceId } — public booking retry marker,

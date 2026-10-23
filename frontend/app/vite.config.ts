@@ -1,10 +1,23 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { APP_ASSETS, assetListOf } from '../../shared/site-assets';
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+
+/** `asset-list.json`: the hashed files this build uses, so the job never deletes them (shared/site-assets.ts). */
+function assetList(): Plugin {
+  return {
+    name: 'separame-asset-list',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const list = assetListOf(Object.keys(bundle), APP_ASSETS, 'app/');
+      this.emitFile({ type: 'asset', fileName: 'asset-list.json', source: JSON.stringify(list) });
+    },
+  };
+}
 
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -19,6 +32,7 @@ export default defineConfig(({ mode, command }) => {
     plugins: [
       react(),
       tailwindcss(),
+      assetList(),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'script',

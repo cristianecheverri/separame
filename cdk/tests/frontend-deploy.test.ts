@@ -8,20 +8,17 @@ describe('FrontendDeployStack', () => {
   const deployments = resourcesOf(template, 'Custom::CDKBucketDeployment').map(([id, r]) => [id, r as Deployment] as const);
   const byId = (prefix: string) => deployments.find(([id]) => id.startsWith(prefix))![1].Properties;
 
-  it('never prunes the bucket root (profile pages live there)', () => {
+  it('never prunes: the root holds the profile pages and old panel chunks keep open tabs working', () => {
     expect(deployments).toHaveLength(4);
-    for (const [, d] of deployments) {
-      if (!d.Properties.DestinationBucketKeyPrefix) expect(d.Properties.Prune).toBe(false);
-    }
+    for (const [, d] of deployments) expect(d.Properties.Prune).toBe(false);
     expect(byId('BookingDeployment').Prune).toBe(false);
     // index.html, 404.html, c/index.html, w/index.html placeholders + robots.txt.
     expect((byId('BookingDeployment').SourceObjectKeys as unknown[]).length).toBe(5);
   });
 
-  it('deploys the SPA under app/ (pruned within the prefix) with config.json', () => {
+  it('deploys the SPA under app/ with config.json', () => {
     const app = byId('AppDeployment');
     expect(app.DestinationBucketKeyPrefix).toBe('app/');
-    expect(app.Prune).toBe(true);
     expect((app.SourceObjectKeys as unknown[]).length).toBe(2); // build + config.json
   });
 

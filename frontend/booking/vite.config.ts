@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { LANDING_DEFAULT_PRICE, LANDING_SLOT_NAMES, landingSlotsIn, renderLandingPrices, toPublicPrices } from '../../shared/landing';
+import { BOOKING_ASSETS, assetListOf } from '../../shared/site-assets';
 import { TRIAL_DAYS } from '../../shared/subscription';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +52,17 @@ function devRoutes(): Plugin {
   };
 }
 
+/** `b/asset-list.json`: the hashed files this build uses, so the job never deletes them (shared/site-assets.ts). */
+function assetList(): Plugin {
+  return {
+    name: 'separame-asset-list',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      this.emitFile({ type: 'asset', fileName: BOOKING_ASSETS.listKey, source: JSON.stringify(assetListOf(Object.keys(bundle), BOOKING_ASSETS)) });
+    },
+  };
+}
+
 /**
  * The manage (/c/<token>) and waitlist-leave (/w/<token>) pages run the same
  * bundle as the profile pages, so they are derived from the built template
@@ -63,10 +75,14 @@ function manageShell(): Plugin {
     apply: 'build',
     closeBundle() {
       const outDir = resolve(root, 'dist');
-      const template = readFileSync(resolve(outDir, '_templates/booking.html'), 'utf8');
+      const templatePath = resolve(outDir, '_templates/booking.html');
+      // Profile pages are generated from this template and live for months, while hashed chunks are
+      // deleted a week after no build uses them: no preload hints to them (booking.js imports what it needs).
+      const template = readFileSync(templatePath, 'utf8').replace(/[ \t]*<link rel="modulepreload"[^>]*>\n?/g, '');
       if (!template.includes(HEAD_MARKER) || !template.includes(DATA_MARKER)) {
         throw new Error('booking template lost its SEPARAME markers');
       }
+      writeFileSync(templatePath, template);
       const shells = { c: 'Tu cita · Sepárame', w: 'Lista de espera · Sepárame' };
       for (const [dir, title] of Object.entries(shells)) {
         const html = template
@@ -109,7 +125,7 @@ function landingPrices(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [preact(), tailwindcss(), devRoutes(), manageShell(), landingPrices()],
+  plugins: [preact(), tailwindcss(), devRoutes(), manageShell(), landingPrices(), assetList()],
   resolve: {
     alias: { '@shared': sharedDir },
   },

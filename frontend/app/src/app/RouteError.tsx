@@ -1,11 +1,13 @@
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router';
 import { Wordmark } from '../components/layout/Wordmark';
+import { reloadForStaleChunk } from '../lib/staleChunks';
 import { FatalError } from './Splash';
 
 export function RouteError() {
   const error = useRouteError();
   if (isRouteErrorResponse(error) && error.status === 404) return <NotFoundPage />;
-  // A new deploy can remove old lazy chunks: reloading picks up the new ones.
+  // A tab still on the previous deploy asked for a chunk it can no longer get: reload once, quietly.
+  if (reloadForStaleChunk(error)) return null;
   return <FatalError message="Tuvimos un problema al abrir esta pantalla. Recarga la página para seguir." onRetry={() => window.location.reload()} />;
 }
 
