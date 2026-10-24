@@ -29,6 +29,7 @@ describe('AuthStack', () => {
         EmailSendingAccount: 'DEVELOPER',
         ConfigurationSet: 'separame-dev',
         From: Match.stringLikeRegexp('<noreply@dev\\.separame\\.app>$'),
+        ReplyToEmailAddress: Match.stringLikeRegexp('^[^@\\s]+@[^@\\s]+$'),
         SourceArn: Match.anyValue(),
       },
     });

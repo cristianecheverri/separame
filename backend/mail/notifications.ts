@@ -143,6 +143,7 @@ export async function sendProCalendarNotice(appt: Appointment, pro: ProProfile, 
       durationMin: appt.durationMin, start: appt.start, agendaOf: pro.ownerId ? pro.name : undefined,
     }),
     to: pro.email,
+    replyTo: operatorReplyTo(),
     invite,
   });
 }

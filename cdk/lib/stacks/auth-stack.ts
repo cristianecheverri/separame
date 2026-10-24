@@ -92,6 +92,8 @@ export class AuthStack extends cdk.Stack {
       email: cognito.UserPoolEmail.withSES({
         fromEmail: config.mailFromAddress,
         fromName: 'Sepárame',
+        // noreply@ has no inbox: replies to the signup and password codes reach the operator.
+        replyTo: config.adminEmail,
         sesRegion: config.region,
         sesVerifiedDomain: config.mailDomain,
         configurationSetName: config.configSetName,

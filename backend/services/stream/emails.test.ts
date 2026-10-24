@@ -154,6 +154,7 @@ describe('stream-appointments: emails module', () => {
     expect(calls).toHaveLength(2);
     const own = rawOf(calls[1]);
     expect(toOf(own)).toBe('laura@correo.com');
+    expect(own).toContain('Reply-To: ops@separame.app');
     expect(parts(own).find((p) => p.headers.startsWith('Content-Type: text/html'))!.body).toContain('Agregamos esta cita a tu calendario');
     expect(calendarPart(own)!.body).toContain('METHOD:REQUEST');
     expect(emailMarkers()).toContain('EMAIL#appt1#invite#0');
