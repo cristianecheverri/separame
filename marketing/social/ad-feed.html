@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="brand.css" />
+  <style>
+    /* 1080 × 1350 (4:5): feed of Facebook and Instagram. */
+    .canvas { width: 1080px; height: 1350px; }
+    .text { position: absolute; left: 80px; right: 80px; top: 84px; text-align: center; }
+    .wordmark { font-size: 46px; }
+    .headline { margin-top: 40px; font-size: 92px; }
+    .sub { margin: 26px auto 0; font-size: 34px; width: 820px; }
+    .phone { left: 290px; top: 640px; width: 500px; border-width: 15px; border-radius: 76px; }
+    .card { gap: 18px; padding: 20px 30px 20px 20px; }
+    .card .icon { width: 60px; height: 60px; }
+    .card b { font-size: 26px; }
+    .card span { font-size: 22px; }
+    .c1 { left: 40px; top: 1000px; }
+    .c2 { right: 40px; top: 760px; }
+    .bottom {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 170px;
+      display: flex; align-items: center; justify-content: center; gap: 28px;
+      background: var(--green-dark);
+    }
+    .pill { padding: 20px 36px; font-size: 34px; }
+    .price { font-size: 30px; font-weight: 600; color: var(--mint); }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob" style="width: 640px; height: 640px; left: -260px; top: 420px"></div>
+    <div class="blob" style="width: 560px; height: 560px; left: 760px; top: -200px"></div>
+
+    <div class="text">
+      <div class="wordmark">sepárame<span class="dot">.</span></div>
+      <h1 class="headline">Deja de agendar<br /><em>por WhatsApp.</em></h1>
+      <p class="sub">Tus clientes eligen día y hora desde tu enlace.<br />Tú solo atiendes.</p>
+    </div>
+
+    <div class="phone"><img src="assets/booking-day-time.png" alt="" /></div>
+
+    <div class="card c1">
+      <div class="icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </div>
+      <div><b>Cita confirmada</b><span>Jue 22 · 10:00 a. m.</span></div>
+    </div>
+    <div class="card c2">
+      <div class="icon green">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+      </div>
+      <div><b>Recordatorio enviado</b><span>Un día antes, solito</span></div>
+    </div>
+
+    <div class="bottom">
+      <span class="pill">Prueba gratis 10 días</span>
+      <span class="price">Luego desde $5.000/mes</span>
+    </div>
+  </div>
+</body>
+</html>

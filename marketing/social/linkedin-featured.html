@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="brand.css" />
+  <style>
+    /* 1200 × 627: LinkedIn's link and "Featured" image. */
+    .canvas { width: 1200px; height: 627px; }
+    .text { position: absolute; left: 72px; top: 76px; width: 600px; }
+    .wordmark { font-size: 40px; }
+    .headline { margin-top: 40px; font-size: 64px; }
+    .sub { margin-top: 22px; font-size: 25px; width: 520px; }
+    .row { margin-top: 34px; display: flex; align-items: center; gap: 20px; }
+    .pill { padding: 13px 24px; font-size: 22px; }
+    .url { font-size: 22px; }
+    .phone { width: 290px; border-width: 10px; border-radius: 46px; }
+    .back { left: 900px; top: 120px; transform: rotate(6deg); }
+    .front { left: 700px; top: 64px; transform: rotate(-4deg); }
+    .card { left: 640px; top: 448px; gap: 14px; padding: 16px 24px 16px 16px; }
+    .card .icon { width: 46px; height: 46px; }
+    .card b { font-size: 19px; }
+    .card span { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob" style="width: 460px; height: 460px; left: -170px; top: -200px"></div>
+    <div class="blob" style="width: 560px; height: 560px; left: 820px; top: 300px"></div>
+
+    <div class="text">
+      <div class="wordmark">sepárame<span class="dot">.</span></div>
+      <h1 class="headline">Tu agenda de citas, en <em>un enlace.</em></h1>
+      <p class="sub">Para profesionales en Colombia. Tus clientes eligen día y hora sin llamarte.</p>
+      <div class="row">
+        <span class="pill">Prueba gratis 10 días</span>
+        <span class="url">separame.app</span>
+      </div>
+    </div>
+
+    <div class="phone back"><img src="assets/booking-confirmed.png" alt="" /></div>
+    <div class="phone front"><img src="assets/booking-day-time.png" alt="" /></div>
+
+    <div class="card">
+      <div class="icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15241D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </div>
+      <div><b>Recordatorio enviado</b><span>Mañana a las 10:00 a. m.</span></div>
+    </div>
+  </div>
+</body>
+</html>

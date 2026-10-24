@@ -39,6 +39,13 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
   - [ ] Hablar con un contador: régimen y facturación electrónica DIAN.
   - [ ] Pasarme responsable, cédula o NIT y correo de contacto para completar
         privacidad y términos (y decidir si creamos `soporte@separame.app`).
+  - [x] Textos legales al día con el producto (23-oct): entrada con contraseña, gracia de 3 días,
+        plan para equipos, referidos, avisos al celular, clientes sin correo y contacto solo por
+        los correos del plan o los pagos (Cognito y el aviso de calendario responden al operador).
+- [ ] **Lanzamiento** (kit en `marketing/launch-kit.md`, imágenes en `marketing/social/out/`):
+  - [ ] Post y proyecto de LinkedIn.
+  - [ ] Página de Facebook y cuenta de Instagram con sus primeras publicaciones.
+  - [ ] Anuncios en Meta, después de completar lo legal de arriba.
 - [x] **Google Search Console** (22-oct):
   - [x] Propiedad de tipo **Dominio** `separame.app` y registro TXT (22-oct; creado a mano y
         pasado a CDK: `GOOGLE_SITE_VERIFICATION` en `cdk/lib/config.ts`).
