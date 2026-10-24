@@ -1,0 +1,472 @@
+<title>Kit de lanzamiento Sepárame</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: green brand band, sticky section nav, one reading column of cards; every text block has its own copy button. */
+  :root {
+    --bg: #f3f6f4;
+    --card: #ffffff;
+    --ink: #15241d;
+    --muted: #56645d;
+    --line: #e3e8e5;
+    --accent: #0b6e4f;
+    --accent-soft: #eaf5f0;
+    --band: #0b6e4f;
+    --band-ink: #ffffff;
+    --band-muted: #d5ede3;
+    --yellow: #ffc93c;
+    --yellow-soft: #fff4d1;
+    --yellow-ink: #5c4300;
+    --code-bg: #f3f6f4;
+    --font-display: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+    --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1713; --card: #16221c; --ink: #e6efea; --muted: #9db0a6; --line: #26362e;
+      --accent: #5cd0a3; --accent-soft: #173328; --band: #0a5a41; --band-ink: #ffffff; --band-muted: #bfe3d3;
+      --yellow: #ffc93c; --yellow-soft: #3a3014; --yellow-ink: #ffd873; --code-bg: #101b16;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1713; --card: #16221c; --ink: #e6efea; --muted: #9db0a6; --line: #26362e;
+    --accent: #5cd0a3; --accent-soft: #173328; --band: #0a5a41; --band-ink: #ffffff; --band-muted: #bfe3d3;
+    --yellow: #ffc93c; --yellow-soft: #3a3014; --yellow-ink: #ffd873; --code-bg: #101b16;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+  /* Brand band */
+  .band { background: var(--band); color: var(--band-ink); }
+  .band .wrap { padding-block: 40px 36px; display: grid; gap: 14px; }
+  .wordmark { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.02em; }
+  .wordmark span { color: var(--yellow); }
+  h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 6vw, 52px); line-height: 1.02; letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--band-muted); max-width: 60ch; margin: 0; font-size: 17px; }
+  .status { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; background: rgba(255, 255, 255, 0.12); color: var(--band-ink); }
+  .chip.wait { background: var(--yellow); color: #15241d; }
+
+  /* Sticky nav */
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--card); }
+  nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+  nav a { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 15px; text-decoration: none; }
+  nav a:hover { color: var(--accent); background: var(--accent-soft); }
+  nav a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  main .wrap { display: grid; gap: 56px; padding-block: 40px 72px; }
+  section { display: grid; gap: 18px; scroll-margin-top: 72px; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.02em; line-height: 1.08; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; margin: 0; }
+  p { margin: 0; }
+  .note { color: var(--muted); max-width: 65ch; }
+  code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }
+  a { color: var(--accent); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 14px; min-width: 0; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-head small { color: var(--muted); font-size: 14px; }
+
+  /* Copyable text */
+  .copyable { position: relative; display: grid; gap: 8px; min-width: 0; }
+  .copyable pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-body); font-size: 15px; line-height: 1.6; background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; padding: 16px; max-height: 420px; overflow-y: auto; }
+  .copyable.inline pre { font-family: var(--font-mono); font-size: 14px; padding: 10px 12px; }
+  .copy-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .copy-row span { font-size: 14px; font-weight: 600; color: var(--muted); }
+  button.copy { font: inherit; font-size: 14px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  button.copy.done { background: var(--accent); color: var(--card); }
+
+  /* Images */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+  figure .img { background: var(--code-bg); display: grid; place-items: center; padding: 12px; height: 200px; }
+  figure img { max-width: 100%; max-height: 176px; object-fit: contain; border-radius: 6px; box-shadow: 0 6px 18px rgba(4, 40, 28, 0.18); }
+  figure.profile img { border-radius: 50%; }
+  figcaption { padding: 12px 14px 14px; display: grid; gap: 2px; font-size: 14px; }
+  figcaption b { font-size: 15px; }
+  figcaption .dim { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Field tables */
+  .fields { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); }
+  .field { display: grid; grid-template-columns: 180px 1fr; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); align-items: start; }
+  .field:first-child { border-top: 0; }
+  .field dt { font-weight: 600; color: var(--muted); font-size: 15px; }
+  .field dd { margin: 0; min-width: 0; display: grid; gap: 4px; }
+  .field .val { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+  .field .val > span { min-width: 0; overflow-wrap: anywhere; }
+  .field .hint { color: var(--muted); font-size: 14px; }
+  @media (max-width: 560px) { .field { grid-template-columns: 1fr; gap: 4px; } }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 14px; }
+
+  .callout { border-radius: 16px; padding: 18px 20px; display: grid; gap: 8px; background: var(--yellow-soft); color: var(--yellow-ink); }
+  .callout b { color: inherit; }
+  .callout ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .callout.info { background: var(--accent-soft); color: var(--ink); }
+
+  /* Ads walkthrough: a real sequence, so it is numbered */
+  ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: grid; gap: 14px; }
+  ol.steps > li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+  ol.steps > li::before { content: counter(step); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow); color: #15241d; font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+  ol.steps .body { display: grid; gap: 10px; min-width: 0; }
+  ol.steps ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  .where { font-size: 14px; color: var(--muted); }
+
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+  footer { border-top: 1px solid var(--line); }
+  footer .wrap { padding-block: 24px; color: var(--muted); font-size: 14px; }
+
+  @media (prefers-reduced-motion: no-preference) { button.copy { transition: background 0.15s, color 0.15s; } }
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div class="wordmark">sepárame<span>.</span></div>
+    <h1>Kit de lanzamiento</h1>
+    <p class="lede">Todo lo que necesitas para LinkedIn, la página de Facebook, Instagram y los anuncios en Meta. Cada texto tiene su botón para copiarlo.</p>
+    <div class="status">
+      <span class="chip">✓ Textos legales al día con el producto</span>
+      <span class="chip wait">Falta tu identificación como responsable</span>
+    </div>
+  </div>
+</header>
+
+<nav aria-label="Secciones">
+  <div class="wrap">
+    <a href="#imagenes">Imágenes</a>
+    <a href="#linkedin">LinkedIn</a>
+    <a href="#facebook">Facebook e Instagram</a>
+    <a href="#anuncios">Anuncios</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+
+    <!-- Images -->
+    <section id="imagenes">
+      <p class="eyebrow">Imágenes</p>
+      <h2>Las cinco piezas</h2>
+      <p class="note">Están en <code>marketing/social/out/</code> del repositorio. Si cambias un texto, se regeneran con <code>node marketing/social/render.mjs</code>.</p>
+      <div class="gallery">
+        <figure class="profile">
+          <div class="img"><img src="social/out/profile.png" alt="Foto de perfil: chulito blanco con punto amarillo sobre verde"></div>
+          <figcaption><b>profile.png</b><span class="dim">1080 × 1080</span><span>Foto de perfil de Facebook e Instagram. Se recorta en círculo.</span></figcaption>
+        </figure>
+        <figure>
+          <div class="img"><img src="social/out/facebook-cover.png" alt="Portada: «Tus clientes separan cita desde un enlace» con un celular"></div>
+          <figcaption><b>facebook-cover.png</b><span class="dim">1640 × 624</span><span>Portada de la página. En el celular se ve solo el centro.</span></figcaption>
+        </figure>
+        <figure>
+          <div class="img"><img src="social/out/linkedin-featured.png" alt="Imagen horizontal: «Tu agenda de citas, en un enlace» con dos celulares"></div>
+          <figcaption><b>linkedin-featured.png</b><span class="dim">1200 × 627</span><span>Imagen horizontal para LinkedIn.</span></figcaption>
+        </figure>
+        <figure>
+          <div class="img"><img src="social/out/ad-feed.png" alt="Anuncio 4:5: «Deja de agendar por WhatsApp»"></div>
+          <figcaption><b>ad-feed.png</b><span class="dim">1080 × 1350 · 4:5</span><span>Post de LinkedIn, publicaciones y anuncio en el feed.</span></figcaption>
+        </figure>
+        <figure>
+          <div class="img"><img src="social/out/ad-story.png" alt="Anuncio 9:16: «Deja de agendar por WhatsApp» con botón Prueba gratis 10 días"></div>
+          <figcaption><b>ad-story.png</b><span class="dim">1080 × 1920 · 9:16</span><span>Historias y reels. Lo importante queda fuera de las zonas que tapa Instagram.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- LinkedIn -->
+    <section id="linkedin">
+      <p class="eyebrow">LinkedIn</p>
+      <h2>Post y proyecto</h2>
+
+      <div class="card">
+        <div class="card-head"><h3>Post</h3><small>1.522 de 3.000 caracteres · adjunta ad-feed.png</small></div>
+        <p class="note">Enfocado en negocio, para profesionales y para quien conozca a uno. Sin detalles técnicos.</p>
+        <div class="copyable">
+          <div class="copy-row"><span>Texto del post</span><button class="copy" type="button" data-target="li-post">Copiar</button></div>
+          <pre id="li-post">¿Cuántas veces a la semana respondes "¿qué horario tienes?" por WhatsApp?
+
+Si eres odontólogo, psicólogo, abogado, barbero, entrenador o tienes un consultorio, seguramente agendas así: preguntar, proponer horas, confirmar, recordar… y aun así alguien no llega.
+
+Por eso lancé Sepárame: una agenda de citas en línea hecha para Colombia.
+
+Así funciona:
+1️⃣ Creas tu cuenta y pones tus servicios, precios y horario.
+2️⃣ Compartes tu enlace (separame.app/tu-nombre) por WhatsApp, Instagram o con un QR en la puerta.
+3️⃣ Tus clientes eligen servicio, día y hora. Sin llamarte, sin descargar nada y sin crear cuenta.
+
+Lo que pasa después lo hace Sepárame solo:
+✅ Tu cliente recibe la confirmación, con botones para agregar la cita a su calendario.
+✅ Un día antes le llega un recordatorio con un botón "Sí, voy", y tú ves quién confirmó.
+✅ Si alguien cancela, la lista de espera le avisa a quien quería ese día.
+✅ Nunca quedan dos personas a la misma hora.
+✅ Los festivos de Colombia ya vienen cargados.
+✅ Tienes tu agenda en el celular, con un aviso por cada cita nueva.
+
+¿Trabajan varios en el mismo consultorio? Hay un plan para equipos: una sola cuenta y la agenda de cada profesional.
+
+💰 Prueba gratis 10 días, sin tarjeta. Después, desde $5.000 al mes, pagando por Nequi o transferencia, sin cobros automáticos. Los primeros tienen precio fundador: lo conservan mientras sigan renovando.
+
+🙏 Un favor: si conoces a alguien que todavía agenda por WhatsApp, compártele este post o etiquétalo en los comentarios.
+
+separame.app</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Proyecto</h3><small>Perfil → Proyectos → Agregar</small></div>
+        <p class="note">Cuenta qué es y con qué lo hiciste, sin explicar cómo funciona por dentro.</p>
+        <div class="copyable inline">
+          <div class="copy-row"><span>Project name</span><button class="copy" type="button" data-target="li-name">Copiar</button></div>
+          <pre id="li-name">Sepárame — agenda de citas en línea para profesionales</pre>
+        </div>
+        <div class="copyable">
+          <div class="copy-row"><span>Description</span><button class="copy" type="button" data-target="li-desc">Copiar</button></div>
+          <pre id="li-desc">Agenda de citas en línea para profesionales en Colombia, en producción en separame.app. Cada profesional comparte su enlace y sus clientes reservan servicio, día y hora sin crear cuenta; la confirmación, los recordatorios y la lista de espera funcionan solos. Incluye panel instalable en el celular, estadísticas, plan para equipos y suscripciones.
+
+Es un proyecto personal que diseñé y programé con Claude Code como par de programación. Es 100% serverless en AWS, con la infraestructura definida como código (CDK y TypeScript), React en el panel y despliegue automático con GitHub Actions en cada cambio.</pre>
+        </div>
+        <div class="copy-row"><span>Skills</span></div>
+        <div class="tags">
+          <span class="tag">Product Development</span><span class="tag">TypeScript</span><span class="tag">Amazon Web Services (AWS)</span><span class="tag">Infrastructure as code (IaC)</span><span class="tag">React.js</span>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <b>Destacados</b>
+        <p>Agrega <code>https://separame.app</code> como enlace. LinkedIn toma sola la imagen verde del sitio y el título «Sepárame · Tu agenda de citas en línea».</p>
+      </div>
+    </section>
+
+    <!-- Facebook & Instagram -->
+    <section id="facebook">
+      <p class="eyebrow">Facebook e Instagram</p>
+      <h2>La página de Sepárame</h2>
+      <p class="note">Se crea desde <a href="https://www.facebook.com/pages/create" target="_blank" rel="noopener">facebook.com/pages/create</a> con tu perfil personal. Meta lo exige para administrarla, pero tu nombre no aparece en la página ni en los anuncios.</p>
+
+      <dl class="fields">
+        <div class="field"><dt>Nombre</dt><dd><div class="val"><span id="fb-name">Sepárame</span><button class="copy" type="button" data-target="fb-name">Copiar</button></div></dd></div>
+        <div class="field"><dt>Categoría</dt><dd><div class="val"><span id="fb-cat">Software</span><button class="copy" type="button" data-target="fb-cat">Copiar</button></div><span class="hint">Si deja una segunda: Servicio de internet.</span></dd></div>
+        <div class="field"><dt>Presentación</dt><dd><div class="val"><span id="fb-bio">Agenda de citas en línea para profesionales en Colombia. Tus clientes reservan desde un enlace.</span><button class="copy" type="button" data-target="fb-bio">Copiar</button></div><span class="hint">95 de 101 caracteres.</span></dd></div>
+        <div class="field"><dt>Nombre de usuario</dt><dd><div class="val"><span id="fb-user">separame.app</span><button class="copy" type="button" data-target="fb-user">Copiar</button></div><span class="hint">Si no está libre: separameapp.</span></dd></div>
+        <div class="field"><dt>Sitio web</dt><dd><div class="val"><span id="fb-web">https://separame.app/?utm_source=facebook&amp;utm_medium=social&amp;utm_campaign=page</span><button class="copy" type="button" data-target="fb-web">Copiar</button></div></dd></div>
+        <div class="field"><dt>Botón de acción</dt><dd><div class="val"><span><b>Registrarte</b> → <span id="fb-btn">https://separame.app/app/signup?utm_source=facebook&amp;utm_medium=social&amp;utm_campaign=page_button</span></span><button class="copy" type="button" data-target="fb-btn">Copiar</button></div></dd></div>
+        <div class="field"><dt>Correo</dt><dd><span>El de contacto que definas.</span><span class="hint">Pendiente en el backlog, junto con soporte@separame.app.</span></dd></div>
+        <div class="field"><dt>Ubicación</dt><dd><span>Solo «Colombia», sin dirección: no hay local.</span></dd></div>
+        <div class="field"><dt>Foto de perfil</dt><dd><span><code>profile.png</code></span></dd></div>
+        <div class="field"><dt>Portada</dt><dd><span><code>facebook-cover.png</code></span></dd></div>
+      </dl>
+
+      <div class="card">
+        <h3>Instagram</h3>
+        <p>Crea <code>@separame.app</code> (o <code>@separameapp</code>) como cuenta profesional, con la misma foto y presentación, y conéctala a la página desde Meta Business Suite. Así los anuncios en Instagram salen a nombre de esa cuenta. Para estética, barberías, psicólogos y entrenadores, Instagram pesa más que Facebook.</p>
+        <div class="copyable inline">
+          <div class="copy-row"><span>Enlace de la biografía</span><button class="copy" type="button" data-target="ig-link">Copiar</button></div>
+          <pre id="ig-link">https://separame.app/?utm_source=instagram&amp;utm_medium=social&amp;utm_campaign=bio</pre>
+        </div>
+      </div>
+
+      <h3>Primeras publicaciones</h3>
+      <p class="note">Súbelas antes de encender los anuncios: quien toque «Sepárame» en un anuncio y llegue a una página vacía desconfía.</p>
+      <div class="two">
+        <div class="card">
+          <div class="card-head"><h3>Presentación</h3><small>ad-feed.png</small></div>
+          <div class="copyable">
+            <div class="copy-row"><span>Texto</span><button class="copy" type="button" data-target="post-1">Copiar</button></div>
+            <pre id="post-1">Hola 👋 Somos Sepárame, la agenda de citas en línea hecha en Colombia.
+
+Creas tu enlace (separame.app/tu-nombre), lo compartes por WhatsApp o Instagram, y tus clientes eligen servicio, día y hora sin escribirte. Tú recibes la cita; ellos, la confirmación y un recordatorio un día antes.
+
+Prueba gratis 10 días, sin tarjeta 👉 separame.app</pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Cómo funciona</h3><small>facebook-cover.png</small></div>
+          <div class="copyable">
+            <div class="copy-row"><span>Texto</span><button class="copy" type="button" data-target="post-2">Copiar</button></div>
+            <pre id="post-2">Tu enlace de citas, listo en tres pasos:
+1️⃣ Crea tu cuenta con tu correo.
+2️⃣ Pon tus servicios, duraciones y horario (los festivos ya están).
+3️⃣ Comparte tu enlace o tu QR. Las citas empiezan a llegar.
+
+separame.app</pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Menos inasistencias</h3><small>ad-story.png · también como historia</small></div>
+          <div class="copyable">
+            <div class="copy-row"><span>Texto</span><button class="copy" type="button" data-target="post-3">Copiar</button></div>
+            <pre id="post-3">Un día antes de la cita, tu cliente recibe un recordatorio con un botón: "Sí, voy". Tú ves en tu agenda quién confirmó.
+Si no puede ir, cancela o cambia desde el mismo correo, y el cupo le llega a quien estaba en lista de espera.</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ads -->
+    <section id="anuncios">
+      <p class="eyebrow">Anuncios en Meta</p>
+      <h2>De cero a la primera campaña</h2>
+
+      <div class="callout">
+        <b>Antes de encenderlos</b>
+        <p>Los términos y la política de privacidad ya dicen solo cosas ciertas (23 de octubre). Falta tu identificación como responsable en la política (nombre, cédula o NIT, dirección, correo y teléfono), que depende del registro del negocio. Pagar anuncios es anunciarlo: deja todo montado y publícalo cuando eso esté.</p>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div class="body">
+            <h3>Prepara la casa</h3>
+            <p class="where">Una sola vez, en <a href="https://business.facebook.com" target="_blank" rel="noopener">business.facebook.com</a></p>
+            <ul>
+              <li>Crea un <b>portafolio comercial</b> llamado «Sepárame», para que quede separado de Cartazos y de lo personal.</li>
+              <li>En <i>Configuración → Cuentas → Páginas</i>, agrega la página Sepárame. En <i>Cuentas de Instagram</i>, conecta <code>@separame.app</code>.</li>
+              <li>En <i>Cuentas publicitarias → Agregar → Crear</i>: nombre «Sepárame», zona horaria <b>Bogotá</b> y moneda <b>COP</b>. Revísalas bien: <b>no se pueden cambiar después</b>. Asígnate control total.</li>
+              <li>En <i>Configuración de pagos</i>, agrega la tarjeta y la facturación con país Colombia. Meta suma el <b>IVA del 19 %</b>.</li>
+              <li>Activa la verificación en dos pasos: Meta la va a pedir.</li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+            <h3>Crea la campaña</h3>
+            <p class="where"><a href="https://adsmanager.facebook.com" target="_blank" rel="noopener">adsmanager.facebook.com</a> → elige la cuenta «Sepárame» → + Crear</p>
+            <dl class="fields">
+              <div class="field"><dt>Objetivo</dt><dd><span>Tráfico</span></dd></div>
+              <div class="field"><dt>Configuración</dt><dd><span>Manual</span><span class="hint">Si ofrece «Campaña Advantage+», no la elijas por ahora: con la manual controlas qué pasa.</span></dd></div>
+              <div class="field"><dt>Nombre</dt><dd><div class="val"><span id="ad-camp">Lanzamiento oct 26</span><button class="copy" type="button" data-target="ad-camp">Copiar</button></div></dd></div>
+              <div class="field"><dt>Categoría especial</dt><dd><span>Ninguna</span></dd></div>
+            </dl>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+            <h3>Conjunto de anuncios: a quién y cuánto</h3>
+            <dl class="fields">
+              <div class="field"><dt>Conversión</dt><dd><span>Sitio web</span></dd></div>
+              <div class="field"><dt>Optimización</dt><dd><span>Clics en el enlace</span><span class="hint">«Visitas a la página de destino» y los registros necesitan el Meta Pixel, que Sepárame no tiene.</span></dd></div>
+              <div class="field"><dt>Presupuesto</dt><dd><span>Diario, <b>$20.000</b>, con fecha de fin a 7 días</span><span class="hint">≈ $140.000 + IVA. La fecha de fin evita que siga gastando si se te olvida.</span></dd></div>
+              <div class="field"><dt>Ubicación y edad</dt><dd><span>Colombia · 24 a 55 años</span></dd></div>
+              <div class="field"><dt>Público</dt><dd><div class="val"><span id="ad-interests">odontología, psicología, fisioterapia, nutrición, estética, barbería, peluquería, entrenamiento personal, abogados</span><button class="copy" type="button" data-target="ad-interests">Copiar</button></div><span class="hint">Público Advantage+, con estos intereses como sugerencias.</span></dd></div>
+              <div class="field"><dt>Ubicaciones</dt><dd><span>Advantage+ (feed, historias y reels de Facebook e Instagram)</span></dd></div>
+            </dl>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+            <h3>El anuncio</h3>
+            <dl class="fields">
+              <div class="field"><dt>Identidad</dt><dd><span>Página Sepárame y cuenta de Instagram</span><span class="hint">Revisa que no quede Cartazos: Meta a veces pone la última página que usaste.</span></dd></div>
+              <div class="field"><dt>Formato</dt><dd><span>Imagen única: <code>ad-feed.png</code>, y con <b>personalizar por ubicación</b>, <code>ad-story.png</code> en historias y reels</span></dd></div>
+              <div class="field"><dt>Botón</dt><dd><span>Registrarte</span></dd></div>
+              <div class="field"><dt>URL</dt><dd><div class="val"><span id="ad-url">https://separame.app/</span><button class="copy" type="button" data-target="ad-url">Copiar</button></div></dd></div>
+              <div class="field"><dt>Parámetros de URL</dt><dd><div class="val"><span id="ad-utm">utm_source=meta&amp;utm_medium=paid_social&amp;utm_campaign=launch_oct26&amp;utm_content={{ad.name}}</span><button class="copy" type="button" data-target="ad-utm">Copiar</button></div></dd></div>
+              <div class="field"><dt>Mejoras creativas</dt><dd><span><b>Apágalas</b></span><span class="hint">Si no, Meta recorta la imagen, le pone música o reescribe el texto.</span></dd></div>
+            </dl>
+            <p>Pon los dos textos de abajo como <b>dos opciones</b> del mismo anuncio (texto principal, título y descripción). Meta prueba cuál funciona mejor, así que no necesitas dos anuncios. Después toca <b>Publicar</b>: la revisión tarda de minutos a 24 horas.</p>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+            <h3>Después</h3>
+            <ul>
+              <li><b>Los primeros 3 días no toques nada.</b> Es la fase de aprendizaje y cada cambio la reinicia.</li>
+              <li>En el Administrador de anuncios mira el <b>costo por clic</b> y el <b>CTR</b> (porcentaje de clics).</li>
+              <li>En Google Analytics mira los <code>sign_up</code> de la campaña <code>launch_oct26</code> en <i>Adquisición de tráfico</i>. Eso es lo que importa: Analytics ya guarda los UTM y tiene <code>sign_up</code> como evento clave.</li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+
+      <h3>Textos del anuncio</h3>
+      <div class="two">
+        <div class="card">
+          <div class="card-head"><h3>Opción A · el problema</h3></div>
+          <div class="copyable">
+            <div class="copy-row"><span>Texto principal</span><button class="copy" type="button" data-target="ad-a">Copiar</button></div>
+            <pre id="ad-a">¿Se te va la mañana respondiendo "¿qué horario tienes?" por WhatsApp? 📲
+
+Con Sepárame tus clientes separan cita desde tu enlace: eligen servicio, día y hora, y les llega la confirmación y un recordatorio un día antes. Sin llamadas y sin instalar nada.
+
+✅ Cero citas dobles
+✅ Festivos de Colombia incluidos
+✅ Lista de espera que llena los huecos
+
+Prueba gratis 10 días, sin tarjeta. Después, desde $5.000 al mes.</pre>
+          </div>
+          <div class="copyable inline">
+            <div class="copy-row"><span>Título</span><button class="copy" type="button" data-target="ad-a-title">Copiar</button></div>
+            <pre id="ad-a-title">Tu agenda de citas en un enlace</pre>
+          </div>
+          <div class="copyable inline">
+            <div class="copy-row"><span>Descripción</span><button class="copy" type="button" data-target="ad-a-desc">Copiar</button></div>
+            <pre id="ad-a-desc">Prueba gratis 10 días, sin tarjeta</pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Opción B · las inasistencias</h3></div>
+          <div class="copyable">
+            <div class="copy-row"><span>Texto principal</span><button class="copy" type="button" data-target="ad-b">Copiar</button></div>
+            <pre id="ad-b">Cada cita a la que no llegan es un hueco en tu día.
+
+Sepárame le manda a tu cliente un recordatorio un día antes con un botón "Sí, voy". Si no puede ir, cancela desde el correo y el cupo le llega a quien estaba en lista de espera. Tú solo atiendes.
+
+Para consultorios, estudios, barberías y profesionales independientes en Colombia. Prueba gratis 10 días.</pre>
+          </div>
+          <div class="copyable inline">
+            <div class="copy-row"><span>Título</span><button class="copy" type="button" data-target="ad-b-title">Copiar</button></div>
+            <pre id="ad-b-title">Menos inasistencias, más citas</pre>
+          </div>
+          <div class="copyable inline">
+            <div class="copy-row"><span>Descripción</span><button class="copy" type="button" data-target="ad-b-desc">Copiar</button></div>
+            <pre id="ad-b-desc">Desde $5.000 al mes</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <b>La cuenta que hay que mirar</b>
+        <p>Con un plan de $5.000 al mes, un registro que cueste $20.000 en anuncios tarda meses en pagarse, y no todos los registros pagan. Toma esta primera campaña como aprendizaje: qué profesión responde y a qué mensaje. A este precio rinde más lo orgánico: los referidos (ya funcionan), los grupos de profesionales y el contacto directo con los primeros clientes.</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Kit de lanzamiento de Sepárame · actualizado el 23 de octubre de 2026 · fuente: <code>marketing/launch-kit.html</code></div>
+</footer>
+
+<script>
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('button.copy');
+    if (!button) return;
+    const source = document.getElementById(button.dataset.target);
+    if (!source) return;
+    const text = source.textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard refused (some app views): select the text so the viewer can copy it by hand.
+      const range = document.createRange();
+      range.selectNodeContents(source);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      button.textContent = 'Seleccionado';
+      return;
+    }
+    button.textContent = 'Copiado';
+    button.classList.add('done');
+    setTimeout(() => { button.textContent = 'Copiar'; button.classList.remove('done'); }, 1600);
+  });
+</script>

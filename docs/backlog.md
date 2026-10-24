@@ -42,7 +42,7 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
   - [x] Textos legales al día con el producto (23-oct): entrada con contraseña, gracia de 3 días,
         plan para equipos, referidos, avisos al celular, clientes sin correo y contacto solo por
         los correos del plan o los pagos (Cognito y el aviso de calendario responden al operador).
-- [ ] **Lanzamiento** (kit en `marketing/launch-kit.md`, imágenes en `marketing/social/out/`):
+- [ ] **Lanzamiento** (kit en `marketing/launch-kit.html`, imágenes en `marketing/social/out/`):
   - [ ] Post y proyecto de LinkedIn.
   - [ ] Página de Facebook y cuenta de Instagram con sus primeras publicaciones.
   - [ ] Anuncios en Meta, después de completar lo legal de arriba.
