@@ -23,6 +23,8 @@ export const CLIENT_PREFIX = 'CLIENT#';
 export const clientRecordKey = (proId: string, clientKey: string) => ({ PK: proPk(proId), SK: `${CLIENT_PREFIX}${clientKey}` });
 export const WAIT_PREFIX = 'WAIT#';
 export const waitKey = (proId: string, entryId: string) => ({ PK: proPk(proId), SK: `${WAIT_PREFIX}${entryId}` });
+export const HOLD_PREFIX = 'HOLD#';
+export const holdKey = (proId: string, holdId: string) => ({ PK: proPk(proId), SK: `${HOLD_PREFIX}${holdId}` });
 export const PUSH_PREFIX = 'PUSH#';
 export const pushKey = (proId: string, endpointHash: string) => ({ PK: proPk(proId), SK: `${PUSH_PREFIX}${endpointHash}` });
 

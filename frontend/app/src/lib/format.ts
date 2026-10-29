@@ -126,3 +126,10 @@ export function formatWhenInline(instant: ISOInstant): string {
 export function endSentence(text: string): string {
   return /[.!?…]$/.test(text.trim()) ? text.trim() : `${text.trim()}.`;
 }
+
+/** "≈ 25 min", "≈ 2 h", "≈ 1,5 h" (rounded to half hours from 1 h): the stats' time saved estimate. */
+export function formatSavedTime(minutes: number): string {
+  if (minutes < 60) return `≈ ${minutes} min`;
+  const hours = Math.round(minutes / 30) / 2;
+  return `≈ ${String(hours).replace('.', ',')} h`;
+}

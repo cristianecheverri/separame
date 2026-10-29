@@ -1,6 +1,7 @@
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront';
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { PublicProfile, PublicTeam } from '../../shared/api';
+import { isMediaPath } from '../../shared/media';
 import { initials } from '../../shared/format';
 import { SITE_PATHS } from '../../shared/infra';
 import { env } from '../lib/env';
@@ -85,7 +86,7 @@ export const pageKey = (slug: string) => `${slug}/index.html`;
 export const pagePaths = (slug: string) => [`/${slug}`, `/${slug}/`, `/${slug}/index.html`];
 
 export function renderHead(
-  profile: Pick<PublicProfile, 'slug' | 'name' | 'title' | 'city'>,
+  profile: Pick<PublicProfile, 'slug' | 'name' | 'title' | 'city' | 'logo'>,
   cfg: PageConfig,
   description = `${profile.title} en ${profile.city}. Separa tu cita en línea en segundos.`,
 ): string {
@@ -111,6 +112,10 @@ export function renderHead(
     `<meta name="twitter:title" content="${t}">`,
     `<meta name="twitter:description" content="${d}">`,
     `<meta name="twitter:image" content="${i}">`,
+    // The first availability request skips DNS + TLS: the connection opens while the bundle loads.
+    `<link rel="preconnect" href="${escapeHtml(new URL(cfg.apiUrl).origin)}" crossorigin>`,
+    // The band's logo starts downloading with the HTML, not after the script runs.
+    ...(profile.logo && isMediaPath(profile.logo) ? [`<link rel="preload" as="image" href="${escapeHtml(profile.logo)}" fetchpriority="high">`] : []),
   ].join('\n');
 }
 
@@ -135,7 +140,7 @@ export function renderProfilePage(template: string, profile: PublicProfile, cfg:
 
 export function renderTeamPage(template: string, team: PublicTeam, cfg: PageConfig): string {
   const head = renderHead({
-    slug: team.slug, name: team.name, title: '', city: team.city,
+    slug: team.slug, name: team.name, title: '', city: team.city, logo: team.logo,
   }, cfg, `Separa tu cita en línea con el equipo de ${team.name} en ${team.city}.`);
   return renderPage(template, head, { team }, cfg);
 }
@@ -210,7 +215,7 @@ export async function publishTeam(ownerId: string): Promise<PublishOutcome> {
   const members = loaded.filter((m): m is PublicProfile => m !== null && m.services.length > 0);
   const publicTeam: PublicTeam = {
     slug: team.slug, name: team.name, city: owner.city, neighborhood: owner.neighborhood, address: owner.address,
-    phone: owner.phone, initials: initials(team.name), members,
+    phone: owner.phone, initials: initials(team.name), ...(team.logo ? { logo: team.logo } : {}), members,
   };
   await s3.send(new PutObjectCommand({
     Bucket: env.siteBucket(),

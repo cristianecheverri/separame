@@ -28,9 +28,10 @@ describe('pro panel (mock API)', () => {
   it('closes modals with Escape', async () => {
     const user = userEvent.setup();
     await renderApp('/');
-    // The header button (desktop) and the floating one (phones; CSS hides one per breakpoint).
-    expect(await screen.findAllByRole('button', { name: 'Nueva cita' })).toHaveLength(2);
-    await user.click(screen.getAllByRole('button', { name: 'Nueva cita' })[1]);
+    // The header button (desktop) and, on phones, the floating «+» menu (CSS hides one per breakpoint).
+    expect(await screen.findByRole('button', { name: 'Nueva cita' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Agregar' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Nueva cita' }));
     expect(await screen.findByRole('dialog', { name: 'Nueva cita' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

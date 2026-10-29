@@ -38,10 +38,15 @@
  *  PRO#<proId>                      CLIENT#<clientKey>         ClientRecord (aggregates from appointment events + notes)
  *  PRO#<proId>                      WAIT#<entryId>             WaitlistEntry (TTL: last date + 1 day)
  *  PRO#<proId>                      PUSH#<sha256(endpoint)>    web push subscription of one device
+ *  PRO#<proId>                      HOLD#<holdId>              { serviceId, start, end, bufferMin, expiresAt (epoch ms) } — an hour a
+ *                                                              visitor of the booking page is holding (busy for everyone else
+ *                                                              until expiresAt; TTL: expiresAt + 1 h)
  *  CALFEED#<token>                  CALFEED                    { proId } — resolves the secret .ics feed URL (deleted on rotate)
  *  SLUG#<slug>                      SLUG                       { proId }  — uniqueness via conditional put
  *                                                              or { teamOwnerId } for a team page (/<teamSlug>)
  *  LOCK#<proId>#<bogotaDate>        <HH:mm>                    { apptId } — 5-min double-booking locks (TTL: slot end + 7 days)
+ *                                                              or { holdId, holdExpiresAt (epoch ms) } while a HOLD owns the unit
+ *                                                              (free again once it expires; TTL: expiresAt + 1 h)
  *  OWNER#<cognitoSub>               OWNER                      { proId } — Cognito user → professional
  *  TRIAL#<sha256(email)>            TRIAL                      { proId, at } — one free trial per email
  *  REFCODE#<code>                   REFCODE                    { proId, createdAt } — referral code → referrer (immutable, conditional put)
@@ -71,7 +76,7 @@
  *  `clientsBackfillVersion`: when it is behind CLIENTS_BACKFILL_VERSION the next clients-page visit
  *  re-keys appointments/WAIT items and rebuilds the records (notes carried over).
  *
- *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, IDEMP, REFSIGNUP, WAIT (after its last date), BLOCK (30 days after it
+ *  TTL (`ttl`, epoch seconds) ONLY on ephemeral items: EMAIL, RATE, IDEMP, REFSIGNUP, HOLD, WAIT (after its last date), BLOCK (30 days after it
  *  ended: a past block never affects availability, so the blocks query stays bounded), and LOCK once its slot is in the
  *  past (a past slot can never be booked again, so the lock is no longer needed). Appointments,
  *  payments and subscriptions never expire.

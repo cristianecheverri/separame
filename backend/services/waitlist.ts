@@ -9,7 +9,7 @@ import { ddb, isConditionalFailure, queryAll, stripKeys, table, type Item } from
 import { env } from '../lib/env';
 import { ApiError, validationError } from '../lib/http';
 import { newId } from '../lib/ids';
-import { proPk, WAIT_PREFIX, waitKey } from '../lib/keys';
+import { apptKey, proPk, WAIT_PREFIX, waitKey } from '../lib/keys';
 import { log } from '../lib/logger';
 import { linkSecret, signWaitlistToken, verifyWaitlistToken } from '../lib/tokens';
 import { sendWaitlistJoined, sendWaitlistOffer } from '../mail/notifications';
@@ -152,12 +152,20 @@ export async function onWaitlistJoined(entry: WaitItem, pro: ProProfile, now: Da
   await sendOnce(`wait-joined#${entry.id}`, async () => sendWaitlistJoined({ entry, pro, leaveUrl: await leaveLinkFor(entry) }), now);
 }
 
-/** A booking by a waiting client on one of their days marks the entry booked. */
+/**
+ * A booking by a waiting client on one of their days marks the entry booked.
+ * When that day had been offered to them before the booking, the appointment
+ * is a recovered slot: it gets `fromWaitlist` (statistics). Neither write
+ * changes status, start or confirmation, so the stream sends nothing for it.
+ */
 export async function markBookedFor(appt: AppointmentItem, date: ISODate): Promise<number> {
   // Name-only appointments (pro-created, no email/phone) can't be matched to a waiting client.
   if (!appt.clientKey) return 0;
   let marked = 0;
-  for (const w of (await waitItems(appt.proId)).filter((x) => x.status === 'waiting' && x.clientKey === appt.clientKey && x.dates.includes(date))) {
+  const waiting = (await waitItems(appt.proId)).filter((x) => x.status === 'waiting' && x.clientKey === appt.clientKey && x.dates.includes(date));
+  const offered = waiting.some((w) => w.offeredAt?.[date] && w.offeredAt[date] <= appt.updatedAt);
+  if (offered && !appt.fromWaitlist) await markRecovered(appt);
+  for (const w of waiting) {
     try {
       await ddb.send(new UpdateCommand({
         TableName: table(),
@@ -173,6 +181,20 @@ export async function markBookedFor(appt: AppointmentItem, date: ISODate): Promi
     }
   }
   return marked;
+}
+
+async function markRecovered(appt: AppointmentItem): Promise<void> {
+  try {
+    await ddb.send(new UpdateCommand({
+      TableName: table(),
+      Key: apptKey(appt.proId, appt.id),
+      UpdateExpression: 'SET fromWaitlist = :t',
+      ConditionExpression: 'attribute_exists(PK)',
+      ExpressionAttributeValues: { ':t': true },
+    }));
+  } catch (err) {
+    if (!isConditionalFailure(err)) throw err;
+  }
 }
 
 /**

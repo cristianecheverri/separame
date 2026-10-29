@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAppointmentSchema, createBookingSchema, joinWaitlistSchema, upsertServiceSchema } from './schemas';
+import { createAppointmentSchema, createBlockSchema, createBookingSchema, joinWaitlistSchema, upsertServiceSchema } from './schemas';
 
 const issues = (result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
   Object.fromEntries((result.error?.issues ?? []).map((i) => [i.path.map(String).join('.'), i.message]));
@@ -54,5 +54,18 @@ describe('upsertServiceSchema.durationMin', () => {
     expect(issues(service(7.5))).toEqual({ durationMin: 'La duración va en múltiplos de 5 minutos.' });
     expect(issues(service('30'))).toEqual({ durationMin: 'La duración va de 5 a 480 minutos (8 horas).' });
     expect(service(45).success).toBe(true);
+  });
+});
+
+describe('createBlockSchema', () => {
+  const base = { start: '2026-10-20T19:00:00.000Z', end: '2026-10-20T21:00:00.000Z' };
+  it('the reason is optional', () => {
+    expect(createBlockSchema.safeParse(base).success).toBe(true);
+  });
+  it('repeats only hours inside one day, for 1–62 days', () => {
+    expect(createBlockSchema.safeParse({ ...base, repeatUntil: '2026-10-23' }).success).toBe(true);
+    expect(createBlockSchema.safeParse({ ...base, end: '2026-10-21T21:00:00.000Z', repeatUntil: '2026-10-23' }).success).toBe(false);
+    expect(createBlockSchema.safeParse({ ...base, repeatUntil: '2026-10-19' }).success).toBe(false);
+    expect(createBlockSchema.safeParse({ ...base, repeatUntil: '2027-01-30' }).success).toBe(false);
   });
 });

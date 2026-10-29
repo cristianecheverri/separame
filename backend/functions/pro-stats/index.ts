@@ -6,8 +6,8 @@ import { proStats } from '../../services/stats';
 /** Statistics for a Bogotá date range (≤ STATS_MAX_DAYS) and the period right before it. */
 export const handler = createApiHandler({
   'GET /me/stats': async (event) => {
-    const { from, to } = parseQuery(event, statsQuerySchema);
+    const { from, to, scope } = parseQuery(event, statsQuerySchema);
     const proId = await actingProId(event);
-    return ok(await proStats(proId, from, to));
+    return ok(await proStats(proId, from, to, new Date(), { withClients: scope !== 'value' }));
   },
 });

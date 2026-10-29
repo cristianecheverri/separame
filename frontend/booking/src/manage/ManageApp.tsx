@@ -89,7 +89,7 @@ function AppointmentCard({ booking, label, cancelled = false, compact = false }:
 }) {
   return (
     <div class={`bg-primary-soft flex gap-3 items-center ${compact ? 'rounded-[20px] py-3 px-3.5' : 'rounded-[22px] p-4'}`}>
-      <Avatar initials={booking.pro.initials} size={compact ? 40 : 44} />
+      <Avatar initials={booking.pro.initials} logo={booking.pro.logo} size={compact ? 40 : 44} />
       <div class={`flex flex-col min-w-0 ${compact ? 'gap-px' : 'gap-0.5'}`}>
         <div class="text-[13px] text-ink-2">{label}</div>
         <div class={`font-bold ${compact ? 'text-[15px]' : 'text-[16px]'} ${cancelled ? 'line-through text-muted' : ''}`}>

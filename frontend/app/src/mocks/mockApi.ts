@@ -15,11 +15,13 @@ import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
   MAX_APPOINTMENTS_RANGE_DAYS, approveTeamSchema, createAppointmentSchema, teamMemberSchema, teamRequestSchema, updateTeamSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
-  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
+  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, uploadLogoSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil, teamPackageAmount } from '@shared/subscription';
 import { addDays, addMinutes, bogotaDate, diffDays, toInstant, todayBogota } from '@shared/time';
+import { expandBlock } from '@shared/blocks';
+import { derivedStats } from '@shared/stats';
 import type { Appointment, Block, ClientRecord, Payment, PriceMigration, ProProfile, ProStats, Service, SubscriptionStatus, TeamRequest, WaitlistEntry } from '@shared/types';
 import { endpointHash } from '../lib/push';
 import type { HttpMethod, TransportRequest, TransportResponse } from '../lib/api';
@@ -50,7 +52,7 @@ interface Db {
   clientNotes: Record<string, string>;
   push: PushConfigResponse;
   /** Team plan: the owner's team (members' agendas live in `members`). */
-  team: { name: string; slug: string; seats: number; memberIds: string[]; createdAt: string } | null;
+  team: { name: string; slug: string; seats: number; memberIds: string[]; createdAt: string; logo?: string } | null;
   teamRequest: TeamRequest | null;
   members: Record<string, { profile: ProProfile; data: Scoped }>;
   adminTeamRequests: AdminTeamRequestRow[];
@@ -61,7 +63,7 @@ interface Db {
 const SCOPED_FIELDS = ['services', 'schedule', 'rules', 'blocks', 'appointments', 'waitlist', 'clientNotes'] as const;
 type Scoped = Pick<Db, (typeof SCOPED_FIELDS)[number]>;
 /** Routes that act on the professional named in `ACTING_PRO_HEADER` (docs/team-plan.md). */
-const ACTING_ROUTES = /^\/me\/(appointments|slots|services|availability|blocks|clients|stats|waitlist)(\/|$)/;
+const ACTING_ROUTES = /^\/me\/(appointments|slots|services|availability|blocks|clients|stats|waitlist|profile\/logo)(\/|$)/;
 
 const clone = <T,>(v: T): T => structuredClone(v);
 let db: Db;
@@ -205,9 +207,12 @@ function me(): MeResponse {
 
 function teamView(): TeamView | null {
   if (!db.team || !db.profile) return null;
-  const member = (p: ProProfile, isOwner: boolean) => ({ proId: p.id, name: p.name, title: p.title, slug: p.slug, isOwner, publicUrl: `${siteUrl}/${p.slug}` });
+  const member = (p: ProProfile, isOwner: boolean) => ({
+    proId: p.id, name: p.name, title: p.title, slug: p.slug, isOwner, publicUrl: `${siteUrl}/${p.slug}`, ...(p.logo ? { logo: p.logo } : {}),
+  });
   return {
     name: db.team.name, slug: db.team.slug, seats: db.team.seats, createdAt: db.team.createdAt, publicUrl: `${siteUrl}/${db.team.slug}`,
+    ...(db.team.logo ? { logo: db.team.logo } : {}),
     members: [member(db.profile, true), ...db.team.memberIds.map((id) => member(db.members[id].profile, false))],
   };
 }
@@ -407,6 +412,7 @@ function computeStats(from: string, to: string): ProStats {
     byWeekday: Array.from({ length: 7 }, (_, i) => ({ weekday: i, appointments: active.filter((a) => (new Date(ms(a.start) - 5 * 3_600_000).getUTCDay() + 6) % 7 === i).length })),
     bySource: { client: active.filter((a) => a.createdBy === 'client').length, pro: active.filter((a) => a.createdBy !== 'client').length },
     noShowRate: attended + noShows ? noShows / (attended + noShows) : 0,
+    ...derivedStats(inRange),
   };
 }
 
@@ -435,6 +441,39 @@ on('PUT', '/me/profile', (_p, body) => {
   return { profile: db.profile, subscription: subscription(), publicUrl: `${siteUrl}/${db.profile.slug}` };
 });
 on('GET', '/me/slug-check', (_p, _b, q) => slugCheck(q.get('slug') ?? ''));
+
+/** Logos: kept as data: URLs (the real API stores them under /media/ on the CDN). */
+function setProLogo(proId: string, logo: string | undefined) {
+  const apply = (p: ProProfile): ProProfile => {
+    const { logo: _old, ...rest } = p;
+    return logo ? { ...rest, logo } : rest;
+  };
+  if (proId === db.profile!.id) db.profile = apply(db.profile!);
+  else db.members[proId].profile = apply(db.members[proId].profile);
+}
+const logoDataUrl = (image: string) => `data:image/webp;base64,${image}`;
+on('PUT', '/me/profile/logo', (_p, body) => {
+  requireWritable();
+  const { image } = validate(uploadLogoSchema, body);
+  setProLogo(currentProId(), logoDataUrl(image));
+  return { logo: logoDataUrl(image) };
+});
+on('DELETE', '/me/profile/logo', () => {
+  requireWritable();
+  setProLogo(currentProId(), undefined);
+  return { logo: null };
+});
+on('PUT', '/me/team/logo', (_p, body) => {
+  const team = requireTeam();
+  const { image } = validate(uploadLogoSchema, body);
+  team.logo = logoDataUrl(image);
+  return { logo: team.logo };
+});
+on('DELETE', '/me/team/logo', () => {
+  const team = requireTeam();
+  delete team.logo;
+  return { logo: null };
+});
 
 on('GET', '/me/services', () => ({ services: [...db.services].sort((a, b) => a.order - b.order) }));
 on('POST', '/me/services', (_p, body) => {
@@ -471,9 +510,9 @@ on('PUT', '/me/availability', (_p, body) => {
 on('POST', '/me/blocks', (_p, body) => {
   requireWritable();
   const data = validate(createBlockSchema, body as CreateBlockRequest);
-  const block: Block = { id: newId('blk'), ...data };
-  db.blocks.push(block);
-  return { block };
+  const blocks: Block[] = expandBlock(data).map((b) => ({ id: newId('blk'), ...b }));
+  db.blocks.push(...blocks);
+  return { block: blocks[0], blocks };
 });
 on('DELETE', '/me/blocks/{id}', ([id]) => {
   requireWritable();

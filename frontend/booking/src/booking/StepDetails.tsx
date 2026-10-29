@@ -1,5 +1,5 @@
 import { PHONE_INPUT_MAX_LENGTH, stripCountryCode } from '@shared/contact';
-import { Check } from '../components/icons';
+import { Check, Clock } from '../components/icons';
 import { useShortScreen } from '../lib/media';
 import type { ContactErrors, ContactField, ContactForm } from '../lib/validation';
 import { StepTitle } from './FlowChrome';
@@ -27,6 +27,8 @@ interface Props extends Omit<FieldsProps, 'emailHint' | 'consentPurpose' | 'emai
   onRemember: (remember: boolean) => void;
   /** The fields came prefilled from this phone's saved data. */
   prefilled: boolean;
+  /** Minutes the picked hour is held for the client (null: not held). */
+  heldMinutes?: number | null;
 }
 
 export const FIELD_IDS: Record<ContactField, string> = {
@@ -48,10 +50,16 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 const CHECKBOX = 'w-[22px] h-[22px] m-0 shrink-0 accent-primary cursor-pointer';
 const CHECK_LABEL = 'min-h-11 flex gap-3 items-start text-[13px] leading-[1.45] text-ink-2 cursor-pointer';
 
-export function StepDetails({ titleRef, remember, onRemember, prefilled, ...fields }: Props) {
+export function StepDetails({ titleRef, remember, onRemember, prefilled, heldMinutes = null, ...fields }: Props) {
   return (
     <section class="flex flex-col gap-3.5 short:gap-2.5">
       <StepTitle titleRef={titleRef}>¿A nombre de quién?</StepTitle>
+      {heldMinutes !== null && (
+        <p class="-mt-1.5 flex gap-1.5 items-center text-[13px] font-semibold text-primary-dark short:-mt-1">
+          <Clock size={16} strokeWidth={2.2} class="shrink-0" />
+          Te guardamos esta hora {heldMinutes} minutos.
+        </p>
+      )}
       {prefilled && (
         <div class="bg-primary-soft rounded-2xl py-3 px-3.5 flex gap-2 items-center text-[14px] leading-[1.4]">
           <Check size={18} strokeWidth={2.2} stroke="#0B6E4F" class="shrink-0" />
@@ -74,7 +82,7 @@ export function StepDetails({ titleRef, remember, onRemember, prefilled, ...fiel
         />
         <span class="flex flex-col gap-0.5">
           <span class="font-semibold text-ink">
-            Recordar mis datos en este celular <span class="font-medium text-muted">(opcional)</span>
+            Recordar mis datos en este celular <span class="font-normal text-ink-2">(opcional)</span>
           </span>
           <span>La próxima vez no tendrás que escribirlos. Solo quedan en este celular.</span>
         </span>

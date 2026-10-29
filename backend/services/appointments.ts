@@ -15,7 +15,7 @@ import {
 } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
 import { newId } from '../lib/ids';
-import { apptKey, apptStartSk, bookingIdempotencyKey, lockKey, proPk, remindPk, remindSk } from '../lib/keys';
+import { apptKey, apptStartSk, bookingIdempotencyKey, holdKey, lockKey, proPk, remindPk, remindSk } from '../lib/keys';
 import { log } from '../lib/logger';
 import { linkSecret, manageTokenFor, verifyManageToken } from '../lib/tokens';
 import { loadContext } from './availability';
@@ -25,9 +25,10 @@ import { loadContext } from './availability';
  *
  * Every create/move writes, in ONE DynamoDB transaction, the appointment and
  * one `LOCK#<proId>#<bogotaDate> / <HH:mm>` item per 5-minute unit of
- * [start, end + buffer) with `attribute_not_exists(PK)`. Two overlapping
- * bookings always share a unit, so the second transaction is canceled and
- * surfaces as 409 `slot_taken`. Cancel deletes the locks and the reminder
+ * [start, end + buffer), on condition that the unit is free (see `LOCK_FREE`).
+ * Two overlapping bookings always share a unit, so the second transaction is
+ * canceled and surfaces as 409 `slot_taken`. A visitor's live hold on a unit
+ * (services/holds.ts) counts as taken, except for the booking that holds it. Cancel deletes the locks and the reminder
  * attributes in the same transaction. Emails are NOT sent here: the DynamoDB
  * stream (stream-appointments) reacts to the item changes.
  */
@@ -71,6 +72,7 @@ export function toAppointment(item: Item): Appointment {
     ...(a.cancelledBy ? { cancelledBy: a.cancelledBy } : {}),
     ...(a.cancelReason ? { cancelReason: a.cancelReason } : {}),
     ...(a.reminderSentAt ? { reminderSentAt: a.reminderSentAt } : {}),
+    ...(a.fromWaitlist ? { fromWaitlist: true } : {}),
     clientConfirmation: a.clientConfirmation,
     ...(a.confirmedAt ? { confirmedAt: a.confirmedAt } : {}),
     ...(a.outcome ? { outcome: a.outcome } : {}),
@@ -109,7 +111,7 @@ export function bookingSummary(appt: Appointment, pro: ProProfile): BookingSumma
     client: { name: appt.client.name, email: appt.client.email },
     pro: {
       slug: pro.slug, name: pro.name, title: pro.title, city: pro.city, neighborhood: pro.neighborhood,
-      address: pro.address, phone: pro.phone, initials: initials(pro.name),
+      address: pro.address, phone: pro.phone, initials: initials(pro.name), ...(pro.logo ? { logo: pro.logo } : {}),
     },
   };
 }
@@ -121,11 +123,22 @@ const LOCK_TTL_GRACE_MS = 7 * DAY_MS;
 export const lockTtlFor = (start: ISOInstant, durationMin: number, bufferMin: number): number =>
   Math.floor((new Date(start).getTime() + (durationMin + bufferMin) * 60_000 + LOCK_TTL_GRACE_MS) / 1000);
 
-const lockPut = (proId: string, apptId: string, unit: ISOInstant, ttl: number): TransactItem => ({
+/**
+ * A unit can be taken when nobody has it, or only a hold that expired (or the
+ * caller's own hold, `:hold`) does. Appointment locks never expire this way.
+ */
+export const LOCK_FREE = 'attribute_not_exists(PK) OR (attribute_not_exists(apptId) AND (holdExpiresAt < :now OR holdId = :hold))';
+/** `:hold` when the caller holds nothing (hold ids are UUIDs, so it never matches). */
+const NO_HOLD = '-';
+
+export const lockFreeValues = (now: Date, holdId?: string): Record<string, unknown> => ({ ':now': now.getTime(), ':hold': holdId ?? NO_HOLD });
+
+const lockPut = (proId: string, apptId: string, unit: ISOInstant, ttl: number, free: Record<string, unknown>): TransactItem => ({
   Put: {
     TableName: table(),
     Item: { ...lockKey(proId, unit), apptId, proId, at: unit, ttl },
-    ConditionExpression: 'attribute_not_exists(PK)',
+    ConditionExpression: LOCK_FREE,
+    ExpressionAttributeValues: free,
   },
 });
 
@@ -178,9 +191,13 @@ export async function writeWithLocks(input: {
   proId: string; apptId: string; main: TransactItem[]; acquire: ISOInstant[]; release: ISOInstant[];
   /** `ttl` of the acquired locks (see `lockTtlFor`). */
   lockTtl: number;
+  now: Date;
+  /** The booking page's hold on these units, which the appointment takes over. */
+  holdId?: string;
 }): Promise<void> {
   const { proId, apptId, main, lockTtl } = input;
-  const acquireOps = input.acquire.map((u) => lockPut(proId, apptId, u, lockTtl));
+  const free = lockFreeValues(input.now, input.holdId);
+  const acquireOps = input.acquire.map((u) => lockPut(proId, apptId, u, lockTtl, free));
   const releaseOps = input.release.map((u) => lockDelete(proId, apptId, u));
   const all = [...main, ...acquireOps, ...releaseOps];
 
@@ -197,7 +214,7 @@ export async function writeWithLocks(input: {
   try {
     for (const chunk of chunks(input.acquire, MAX_TRANSACT_ITEMS)) {
       try {
-        await transactWrite(chunk.map((u) => lockPut(proId, apptId, u, lockTtl)));
+        await transactWrite(chunk.map((u) => lockPut(proId, apptId, u, lockTtl, free)));
       } catch (err) {
         throw mapLockError(err, 0);
       }
@@ -247,6 +264,8 @@ export interface CreateAppointmentInput {
   ignoreMinNotice?: boolean;
   /** Client-generated UUID of a public booking attempt (see `CreateBookingRequest.idempotencyKey`). */
   idempotencyKey?: string;
+  /** The booking page's hold on this hour (`CreateBookingRequest.holdId`): taken over and deleted. */
+  holdId?: string;
 }
 
 /** Idempotency markers only need to outlive the client's retries. */
@@ -288,7 +307,7 @@ const idempotencyPut = (proId: string, key: string, marker: IdempotencyMarker, n
  * appointment (the marker is written in the same transaction, so it exists iff the appointment does).
  */
 export async function createAppointment(input: CreateAppointmentInput): Promise<AppointmentItem> {
-  const { proId, service, now, idempotencyKey } = input;
+  const { proId, service, now, idempotencyKey, holdId } = input;
   const start = normalize(input.start);
   if (idempotencyKey) {
     const replayed = await replayedAppointment(proId, idempotencyKey, start, service.id);
@@ -296,7 +315,7 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   }
   const ctx = await loadContext({
     proId, durationMin: service.durationMin, from: bogotaDate(start), days: 1, now,
-    ignoreMinNotice: input.ignoreMinNotice, consistent: true,
+    ignoreMinNotice: input.ignoreMinNotice, excludeHoldId: holdId, consistent: true,
   });
   if (!isSlotBookable(start, ctx)) throw new ApiError('slot_taken');
 
@@ -319,6 +338,8 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   };
   const main: TransactItem[] = [{ Put: { TableName: table(), Item: item, ConditionExpression: 'attribute_not_exists(PK)' } }];
   if (idempotencyKey) main.push(idempotencyPut(proId, idempotencyKey, { apptId: id, start, serviceId: service.id }, now));
+  // Unconditional: the hold may have expired (and been deleted) while the client typed.
+  if (holdId) main.push({ Delete: { TableName: table(), Key: holdKey(proId, holdId) } });
   try {
     await writeWithLocks({
       proId,
@@ -327,6 +348,8 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
       acquire: lockUnits(start, service.durationMin, ctx.rules.bufferMin),
       release: [],
       lockTtl: lockTtlFor(start, service.durationMin, ctx.rules.bufferMin),
+      now,
+      holdId,
     });
   } catch (err) {
     // Two copies of the same attempt raced: the loser fails on the marker or the locks.
@@ -397,6 +420,7 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
     acquire,
     release,
     lockTtl: lockTtlFor(start, appt.durationMin, ctx.rules.bufferMin),
+    now,
   });
   log.info('appointment moved', { proId: appt.proId, appointmentId: appt.id, actor: input.actor });
   return {
@@ -436,6 +460,7 @@ export async function cancelAppointment(input: { appt: AppointmentItem; actor: A
     acquire: [],
     release: lockUnits(appt.start, appt.durationMin, appt.lockBufferMin ?? 0),
     lockTtl: 0,
+    now,
   });
   log.info('appointment cancelled', { proId: appt.proId, appointmentId: appt.id, actor: input.actor });
   return {

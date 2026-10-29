@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta · «Tu mes con Sepárame» (escritorio)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 360px; height: 390px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; padding: 10px">
+  <section aria-labelledby="vmd-title" style="background: #0B6E4F; color: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+      <span style="font-size: 13px; font-weight: 600; color: #D5EDE3">Octubre con Sepárame</span>
+      <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); color: #FFFFFF; white-space: nowrap">+8 vs. septiembre</span>
+    </div>
+    <h2 id="vmd-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -0.5px"><span style="color: #FFC93C">23 citas</span> se reservaron solas</h2>
+    <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <li style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.16); padding-top: 10px">
+          <span style="color: #D5EDE3">{{r.label}}</span>
+          <strong style="font-size: 16px; white-space: nowrap">{{r.value}}</strong>
+        </li>
+      </sc-for>
+    </ul>
+    <a href="proposal-value-metrics-stats-phone.dc.html" style="align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 14px; color: #FFFFFF; text-underline-offset: 2px">Ver estadísticas →</a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":390}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rows: [
+        { label: 'Tiempo que no gastaste en chats', value: '≈ 2 h' },
+        { label: 'Confirmaron asistencia', value: '74 %' },
+        { label: 'Cupos recuperados (lista de espera)', value: '3' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta · Hoja «No estaré disponible»</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D">
+
+  <header style="height: 60px; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+  </header>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(21,36,29,0.45)"></div>
+
+  <div role="dialog" aria-modal="true" aria-labelledby="bh-title" style="position: absolute; left: 0; right: 0; bottom: 0; height: 776px; background: #FFFFFF; border-radius: 24px 24px 0 0; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 20px 8px">
+      <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <h2 id="bh-title" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; line-height: 1.2">No estaré disponible</h2>
+        <div style="font-size: 14px; color: #56645D; line-height: 1.4">Nadie podrá reservar en ese rango. Tus citas no cambian.</div>
+      </div>
+      <a href="proposal-block-hours-agenda-phone.dc.html" aria-label="Cerrar" style="width: 44px; height: 44px; margin: -8px -8px 0 0; border-radius: 999px; color: #3E4C45; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+    </div>
+
+    <div style="flex: 1 1 0; min-height: 0; overflow: hidden; padding: 12px 20px; display: flex; flex-direction: column; gap: 20px">
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div id="bh-when" style="font-size: 14px; font-weight: 600">¿Cuándo?</div>
+        <div role="group" aria-labelledby="bh-when" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 0 20px 2px">
+          <sc-for list="{{whens}}" as="w" hint-placeholder-count="4">
+            <button onClick="{{w.pick}}" aria-pressed="{{w.selected}}" style="{{w.style}}">{{w.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{singleDay}}" hint-placeholder-val="{{ true }}">
+        <div style="background: #EAF5F0; border-radius: 18px; padding: 12px 8px 12px 16px; display: flex; align-items: center; gap: 12px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B6E4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+          <span style="font-weight: 700; font-size: 15px; flex-grow: 1; min-width: 0">{{dayLabel}}</span>
+          <sc-if value="{{otherDay}}" hint-placeholder-val="{{ false }}">
+            <button style="height: 44px; padding: 0 12px; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 14px; color: #0B6E4F; flex-shrink: 0; cursor: pointer">Cambiar</button>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{range}}" hint-placeholder-val="{{ false }}">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Desde</span>
+            <button style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 12px; font: inherit; font-size: 16px; color: #15241D; display: flex; align-items: center; justify-content: space-between; cursor: pointer">Mar 20 oct. <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E4C45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 14px; font-weight: 600">Hasta</span>
+            <button style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 12px; font: inherit; font-size: 16px; color: #15241D; display: flex; align-items: center; justify-content: space-between; cursor: pointer">Vie 23 oct. <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E4C45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
+          <span id="bh-allday" style="font-size: 15px; font-weight: 600">Todo el día</span>
+          <button role="switch" aria-checked="{{allDay}}" aria-labelledby="bh-allday" onClick="{{toggleAllDay}}" style="{{switchStyle}}"><span aria-hidden="true" style="{{knobStyle}}"></span></button>
+        </div>
+
+        <sc-if value="{{hours}}" hint-placeholder-val="{{ true }}">
+          <div role="group" aria-label="Atajos de horas" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 0 20px 2px">
+            <sc-for list="{{presets}}" as="p" hint-placeholder-count="3">
+              <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">{{p.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 14px; font-weight: 600">De</span>
+              <button style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 12px; font: inherit; font-size: 16px; color: #15241D; display: flex; align-items: center; justify-content: space-between; cursor: pointer">{{fromLabel}} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E4C45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 14px; font-weight: 600">Hasta</span>
+              <button style="height: 48px; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 12px; font: inherit; font-size: 16px; color: #15241D; display: flex; align-items: center; justify-content: space-between; cursor: pointer">{{toLabel}} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E4C45" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+            </div>
+          </div>
+          <sc-if value="{{range}}" hint-placeholder-val="{{ false }}">
+            <div style="font-size: 13px; color: #56645D">Esas horas, cada día del rango.</div>
+          </sc-if>
+        </sc-if>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="bh-reason" style="font-size: 14px; font-weight: 600">Motivo <span style="font-weight: 400; color: #56645D">(opcional)</span></label>
+        <input id="bh-reason" type="text" placeholder="Para qué es este espacio" style="height: 48px; box-sizing: border-box; width: 100%; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 0 14px; font: inherit; font-size: 16px; color: #15241D">
+        <span style="font-size: 12px; color: #56645D">Solo lo ves tú. Tus clientes ven esas horas como no disponibles.</span>
+      </div>
+
+      <sc-if value="{{showConflict}}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="background: #FFF4D1; border-radius: 18px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5v.01"></path></svg>
+          <span><strong>Tienes 1 cita en ese horario:</strong> Daniela Herrera, 3:00 p. m. Sigue en pie; si no la vas a atender, cancélala desde la agenda.</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="padding: 12px 20px 20px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 8px">
+      <a href="proposal-block-hours-agenda-phone.dc.html" style="height: 52px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>{{submitLabel}}</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"when":{"editor":"enum","options":["hoy","mañana","otro día","varios días"],"default":"hoy"},"conflict":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const whenNames = ['hoy', 'mañana', 'otro día', 'varios días'];
+    const initial = Math.max(0, whenNames.indexOf(this.props.when || 'hoy'));
+    const st = Object.assign({ when: initial, allDay: initial === 3, preset: null, from: '2:00 p. m.', to: '4:00 p. m.' }, this.state || {});
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;white-space:nowrap;flex-shrink:0;cursor:pointer;';
+    const on = 'background:#FFC93C;border-color:#FFC93C;';
+    const off = 'background:#FFFFFF;border-color:#E3E8E5;';
+    const labels = ['Hoy', 'Mañana', 'Otro día', 'Varios días'];
+    const days = ['Hoy · martes 20 de octubre', 'Mañana · miércoles 21 de octubre', 'Viernes 23 de octubre'];
+    const presets = [
+      { label: 'Toda la mañana', from: '8:00 a. m.', to: '12:00 p. m.' },
+      { label: 'Toda la tarde', from: '2:00 p. m.', to: '6:00 p. m.' },
+      { label: 'Desde ahora', from: '10:30 a. m.', to: '6:00 p. m.' }
+    ];
+    const range = st.when === 3;
+    const hoursText = st.from + ' – ' + st.to;
+    const whenText = ['hoy', 'mañana', 'el vie 23 oct.', 'del 20 al 23 oct.'][st.when];
+    const submitLabel = 'Bloquear ' + whenText + (st.allDay ? (range ? '' : ' todo el día') : ' · ' + hoursText);
+    return {
+      whens: labels.map((label, i) => ({
+        label, selected: st.when === i,
+        pick: () => this.setState({ when: i, allDay: i === 3 ? true : st.allDay }),
+        style: chip + (st.when === i ? on : off)
+      })),
+      singleDay: !range,
+      range,
+      otherDay: st.when === 2,
+      dayLabel: days[Math.min(st.when, 2)],
+      allDay: st.allDay,
+      hours: !st.allDay,
+      toggleAllDay: () => this.setState({ allDay: !st.allDay }),
+      switchStyle: 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;' + (st.allDay ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;'),
+      knobStyle: 'width:26px;height:26px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(21,36,29,0.25);display:block;',
+      presets: presets.map((p, i) => ({
+        label: p.label, selected: st.preset === i,
+        pick: () => this.setState({ preset: i, from: p.from, to: p.to }),
+        style: chip + (st.preset === i ? on : off)
+      })),
+      fromLabel: st.from,
+      toLabel: st.to,
+      showConflict: !!this.props.conflict,
+      submitLabel
+    };
+  }
+}
+</script>
+</body>
+</html>

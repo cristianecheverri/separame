@@ -1,9 +1,11 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router';
-import type { TeamMemberView, TeamView } from '@shared/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiPaths, type TeamMemberView, type TeamView } from '@shared/api';
 import { initials } from '@shared/format';
 import { teamMemberSchema, updateTeamSchema } from '@shared/schemas';
 import type { Service, AvailabilitySettings } from '@shared/types';
+import { LogoPicker } from '../../components/LogoPicker';
 import { cx } from '../../components/ui/cx';
 import { Field } from '../../components/ui/Field';
 import { CopyIcon, ExternalIcon, InfoIcon, LockIcon, PlusIcon, UsersIcon } from '../../components/ui/icons';
@@ -13,7 +15,7 @@ import { ApiError, errorMessage } from '../../lib/api';
 import { focusFirstError } from '../../lib/focusError';
 import { firstName, linkLabel, plural } from '../../lib/format';
 import { usePro } from '../../lib/pro';
-import { useTeamMemberSettings } from '../../lib/queries';
+import { keys, useTeamMemberSettings } from '../../lib/queries';
 import { copyLink } from '../../lib/share';
 import { SlugField, slugReady, useSlugCheck } from '../profile/SlugField';
 import { memberColor } from './memberColors';
@@ -107,6 +109,7 @@ interface MemberFormProps {
 /** «Editar profesional» / «Agregar profesional»: name, title and own link (with the live slug check). */
 function MemberForm({ member, host, readOnly, onSaved }: MemberFormProps) {
   const toast = useToast();
+  const qc = useQueryClient();
   const save = useSaveMember();
   const formRef = useRef<HTMLFormElement>(null);
   const [name, setName] = useState(member?.name ?? '');
@@ -155,6 +158,18 @@ function MemberForm({ member, host, readOnly, onSaved }: MemberFormProps) {
         {(p) => <input {...p} className={ui.input} value={title} maxLength={60} disabled={readOnly} onChange={(e) => setTitle(e.target.value)} placeholder="Profesión o especialidad" />}
       </Field>
       <SlugField label="Enlace propio" currentText="Es su enlace actual." value={slug} onChange={setSlug} check={check} host={host} disabled={readOnly} />
+      {member && (
+        <LogoPicker
+          logo={member.logo}
+          initials={initials(member.name)}
+          path={apiPaths.profileLogo()}
+          actingProId={member.proId}
+          title="Logo o foto"
+          hint="Se ve en su página y en «¿Con quién?». PNG, JPG o WebP."
+          disabled={readOnly}
+          onChanged={() => void qc.invalidateQueries({ queryKey: keys.me })}
+        />
+      )}
       {errors.slug && check.status !== 'taken' && check.status !== 'invalid' && <div className="text-[13px] font-semibold text-warn-ink -mt-3">{errors.slug}</div>}
       <div className="bg-surface rounded-[16px] py-3 px-[14px] text-[13px] text-ink-2 leading-[1.5]">
         {isNew
@@ -172,6 +187,8 @@ function MemberForm({ member, host, readOnly, onSaved }: MemberFormProps) {
 /** «Página del consultorio»: link, copy, view, and renaming the team or its link (PUT /me/team). */
 function TeamPageCard({ team, host, readOnly }: { team: TeamView; host: string; readOnly: boolean }) {
   const toast = useToast();
+  const qc = useQueryClient();
+  const refreshMe = () => void qc.invalidateQueries({ queryKey: keys.me });
   const update = useUpdateTeam();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(team.name);
@@ -206,6 +223,18 @@ function TeamPageCard({ team, host, readOnly }: { team: TeamView; host: string; 
       </div>
       <div className="bg-surface rounded-[14px] py-3 px-[14px] font-bold text-[15px] [overflow-wrap:anywhere]">{linkLabel(team.publicUrl)}</div>
       <span className="text-[14px] text-ink-2 leading-[1.45]">Tus clientes eligen con quién y ven las horas libres de todos.</span>
+      <div className="border-t border-line pt-[14px]">
+        <LogoPicker
+          logo={team.logo}
+          initials={initials(team.name)}
+          path={apiPaths.teamLogo()}
+          actingProId={null}
+          title="Logo del consultorio"
+          hint="Se ve en la página del consultorio. Cada profesional puede tener el suyo."
+          disabled={readOnly}
+          onChanged={refreshMe}
+        />
+      </div>
       <div className="flex flex-wrap gap-2">
         <CopyTeamLinkButton url={team.publicUrl} />
         <a href={team.publicUrl} target="_blank" rel="noreferrer" className={cx(ui.btnPrimary, 'h-11 px-[18px] no-underline text-white hover:text-white')}>

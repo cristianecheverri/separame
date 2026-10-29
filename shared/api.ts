@@ -22,7 +22,7 @@ export type ErrorCode =
   | 'unauthorized'        // 401
   | 'forbidden'           // 403 — not admin / not the owner
   | 'not_found'           // 404
-  | 'slot_taken'          // 409 — someone booked that slot first
+  | 'slot_taken'          // 409 — someone booked (or is holding) that slot first
   | 'slug_taken'          // 409
   | 'conflict'            // 409 — generic concurrent change
   | 'agenda_unavailable'  // 409 — subscription expired: no new bookings
@@ -59,6 +59,8 @@ export interface ApiErrorBody {
 export const CLIENT_CHANGE_CUTOFF_MIN = 120;
 /** Default availability window requested by the booking page. */
 export const AVAILABILITY_DAYS = 14;
+/** A picked hour is held for the client this long while they fill in their details (see `HoldSlotRequest`). */
+export const HOLD_MINUTES = 10;
 
 // ── Public ─────────────────────────────────────────────────────────────────
 
@@ -84,6 +86,8 @@ export interface PublicProfile {
   address: string;
   phone: string | null;
   initials: string;
+  /** Logo or photo instead of the initials (same-origin path; absent = initials, as always). */
+  logo?: string;
   services: PublicService[];
   /** Team plan: the consultorio this professional belongs to («Parte de …»). */
   team?: { name: string; slug: string };
@@ -99,6 +103,8 @@ export interface PublicTeam {
   address: string;
   phone: string | null;
   initials: string;
+  /** The consultorio's logo (absent = its initials). */
+  logo?: string;
   /** Owner first; each one is a regular professional with their own /<slug> endpoints. */
   members: PublicProfile[];
 }
@@ -117,6 +123,8 @@ export interface AvailabilityQuery {
   days?: number;
   /** Panel only (/me/slots): the appointment being moved, so its own time doesn't block nearby slots. */
   excludeAppointmentId?: string;
+  /** Public page: the visitor's own hold (`HoldSlotRequest.holdId`) doesn't hide the hour they are holding. */
+  holdId?: string;
 }
 
 export interface AvailabilityResponse {
@@ -140,6 +148,26 @@ export interface CreateBookingRequest {
    * gets the appointment it already created instead of `slot_taken`.
    */
   idempotencyKey?: string;
+  /** The page's hold on this hour (`HoldSlotRequest.holdId`): the booking takes it over. */
+  holdId?: string;
+}
+
+/**
+ * The booking page holds the hour the client picks (and holds it again on every
+ * "Siguiente"), so nobody else can take it while they type their details.
+ * `holdId` is a random UUID the page keeps for the whole attempt: a new hold
+ * with the same id replaces the previous one (picking another hour frees the
+ * old one). Fails with `slot_taken` when the hour is no longer free.
+ */
+export interface HoldSlotRequest {
+  serviceId: string;
+  start: ISOInstant;
+  holdId: string;
+}
+
+export interface HoldSlotResponse {
+  /** Until when nobody else can book it; null when the service is too long to hold (the booking still checks). */
+  expiresAt: ISOInstant | null;
 }
 
 export interface BookingSummary {
@@ -165,6 +193,7 @@ export interface BookingSummary {
     /** For the "call the office" button when it's too late to change online. */
     phone: string | null;
     initials: string;
+    logo?: string;
   };
 }
 
@@ -378,13 +407,29 @@ export interface PutAvailabilityRequest {
 }
 
 export interface CreateBlockRequest {
-  label: string;
+  /** Optional reason only the pro sees; «No disponible» when empty. */
+  label?: string;
   start: ISOInstant;
   end: ISOInstant;
+  /** «Varios días» with hours: the same hours (start–end, inside one day) every day up to this date. */
+  repeatUntil?: ISODate;
+}
+
+export interface UploadLogoRequest {
+  /** The image (PNG, JPG or WebP, ≤ 256 px) as base64, without the `data:` prefix. */
+  image: string;
+}
+
+export interface LogoResponse {
+  /** Its site path, or null once removed (the page shows the initials again). */
+  logo: string | null;
 }
 
 export interface BlockResponse {
+  /** The first block created. */
   block: Block;
+  /** Every block created: one per day with `repeatUntil`, else just `block`. */
+  blocks: Block[];
 }
 
 export interface ListAppointmentsQuery {
@@ -452,6 +497,11 @@ export const STATS_MAX_DAYS = 366;
 export interface StatsQuery {
   from: ISODate;
   to: ISODate;
+  /**
+   * `value`: only what the agenda card needs — skips the client records, so
+   * `newClients` / `returningClients` come back as 0. The default is everything.
+   */
+  scope?: 'value';
 }
 
 export interface StatsResponse {
@@ -737,6 +787,9 @@ export const apiPaths = {
   publicPro: (slug: string) => `/public/pros/${enc(slug)}`,
   publicAvailability: (slug: string, q: AvailabilityQuery) => `/public/pros/${enc(slug)}/availability${qs({ ...q })}`,
   publicBookings: (slug: string) => `/public/pros/${enc(slug)}/bookings`,
+  publicHolds: (slug: string) => `/public/pros/${enc(slug)}/holds`,
+  profileLogo: () => '/me/profile/logo',
+  teamLogo: () => '/me/team/logo',
   publicAppointment: (token: string) => `/public/appointments/${enc(token)}`,
   publicCancel: (token: string) => `/public/appointments/${enc(token)}/cancel`,
   publicReschedule: (token: string) => `/public/appointments/${enc(token)}/reschedule`,

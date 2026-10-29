@@ -35,7 +35,7 @@ export const keys = {
   waitlistAll: ['waitlist'] as const,
   waitlist: (proId: string) => ['waitlist', proId] as const,
   statsAll: ['stats'] as const,
-  stats: (from: ISODate, to: ISODate, proId: string) => ['stats', from, to, proId] as const,
+  stats: (from: ISODate, to: ISODate, proId: string, scope?: 'value') => ['stats', from, to, proId, scope ?? 'all'] as const,
   pushConfig: ['push-config'] as const,
   adminStats: ['admin', 'stats'] as const,
   adminSubscriptions: (q: ListSubscriptionsQuery) => ['admin', 'subscriptions', q.state ?? '', q.q ?? ''] as const,
@@ -180,12 +180,15 @@ export function useWaitlist(): MergedResult<WaitlistResponse> {
   return acting.isAll ? merged : { data: single.data, isPending: single.isPending, isError: single.isError };
 }
 
-export function useStats(from: ISODate, to: ISODate) {
+/** `scope: 'value'`: the agenda card's light version (no client records read). */
+export function useStats(from: ISODate, to: ISODate, scope?: 'value') {
   const { proId, header } = useActing();
   return useQuery({
-    queryKey: keys.stats(from, to, proId),
-    queryFn: () => api.get<StatsResponse>(apiPaths.stats({ from, to }), { actingProId: header }),
+    queryKey: keys.stats(from, to, proId, scope),
+    queryFn: () => api.get<StatsResponse>(apiPaths.stats({ from, to, scope }), { actingProId: header }),
     placeholderData: keepPreviousOf(proId),
+    // Opening the agenda again within a few minutes doesn't ask again.
+    staleTime: 5 * 60_000,
   });
 }
 

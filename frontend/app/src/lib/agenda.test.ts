@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDayRows, freeGaps, isNewAppointment, upcomingDays } from './agenda';
+import { blocksOn, buildDayRows, freeGaps, isNewAppointment, upcomingDays } from './agenda';
 import { MOCK_NOW, rules, schedule, TODAY, trialAppointments } from '../mocks/fixtures';
 
 const now = new Date(MOCK_NOW);
@@ -24,6 +24,19 @@ describe('day agenda', () => {
       '3:00 p. m. confirmed',
       '4:00 p. m. confirmed',
     ]);
+  });
+
+  it('a block replaces the free gap it covers and shows as its own row', () => {
+    const block = { id: 'b1', label: 'No disponible', start: '2026-10-20T14:30:00.000Z', end: '2026-10-20T15:00:00.000Z' };
+    const rows = buildDayRows(TODAY, today, schedule, rules, now, { blocks: [block] });
+    expect(rows.filter((r) => r.kind === 'free')).toHaveLength(0);
+    expect(rows.find((r) => r.kind === 'blocked')).toMatchObject({ time: '9:30 a. m.', allDay: false, block });
+  });
+
+  it('a block over several days is «Todo el día» on the days in between', () => {
+    const vacation = { id: 'b2', label: 'Vacaciones', start: '2026-10-19T05:00:00.000Z', end: '2026-10-23T05:00:00.000Z' };
+    expect(blocksOn(TODAY, [vacation])).toEqual([{ block: vacation, start: '2026-10-20T05:00:00.000Z', end: '2026-10-21T05:00:00.000Z', allDay: true }]);
+    expect(blocksOn('2026-10-23', [vacation])).toEqual([]);
   });
 
   it('marks client bookings from the last 24 h as new', () => {

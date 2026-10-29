@@ -67,7 +67,7 @@ Calendar (requiere revisión de Google), anticipos, planes para
 equipos (fase 2) y **notas clínicas** (datos de salud = datos sensibles por ley).
 
 ## Reglas de suscripción (se aplican SIEMPRE en el servidor, nunca solo en la UI)
-- **Prueba gratis de 10 días** por profesional (`TRIAL_DAYS` en `shared/subscription.ts`). Una sola prueba por correo verificado
+- **Prueba gratis de 15 días** por profesional (`TRIAL_DAYS` en `shared/subscription.ts`). Una sola prueba por correo verificado
   (sin verificación por SMS; se bloquean dominios de correo desechables).
 - **Vigente** = `now < max(trialEndsAt, paidUntil) + gracia`. Gracia de 2–3 días.
 - **Vencida:**

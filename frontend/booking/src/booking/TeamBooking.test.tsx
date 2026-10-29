@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { describe, expect, it, vi } from 'vitest';
 import { MOCK_TEAM } from '../mock/fixtures';
 import { createMockApi } from '../mock/mockApi';
@@ -14,16 +14,31 @@ function renderTeam(query = '') {
 const click = (target: string | RegExp | HTMLElement) =>
   fireEvent.click(target instanceof HTMLElement ? target : screen.getByRole('button', { name: target }));
 const isDisabled = (el: HTMLElement) => (el as HTMLButtonElement).disabled;
+/** "Siguiente" re-checks the held hour (async) before moving on: let the mock answer. */
+async function next() {
+  click('Siguiente');
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+}
 
 async function fillDetails() {
   fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
   fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
   fireEvent.click(screen.getByRole('checkbox', { name: /Autorizo el tratamiento/ }));
-  click('Siguiente');
+  await next();
   await screen.findByRole('heading', { name: '¿Todo bien?' });
 }
 
 describe('Team page', () => {
+  it('shows the consultorio\'s logo in the band and each professional\'s in «¿Con quién?» (initials when they have none)', () => {
+    const team = { ...MOCK_TEAM, logo: '/media/teams/o1/0123456789abcdef.webp', members: MOCK_TEAM.members.map((m, i) => (i === 1 ? { ...m, logo: '/media/pros/m1/fedcba9876543210.png' } : m)) };
+    const api = createMockApi(new URLSearchParams('delay=0'));
+    const { container, unmount } = render(<BookingApp slug={team.slug} initialProfile={null} team={team} runtime={{ api, turnstileSiteKey: null }} />);
+    expect(container.querySelector(`img[src="${team.logo}"]`)).toBeTruthy();
+    expect(container.querySelectorAll('img[src="/media/pros/m1/fedcba9876543210.png"]').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(MOCK_TEAM.members[0].initials).length).toBeGreaterThan(0);
+    unmount();
+  });
+
   it('starts with «¿Con quién?»: the team band, «Cualquiera disponible» first, then each professional', () => {
     renderTeam();
     expect(screen.getByRole('heading', { level: 1, name: 'Consultorio Sonríe' })).toBeTruthy();
@@ -43,7 +58,7 @@ describe('Team page', () => {
   it('a professional continues with their own services, and the chip goes back to «¿Con quién?»', async () => {
     renderTeam();
     click(/Dr\. Julián Ortiz/);
-    click('Siguiente');
+    await next();
     expect(screen.getByText('Paso 2 de 5 · Servicio')).toBeTruthy();
     expect(screen.getByRole('heading', { name: '¿Qué servicio necesitas?' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Control de brackets/ })).toBeTruthy();
@@ -56,9 +71,9 @@ describe('Team page', () => {
 
     // Another professional: the service starts over; "Paso anterior" steps back.
     click(/Dra\. Sara Gómez/);
-    click('Siguiente');
+    await next();
     click(/Valoración de endodoncia/);
-    click('Siguiente');
+    await next();
     expect(screen.getByText('Paso 3 de 5 · Día y hora')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar con quién: Con Dra. Sara Gómez' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar servicio: Valoración de endodoncia · 30 min' })).toBeTruthy();
@@ -73,13 +88,13 @@ describe('Team page', () => {
   it('«Cualquiera disponible» merges the services, assigns each hour and books with that professional', async () => {
     const { createBooking } = renderTeam();
     click(/Cualquiera disponible/);
-    click('Siguiente');
+    await next();
     expect(screen.getByRole('button', { name: 'Cambiar con quién: Cualquiera disponible' }).textContent).toContain('Cambiar');
     // Dra. Laura Pérez and Dra. Sara Gómez both offer «Valoración» (30 min): one entry.
     expect(screen.getAllByRole('button', { name: /^Valoración30 min/ })).toHaveLength(1);
     expect(screen.getByRole('button', { name: /Tratamiento de conducto/ })).toBeTruthy();
     click(/^Valoración30 min/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     // 9:00 is taken for Dra. Laura Pérez but free for Dra. Sara Gómez.
     click('9:00 a. m.');
@@ -87,7 +102,7 @@ describe('Team page', () => {
     click('10:00 a. m.');
     expect(screen.getByRole('status').textContent).toBe('LPTe atiende: Dra. Laura Pérez (libre a esa hora)');
     click('9:00 a. m.');
-    click('Siguiente');
+    await next();
     expect(screen.getByText('Paso 4 de 5 · Tus datos')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cambiar con quién: Con Dra. Sara Gómez' })).toBeTruthy();
     await fillDetails();
@@ -109,9 +124,9 @@ describe('Team page', () => {
   it('restores the «¿Con quién?» choice after a reload', async () => {
     const first = renderTeam();
     click(/Dra\. Laura Pérez/);
-    click('Siguiente');
+    await next();
     click(/Limpieza dental/);
-    click('Siguiente');
+    await next();
     await screen.findByRole('button', { name: 'Jueves 22 de octubre' });
     first.unmount();
     renderTeam();

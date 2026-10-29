@@ -101,15 +101,16 @@ describe('ApiStack', () => {
     });
   });
 
-  it('lets only pro-account and admin-prices write the site bucket and invalidate the distribution', () => {
+  it('lets only pro-account, admin-prices and pro-team (logos) write the site bucket and invalidate the distribution', () => {
     const policies = resourcesOf(template, 'AWS::IAM::Policy');
     const publishers = policies
       .filter(([, r]) => JSON.stringify(r.Properties.PolicyDocument).includes('cloudfront:CreateInvalidation'))
       .map(([id]) => id)
       .sort();
-    expect(publishers).toHaveLength(2);
+    expect(publishers).toHaveLength(3);
     expect(publishers[0]).toMatch(/^AdminPrices/);
     expect(publishers[1]).toMatch(/^ProAccount/);
+    expect(publishers[2]).toMatch(/^ProTeam/);
     const adminPolicy = policies.find(([id]) => id.startsWith('AdminSubscriptions'))!;
     expect(JSON.stringify(adminPolicy[1].Properties.PolicyDocument)).toContain('cognito-idp:AdminGetUser');
   });

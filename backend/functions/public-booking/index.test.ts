@@ -1,9 +1,10 @@
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
-import { DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, QueryCommand, TransactWriteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { clientKeyOf } from '../../../shared/clients';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apptKey, bookingIdempotencyKey, serviceKey, settingsKey, slugKey, subKey, profileKey } from '../../lib/keys';
+import { apptKey, bookingIdempotencyKey, holdKey, serviceKey, settingsKey, slugKey, subKey, profileKey } from '../../lib/keys';
+import { LOCK_FREE } from '../../services/appointments';
 import { verifyManageToken } from '../../lib/tokens';
 import {
   apiEvent, canceledTx, parse, PRO_ID, profile, service, settings, setTestEnv, subItem,
@@ -84,7 +85,9 @@ describe('POST /public/pros/{slug}/bookings', () => {
     expect(tx[0].Put!.ConditionExpression).toBe('attribute_not_exists(PK)');
     const locks = tx.slice(1).map((t) => t.Put!);
     expect(locks.map((l) => l.Item!.SK)).toEqual(['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30', '10:35']);
-    expect(locks.every((l) => l.Item!.PK === `LOCK#${PRO_ID}#2026-10-21` && l.ConditionExpression === 'attribute_not_exists(PK)')).toBe(true);
+    expect(locks.every((l) => l.Item!.PK === `LOCK#${PRO_ID}#2026-10-21` && l.ConditionExpression === LOCK_FREE)).toBe(true);
+    // Free = nobody has it, or only an expired hold does (this booking holds nothing).
+    expect(locks[0].ExpressionAttributeValues).toEqual({ ':now': NOW.getTime(), ':hold': '-' });
     // TTL = slot end (15:30) + buffer (10 min) + 7 days.
     expect(locks.every((l) => l.Item!.ttl === Date.parse('2026-10-28T15:40:00.000Z') / 1000)).toBe(true);
 
@@ -219,5 +222,111 @@ describe('POST /public/pros/{slug}/bookings', () => {
       expect(res.statusCode).toBe(400);
       expect(parse(res).error.fields).toHaveProperty('idempotencyKey');
     });
+  });
+});
+
+const HOLD_ID = '7a1d2c3b-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+/** Only the holds query (the appointments query must not see hold items). */
+const HOLDS_QUERY = { ExpressionAttributeValues: { ':pk': `PRO#${PRO_ID}`, ':p': 'HOLD#', ':now': NOW.getTime() } };
+
+const liveHold = (holdId: string, overrides: Record<string, unknown> = {}) => ({
+  ...holdKey(PRO_ID, holdId), holdId, start: START, end: '2026-10-21T15:30:00.000Z', expiresAt: NOW.getTime() + 5 * 60_000, ...overrides,
+});
+
+describe('POST /public/pros/{slug}/bookings with a hold', () => {
+  it('takes over its own hold: the locks accept it and the hold item is deleted in the same transaction', async () => {
+    mockPro();
+    const res = await handler(booking(START, { holdId: HOLD_ID }));
+    expect(res.statusCode).toBe(201);
+    const tx = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems!;
+    expect(tx[1].Delete).toEqual({ TableName: expect.any(String), Key: holdKey(PRO_ID, HOLD_ID) });
+    const locks = tx.slice(2).map((t) => t.Put!);
+    expect(locks).toHaveLength(8);
+    expect(locks[0].ExpressionAttributeValues).toEqual({ ':now': NOW.getTime(), ':hold': HOLD_ID });
+  });
+
+  it("someone else's live hold makes the hour taken before writing", async () => {
+    mockPro();
+    ddb.on(QueryCommand, HOLDS_QUERY).resolves({ Items: [liveHold('other-hold')] });
+    const res = await handler(booking(START, { holdId: HOLD_ID }));
+    expect(parse(res).error.code).toBe('slot_taken');
+    expect(ddb.commandCalls(TransactWriteCommand)).toHaveLength(0);
+  });
+});
+
+const hold = (start: string, holdId = HOLD_ID) => apiEvent('POST /public/pros/{slug}/holds', {
+  path: { slug: profile.slug },
+  body: { serviceId: service.id, start, holdId },
+});
+
+describe('POST /public/pros/{slug}/holds', () => {
+  it('holds the hour for 10 minutes: hold item + one hold lock per 5-minute unit in one transaction', async () => {
+    mockPro();
+    const res = await handler(hold(START));
+    expect(res.statusCode).toBe(200);
+    const expiresAt = NOW.getTime() + 10 * 60_000;
+    expect(parse(res)).toEqual({ expiresAt: new Date(expiresAt).toISOString() });
+
+    const tx = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems!;
+    expect(tx).toHaveLength(9);
+    expect(tx[0].Put!.Item).toMatchObject({
+      ...holdKey(PRO_ID, HOLD_ID), holdId: HOLD_ID, serviceId: service.id, start: START, end: '2026-10-21T15:30:00.000Z',
+      durationMin: 30, bufferMin: 10, expiresAt, ttl: expiresAt / 1000 + 3600,
+    });
+    const locks = tx.slice(1).map((t) => t.Put!);
+    expect(locks.map((l) => l.Item!.SK)).toEqual(['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30', '10:35']);
+    expect(locks.every((l) => l.Item!.holdId === HOLD_ID && l.Item!.holdExpiresAt === expiresAt && l.Item!.apptId === undefined)).toBe(true);
+    expect(locks.every((l) => l.ConditionExpression === LOCK_FREE)).toBe(true);
+    expect(locks[0].ExpressionAttributeValues).toEqual({ ':now': NOW.getTime(), ':hold': HOLD_ID });
+  });
+
+  it('an hour that is booked or held by someone else is slot_taken', async () => {
+    mockPro();
+    ddb.on(QueryCommand, HOLDS_QUERY).resolves({ Items: [liveHold('other-hold')] });
+    expect(parse(await handler(hold(START))).error.code).toBe('slot_taken');
+    expect(ddb.commandCalls(TransactWriteCommand)).toHaveLength(0);
+  });
+
+  it('ignores expired holds and its own hold', async () => {
+    mockPro();
+    ddb.on(QueryCommand, HOLDS_QUERY).resolves({ Items: [liveHold('other-hold', { expiresAt: NOW.getTime() - 1 }), liveHold(HOLD_ID)] });
+    expect((await handler(hold(START))).statusCode).toBe(200);
+  });
+
+  it('maps a lock that someone took meanwhile to slot_taken', async () => {
+    mockPro();
+    ddb.on(TransactWriteCommand).rejects(canceledTx(['None', 'ConditionalCheckFailed']));
+    const res = await handler(hold(START));
+    expect(res.statusCode).toBe(409);
+    expect(parse(res).error.code).toBe('slot_taken');
+  });
+
+  it('a new hold with the same id frees the units the old one no longer covers', async () => {
+    mockPro();
+    ddb.on(GetCommand, { Key: holdKey(PRO_ID, HOLD_ID) }).resolves({
+      Item: { ...liveHold(HOLD_ID), durationMin: 30, bufferMin: 10 },
+    });
+    ddb.on(DeleteCommand).resolves({});
+    // 10:30 instead of 10:00: 10:30 and 10:35 are shared, the six before are released.
+    expect((await handler(hold('2026-10-21T15:30:00.000Z'))).statusCode).toBe(200);
+    const released = ddb.commandCalls(DeleteCommand).map((c) => c.args[0].input);
+    expect(released.map((d) => d.Key!.SK)).toEqual(['10:00', '10:05', '10:10', '10:15', '10:20', '10:25']);
+    expect(released.every((d) => d.ConditionExpression === 'holdId = :hold' && d.ExpressionAttributeValues![':hold'] === HOLD_ID)).toBe(true);
+  });
+
+  it('refuses holds when the agenda is not taking bookings, and rate-limits per IP', async () => {
+    mockPro(subItem({ trialEndsAt: '2026-10-01T00:00:00.000Z' }));
+    expect(parse(await handler(hold(START))).error.code).toBe('agenda_unavailable');
+
+    mockPro();
+    ddb.on(UpdateCommand).rejects(Object.assign(new Error('cond'), { name: 'ConditionalCheckFailedException' }));
+    expect((await handler(hold(START))).statusCode).toBe(429);
+  });
+
+  it('validates the hold id', async () => {
+    mockPro();
+    const res = await handler(hold(START, 'nope'));
+    expect(res.statusCode).toBe(400);
+    expect(parse(res).error.fields).toHaveProperty('holdId');
   });
 });

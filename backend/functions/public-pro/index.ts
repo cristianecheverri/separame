@@ -33,7 +33,7 @@ export const handler = createApiHandler({
       loadSubscription(proId, now),
     ]);
     return ok(await availabilityFor({
-      proId, service, from: query.from, days: query.days, active: sub.status.canAcceptBookings, now,
+      proId, service, from: query.from, days: query.days, active: sub.status.canAcceptBookings, now, excludeHoldId: query.holdId,
     }));
   },
 

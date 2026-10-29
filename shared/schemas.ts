@@ -6,7 +6,9 @@
  */
 // Namespace import: lets the bundler drop zod's locale files (≈ 450 KB → 85 KB per Lambda).
 import * as z from 'zod';
+import { blockDays, isSingleDay, MAX_DAILY_BLOCK_DAYS } from './blocks';
 import { CONTACT_MESSAGES, normalizePhone } from './contact';
+import { MAX_LOGO_BASE64 } from './media';
 import { slugProblem } from './slug';
 import { WEEKDAYS, minutesOf } from './time';
 
@@ -86,6 +88,14 @@ export const availabilityQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(31).optional(),
   /** Panel only (/me/slots): the appointment being moved doesn't block its own neighbouring times. */
   excludeAppointmentId: z.string().min(1).max(64).optional(),
+  /** Public page: the visitor's own hold doesn't hide the hour they are holding. */
+  holdId: z.uuid().optional(),
+});
+
+export const holdSlotSchema = z.object({
+  serviceId: z.string().min(1).max(64),
+  start: isoInstantSchema,
+  holdId: z.uuid(),
 });
 
 export const createBookingSchema = z.object({
@@ -95,6 +105,7 @@ export const createBookingSchema = z.object({
   consent: z.literal(true, { message: 'Debes autorizar el tratamiento de tus datos' }),
   turnstileToken: z.string().min(1).max(4096),
   idempotencyKey: z.uuid().optional(),
+  holdId: z.uuid().optional(),
 });
 
 export const cancelBookingSchema = z.object({
@@ -179,13 +190,26 @@ export const putAvailabilitySchema = z.object({
   rules: bookingRulesSchema,
 });
 
+/** A logo already shrunk by the panel, base64 without the `data:` prefix (type checked from the bytes). */
+export const uploadLogoSchema = z.object({
+  image: z.string().min(16, 'Elige una imagen').max(MAX_LOGO_BASE64, 'La imagen es muy pesada').regex(/^[A-Za-z0-9+/]+={0,2}$/, 'Imagen inválida'),
+});
+
 export const createBlockSchema = z
   .object({
-    label: name('El nombre', 60),
+    /** Optional: «No disponible» when empty (only the pro sees it). */
+    label: z.string().trim().max(60, 'El motivo es muy largo').optional(),
     start: isoInstantSchema,
     end: isoInstantSchema,
+    /** «Varios días» with hours: the same hours every day up to this date. */
+    repeatUntil: isoDateSchema.optional(),
   })
-  .refine((b) => new Date(b.start) < new Date(b.end), 'El final debe ser después del inicio');
+  .refine((b) => new Date(b.start) < new Date(b.end), 'El final debe ser después del inicio')
+  .refine((b) => !b.repeatUntil || isSingleDay(b.start, b.end), { message: 'Las horas que se repiten deben quedar en un mismo día', path: ['repeatUntil'] })
+  .refine((b) => !b.repeatUntil || (blockDays(b) >= 1 && blockDays(b) <= MAX_DAILY_BLOCK_DAYS), {
+    message: `Elige entre 1 y ${MAX_DAILY_BLOCK_DAYS} días`,
+    path: ['repeatUntil'],
+  });
 
 /** Longest `from`–`to` span the pro's appointment list accepts (the panel asks for 90 days back or ahead). */
 export const MAX_APPOINTMENTS_RANGE_DAYS = 92;
@@ -229,7 +253,7 @@ export const updateClientNotesSchema = z.object({
 });
 
 export const statsQuerySchema = z
-  .object({ from: isoDateSchema, to: isoDateSchema })
+  .object({ from: isoDateSchema, to: isoDateSchema, scope: z.literal('value').optional() })
   .refine((q) => q.from <= q.to, 'Rango inválido');
 
 export const pushSubscriptionSchema = z.object({

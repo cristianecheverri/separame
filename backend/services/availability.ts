@@ -4,17 +4,18 @@ import { AVAILABILITY_DAYS } from '../../shared/api';
 import {
   computeAvailability, DEFAULT_RULES, DEFAULT_SCHEDULE, type AvailabilityContext, type Interval,
 } from '../../shared/availability';
+import { expandBlock } from '../../shared/blocks';
 import { LSI1 } from '../../shared/infra';
 import { addDays, addMinutes, toInstant, todayBogota, type ISODate, type ISOInstant } from '../../shared/time';
 import type { AvailabilitySettings, Block, BookingRules, Service, WeeklySchedule } from '../../shared/types';
-import { ddb, getItem, isConditionalFailure, queryAll, stripKeys, table, type Item } from '../lib/dynamo';
+import { ddb, getItem, isConditionalFailure, queryAll, stripKeys, table, transactWrite, type Item } from '../lib/dynamo';
 import { ApiError } from '../lib/http';
 import { newId } from '../lib/ids';
-import { apptStartSk, BLOCK_PREFIX, blockKey, proPk, settingsKey } from '../lib/keys';
+import { apptStartSk, BLOCK_PREFIX, blockKey, HOLD_PREFIX, proPk, settingsKey } from '../lib/keys';
 
 /**
- * Availability inputs (weekly schedule + rules on `SETTINGS`, `BLOCK#` items
- * and the pro's confirmed appointments) loaded for a window and handed to the
+ * Availability inputs (weekly schedule + rules on `SETTINGS`, `BLOCK#` items,
+ * the pro's confirmed appointments and the live `HOLD#` items) loaded for a window and handed to the
  * shared `computeDay` / `computeAvailability` — the single slot implementation
  * shared with the frontends. Every load used to validate a write is consistent.
  */
@@ -62,18 +63,16 @@ export async function getAvailabilitySettings(proId: string): Promise<Availabili
 export const BLOCK_RETENTION_DAYS = 30;
 export const blockExpiry = (end: ISOInstant): number => Math.floor(Date.parse(end) / 1000) + BLOCK_RETENTION_DAYS * 86_400;
 
-export async function addBlock(proId: string, input: CreateBlockRequest, now: Date = new Date()): Promise<Block> {
-  const block: Block = {
-    id: newId(now),
-    label: input.label,
-    start: new Date(input.start).toISOString(),
-    end: new Date(input.end).toISOString(),
-  };
-  await ddb.send(new PutCommand({
-    TableName: table(),
-    Item: { ...blockKey(proId, block.id), ...block, proId, createdAt: now.toISOString(), ttl: blockExpiry(block.end) },
-  }));
-  return block;
+/** One block, or one per day with `repeatUntil` (≤ MAX_DAILY_BLOCK_DAYS, so one transaction). */
+export async function addBlocks(proId: string, input: CreateBlockRequest, now: Date = new Date()): Promise<Block[]> {
+  const blocks: Block[] = expandBlock(input).map((b) => ({ id: newId(now), ...b }));
+  const item = (block: Block) => ({ ...blockKey(proId, block.id), ...block, proId, createdAt: now.toISOString(), ttl: blockExpiry(block.end) });
+  if (blocks.length === 1) {
+    await ddb.send(new PutCommand({ TableName: table(), Item: item(blocks[0]) }));
+  } else {
+    await transactWrite(blocks.map((block) => ({ Put: { TableName: table(), Item: item(block) } })));
+  }
+  return blocks;
 }
 
 export async function deleteBlock(proId: string, blockId: string): Promise<void> {
@@ -105,6 +104,26 @@ export async function busyIntervals(
     .map((a) => ({ start: a.start as string, end: a.end as string }));
 }
 
+/**
+ * Hours visitors of the booking page are holding right now (services/holds.ts),
+ * as busy intervals. Expired holds still in the table (TTL is lazy) are ignored.
+ */
+export async function heldIntervals(
+  proId: string, now: Date, opts: { consistent?: boolean; excludeHoldId?: string } = {},
+): Promise<Interval[]> {
+  const items = await queryAll({
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :p)',
+    FilterExpression: 'expiresAt > :now',
+    ExpressionAttributeNames: { '#s': 'start', '#e': 'end' },
+    ExpressionAttributeValues: { ':pk': proPk(proId), ':p': HOLD_PREFIX, ':now': now.getTime() },
+    ProjectionExpression: 'holdId, #s, #e, expiresAt',
+    ConsistentRead: opts.consistent ?? false,
+  });
+  return items
+    .filter((h) => typeof h.expiresAt === 'number' && h.expiresAt > now.getTime() && h.holdId !== opts.excludeHoldId)
+    .map((h) => ({ start: h.start as string, end: h.end as string }));
+}
+
 export interface ContextOptions {
   proId: string;
   durationMin: number;
@@ -115,17 +134,21 @@ export interface ContextOptions {
   ignoreMinNotice?: boolean;
   /** Rescheduling: the appointment being moved doesn't block itself. */
   excludeAppointmentId?: string;
+  /** The caller's own hold doesn't block the hour it holds. */
+  excludeHoldId?: string;
   consistent?: boolean;
 }
 
 export async function loadContext(opts: ContextOptions): Promise<AvailabilityContext> {
   const windowStart = toInstant(opts.from, '00:00');
   const windowEnd = toInstant(addDays(opts.from, opts.days), '00:00');
-  const [settings, blocks, busy] = await Promise.all([
+  const [settings, blocks, booked, held] = await Promise.all([
     getSettings(opts.proId, opts.consistent),
     listBlocks(opts.proId, opts.consistent),
     busyIntervals(opts.proId, windowStart, windowEnd, { consistent: opts.consistent, excludeId: opts.excludeAppointmentId }),
+    heldIntervals(opts.proId, opts.now, { consistent: opts.consistent, excludeHoldId: opts.excludeHoldId }),
   ]);
+  const busy = [...booked, ...held.filter((h) => h.end > windowStart && h.start < windowEnd)];
   return {
     schedule: settings.schedule,
     rules: opts.ignoreMinNotice ? { ...settings.rules, minNoticeMin: 0 } : settings.rules,
@@ -139,14 +162,14 @@ export async function loadContext(opts: ContextOptions): Promise<AvailabilityCon
 /** AvailabilityResponse for a service; `active: false` → no days (expired subscription). */
 export async function availabilityFor(input: {
   proId: string; service: Service; from?: ISODate; days?: number; active: boolean; now: Date; ignoreMinNotice?: boolean;
-  excludeAppointmentId?: string;
+  excludeAppointmentId?: string; excludeHoldId?: string;
 }): Promise<AvailabilityResponse> {
   const from = input.from ?? todayBogota(input.now);
   const days = input.days ?? AVAILABILITY_DAYS;
   if (!input.active) return { active: false, serviceId: input.service.id, from, days: [] };
   const ctx = await loadContext({
     proId: input.proId, durationMin: input.service.durationMin, from, days, now: input.now, ignoreMinNotice: input.ignoreMinNotice,
-    excludeAppointmentId: input.excludeAppointmentId,
+    excludeAppointmentId: input.excludeAppointmentId, excludeHoldId: input.excludeHoldId,
   });
   return { active: true, serviceId: input.service.id, from, days: computeAvailability(from, days, ctx) };
 }

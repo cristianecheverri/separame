@@ -28,10 +28,11 @@ import { loadSubItem, requireWritable, subIndexAttrs, subscriptionStatus, type S
 const DAY_MS = 86_400_000;
 
 export function toProfile(item: Item): ProProfile {
-  const { id, slug, name, title, city, neighborhood, address, phone, email, ownerId, createdAt, updatedAt } = stripKeys<ProProfile>(item);
+  const { id, slug, name, title, city, neighborhood, address, phone, email, ownerId, logo, createdAt, updatedAt } = stripKeys<ProProfile>(item);
   return {
     id, slug, name, title, city, neighborhood: neighborhood ?? '', address: address ?? '', phone: phone ?? null, email, createdAt, updatedAt,
     ...(ownerId ? { ownerId } : {}),
+    ...(logo ? { logo } : {}),
   };
 }
 
@@ -49,6 +50,7 @@ export function toPublicProfile(profile: ProProfile, services: Service[]): Publi
     address: profile.address,
     phone: profile.phone,
     initials: initials(profile.name),
+    ...(profile.logo ? { logo: profile.logo } : {}),
     services: services.filter((s) => s.visible).map(toPublicService),
   };
 }

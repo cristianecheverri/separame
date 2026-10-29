@@ -118,7 +118,7 @@ export function Confirmed({ result, icsUrl, agendaSlug, onRestart }: {
 
         <div class="bg-primary-soft rounded-[22px] p-[18px] flex flex-col gap-3.5">
           <div class="flex gap-3 items-center">
-            <Avatar initials={pro.initials} />
+            <Avatar initials={pro.initials} logo={pro.logo} />
             <div class="flex flex-col gap-0.5 min-w-0">
               <div class="font-bold text-[16px]">{pro.name}</div>
               <div class="text-[14px] text-ink-2">

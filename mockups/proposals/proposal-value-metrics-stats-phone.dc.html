@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta · Estadísticas con métricas de valor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1760px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column">
+
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+  </header>
+
+  <main style="box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Estadísticas</h1>
+      <div style="font-size: 15px; color: #56645D">Cómo va tu agenda y lo que Sepárame hizo por ti.</div>
+    </div>
+
+    <div role="group" aria-label="Periodo" style="display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+      <sc-for list="{{periods}}" as="p" hint-placeholder-count="4">
+        <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">{{p.label}}</button>
+      </sc-for>
+    </div>
+
+    <section aria-labelledby="sv-title" style="background: #0B6E4F; color: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 id="sv-title" style="margin: 0; font-size: 13px; font-weight: 600; color: #D5EDE3">Lo que Sepárame hizo por ti</h2>
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.15; letter-spacing: -0.5px"><span style="color: #FFC93C">23 citas</span> se reservaron solas</div>
+        <div style="font-size: 14px; color: #D5EDE3">85 % de tus citas del mes · +8 vs. el periodo anterior</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{value}}" as="v" hint-placeholder-count="4">
+          <div style="background: rgba(255,255,255,0.12); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+            <span style="font-size: 13px; font-weight: 600; color: #D5EDE3">{{v.label}}</span>
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; line-height: 1; white-space: nowrap">{{v.value}}</span>
+            <span style="font-size: 12px; line-height: 1.35; color: #D5EDE3">{{v.note}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; color: #56645D">Comparado con el periodo anterior</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{tiles}}" as="t" hint-placeholder-count="6">
+          <div style="{{t.style}}">
+            <div style="font-size: 13px; font-weight: 600">{{t.label}}</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1">{{t.value}}</div>
+            <div style="{{t.changeStyle}}">{{t.change}}</div>
+          </div>
+        </sc-for>
+        <div style="grid-column: span 2; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: #FFFFFF">
+          <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600"><span>Ingresos estimados</span><span style="font-weight: 700; color: #0B6E4F">+56 %</span></div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1">$1.620.000</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #56645D">Estimado con tus precios de referencia; Sepárame no cobra a tus clientes.</div>
+        </div>
+      </div>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Horas más pedidas</h2>
+      <div role="img" aria-label="Citas por hora de inicio: 8 a. m. 3, 9 a. m. 4, 10 a. m. 6, 11 a. m. 3, 2 p. m. 2, 3 p. m. 4, 4 p. m. 3, 5 p. m. 2." style="display: flex; align-items: flex-end; gap: 6px; height: 150px">
+        <sc-for list="{{hours}}" as="h" hint-placeholder-count="8">
+          <div aria-hidden="true" style="flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px">
+            <span style="font-size: 13px; font-weight: 700">{{h.value}}</span>
+            <div style="{{h.style}}"></div>
+            <span style="font-size: 12px; font-weight: 600; color: #56645D; white-space: nowrap">{{h.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size: 14px; color: #3E4C45; line-height: 1.45; border-top: 1px solid #E3E8E5; padding-top: 12px">Tus clientes reservan con <strong style="color: #15241D">3 días</strong> de anticipación, en promedio. El 30 % reserva para el mismo día o el siguiente.</div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Días con más citas</h2>
+      <div role="img" aria-label="Citas por día de la semana: lunes 6, martes 4, miércoles 7, jueves 5, viernes 4, sábado 1, domingo 0." style="display: flex; align-items: flex-end; gap: 8px; height: 160px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="7">
+          <div aria-hidden="true" style="flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px">
+            <span style="font-size: 13px; font-weight: 700">{{b.value}}</span>
+            <div style="{{b.style}}"></div>
+            <span style="font-size: 12px; font-weight: 600; color: #56645D">{{b.day}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">Servicios más pedidos</h2>
+      <ol aria-label="Citas por servicio" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+        <sc-for list="{{services}}" as="s" hint-placeholder-count="3">
+          <li style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14px">
+              <span style="font-weight: 700">{{s.name}}</span>
+              <span style="color: #3E4C45; white-space: nowrap">{{s.detail}}</span>
+            </div>
+            <div aria-hidden="true" style="height: 10px; border-radius: 999px; background: #F3F6F4; overflow: hidden">
+              <div style="{{s.barStyle}}"></div>
+            </div>
+          </li>
+        </sc-for>
+      </ol>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ period: 0 }, this.state || {});
+    const chip = 'height:44px;padding:0 18px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;white-space:nowrap;flex-shrink:0;cursor:pointer;';
+    const labels = ['Este mes', 'Mes pasado', 'Últimos 90 días', 'Este año'];
+    const tile = 'border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:8px;';
+    const up = 'font-size:13px;font-weight:700;color:#0B6E4F;';
+    const bad = 'font-size:13px;font-weight:700;color:#7A3E00;';
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const dayValues = [6, 4, 7, 5, 4, 1, 0];
+    const dayMax = Math.max.apply(null, dayValues);
+    const hourLabels = ['8', '9', '10', '11', '2', '3', '4', '5'];
+    const hourValues = [3, 4, 6, 3, 2, 4, 3, 2];
+    const hourMax = Math.max.apply(null, hourValues);
+    const bar = (v, max, h) => 'width:100%;max-width:40px;border-radius:10px 10px 4px 4px;height:' + Math.max(4, (v / max) * h) + 'px;background:' + (v === max ? '#0B6E4F' : v > 0 ? '#CFE3DA' : '#E3E8E5') + ';';
+    const services = [
+      { name: 'Valoración', n: 14, cop: '$840.000' },
+      { name: 'Control', n: 8, cop: 'Sin costo' },
+      { name: 'Limpieza dental', n: 5, cop: '$600.000' }
+    ];
+    return {
+      periods: labels.map((label, i) => ({
+        label, selected: st.period === i, pick: () => this.setState({ period: i }),
+        style: chip + (st.period === i ? 'background:#15241D;border-color:#15241D;color:#FFFFFF;' : 'background:#FFFFFF;border-color:#E3E8E5;')
+      })),
+      value: [
+        { label: 'Tiempo ahorrado', value: '≈ 2 h', note: 'estimado: 5 min por cita en línea' },
+        { label: 'Recordatorios enviados', value: '31', note: 'sin que escribieras a nadie' },
+        { label: 'Confirmaron asistencia', value: '74 %', note: 'respondieron «Sí, voy»' },
+        { label: 'Cupos recuperados', value: '3', note: 'con la lista de espera' }
+      ],
+      tiles: [
+        { label: 'Citas', value: '27', change: '+42 %', style: tile + 'background:#FFFFFF;', changeStyle: up },
+        { label: 'Ocupación', value: '38 %', change: '+9 pts', style: tile + 'background:#FFF4D1;', changeStyle: up },
+        { label: 'Inasistencias', value: '7 %', change: '−5 pts', style: tile + 'background:#FFFFFF;', changeStyle: up },
+        { label: 'Cancelaciones', value: '4', change: '1 con menos de 24 h', style: tile + 'background:#FFFFFF;', changeStyle: bad },
+        { label: 'Nuevos / recurrentes', value: '9 / 14', change: '+38 %', style: tile + 'background:#FFFFFF;', changeStyle: up },
+        { label: 'Agendadas por ti', value: '4', change: '15 % del total', style: tile + 'background:#FFFFFF;', changeStyle: 'font-size:13px;font-weight:700;color:#56645D;' }
+      ],
+      hours: hourLabels.map((label, i) => ({ label, value: hourValues[i], style: bar(hourValues[i], hourMax, 90) })),
+      bars: days.map((day, i) => ({ day, value: dayValues[i], style: bar(dayValues[i], dayMax, 100) })),
+      services: services.map((s) => ({
+        name: s.name, detail: s.n + ' citas · ' + s.cop,
+        barStyle: 'height:100%;border-radius:999px;background:#0B6E4F;width:' + Math.round((s.n / services[0].n) * 100) + '%;'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
  * slug is the team's: its services are the members' services merged by name and
  * duration, and `createTeamApi` turns calls to that slug into calls to the
  * members (availability = union of their free hours, each hour assigned to one
- * free member; the booking goes to that member). No new public endpoints.
+ * free member; the hold and the booking go to that member). No new public endpoints.
  */
 import type { AvailabilityResponse, PublicProfile, PublicService, PublicTeam } from '@shared/api';
 import type { DayAvailability } from '@shared/availability';
@@ -79,6 +79,7 @@ export function teamPageOf(team: PublicTeam): TeamPage {
     address: team.address,
     phone: team.phone,
     initials: team.initials,
+    ...(team.logo ? { logo: team.logo } : {}),
     services: [],
   };
   const merged = mergeServices(team.members);
@@ -161,6 +162,12 @@ export async function settleInBatches<T, R>(items: readonly T[], run: (item: T) 
 export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
   const assigneesByService = new Map<string, Map<string, Offering>>();
   const isAny = (slug: string) => slug === page.team.slug;
+  /** The member an hour of «Cualquiera disponible» goes to; an unknown hour (stale page) is handled like a taken one. */
+  const assignee = (serviceId: string, start: string): Offering => {
+    const offering = assigneesByService.get(serviceId)?.get(start);
+    if (!offering) throw new ApiError('slot_taken', 'Slot not assigned', 409);
+    return offering;
+  };
   const mergedService = (serviceId: string): MergedService => {
     const merged = page.merged.get(serviceId);
     if (!merged || merged.offerings.length === 0) throw new ApiError('not_found', 'Unknown service', 404);
@@ -187,10 +194,13 @@ export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
     },
     async createBooking(slug, body) {
       if (!isAny(slug)) return base.createBooking(slug, body);
-      const offering = assigneesByService.get(body.serviceId)?.get(body.start);
-      // Unknown hour (stale page): same path as a taken one, the client picks again.
-      if (!offering) throw new ApiError('slot_taken', 'Slot not assigned', 409);
+      const offering = assignee(body.serviceId, body.start);
       return base.createBooking(offering.member.slug, { ...body, serviceId: offering.service.id });
+    },
+    async holdSlot(slug, body) {
+      if (!isAny(slug)) return base.holdSlot(slug, body);
+      const offering = assignee(body.serviceId, body.start);
+      return base.holdSlot(offering.member.slug, { ...body, serviceId: offering.service.id });
     },
     async joinWaitlist(slug, body) {
       if (!isAny(slug)) return base.joinWaitlist(slug, body);

@@ -43,9 +43,12 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
         plan para equipos, referidos, avisos al celular, clientes sin correo y contacto solo por
         los correos del plan o los pagos (Cognito y el aviso de calendario responden al operador).
 - [ ] **Lanzamiento** (kit en `marketing/launch-kit.html`, imágenes en `marketing/social/out/`):
-  - [ ] Post y proyecto de LinkedIn.
-  - [ ] Página de Facebook y cuenta de Instagram con sus primeras publicaciones.
-  - [ ] Anuncios en Meta, después de completar lo legal de arriba.
+  - [x] Post de LinkedIn (23-oct).
+  - [ ] Proyecto de LinkedIn.
+  - [x] Página de Facebook, cuenta de Instagram, primeras publicaciones, dominio verificado en Meta
+        y portafolio comercial con su cuenta publicitaria (23-oct).
+  - [ ] Anuncios en Meta: después de tu identificación como responsable en la política y de la
+        prueba completa en el celular. Arrancar un lunes o martes, 7 días.
 - [x] **Google Search Console** (22-oct):
   - [x] Propiedad de tipo **Dominio** `separame.app` y registro TXT (22-oct; creado a mano y
         pasado a CDK: `GOOGLE_SITE_VERIFICATION` en `cdk/lib/config.ts`).
@@ -79,6 +82,32 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       espera con todos los que ofrecen el servicio, y las citas del equipo en el calendario del dueño.
 - [ ] Solo si los equipos crecen mucho: una ruta pública `/public/teams/{slug}/availability` que haga la
       mezcla en una sola Lambda (hoy son hasta 4 consultas a la vez desde el navegador).
+
+### Reserva: disponibilidad y horas retenidas (29-oct)
+- [x] El margen entre citas ya no tapa la media hora de antes y de después: se ofrecen las horas
+      pegadas al margen (9:20 y 10:40 alrededor de una cita de 10:00–10:30).
+- [x] Hora retenida 10 minutos al tocarla (`POST /public/pros/{slug}/holds`, mismos locks de 5 min que
+      las citas) y revalidada en cada "Siguiente"; «Te guardamos esta hora 10 minutos…» en «Tus datos»
+      (lienzo y `mockups/line-a/` al día: hora tomada y «Verificando la hora…»).
+- [x] Sin anticipación mínima, una hora que empezó se puede pedir hasta 5 min después
+      (`STARTED_SLOT_GRACE_MIN`); en la reserva, «Esa hora ya empezó…» si la página quedó abierta.
+- [ ] Desplegar a dev y probarlo con dos celulares a la vez; luego a prod.
+
+### Bloquear horas, métricas de valor, logo y rendimiento (29-oct)
+- [x] Bloquear horas desde la agenda: «+» → «Bloquear horas», «Bloquear» en el espacio libre, el bloqueo
+      en el día y la semana con «Quitar»/«Deshacer»; hoja «No estaré disponible» (motivo opcional,
+      varios días con horas = esas horas cada día, aviso si hay citas en el rango).
+- [x] Métricas de valor: «<Mes> con Sepárame» en la agenda y «Lo que Sepárame hizo por ti» en
+      Estadísticas (se reservaron solas, tiempo ahorrado ≈ 5 min por cita en línea, recordatorios,
+      confirmaron asistencia, cupos recuperados con la lista de espera), cancelaciones tardías,
+      agendadas por ti, horas más pedidas y anticipación. «Fuera de tu horario» descartada.
+- [x] Logo o foto del profesional (Perfil público) y del consultorio y cada profesional (Equipo); sin
+      logo, las iniciales como siempre. Se reduce a 256 px en el navegador; el API valida los bytes.
+- [x] Prueba gratis de 15 días (las cuentas que ya estaban en prueba conservan su fecha).
+- [x] Rendimiento: respuestas del API comprimidas (brotli/gzip), `preconnect` al API y precarga del
+      logo en la página de reserva, estadísticas livianas para la agenda (caché de 5 min).
+- [ ] Volver a generar las imágenes de anuncios ya publicadas en redes si dicen «10 días» (las de
+      `marketing/social/out/` ya dicen 15).
 
 ### Detalles pendientes de la ronda del 21-oct
 - [ ] "Olvidar mis datos" en la reserva. Lo pospusiste; confirmar si va esta semana.

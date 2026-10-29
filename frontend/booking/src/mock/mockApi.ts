@@ -14,15 +14,17 @@
  *                       (slot_taken, agenda_unavailable, validation, captcha_failed, network);
  *                       fail=lost creates the booking but loses the response (network
  *                       error) — the retry gets the same appointment (idempotency key)
+ *   hold=taken          the first hold (tapping an hour) finds it taken
+ *   hold=next           the re-check on "Siguiente" finds it taken
  *   delay=<ms>          artificial latency (default 350)
  * Manage tokens: late (cutoff passed), cancelled, confirmed (attendance already
  * confirmed), invalid (404); any other token is the demo appointment.
  * Waitlist leave (/w/<token>): `invalid` → 404, anything else succeeds.
  */
 import type {
-  AvailabilityResponse, BookingSummary, CreateBookingRequest, ManagedAppointmentResponse, PublicProfile,
+  AvailabilityResponse, BookingSummary, CreateBookingRequest, HoldSlotRequest, ManagedAppointmentResponse, PublicProfile,
 } from '@shared/api';
-import { CLIENT_CHANGE_CUTOFF_MIN } from '@shared/api';
+import { CLIENT_CHANGE_CUTOFF_MIN, HOLD_MINUTES } from '@shared/api';
 import { computeAvailability, type Interval } from '@shared/availability';
 import { addMinutes, bogotaDate, bogotaTime, toInstant } from '@shared/time';
 import { ApiError, type ApiClient } from '../lib/api';
@@ -78,6 +80,8 @@ function soon(): string {
 export function createMockApi(params: URLSearchParams): ApiClient {
   const state = params.get('state');
   let failure = params.get('fail');
+  /** Hold attempts left before one fails with slot_taken (hold=taken → the first, hold=next → the second). */
+  let holdsUntilTaken = params.get('hold') === 'taken' ? 0 : params.get('hold') === 'next' ? 1 : -1;
   const delayMs = Number(params.get('delay') ?? 350);
   const singleService = params.get('services') === '1';
   const profileFor = (slug: string): PublicProfile => {
@@ -146,6 +150,15 @@ export function createMockApi(params: URLSearchParams): ApiClient {
         active, serviceId: service.id, from,
         days: state === 'empty' ? days.map((d) => ({ ...d, slots: [] })) : days,
       };
+    },
+    async holdSlot(slug, body: HoldSlotRequest) {
+      await wait();
+      if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);
+      if (holdsUntilTaken-- === 0) {
+        busyFor(slug).push({ start: body.start, end: addMinutes(body.start, 30) });
+        throw new ApiError('slot_taken', 'Alguien acaba de separar esa hora. Elige otra.', 409);
+      }
+      return { expiresAt: new Date(Date.now() + HOLD_MINUTES * 60_000).toISOString() };
     },
     async createBooking(slug, body: CreateBookingRequest) {
       await wait();

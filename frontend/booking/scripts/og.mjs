@@ -25,7 +25,7 @@ h1{font-family:B;font-weight:800;font-size:78px;line-height:1.02;letter-spacing:
 </style></head><body>
 <div class="mark">sepárame<span>.</span></div>
 <h1>Tu agenda en línea, lista para que te separen citas.</h1>
-<div class="foot"><span class="pill">Prueba gratis 10 días</span><span>separame.app</span></div>
+<div class="foot"><span class="pill">Prueba gratis 15 días</span><span>separame.app</span></div>
 </body></html>`;
 
 function fallbackExecutable() {

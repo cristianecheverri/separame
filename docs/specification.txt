@@ -93,7 +93,7 @@ FUERA DE LA PRIMERA VERSIÓN
 --------------------------------------------------------------------
 REGLAS DE SUSCRIPCIÓN
 --------------------------------------------------------------------
-  - Prueba gratis de 10 días por profesional.
+  - Prueba gratis de 15 días por profesional.
     Una sola prueba por correo verificado (evita abusos). No se verifica
     el teléfono por SMS; se bloquean los correos desechables.
   - Suscripción VIGENTE: todo funciona.
@@ -204,6 +204,15 @@ ARQUITECTURA (todo serverless, casi gratis en reposo)
   - Backend: API Gateway HTTP API en api.separame.app + DynamoDB
     (tabla única, on-demand).
     Cada horario reservado es un registro único -> sin citas dobles.
+    Al tocar una hora en la reserva, se le guarda al cliente 10 minutos
+    (nadie más la puede tomar) y se revalida en cada "Siguiente"; si ya
+    no está libre, vuelve a "Día y hora" antes de escribir sus datos.
+    Con margen entre citas, la agenda ofrece la hora justo después del
+    margen (10:40 tras una cita de 10:00–10:30) y la última que termina
+    antes de él (9:20), en vez de perder la media hora de cada lado.
+    Sin anticipación mínima (citas que agenda el profesional, o si la
+    pone en 0), una hora que acaba de empezar se puede pedir hasta 5
+    minutos después de su inicio; luego ya no aparece.
     - Varias Lambdas pequeñas y específicas (una por grupo de rutas,
       el webhook, los jobs y los triggers de Cognito), no una que lo
       haga todo. Cada una empaqueta solo lo que usa para arrancar rápido.

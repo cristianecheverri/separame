@@ -1,13 +1,14 @@
 /**
- * Builds the rows of the day agenda (appointments + "Espacio libre" gaps) and
+ * Builds the rows of the day agenda (appointments, "Espacio libre" gaps and
+ * «No disponible» blocks) and
  * the "Próximos días" summary. Pure, so it is unit-tested.
  */
 import { formatInstantTime } from '@shared/format';
 import { holidayOn } from '@shared/holidays';
 import { addDays, bogotaDate, minutesOf, toInstant, weekdayOf, type ISODate, type ISOInstant } from '@shared/time';
-import type { Appointment, BookingRules, WeeklySchedule } from '@shared/types';
+import type { Appointment, Block, BookingRules, WeeklySchedule } from '@shared/types';
 
-export type DayRowKind = 'confirmed' | 'new' | 'free' | 'cancelled';
+export type DayRowKind = 'confirmed' | 'new' | 'free' | 'cancelled' | 'blocked';
 
 export interface DayRow {
   key: string;
@@ -17,6 +18,11 @@ export interface DayRow {
   appointment?: Appointment;
   /** Free rows only. */
   freeMinutes?: number;
+  /** Blocked rows: the block, and its part inside this day. */
+  block?: Block;
+  end?: ISOInstant;
+  /** Blocked rows: covers the whole day. */
+  allDay?: boolean;
 }
 
 /** Gaps shorter than this are not worth showing. */
@@ -50,6 +56,7 @@ export function freeGaps(
   schedule: WeeklySchedule,
   rules: Pick<BookingRules, 'slotStepMin'>,
   now: Date,
+  blocks: Pick<Block, 'start' | 'end'>[] = [],
 ): { start: ISOInstant; minutes: number }[] {
   const today = bogotaDate(now);
   if (date < today) return [];
@@ -75,6 +82,8 @@ export function freeGaps(
       const gapStart = ms(toInstant(date, '00:00')) + from * 60_000;
       const gapEnd = gapStart + minutes * 60_000;
       if (cancelled.some((c) => ms(c.start) < gapEnd && ms(c.end) > gapStart)) continue;
+      // Blocked time isn't free: the block shows as its own row.
+      if (blocks.some((b) => ms(b.start) < gapEnd && ms(b.end) > gapStart)) continue;
       gaps.push({ start: new Date(gapStart).toISOString(), minutes });
     }
   }
@@ -87,7 +96,7 @@ export function buildDayRows(
   schedule: WeeklySchedule,
   rules: Pick<BookingRules, 'slotStepMin'>,
   now: Date,
-  options: { includeFree?: boolean } = {},
+  options: { includeFree?: boolean; blocks?: Block[] } = {},
 ): DayRow[] {
   const rows: DayRow[] = appointments.map((a) => ({
     key: a.id,
@@ -96,12 +105,30 @@ export function buildDayRows(
     time: formatInstantTime(a.start),
     appointment: a,
   }));
+  const blocks = blocksOn(date, options.blocks ?? []);
+  for (const b of blocks) {
+    rows.push({ key: `block-${b.block.id}`, kind: 'blocked', start: b.start, end: b.end, allDay: b.allDay, time: b.allDay ? 'Todo el día' : formatInstantTime(b.start), block: b.block });
+  }
   if (options.includeFree !== false) {
-    for (const gap of freeGaps(date, appointments, schedule, rules, now)) {
+    for (const gap of freeGaps(date, appointments, schedule, rules, now, blocks)) {
       rows.push({ key: `free-${gap.start}`, kind: 'free', start: gap.start, time: formatInstantTime(gap.start), freeMinutes: gap.minutes });
     }
   }
   return rows.sort((a, b) => ms(a.start) - ms(b.start) || (a.kind === 'cancelled' ? 1 : 0) - (b.kind === 'cancelled' ? 1 : 0));
+}
+
+/** The blocks that touch `date`, clipped to it. */
+export function blocksOn(date: ISODate, blocks: Block[]): { block: Block; start: ISOInstant; end: ISOInstant; allDay: boolean }[] {
+  const dayStart = ms(toInstant(date, '00:00'));
+  const dayEnd = ms(toInstant(addDays(date, 1), '00:00'));
+  return blocks
+    .filter((b) => ms(b.start) < dayEnd && ms(b.end) > dayStart)
+    .map((block) => {
+      const start = Math.max(dayStart, ms(block.start));
+      const end = Math.min(dayEnd, ms(block.end));
+      return { block, start: new Date(start).toISOString(), end: new Date(end).toISOString(), allDay: start === dayStart && end === dayEnd };
+    })
+    .sort((a, b) => ms(a.start) - ms(b.start));
 }
 
 export interface UpcomingDay {

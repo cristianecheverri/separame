@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type ProfileResponse, type UpdateProfileRequest } from '@shared/api';
+import { initials } from '@shared/format';
+import { LogoPicker } from '../../components/LogoPicker';
 import { downloadQr, QrTile } from '../../components/ShareQr';
 import { cx } from '../../components/ui/cx';
 import { CopyIcon, ExternalIcon, LockIcon } from '../../components/ui/icons';
@@ -73,6 +75,18 @@ export function ProfilePage() {
         </form>
 
         <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+          <section className={cx(ui.card, 'gap-[14px]')}>
+            <LogoPicker
+              logo={profile.logo}
+              initials={initials(profile.name)}
+              path={apiPaths.profileLogo()}
+              actingProId={null}
+              title="Logo o foto"
+              hint="Se ve en tu página de citas en lugar de tus iniciales. PNG, JPG o WebP."
+              disabled={readOnly}
+              onChanged={() => void qc.invalidateQueries({ queryKey: keys.me })}
+            />
+          </section>
           <section className={cx(ui.card, 'gap-[14px]')}>
             <h2 className={ui.h2sm}>Tu enlace</h2>
             <div className="font-bold text-[15px] text-primary [overflow-wrap:anywhere]">{linkLabel(publicUrl)}</div>

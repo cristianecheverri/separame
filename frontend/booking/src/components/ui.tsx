@@ -32,12 +32,20 @@ const AVATAR_SIZES = {
   64: 'w-16 h-16 text-[24px]',
 } as const;
 
-export function Avatar({ initials, size = 44, tone = 'green', class: className = '' }: {
+/** The professional's / consultorio's logo in the avatar circle (square 256 px image from the panel). */
+function LogoImage({ src, size, class: className }: { src: string; size: number; class: string }) {
+  return <img src={src} alt="" width={size} height={size} decoding="async" class={`${className} rounded-full object-cover bg-white shrink-0`} />;
+}
+
+export function Avatar({ initials, logo, size = 44, tone = 'green', class: className = '' }: {
   initials: string;
+  /** When set, the logo replaces the initials (same size and place). */
+  logo?: string;
   size?: keyof typeof AVATAR_SIZES;
   tone?: 'green' | 'yellow';
   class?: string;
 }) {
+  if (logo) return <LogoImage src={logo} size={size} class={`${AVATAR_SIZES[size]} ${className}`} />;
   const colors = tone === 'yellow' ? 'bg-accent text-ink' : 'bg-primary text-white';
   return (
     <div
@@ -59,13 +67,15 @@ const MEMBER_AVATAR_SIZES = {
 } as const;
 
 /** Initials of a team member in their color: «¿Con quién?», the team band and «Te atiende». */
-export function MemberAvatar({ initials, index, size = 44, class: className = '' }: {
+export function MemberAvatar({ initials, logo, index, size = 44, class: className = '' }: {
   initials: string;
+  logo?: string;
   /** Position in the team (owner = 0): picks the color. */
   index: number;
   size?: keyof typeof MEMBER_AVATAR_SIZES;
   class?: string;
 }) {
+  if (logo) return <LogoImage src={logo} size={size} class={`${MEMBER_AVATAR_SIZES[size]} ${className}`} />;
   const tone = MEMBER_TONES[((index % MEMBER_TONES.length) + MEMBER_TONES.length) % MEMBER_TONES.length];
   return (
     <span

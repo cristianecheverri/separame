@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { formatDateNoYear, formatDayLong } from '@shared/format';
 import { holidayOn } from '@shared/holidays';
-import { addDays, bogotaDate, jsWeekday, todayBogota, weekdayOf, type ISODate } from '@shared/time';
+import { addDays, addMinutes, bogotaDate, bogotaTime, jsWeekday, todayBogota, weekdayOf, type ISODate } from '@shared/time';
 import { cx } from '../../components/ui/cx';
-import { ChevronLeftIcon, ChevronRightIcon, LinkIcon, LockIcon, PlusIcon, ShareIcon } from '../../components/ui/icons';
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, LinkIcon, LockIcon, PlusIcon, ShareIcon } from '../../components/ui/icons';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Fab } from '../../components/ui/Fab';
+import { Fab, FabMenu } from '../../components/ui/Fab';
 import { ui } from '../../components/ui/styles';
 import { useToast } from '../../components/ui/Toast';
 import { activeAppointments, buildDayRows } from '../../lib/agenda';
@@ -25,6 +25,9 @@ import type { AppointmentModalState } from '../appointments/AppointmentModals';
 import { LazyAppointmentModals as AppointmentModals } from '../appointments/LazyAppointmentModals';
 import { CalendarSyncCard, ReadOnlyChecklist, ReminderNote, ShareCard, UpcomingCard } from './SideCards';
 import { ReferralCard } from '../referrals/ReferralCard';
+import { BlockSheet, type BlockPrefill } from '../availability/BlockSheet';
+import { useBlocks } from '../availability/useBlocks';
+import { ValueCard } from './ValueCard';
 import { WeekView } from './WeekView';
 
 /** Team plan: whose agenda the headline talks about. */
@@ -82,6 +85,11 @@ export function AgendaPage() {
   /** Appointment picked in the week view: shown and briefly highlighted in its day. */
   const [focusId, setFocusId] = useState<string | null>(null);
   const markOutcome = useOutcome();
+  /** «No estaré disponible» open (from «+», the desktop button or a free gap). */
+  const [blocking, setBlocking] = useState<{ prefill?: BlockPrefill } | null>(null);
+  const { remove: removeBlock } = useBlocks();
+  /** Blocks belong to one professional: not under the team's «Todos». */
+  const canBlock = !readOnly && !acting.isAll;
 
   const shownDate = readOnly ? today : date;
   const weekStart = addDays(shownDate, -((jsWeekday(shownDate) + 6) % 7));
@@ -96,7 +104,10 @@ export function AgendaPage() {
   const todayCount = todayQuery.data ? activeAppointments(todayQuery.data.appointments).length : null;
   const rows =
     dayQuery.data && settings
-      ? buildDayRows(shownDate, dayQuery.data.appointments, settings.schedule, settings.rules, clock, { includeFree: !readOnly && !acting.isAll })
+      ? buildDayRows(shownDate, dayQuery.data.appointments, settings.schedule, settings.rules, clock, {
+          includeFree: !readOnly && !acting.isAll,
+          blocks: acting.isAll ? [] : settings.blocks,
+        })
       : null;
 
   const focusReady = !!focusId && !!rows?.some((row) => row.key === focusId);
@@ -118,6 +129,7 @@ export function AgendaPage() {
     else if (outcome === 'failed') toast.error('No pudimos copiar el enlace.');
   };
   const newAppointment = () => setModal({ kind: 'new', date: view === 'day' && date >= today ? date : undefined });
+  const blockHours = () => setBlocking({});
 
   const emptyText = () => {
     const holiday = holidayOn(shownDate);
@@ -160,7 +172,13 @@ export function AgendaPage() {
             </button>
           )}
           {/* Below 1024 px the floating button takes over (MP-03), except when it's locked (read-only). */}
-          <div className={readOnly ? 'flex' : 'hidden lg:flex'}>
+          <div className={cx(readOnly ? 'flex' : 'hidden lg:flex', 'gap-[10px]')}>
+            {canBlock && (
+              <button type="button" onClick={blockHours} className={ui.btnOutline}>
+                <LockIcon size={16} />
+                Bloquear horas
+              </button>
+            )}
             <button
               type="button"
               disabled={readOnly}
@@ -174,6 +192,8 @@ export function AgendaPage() {
           </div>
         </div>
       </div>
+
+      {!readOnly && !acting.isAll && <ValueCard variant="phone" onShare={() => void share()} className="lg:hidden" />}
 
       <div className="flex flex-wrap gap-6 items-start">
         <section className={cx(ui.card, 'flex-[999_1_480px] min-w-0 gap-[6px]')} aria-labelledby="agenda-title">
@@ -230,6 +250,7 @@ export function AgendaPage() {
                 weekStart={weekStart}
                 today={today}
                 appointments={weekQuery.data.appointments}
+                blocks={acting.isAll ? [] : settings?.blocks}
                 schedule={settings?.schedule}
                 now={clock}
                 onPickDay={(d) => {
@@ -284,6 +305,13 @@ export function AgendaPage() {
                 onMove={(appointment) => setModal({ kind: 'move', appointment })}
                 onCancel={(appointment) => setModal({ kind: 'cancel', appointment })}
                 onFree={(free) => setModal({ kind: 'new', date: shownDate, start: free.start, freeMinutes: free.freeMinutes })}
+                onBlockFree={
+                  canBlock
+                    ? (free) =>
+                        setBlocking({ prefill: { date: shownDate, startTime: bogotaTime(free.start), endTime: bogotaTime(addMinutes(free.start, free.freeMinutes ?? 30)) } })
+                    : undefined
+                }
+                onUnblock={canBlock ? (block) => removeBlock.mutate(block) : undefined}
               />
             ))
           )}
@@ -297,6 +325,7 @@ export function AgendaPage() {
           </div>
         ) : (
           <div className="flex-[1_1_300px] min-w-0 flex flex-col gap-5">
+            {!acting.isAll && <ValueCard variant="desktop" onShare={() => void share()} className="hidden lg:flex" />}
             {/* First of the side cards: right after the day's appointments on phones (proposal MP-03). */}
             <div className="empty:hidden">
               <InstallCard />
@@ -314,8 +343,18 @@ export function AgendaPage() {
           </div>
         )}
       </div>
-      {!readOnly && <Fab label="Nueva cita" onClick={newAppointment} />}
+      {canBlock ? (
+        <FabMenu
+          actions={[
+            { label: 'Bloquear horas', icon: <LockIcon size={18} />, onClick: blockHours },
+            { label: 'Nueva cita', icon: <CalendarIcon size={18} />, onClick: newAppointment },
+          ]}
+        />
+      ) : (
+        !readOnly && <Fab label="Nueva cita" onClick={newAppointment} />
+      )}
       <AppointmentModals state={modal} onClose={() => setModal(null)} />
+      {blocking && <BlockSheet prefill={blocking.prefill} onClose={() => setBlocking(null)} />}
     </div>
   );
 }

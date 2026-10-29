@@ -34,6 +34,19 @@ describe('computeDay', () => {
     expect(times(computeDay('2026-10-20', ctx()).slots)[0]).toBe('11:00');
   });
 
+  it('without minimum notice, an hour that just started stays bookable for 5 minutes', () => {
+    const noNotice = { ...DEFAULT_RULES, minNoticeMin: 0 };
+    const at = (time: string) => new Date(toInstant('2026-10-20', time));
+    expect(times(computeDay('2026-10-20', ctx({ rules: noNotice, now: at('10:05') })).slots)[0]).toBe('10:00');
+    expect(isSlotBookable(toInstant('2026-10-20', '10:00'), ctx({ rules: noNotice, now: at('10:05') }))).toBe(true);
+    expect(times(computeDay('2026-10-20', ctx({ rules: noNotice, now: at('10:06') })).slots)[0]).toBe('10:30');
+  });
+
+  it('with a minimum notice, the notice rules (no grace for started hours)', () => {
+    const halfHour = { ...DEFAULT_RULES, minNoticeMin: 30 };
+    expect(times(computeDay('2026-10-20', ctx({ rules: halfHour, now: new Date(toInstant('2026-10-20', '10:02')) })).slots)[0]).toBe('11:00');
+  });
+
   it('today after the last start (within the notice) is over, not full', () => {
     const evening = new Date(toInstant('2026-10-20', '16:30'));
     expect(computeDay('2026-10-20', ctx({ now: evening }))).toMatchObject({ closed: 'past', slots: [] });
@@ -60,6 +73,31 @@ describe('computeDay', () => {
     expect(slots).not.toContain('10:30');
     expect(slots).toContain('09:00');
     expect(slots).toContain('11:00');
+  });
+
+  it('offers the starts right around the buffer instead of losing the neighbouring grid slots', () => {
+    const busy = [{ start: toInstant('2026-10-22', '10:00'), end: toInstant('2026-10-22', '10:30') }];
+    const slots = times(computeDay('2026-10-22', ctx({ busy })).slots);
+    expect(slots.slice(0, 7)).toEqual(['08:00', '08:30', '09:00', '09:20', '10:40', '11:00', '11:30']);
+    // The extra starts are real slots: their locks never touch the booked appointment's.
+    const booked = new Set(lockUnits(busy[0].start, 30, DEFAULT_RULES.bufferMin));
+    for (const at of ['09:20', '10:40']) {
+      expect(lockUnits(toInstant('2026-10-22', at), 30, DEFAULT_RULES.bufferMin).some((u) => booked.has(u))).toBe(false);
+    }
+  });
+
+  it('without a buffer the grid slots next to an appointment stay (no extra starts)', () => {
+    const busy = [{ start: toInstant('2026-10-22', '10:00'), end: toInstant('2026-10-22', '10:30') }];
+    const slots = times(computeDay('2026-10-22', ctx({ busy, rules: { ...DEFAULT_RULES, bufferMin: 0 } })).slots);
+    expect(slots.slice(0, 7)).toEqual(['08:00', '08:30', '09:00', '09:30', '10:30', '11:00', '11:30']);
+  });
+
+  it('extra starts stay inside the weekly range', () => {
+    const busy = [{ start: toInstant('2026-10-22', '11:00'), end: toInstant('2026-10-22', '11:30') }];
+    const slots = times(computeDay('2026-10-22', ctx({ busy })).slots);
+    // 11:40 would end at 12:10, after the morning range.
+    expect(slots).not.toContain('11:40');
+    expect(slots).toContain('10:20');
   });
 
   it('closes Sundays, holidays, the past and beyond the booking window', () => {

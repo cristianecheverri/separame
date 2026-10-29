@@ -1,6 +1,7 @@
 import type {
   APIGatewayProxyEventV2, APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyStructuredResultV2,
 } from 'aws-lambda';
+import { brotliCompressSync, constants as zlib, gzipSync } from 'node:zlib';
 import type { z } from 'zod';
 import { ERROR_STATUS, type ApiErrorBody, type ErrorCode } from '../../shared/api';
 import { log } from './logger';
@@ -125,24 +126,52 @@ export function pathParam(event: ApiEvent, name: string): string {
 
 export const sourceIp = (event: ApiEvent): string => event.requestContext?.http?.sourceIp ?? 'unknown';
 
+/** Smaller bodies don't pay for the compression headers and the CPU. */
+export const COMPRESS_MIN_BYTES = 1024;
+
+/**
+ * The HTTP API doesn't compress responses: done here, brotli (fast level) or
+ * gzip as the client accepts. Availability, appointment lists and stats shrink
+ * 5–10×, which matters on phone data plans.
+ */
+export function compressed(event: ApiEvent, result: ApiResult): ApiResult {
+  const body = result.body;
+  if (typeof body !== 'string' || result.isBase64Encoded || Buffer.byteLength(body) < COMPRESS_MIN_BYTES) return result;
+  const accepted = (event.headers?.['accept-encoding'] ?? '').toLowerCase();
+  const encoding = /\bbr\b/.test(accepted) ? 'br' : /\bgzip\b/.test(accepted) ? 'gzip' : null;
+  if (!encoding) return result;
+  const bytes = encoding === 'br'
+    ? brotliCompressSync(body, { params: { [zlib.BROTLI_PARAM_QUALITY]: 4, [zlib.BROTLI_PARAM_MODE]: zlib.BROTLI_MODE_TEXT } })
+    : gzipSync(body, { level: 6 });
+  return {
+    ...result,
+    headers: { ...result.headers, 'content-encoding': encoding, vary: 'accept-encoding' },
+    body: bytes.toString('base64'),
+    isBase64Encoded: true,
+  };
+}
+
 /**
  * Builds the Lambda handler for a route group: dispatches on `event.routeKey`
  * (e.g. `"GET /me/services"`), turns `ApiError` into its JSON error and any
- * other exception into a logged 500 that never leaks internals.
+ * other exception into a logged 500 that never leaks internals. Large bodies
+ * leave compressed (`compressed`).
  */
 export function createApiHandler(routes: Record<string, RouteHandler>) {
-  return async (event: ApiEvent): Promise<ApiResult> => {
-    const route = routes[event.routeKey];
-    try {
-      if (!route) throw new ApiError('not_found', 'Ruta no encontrada.');
-      return await route(event);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status >= 500) log.error('api error', { routeKey: event.routeKey, code: err.code, err });
-        return errorResponse(err);
-      }
-      log.error('unhandled error', { routeKey: event.routeKey, err });
-      return errorResponse(new ApiError('internal'));
+  return async (event: ApiEvent): Promise<ApiResult> => compressed(event, await dispatch(routes, event));
+}
+
+async function dispatch(routes: Record<string, RouteHandler>, event: ApiEvent): Promise<ApiResult> {
+  const route = routes[event.routeKey];
+  try {
+    if (!route) throw new ApiError('not_found', 'Ruta no encontrada.');
+    return await route(event);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.status >= 500) log.error('api error', { routeKey: event.routeKey, code: err.code, err });
+      return errorResponse(err);
     }
-  };
+    log.error('unhandled error', { routeKey: event.routeKey, err });
+    return errorResponse(new ApiError('internal'));
+  }
 }

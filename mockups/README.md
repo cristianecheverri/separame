@@ -28,8 +28,12 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 
 | Archivo | Pantalla | Nombre original |
 |---|---|---|
-| `client-booking-steps.dc.html` | Reserva por pasos. **Es la implementada.** Paso 1 con la banda verde del perfil; chips de la selección arriba; día con horas preseleccionado, día lleno con borde punteado y leyenda; «Tus datos» con «Recordar mis datos» y botón que dice qué falta; «Precio a convenir» / sin precio. Tweaks `step`, `returning`, `captchaHint` | `Pasos` |
+| `client-booking-steps.dc.html` | Reserva por pasos. **Es la implementada.** Paso 1 con la banda verde del perfil; chips de la selección arriba; día con horas preseleccionado, día lleno con borde punteado y leyenda; «Tus datos» con «Recordar mis datos» y botón que dice qué falta; «Precio a convenir» / sin precio. Tweaks `step`, `returning`, `captchaHint`, `hold` (hora guardada / verificando / tomada / ya empezó) | `Pasos` |
 | `client-booking-steps-captcha-hint.dc.html` | Paso 4 con la verificación y el aviso «Confirma que eres una persona ↑» (importa `client-booking-steps`) | `client-booking-steps-captcha-hint` |
+| `client-booking-steps-slot-taken.dc.html` | Paso 2 cuando la hora que tocaste ya la tomó alguien (al tocarla o al revalidarla en «Siguiente»): aviso «Alguien acaba de separar esa hora. Elige otra, por favor.»; con el tweak `hold` = `started`, «Esa hora ya empezó. Elige otra, por favor.» (importa `client-booking-steps`) | `client-booking-steps-slot-taken` |
+| `client-booking-steps-verifying.dc.html` | Paso 3 con la hora guardada («Te guardamos esta hora 10 minutos mientras escribes tus datos.») y el botón «Verificando la hora…» mientras se revalida (importa `client-booking-steps`, tweak `hold`) | `client-booking-steps-verifying` |
+| `client-booking-logo.dc.html` | Paso 1 con el logo del profesional en la banda (tweak `logo` de `client-booking-steps`; sin logo, las iniciales como siempre). En la página del consultorio la banda lleva el logo del consultorio y «¿Con quién?» el de cada profesional | `client-booking-logo` |
+| `pro-public-profile-logo.dc.html` | Perfil público con «Logo o foto» subido (tweak `logo` de `pro-public-profile`): «Cambiar imagen» / «Quitar». En «Equipo» van el logo del consultorio y el de cada profesional | `pro-public-profile-logo` |
 | `client-booking-returning.dc.html` | «Tus datos» de un cliente que vuelve: datos guardados y aviso «Usamos los datos que guardaste en este celular.» | `client-booking-returning` |
 | `client-booking-landscape.dc.html` | Reserva en horizontal (844×390): encabezado compacto, chips en una fila, nombre y celular lado a lado | `client-booking-landscape` |
 | `client-booking-steps-at-step-{2,3,4}.dc.html` | El mismo flujo abierto en el paso 2, 3 y 4 (importa `client-booking-steps`) | `Pasos-2/3/4` |
@@ -150,6 +154,8 @@ Los enlaces a pantallas de la línea A apuntan a `../line-a/`.
 | `proposals/team-email-request-result.dc.html` | Equipos · Correos de la solicitud: aviso al admin, aprobada y rechazada (tweak: variante) |
 | `proposals/proposal-footer-links-{before,after,after-desktop}.dc.html` | **Aprobada.** Pie de la página principal con «Cómo funciona · Precios · Preguntas» también en el celular (sitelinks; la página sigue siendo una sola) |
 | `proposals/proposal-landing-teams-{desktop,phone}.dc.html` | **Aprobada.** Página principal: sección «Para consultorios y equipos» después de Precios, con «¿Con quién?» ilustrado y el botón «Solicitar plan para equipos» |
+| `proposals/proposal-block-hours-{agenda-phone,sheet-phone}.dc.html` | **Aprobada e implementada (29-oct).** Bloquear horas desde la agenda: «+» con «Nueva cita» / «Bloquear horas», «Bloquear» en el espacio libre, el bloqueo visible en el día con «Quitar», y la hoja «No estaré disponible» (Hoy · Mañana · Otro día · Varios días, atajos de horas, motivo opcional, aviso si hay citas en el rango) |
+| `proposals/proposal-value-metrics-{agenda-phone,desktop-card,stats-phone}.dc.html` | **Aprobada e implementada (29-oct).** Métricas de valor: «Octubre con Sepárame» en la agenda (celular y escritorio) y «Lo que Sepárame hizo por ti» en Estadísticas (se reservaron solas, tiempo ahorrado, recordatorios enviados, confirmaron asistencia, cupos recuperados; sin «fuera de tu horario», descartada), más cancelaciones, horas más pedidas y anticipación |
 
 ## Exploración (líneas B y C)
 

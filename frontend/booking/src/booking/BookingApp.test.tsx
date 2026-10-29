@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/preact';
-import { describe, expect, it } from 'vitest';
-import { MOCK_PROFILE } from '../mock/fixtures';
+import { act, fireEvent, render, screen } from '@testing-library/preact';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MOCK_NOW, MOCK_PROFILE } from '../mock/fixtures';
 import { createMockApi } from '../mock/mockApi';
 import { BookingApp } from './BookingApp';
 
@@ -12,34 +12,46 @@ function renderApp(query = '', profile = MOCK_PROFILE) {
 const click = (target: string | RegExp | HTMLElement) =>
   fireEvent.click(target instanceof HTMLElement ? target : screen.getByRole('button', { name: target }));
 const isDisabled = (el: HTMLElement) => (el as HTMLButtonElement).disabled;
+/** "Siguiente" re-checks the held hour (async) before moving on: let the mock answer. */
+async function next() {
+  click('Siguiente');
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+}
 const consent = () => screen.getByRole('checkbox', { name: /Autorizo el tratamiento/ });
 
 async function goToDetails() {
   click(/Valoración/);
-  click('Siguiente');
+  await next();
   click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
   click('10:00 a. m.');
-  click('Siguiente');
+  await next();
 }
 
 async function goToReview() {
   expect(isDisabled(screen.getByRole('button', { name: 'Elige un servicio' }))).toBe(true);
   click(/Valoración/);
-  click('Siguiente');
+  await next();
   click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
   click('10:00 a. m.');
   expect(screen.getByRole('button', { name: 'Cambiar servicio: Valoración · 30 min · $60.000' })).toBeTruthy();
-  click('Siguiente');
+  await next();
   expect(screen.getByRole('button', { name: 'Cambiar día y hora: Jue 22 oct · 10:00 a. m.' })).toBeTruthy();
   fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
   fireEvent.input(screen.getByLabelText(/^Correo/), { target: { value: 'mariana@correo.com' } });
   fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
   fireEvent.click(consent());
-  click('Siguiente');
+  await next();
   await screen.findByRole('heading', { name: '¿Todo bien?' });
 }
 
 describe('BookingApp', () => {
+  // The mock's hours are around MOCK_NOW: the page compares them with the clock.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(MOCK_NOW);
+  });
+  afterEach(() => vi.useRealTimers());
+
   it('renders the profile instantly and books through the four steps', async () => {
     renderApp();
     expect(screen.getByText('Dra. Laura Pérez')).toBeTruthy();
@@ -58,7 +70,7 @@ describe('BookingApp', () => {
   it('disables closed days; full days lead to the waitlist', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     expect(isDisabled(await screen.findByRole('button', { name: 'Domingo 25 de octubre, no hay atención' }))).toBe(true);
     // The first day with free hours comes preselected, its hours already showing.
     expect(screen.getByRole('button', { name: 'Miércoles 21 de octubre', pressed: true })).toBeTruthy();
@@ -79,15 +91,15 @@ describe('BookingApp', () => {
   it('shows field errors in Spanish and stays on step 3', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
+    await next();
     fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'M' } });
     fireEvent.input(screen.getByLabelText(/^Correo/), { target: { value: 'mariana@' } });
     fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300' } });
     fireEvent.click(consent());
-    click('Siguiente');
+    await next();
     expect(screen.getByText('Escribe tu nombre completo')).toBeTruthy();
     expect(screen.getByText('Revisa tu correo, parece que le falta algo')).toBeTruthy();
     expect(screen.getByText('El celular debe tener 10 dígitos')).toBeTruthy();
@@ -102,6 +114,95 @@ describe('BookingApp', () => {
     expect(screen.getByText('Paso 2 de 4 · Día y hora')).toBeTruthy();
     await screen.findByRole('button', { name: '10:30 a. m.' });
     expect(screen.queryByRole('button', { name: '10:00 a. m.' })).toBeNull();
+  });
+
+  describe('holding the picked hour', () => {
+    function renderSpied(query = '') {
+      const api = createMockApi(new URLSearchParams(`delay=0&${query}`));
+      const spies = {
+        hold: vi.spyOn(api, 'holdSlot'), book: vi.spyOn(api, 'createBooking'), availability: vi.spyOn(api, 'getAvailability'),
+      };
+      render(<BookingApp slug={MOCK_PROFILE.slug} initialProfile={MOCK_PROFILE} runtime={{ api, turnstileSiteKey: null }} />);
+      return spies;
+    }
+
+    async function pickTen() {
+      click(/Valoración/);
+      await next();
+      click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
+      click('10:00 a. m.');
+    }
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('holds the hour on tap, says so in «Tus datos», and the booking takes the same hold', async () => {
+      const spies = renderSpied();
+      await pickTen();
+      expect(spies.hold).toHaveBeenCalledTimes(1);
+      const { holdId } = spies.hold.mock.calls[0][1];
+      expect(spies.hold.mock.calls[0]).toEqual([MOCK_PROFILE.slug, { serviceId: 'valoracion', start: '2026-10-22T15:00:00.000Z', holdId }]);
+      // Their own hold never hides the hour from them.
+      expect(spies.availability.mock.calls.every(([, query]) => query.holdId === holdId)).toBe(true);
+      await next();
+      expect(screen.getByText('Te guardamos esta hora 10 minutos.')).toBeTruthy();
+      // Leaving «Día y hora» right after the tap reuses that hold (no second call).
+      expect(spies.hold).toHaveBeenCalledTimes(1);
+
+      fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
+      fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
+      fireEvent.click(consent());
+      await next();
+      click('Separar mi cita');
+      await screen.findByRole('heading', { name: '¡Listo, Mariana! Tu cita quedó separada.' });
+      expect(spies.book.mock.calls[0][1].holdId).toBe(holdId);
+    });
+
+    it('a tapped hour someone else holds sends the client to pick another, before any details', async () => {
+      renderSpied('hold=taken');
+      await pickTen();
+      expect(await screen.findByText('Alguien acaba de separar esa hora. Elige otra, por favor.')).toBeTruthy();
+      await screen.findByRole('button', { name: '10:30 a. m.' });
+      expect(screen.queryByRole('button', { name: '10:00 a. m.' })).toBeNull();
+      expect(isDisabled(screen.getByRole('button', { name: 'Elige una hora' }))).toBe(true);
+    });
+
+    it('an hour that already started while the page was open says so', async () => {
+      renderSpied('hold=taken');
+      click(/Valoración/);
+      await next();
+      click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
+      vi.setSystemTime(new Date('2026-10-22T15:10:00.000Z'));
+      click('10:00 a. m.');
+      expect(await screen.findByText('Esa hora ya empezó. Elige otra, por favor.')).toBeTruthy();
+    });
+
+    it('re-checks the hour when leaving «Tus datos» and goes back to «Día y hora» if it was taken', async () => {
+      const spies = renderSpied('hold=next');
+      await pickTen();
+      await next();
+      fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
+      fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
+      fireEvent.click(consent());
+      // The tap's hold is no longer fresh by the time the details are filled in.
+      const later = Date.now() + 60_000;
+      vi.spyOn(Date, 'now').mockReturnValue(later);
+      await next();
+      expect(spies.hold).toHaveBeenCalledTimes(2);
+      expect(await screen.findByText('Alguien acaba de separar esa hora. Elige otra, por favor.')).toBeTruthy();
+      expect(screen.getByText('Paso 2 de 4 · Día y hora')).toBeTruthy();
+      expect(spies.book).not.toHaveBeenCalled();
+    });
+  });
+
+  it('the professional\'s logo replaces the initials; without one the page looks as always', () => {
+    const logo = '/media/pros/p1/0123456789abcdef.webp';
+    const { container, unmount } = renderApp('', { ...MOCK_PROFILE, logo });
+    expect(container.querySelector(`img[src="${logo}"]`)).toBeTruthy();
+    expect(screen.queryByText(MOCK_PROFILE.initials)).toBeNull();
+    unmount();
+    const plain = renderApp();
+    expect(plain.container.querySelector('img[src^="/media/"]')).toBeNull();
+    expect(screen.getByText(MOCK_PROFILE.initials)).toBeTruthy();
   });
 
   it('shows a retry message on network errors', async () => {
@@ -126,12 +227,12 @@ describe('BookingApp', () => {
     expect(screen.getByText('Valoración · 30 min · $60.000')).toBeTruthy();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
+    await next();
     fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
     fireEvent.input(screen.getByLabelText(/^Correo/), { target: { value: 'mariana@correo.com' } });
     fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '3001234567' } });
     fireEvent.click(consent());
-    click('Siguiente');
+    await next();
     expect(screen.getByText('Paso 3 de 3 · Confirmar')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Cambiar servicio' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Cambiar cuándo' })).toBeTruthy();
@@ -140,11 +241,11 @@ describe('BookingApp', () => {
   it('jumps back to a step from its chip', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
-    click('Cambiar servicio: Valoración · 30 min · $60.000');
+    await next();
+    click('Cambiar servicio: Valoración · 30 min');
     expect(screen.getByText('Paso 1 de 4 · Servicio')).toBeTruthy();
   });
 
@@ -167,7 +268,7 @@ describe('BookingApp', () => {
   it('joins the waitlist when nothing is free', async () => {
     renderApp('state=empty');
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: /¿No encuentras hora\?/ }));
     expect(screen.getByRole('heading', { name: 'Te avisamos si se libera un cupo' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Domingo 25/ })).toBeNull();
@@ -187,7 +288,7 @@ describe('BookingApp', () => {
   it('caps the waitlist at 7 days and shows API errors', async () => {
     renderApp('state=empty&fail=rate_limited');
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: /¿No encuentras hora\?/ }));
     const pills = screen.getByRole('group', { name: 'Días que te sirven' }).querySelectorAll('button');
     pills.forEach((pill) => fireEvent.click(pill));
@@ -204,7 +305,7 @@ describe('BookingApp', () => {
   it('restores a half-filled form after a reload', async () => {
     const first = renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
     first.unmount();
@@ -225,10 +326,10 @@ describe('BookingApp', () => {
   it('drops a pasted or typed +57 / 0057 from the phone field', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
+    await next();
     const phone = screen.getByLabelText('Celular') as HTMLInputElement;
     expect(phone.maxLength).toBe(24);
     fireEvent.input(phone, { target: { value: '(+57) 300 123 4567' } });
@@ -240,10 +341,10 @@ describe('BookingApp', () => {
   it('says the consent is what is missing when everything else is filled', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
+    await next();
     expect(isDisabled(screen.getByRole('button', { name: 'Escribe tu nombre para seguir' }))).toBe(true);
     fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
     expect(isDisabled(screen.getByRole('button', { name: 'Escribe tu celular para seguir' }))).toBe(true);
@@ -257,10 +358,10 @@ describe('BookingApp', () => {
   it('books without an email: no email promise, the manage link to copy instead', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
     click('10:00 a. m.');
-    click('Siguiente');
+    await next();
     expect(screen.getByLabelText(/^Correo\s*\(opcional\)$/)).toBeTruthy();
     // Required phone before the optional email; Enter on the last text field submits.
     const fields = [...document.querySelectorAll('input:not([type=checkbox])')] as HTMLInputElement[];
@@ -270,7 +371,7 @@ describe('BookingApp', () => {
     fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
     fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
     fireEvent.click(consent());
-    click('Siguiente');
+    await next();
     await screen.findByRole('heading', { name: '¿Todo bien?' });
     click('Separar mi cita');
     expect(await screen.findByRole('heading', { name: '¡Listo, Mariana! Tu cita quedó separada.' })).toBeTruthy();
@@ -294,7 +395,7 @@ describe('BookingApp', () => {
     fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
     fireEvent.click(consent());
     fireEvent.click(screen.getByRole('checkbox', { name: /Recordar mis datos en este celular/ }));
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Separar mi cita' }));
     await screen.findByRole('heading', { name: '¡Listo, Mariana! Tu cita quedó separada.' });
     expect(JSON.parse(localStorage.getItem('separame:contact') ?? 'null')).toEqual({ name: 'Mariana Gómez', phone: '300 123 4567', email: '' });
@@ -347,7 +448,7 @@ describe('BookingApp', () => {
   it('the waitlist only offers full days, aligned by week, with its own consent text', async () => {
     renderApp();
     click(/Valoración/);
-    click('Siguiente');
+    await next();
     click(await screen.findByRole('button', { name: 'Viernes 23 de octubre, lleno' }));
     click(screen.getByRole('button', { name: /¿No encuentras hora\?/ }));
     const group = screen.getByRole('group', { name: 'Días que te sirven' });

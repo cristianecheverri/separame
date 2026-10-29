@@ -143,6 +143,17 @@ describe('offers', () => {
     const appt = { proId: PRO_ID, clientKey: KEY } as AppointmentItem;
     expect(await markBookedFor(appt, '2026-10-21')).toBe(1);
     expect(ddb.commandCalls(UpdateCommand)[0].args[0].input).toMatchObject({ ConditionExpression: '#st = :waiting', ExpressionAttributeValues: { ':booked': 'booked', ':waiting': 'waiting' } });
+    // Never offered that day: not a recovered slot.
+    expect(ddb.commandCalls(UpdateCommand).some((c) => c.args[0].input.UpdateExpression === 'SET fromWaitlist = :t')).toBe(false);
+  });
+
+  it('booking a day after its «Se liberó un cupo» email marks the appointment as a recovered slot', async () => {
+    const offered = entry('w1', '2026-10-10T05:00:00.000Z', { clientKey: KEY, offeredAt: { '2026-10-21': '2026-10-19T12:00:00.000Z' } });
+    ddb.on(QueryCommand, waitQuery).resolves({ Items: [offered] });
+    const appt = { id: 'a1', proId: PRO_ID, clientKey: KEY, updatedAt: '2026-10-19T12:30:00.000Z' } as AppointmentItem;
+    expect(await markBookedFor(appt, '2026-10-21')).toBe(1);
+    const recovered = ddb.commandCalls(UpdateCommand).find((c) => c.args[0].input.UpdateExpression === 'SET fromWaitlist = :t');
+    expect(recovered?.args[0].input.Key).toEqual({ PK: `PRO#${PRO_ID}`, SK: 'APPT#a1' });
   });
 });
 

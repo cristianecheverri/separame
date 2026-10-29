@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useBlocker } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiPaths, type AvailabilitySettingsResponse, type BlockResponse, type PutAvailabilityRequest } from '@shared/api';
-import { createBlockSchema } from '@shared/schemas';
-import { addDays, todayBogota, toInstant } from '@shared/time';
+import { apiPaths, type AvailabilitySettingsResponse, type PutAvailabilityRequest } from '@shared/api';
 import type { AvailabilitySettings, Block, BookingRules } from '@shared/types';
 import { cx } from '../../components/ui/cx';
-import { Field } from '../../components/ui/Field';
 import { CloseIcon, LockIcon } from '../../components/ui/icons';
 import { Modal } from '../../components/ui/Modal';
 import { PillSelect } from '../../components/ui/PillSelect';
@@ -15,14 +12,13 @@ import { ui } from '../../components/ui/styles';
 import { Switch } from '../../components/ui/Switch';
 import { useToast } from '../../components/ui/Toast';
 import { api, errorMessage } from '../../lib/api';
-import { focusFirstError } from '../../lib/focusError';
-import { now } from '../../lib/clock';
 import { formatBlockRange, formatDayShortMonth, isFullDayBlock } from '../../lib/format';
 import { usePro } from '../../lib/pro';
 import { keys, useActing, useAvailability } from '../../lib/queries';
 import { ProSelector } from '../team/ProSelector';
-import { formatTime } from '@shared/format';
-import { sameSchedule, type ScheduleDraft, scheduleErrors, stableJson, timeStepsWith, toDraft, toSchedule } from './scheduleModel';
+import { sameSchedule, type ScheduleDraft, scheduleErrors, stableJson, toDraft, toSchedule } from './scheduleModel';
+import { BlockSheet } from './BlockSheet';
+import { useBlocks } from './useBlocks';
 import { WeeklyScheduleEditor } from './WeeklyScheduleEditor';
 
 const withCurrent = (options: { value: number; label: string }[], value: number, label: (v: number) => string) =>
@@ -93,26 +89,7 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
     onError: (error) => toast.error(errorMessage(error)),
   });
 
-  const refreshBlocks = () => {
-    void qc.invalidateQueries({ queryKey: keys.availability(proId) });
-    void qc.invalidateQueries({ queryKey: keys.slotsAll });
-  };
-  const restoreBlock = useMutation({
-    mutationFn: (block: Block) => api.post<BlockResponse>(apiPaths.blocks(), { label: block.label, start: block.start, end: block.end }, acting),
-    onSuccess: (_res, block) => {
-      refreshBlocks();
-      toast.success(`Volviste a bloquear «${block.label}».`);
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
-  const removeBlock = useMutation({
-    mutationFn: (block: Block) => api.del(apiPaths.block(block.id), acting),
-    onSuccess: (_res, block) => {
-      refreshBlocks();
-      toast.show(`Quitaste «${block.label}». Ya se puede reservar en esas fechas.`, 'success', { label: 'Deshacer', onClick: () => restoreBlock.mutate(block) });
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
+  const { remove: removeBlock } = useBlocks();
 
   const submit = () => {
     if (readOnly) return;
@@ -223,7 +200,7 @@ function AvailabilityForm({ data }: { data: AvailabilitySettingsResponse }) {
         </div>
       )}
 
-      {blockOpen && <BlockModal onClose={() => setBlockOpen(false)} />}
+      {blockOpen && <BlockSheet onClose={() => setBlockOpen(false)} />}
 
       <Modal
         open={blocker.state === 'blocked'}
@@ -261,97 +238,5 @@ function BlockItem({ block, readOnly, onRemove }: { block: Block; readOnly: bool
         </button>
       )}
     </div>
-  );
-}
-
-function BlockModal({ onClose }: { onClose: () => void }) {
-  const qc = useQueryClient();
-  const { proId, header } = useActing();
-  const toast = useToast();
-  const today = todayBogota(now());
-  const [label, setLabel] = useState('');
-  const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(today);
-  const [allDay, setAllDay] = useState(true);
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('12:00');
-  const [error, setErrorState] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-  const setError = (message: string | null) => {
-    setErrorState(message);
-    if (message) focusFirstError(formRef.current);
-  };
-
-  const create = useMutation({
-    mutationFn: (body: { label: string; start: string; end: string }) => api.post<BlockResponse>(apiPaths.blocks(), body, { actingProId: header }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.availability(proId) });
-      void qc.invalidateQueries({ queryKey: keys.slotsAll });
-      toast.success('Bloqueo agregado.');
-      onClose();
-    },
-    onError: (e) => setError(errorMessage(e)),
-  });
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const body = {
-      label,
-      start: toInstant(from, allDay ? '00:00' : startTime),
-      end: allDay ? toInstant(addDays(to < from ? from : to, 1), '00:00') : toInstant(to < from ? from : to, endTime),
-    };
-    const parsed = createBlockSchema.safeParse(body);
-    if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? 'Revisa los datos.');
-    setError(null);
-    create.mutate(parsed.data);
-  };
-
-  const timeOptions = (current: string) => timeStepsWith(current).map((t) => ({ value: t, label: formatTime(t) }));
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      title="Bloquear días"
-      description="Nadie podrá reservar en estas fechas. Las citas que ya tengas no cambian."
-      footer={
-        <>
-          <button type="submit" form="block-form" disabled={create.isPending} className="h-12 px-6 rounded-full bg-primary text-white font-bold text-[15px] grow sm:grow-0 hover:bg-primary-dark">
-            {create.isPending ? 'Guardando…' : 'Bloquear'}
-          </button>
-          <button type="button" onClick={onClose} className="h-12 px-5 rounded-full border-2 border-line-strong bg-white font-bold text-[15px] grow sm:grow-0">
-            Volver
-          </button>
-        </>
-      }
-    >
-      <form id="block-form" ref={formRef} onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <Field label="Nombre">{(p) => <input {...p} className={ui.input} value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Nombre del bloqueo" />}</Field>
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-          <Field label="Desde">{(p) => <input {...p} type="date" min={today} className={ui.input} value={from} onChange={(e) => setFrom(e.target.value)} />}</Field>
-          <Field label="Hasta">{(p) => <input {...p} type="date" min={from} className={ui.input} value={to} onChange={(e) => setTo(e.target.value)} />}</Field>
-        </div>
-        <label className="flex gap-3 items-center text-[14px] min-h-11 cursor-pointer">
-          <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="w-[22px] h-[22px] m-0 accent-primary shrink-0" />
-          Todo el día
-        </label>
-        {!allDay && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-[6px]">
-              <span className={ui.label}>Hora inicial</span>
-              <PillSelect variant="field" label="Hora inicial" value={startTime} options={timeOptions(startTime)} onChange={setStartTime} />
-            </div>
-            <div className="flex flex-col gap-[6px]">
-              <span className={ui.label}>Hora final</span>
-              <PillSelect variant="field" label="Hora final" value={endTime} options={timeOptions(endTime)} onChange={setEndTime} />
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="text-[13px] font-semibold text-warn-ink" role="alert">
-            {error}
-          </div>
-        )}
-      </form>
-    </Modal>
   );
 }

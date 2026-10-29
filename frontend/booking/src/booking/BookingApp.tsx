@@ -8,9 +8,16 @@
  * only used when it has free hours; otherwise, as always, the first day with
  * free hours comes preselected). The email is optional here; the phone is not.
  * "Recordar mis datos" keeps name / phone / email in this browser for next time.
+ *
+ * The hour the client taps is held for them on the server (HOLD_MINUTES; nobody
+ * else can take it meanwhile) and held again — which re-checks it — on every
+ * "Siguiente" after it, so a taken hour sends them back to «Día y hora» before
+ * they type their details, not after.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { AVAILABILITY_DAYS, type CreateBookingResponse, type PublicProfile, type PublicService, type PublicTeam } from '@shared/api';
+import {
+  AVAILABILITY_DAYS, HOLD_MINUTES, type CreateBookingResponse, type PublicProfile, type PublicService, type PublicTeam,
+} from '@shared/api';
 import { normalizeEmail } from '@shared/contact';
 import { capitalize, formatDayLong, formatDayShort, formatDuration, formatInstantTime, formatServicePrice, MONTH_SHORT } from '@shared/format';
 import { bogotaDate } from '@shared/time';
@@ -48,6 +55,8 @@ interface Draft extends ContactForm {
   start: string | null;
   /** UUID of this booking attempt (new for every picked slot): a retry after a lost response gets the same appointment. */
   idempotencyKey?: string | null;
+  /** UUID of this visitor's hold (kept across reloads, so their own held hour doesn't show as taken). */
+  holdId?: string | null;
   /** "Recordar mis datos en este celular". */
   remember?: boolean;
 }
@@ -59,7 +68,8 @@ interface HistoryState {
 
 const ALL_STEPS: StepId[] = ['who', 'service', 'when', 'details', 'review'];
 const EMPTY_DRAFT: Draft = {
-  who: null, serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false, idempotencyKey: null, remember: false,
+  who: null, serviceId: null, day: null, start: null, name: '', email: '', phone: '', agree: false, idempotencyKey: null, holdId: null,
+  remember: false,
 };
 /** The phone is what the pro needs; the email only brings the confirmation and the reminder. */
 const CONTACT_RULES: ContactRules = { emailOptional: true };
@@ -70,6 +80,28 @@ const BLOCKED_LABELS = {
   hour: 'Elige una hora',
 } as const;
 const SLOT_TAKEN_NOTICE = 'Alguien acaba de separar esa hora. Elige otra, por favor.';
+/** The page stayed open past the hour's start (it can only be booked a few minutes after it starts). */
+const SLOT_STARTED_NOTICE = 'Esa hora ya empezó. Elige otra, por favor.';
+const hasStarted = (start: string): boolean => Date.parse(start) <= Date.now();
+/** A hold younger than this already counts as the re-check of "Siguiente" (it was just tapped). */
+const FRESH_HOLD_MS = 15_000;
+
+interface HoldAttempt {
+  start: string;
+  at: number;
+  /** false only when the hour is no longer free. */
+  result: Promise<boolean>;
+  /** `result` once it settled (null while on its way). */
+  free: boolean | null;
+}
+
+function holdAttempt(start: string, result: Promise<boolean>): HoldAttempt {
+  const attempt: HoldAttempt = { start, at: Date.now(), result, free: null };
+  void result.then((free) => (attempt.free = free));
+  return attempt;
+}
+const isFreshHold = (attempt: HoldAttempt | null, start: string): attempt is HoldAttempt =>
+  attempt !== null && attempt.start === start && Date.now() - attempt.at < FRESH_HOLD_MS;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 type Screen = 'flow' | 'unavailable' | 'notfound' | 'error';
@@ -211,6 +243,10 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   const [slotNotice, setSlotNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  /** "Siguiente" is re-checking the held hour. */
+  const [checking, setChecking] = useState(false);
+  /** The hour the server is holding for this visitor (null: none, or the service is too long to hold). */
+  const [heldStart, setHeldStart] = useState<string | null>(null);
   const captcha = useCaptcha(turnstileSiteKey);
   const shortScreen = useShortScreen();
 
@@ -226,6 +262,8 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   const scrollerRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const latestRef = useRef({ draft, done, steps });
+  const holdIdRef = useRef(boot.draft.holdId ?? newUuid());
+  const holdRef = useRef<HoldAttempt | null>(null);
 
   const stepIndex = Math.max(0, steps.indexOf(step));
   const apiSlug = profile?.slug ?? slug;
@@ -280,7 +318,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       if (inflightRef.current.has(key)) return;
       inflightRef.current.add(key);
       api
-        .getAvailability(fromSlug, { serviceId, days: AVAILABILITY_DAYS })
+        .getAvailability(fromSlug, { serviceId, days: AVAILABILITY_DAYS, holdId: holdIdRef.current })
         .then((data) => {
           setAvailability((all) => ({ ...all, [key]: { status: 'ready', data } }));
           if (!data.active) setScreen('unavailable');
@@ -332,7 +370,9 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   /** The professional of the appointment: the picked member, or the one assigned to the hour. */
   const attendant: PublicProfile | null = teamPage ? (draft.who === ANY_PRO ? (anyOffering?.member ?? null) : profile) : null;
   const assignee: Assignee | null =
-    anyOffering && team ? { name: anyOffering.member.name, initials: anyOffering.member.initials, index: anyOffering.index } : null;
+    anyOffering && team
+      ? { name: anyOffering.member.name, initials: anyOffering.member.initials, logo: anyOffering.member.logo, index: anyOffering.index }
+      : null;
   /** What is booked: under «Cualquiera disponible», the assigned member's own service (their price). */
   const bookedService = anyOffering?.service ?? service;
 
@@ -433,9 +473,47 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   const pickDay = (date: string) =>
     setDraft((d) => ({ ...d, day: date, start: d.start && bogotaDate(d.start) === date ? d.start : null }));
 
+  // ── Holding the picked hour ──
+  /** The hour was taken meanwhile: back to its day's hours, with the notice, on fresh availability. */
+  const loseSlot = (serviceId: string, start: string) => {
+    setSlotNotice(hasStarted(start) ? SLOT_STARTED_NOTICE : SLOT_TAKEN_NOTICE);
+    setHeldStart(null);
+    setDraft((d) => ({ ...d, start: null }));
+    refreshAvailability(serviceId);
+  };
+
+  /**
+   * Holds `start` for this visitor; resolves false only when it is no longer free. Any other
+   * failure lets the client go on (the booking itself still can't double-book).
+   */
+  const hold = (serviceId: string, start: string): Promise<boolean> => {
+    const result = api
+      .holdSlot(apiSlug, { serviceId, start, holdId: holdIdRef.current })
+      .then((res) => {
+        if (latestRef.current.draft.start === start) setHeldStart(res.expiresAt ? start : null);
+        return true;
+      })
+      .catch((error: unknown) => {
+        const code = error instanceof ApiError ? error.code : 'internal';
+        if (code === 'agenda_unavailable') setScreen('unavailable');
+        return code !== 'slot_taken';
+      });
+    holdRef.current = holdAttempt(start, result);
+    return result;
+  };
+
   const pickSlot = (start: string) => {
     setSlotNotice(null);
-    setDraft((d) => ({ ...d, start, day: bogotaDate(start), idempotencyKey: d.start === start && d.idempotencyKey ? d.idempotencyKey : newUuid() }));
+    setHeldStart(null);
+    setDraft((d) => ({
+      ...d, start, day: bogotaDate(start), holdId: holdIdRef.current,
+      idempotencyKey: d.start === start && d.idempotencyKey ? d.idempotencyKey : newUuid(),
+    }));
+    if (!service) return;
+    const serviceId = service.id;
+    void hold(serviceId, start).then((free) => {
+      if (!free && latestRef.current.draft.start === start) loseSlot(serviceId, start);
+    });
   };
 
   const changeField = (field: ContactField, value: string | boolean) => {
@@ -467,8 +545,8 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
         ? BLOCKED_LABELS[dayHasHours ? 'hour' : 'when']
         : contactBlockedLabel(draft, CONTACT_RULES);
 
-  const next = () => {
-    if (!canNext) return;
+  const next = async () => {
+    if (!canNext || checking) return;
     if (step === 'details') {
       const found = validateContact(draft, CONTACT_RULES);
       setErrors(found);
@@ -476,6 +554,24 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       if (first) {
         document.getElementById(FIELD_IDS[first])?.focus();
         return;
+      }
+    }
+    // Leaving «Día y hora» or «Tus datos»: the hour must still be free (and stays held a while longer).
+    // A hold from a tap a moment ago counts; when it already came back free, no wait at all.
+    const start = draft.start;
+    if ((step === 'when' || step === 'details') && service && start) {
+      const last = holdRef.current;
+      const fresh = isFreshHold(last, start);
+      if (!fresh || last.free !== true) {
+        setChecking(true);
+        const free = await (fresh ? last.result : hold(service.id, start));
+        setChecking(false);
+        if (!free) {
+          track('booking_error', { pro_slug: trackSlug, reason: 'slot_taken' });
+          loseSlot(service.id, start);
+          if (step !== 'when') go('when');
+          return;
+        }
       }
     }
     if (stepIndex < steps.length - 1) go(steps[stepIndex + 1]);
@@ -496,7 +592,11 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
         consent: true,
         turnstileToken: token,
         idempotencyKey,
+        holdId: holdIdRef.current,
       });
+      holdIdRef.current = newUuid();
+      holdRef.current = null;
+      setHeldStart(null);
       saveJson(doneKey, result);
       removeKey(draftKey);
       saveContact(draft.remember ? { name: draft.name.trim(), phone: formatPhone(normalizePhone(draft.phone)), email: normalizeEmail(draft.email) } : null);
@@ -508,9 +608,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       const code = error instanceof ApiError ? error.code : 'internal';
       track('booking_error', { pro_slug: trackSlug, reason: code });
       if (code === 'slot_taken') {
-        setSlotNotice(SLOT_TAKEN_NOTICE);
-        setDraft((d) => ({ ...d, start: null }));
-        refreshAvailability(service.id);
+        loseSlot(service.id, draft.start);
         go('when');
       } else if (code === 'agenda_unavailable') {
         setScreen('unavailable');
@@ -671,6 +769,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
               remember={Boolean(draft.remember)}
               onRemember={(remember) => setDraft((d) => ({ ...d, remember }))}
               prefilled={prefilled && Boolean(draft.remember)}
+              heldMinutes={heldStart && heldStart === draft.start ? HOLD_MINUTES : null}
               titleRef={titleRef}
             />
           )}
@@ -690,8 +789,14 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       <FlowFooter>
         {step === 'review' && captcha.needsInteraction && <CaptchaHint />}
         {step !== 'review' ? (
-          <button type="button" onClick={next} disabled={!canNext} class={canNext ? PRIMARY_BUTTON : DISABLED_BUTTON}>
-            {canNext ? 'Siguiente' : blockedLabel}
+          <button
+            type="button"
+            onClick={() => void next()}
+            disabled={!canNext}
+            aria-busy={checking}
+            class={`${canNext ? PRIMARY_BUTTON : DISABLED_BUTTON} ${checking ? 'opacity-80 cursor-progress' : ''}`}
+          >
+            {checking ? 'Verificando la hora…' : canNext ? 'Siguiente' : blockedLabel}
           </button>
         ) : (
           <button
@@ -713,7 +818,8 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
 function soloChips(step: StepId, draft: Draft, service: PublicService | null, singleService: boolean): SelectionChip[] {
   const chips: SelectionChip[] = [];
   if (service && (step === 'when' || step === 'details')) {
-    const label = serviceChip(service);
+    // «Tus datos» also carries the day and hour: without the price both chips fit a 375 px row (it shows in «Confirmar»).
+    const label = step === 'details' ? joinDot(service.name, formatDuration(service.durationMin)) : serviceChip(service);
     chips.push(singleService ? { label, title: label } : { label, title: `Cambiar servicio: ${label}`, target: 'service' });
   }
   if (draft.start && step === 'details') {

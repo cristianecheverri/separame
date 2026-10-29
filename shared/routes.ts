@@ -26,7 +26,7 @@ const fn = (name: string, description: string, extra: Partial<FunctionDef> = {})
 
 export const API_FUNCTIONS = {
   publicPro: fn('public-pro', 'Public profile and availability of a professional; who a referral code belongs to'),
-  publicBooking: fn('public-booking', 'Client creates a booking (atomic slot locks)'),
+  publicBooking: fn('public-booking', 'Client holds a picked hour for a few minutes and creates the booking (atomic slot locks)'),
   publicPrices: fn('public-prices', 'Active price version for the landing: packages, monthly equivalents, trial days'),
   publicAppointment: fn('public-appointment', 'Client views, cancels, reschedules or downloads the .ics via signed link'),
   proAccount: fn('pro-account', 'Current professional: me, onboarding, profile, slug check'),
@@ -79,6 +79,8 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/public/pros/{slug}', fn: 'publicPro', auth: 'public' },
   { method: 'GET', path: '/public/pros/{slug}/availability', fn: 'publicPro', auth: 'public' },
   { method: 'POST', path: '/public/pros/{slug}/bookings', fn: 'publicBooking', auth: 'public', throttle: 'booking' },
+  // Every picked hour (and every "Siguiente") holds it: stage throttle + a per-IP limit, not the booking one.
+  { method: 'POST', path: '/public/pros/{slug}/holds', fn: 'publicBooking', auth: 'public' },
   { method: 'GET', path: '/public/appointments/{token}', fn: 'publicAppointment', auth: 'public' },
   { method: 'GET', path: '/public/appointments/{token}/ics', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/appointments/{token}/cancel', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
@@ -99,6 +101,9 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/me/onboarding', fn: 'proAccount', auth: 'pro' },
   { method: 'PUT', path: '/me/profile', fn: 'proAccount', auth: 'pro' },
   { method: 'GET', path: '/me/slug-check', fn: 'proAccount', auth: 'pro' },
+  // Logo or photo of the acting professional (owner or a team member), shrunk by the panel to a few KB.
+  { method: 'PUT', path: '/me/profile/logo', fn: 'proAccount', auth: 'pro' },
+  { method: 'DELETE', path: '/me/profile/logo', fn: 'proAccount', auth: 'pro' },
 
   { method: 'GET', path: '/me/services', fn: 'proServices', auth: 'pro' },
   { method: 'POST', path: '/me/services', fn: 'proServices', auth: 'pro' },
@@ -145,6 +150,8 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/me/team-request', fn: 'proTeam', auth: 'pro' },
   { method: 'POST', path: '/me/team/members', fn: 'proTeam', auth: 'pro' },
   { method: 'PUT', path: '/me/team/members/{memberId}', fn: 'proTeam', auth: 'pro' },
+  { method: 'PUT', path: '/me/team/logo', fn: 'proTeam', auth: 'pro' },
+  { method: 'DELETE', path: '/me/team/logo', fn: 'proTeam', auth: 'pro' },
 
   // Admin — Cognito JWT + `admin` group (checked in the handler)
   { method: 'GET', path: '/admin/stats', fn: 'adminSubscriptions', auth: 'admin' },

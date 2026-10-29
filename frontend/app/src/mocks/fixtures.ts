@@ -157,7 +157,14 @@ function history(): Appointment[] {
     const count = wd === 6 ? 2 : 2 + ((d * 7 + wd) % 4 === 0 ? 2 : (d + wd) % 3);
     out.push(...fill(date, Math.min(count, 5), Math.abs(d * 3 + wd)));
   }
-  return out.map((a, i) => (i % 17 === 0 ? { ...a, status: 'cancelled', cancelledBy: 'client' } : i % 5 === 0 ? { ...a, createdBy: 'pro' } : a));
+  // Some clients confirm attendance and a few slots come back through the waitlist (stats: «Lo que Sepárame hizo por ti»).
+  return out.map((a, i) =>
+    i % 17 === 0
+      ? { ...a, status: 'cancelled', cancelledBy: 'client' }
+      : i % 5 === 0
+        ? { ...a, createdBy: 'pro' }
+        : { ...a, ...(i % 4 !== 3 ? { clientConfirmation: 'confirmed' as const } : {}), ...(i % 23 === 0 ? { fromWaitlist: true } : {}) },
+  );
 }
 
 export function expiredAppointments(): Appointment[] {

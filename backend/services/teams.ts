@@ -35,6 +35,8 @@ export interface TeamItem {
   seats: number;
   memberIds: string[];
   memberSlugs: string[];
+  /** The consultorio's logo (site path under /media/). */
+  logo?: string;
   createdAt: ISOInstant;
   updatedAt: ISOInstant;
 }
@@ -86,7 +88,7 @@ export async function actingProId(event: ApiEvent): Promise<string> {
 // ── Views ────────────────────────────────────────────────────────────────────
 
 const memberOf = (p: ProProfile, isOwner: boolean): TeamMemberView => ({
-  proId: p.id, name: p.name, title: p.title, slug: p.slug, isOwner, publicUrl: publicUrl(p.slug),
+  proId: p.id, name: p.name, title: p.title, slug: p.slug, isOwner, publicUrl: publicUrl(p.slug), ...(p.logo ? { logo: p.logo } : {}),
 });
 
 export async function teamView(team: TeamItem): Promise<TeamView> {
@@ -98,6 +100,7 @@ export async function teamView(team: TeamItem): Promise<TeamView> {
   });
   return {
     name: team.name, slug: team.slug, seats: team.seats, createdAt: team.createdAt, publicUrl: publicUrl(team.slug), members,
+    ...(team.logo ? { logo: team.logo } : {}),
   };
 }
 

@@ -138,7 +138,7 @@ function MembersLine({ members }: { members: PublicProfile[] }) {
     <div class="flex gap-2.5 items-center">
       <div class="flex" aria-hidden="true">
         {members.map((m, i) => (
-          <MemberAvatar key={m.slug} initials={m.initials} index={i} size={32} class={i > 0 ? '-ml-2' : ''} />
+          <MemberAvatar key={m.slug} initials={m.initials} logo={m.logo} index={i} size={32} class={i > 0 ? '-ml-2' : ''} />
         ))}
       </div>
       <span class="text-[14px] text-mint">
@@ -170,7 +170,7 @@ export function ProfileBand({ profile, members, details = false }: { profile: Pu
       <div class={`pt-[18px] px-5 flex flex-col ${details ? 'pb-6 gap-[18px]' : 'pb-7 gap-[22px]'}`}>
         <Wordmark onGreen />
         <div class="flex gap-3.5 items-center">
-          <Avatar initials={profile.initials} size={64} tone="yellow" />
+          <Avatar initials={profile.initials} logo={profile.logo} size={64} tone="yellow" />
           <div class="flex flex-col gap-1 min-w-0">
             <h1 class="m-0 font-display font-extrabold text-[26px] leading-[1.1] tracking-[-0.5px] break-words line-clamp-2">{profile.name}</h1>
             <div class="text-[15px] text-mint">{joinDot(profile.title, profile.city)}</div>
@@ -223,7 +223,7 @@ export function ProfileRow({ profile, onBack, backLabel = 'Paso anterior', progr
           </span>
         </button>
       ) : (
-        <Avatar initials={profile.initials} class="short:w-9 short:h-9 short:text-[14px]" />
+        <Avatar initials={profile.initials} logo={profile.logo} class="short:w-9 short:h-9 short:text-[14px]" />
       )}
       <div class="flex flex-col gap-px short:gap-0 grow min-w-0">
         <div class="font-bold text-[15px] short:text-[14px] truncate">{profile.name}</div>

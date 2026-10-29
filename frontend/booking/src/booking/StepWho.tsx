@@ -64,7 +64,7 @@ export function StepWho({ team, who, onPick, titleRef, titleAs }: Props) {
           key={member.slug}
           selected={who === member.slug}
           onPick={() => onPick(member.slug)}
-          avatar={<MemberAvatar initials={member.initials} index={i} />}
+          avatar={<MemberAvatar initials={member.initials} logo={member.logo} index={i} />}
           title={member.name}
           sub={member.title}
         />

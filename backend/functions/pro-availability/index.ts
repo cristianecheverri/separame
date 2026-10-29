@@ -2,7 +2,7 @@ import { upcomingHolidays } from '../../../shared/holidays';
 import { createBlockSchema, putAvailabilitySchema } from '../../../shared/schemas';
 import { todayBogota } from '../../../shared/time';
 import { created, createApiHandler, noContent, ok, parseBody, pathParam, type ApiEvent } from '../../lib/http';
-import { addBlock, deleteBlock, getAvailabilitySettings, putSettings } from '../../services/availability';
+import { addBlocks, deleteBlock, getAvailabilitySettings, putSettings } from '../../services/availability';
 import { actingProId } from '../../services/teams';
 import { requireWritable } from '../../services/subscriptions';
 
@@ -32,7 +32,8 @@ export const handler = createApiHandler({
   'POST /me/blocks': async (event) => {
     const input = parseBody(event, createBlockSchema);
     const proId = await writableProId(event);
-    return created({ block: await addBlock(proId, input) });
+    const blocks = await addBlocks(proId, input);
+    return created({ block: blocks[0], blocks });
   },
 
   'DELETE /me/blocks/{blockId}': async (event) => {

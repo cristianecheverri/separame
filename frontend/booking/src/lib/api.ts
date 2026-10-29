@@ -13,6 +13,8 @@ import {
   type CreateBookingResponse,
   type ErrorCode,
   type GetPublicProResponse,
+  type HoldSlotRequest,
+  type HoldSlotResponse,
   type JoinTeamWaitlistRequest,
   type JoinWaitlistRequest,
   type JoinWaitlistResponse,
@@ -39,6 +41,8 @@ export interface ApiClient {
   getPro(slug: string): Promise<GetPublicProResponse>;
   getAvailability(slug: string, query: AvailabilityQuery): Promise<AvailabilityResponse>;
   createBooking(slug: string, body: CreateBookingRequest): Promise<CreateBookingResponse>;
+  /** Holds the picked hour a few minutes for this visitor (`slot_taken` when it is no longer free). */
+  holdSlot(slug: string, body: HoldSlotRequest): Promise<HoldSlotResponse>;
   getAppointment(token: string): Promise<ManagedAppointmentResponse>;
   cancelAppointment(token: string, body: CancelBookingRequest): Promise<BookingMutationResponse>;
   rescheduleAppointment(token: string, body: RescheduleBookingRequest): Promise<BookingMutationResponse>;
@@ -83,6 +87,7 @@ export function createHttpApi(baseUrl: string): ApiClient {
     getPro: (slug) => request(apiPaths.publicPro(slug)),
     getAvailability: (slug, query) => request(apiPaths.publicAvailability(slug, query)),
     createBooking: (slug, body) => request(apiPaths.publicBookings(slug), 'POST', body),
+    holdSlot: (slug, body) => request(apiPaths.publicHolds(slug), 'POST', body),
     getAppointment: (token) => request(apiPaths.publicAppointment(token)),
     cancelAppointment: (token, body) => request(apiPaths.publicCancel(token), 'POST', body),
     rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), 'POST', body),

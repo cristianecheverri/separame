@@ -4,7 +4,13 @@
  * deterministic: everything time-dependent comes in through `now`.
  *
  * Conflict rule: a candidate [s, s+d) is free when it stays `bufferMin` away
- * from every confirmed appointment and doesn't overlap any block.
+ * from every confirmed appointment (and live hold) and doesn't overlap any block.
+ *
+ * Candidates are the `slotStepMin` grid plus, around each busy interval, the
+ * start right after its buffer and the last start that ends a buffer before it.
+ * Without them a 10-minute buffer on a 30-minute grid would hide the grid slot
+ * before and after every appointment (10:00–10:30 booked → 9:30 and 10:30
+ * gone); with them the day offers 9:20 and 10:40 instead.
  *
  * Double-booking is prevented at write time with lock items on a 5-minute grid
  * (see `lockUnits`): each appointment locks [start, end + buffer). Two bookings
@@ -19,6 +25,12 @@ import {
 import type { BookingRules, TimeRange, WeeklySchedule } from './types';
 
 export const LOCK_UNIT_MIN = 5;
+/**
+ * Without minimum notice (the pro's own bookings, or a pro who set it to 0), an
+ * hour that just started can still be booked this many minutes after its start.
+ */
+export const STARTED_SLOT_GRACE_MIN = 5;
+const LOCK_UNIT_MS = LOCK_UNIT_MIN * 60_000;
 
 export interface Interval {
   start: ISOInstant;
@@ -100,7 +112,9 @@ export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailabi
   });
   if (fullyBlocked) return { ...base, closed: 'blocked', ...(holiday ? { holidayName: holiday.name } : {}) };
 
-  const earliest = ctx.now.getTime() + ctx.rules.minNoticeMin * 60_000;
+  const earliest = ctx.rules.minNoticeMin > 0
+    ? ctx.now.getTime() + ctx.rules.minNoticeMin * 60_000
+    : ctx.now.getTime() - STARTED_SLOT_GRACE_MIN * 60_000;
   const buffer = ctx.rules.bufferMin * 60_000;
   const duration = ctx.durationMin * 60_000;
   const busy = ctx.busy.map((b) => [ms(b.start), ms(b.end)] as const);
@@ -111,13 +125,16 @@ export function computeDay(date: ISODate, ctx: AvailabilityContext): DayAvailabi
   // booking ("past"), not full: it must not offer the waitlist.
   let anyUpcoming = false;
   for (const range of ranges) {
-    const startMin = minutesOf(range.start);
-    const endMin = minutesOf(range.end);
-    for (let m = startMin; m + ctx.durationMin <= endMin; m += step) {
-      const s = ms(toInstant(date, hhmm(m)));
+    const rangeStart = ms(toInstant(date, range.start));
+    const rangeEnd = ms(toInstant(date, range.end));
+    const grid: number[] = [];
+    for (let m = minutesOf(range.start); m + ctx.durationMin <= minutesOf(range.end); m += step) grid.push(ms(toInstant(date, hhmm(m))));
+    if (grid.some((s) => s >= earliest)) anyUpcoming = true;
+    const anchors = busy.flatMap(([bs, be]) => [be + buffer, bs - buffer - duration])
+      .filter((s) => s >= rangeStart && s + duration <= rangeEnd && s % LOCK_UNIT_MS === 0);
+    for (const s of [...new Set([...grid, ...anchors])].sort((a, b) => a - b)) {
       const e = s + duration;
       if (s < earliest) continue;
-      anyUpcoming = true;
       if (busy.some(([bs, be]) => overlaps(s, e, bs - buffer, be + buffer))) continue;
       if (dayBlocks.some(([bs, be]) => overlaps(s, e, bs, be))) continue;
       slots.push(new Date(s).toISOString());

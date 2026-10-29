@@ -1197,6 +1197,95 @@
       "y": 16844,
       "radius": 28,
       "is_interactive": true
+    },
+    "client-booking-steps-slot-taken.dc.html": {
+      "h": 844,
+      "w": 390,
+      "x": 1880,
+      "y": 2380,
+      "page": "linea-a",
+      "radius": 28,
+      "is_interactive": true,
+      "title": "Por pasos — 2 · La hora que tocaste ya la tomó alguien"
+    },
+    "client-booking-steps-verifying.dc.html": {
+      "h": 844,
+      "w": 390,
+      "x": 2350,
+      "y": 2380,
+      "page": "linea-a",
+      "radius": 28,
+      "is_interactive": true,
+      "title": "Por pasos — 3 · «Verificando la hora…» y hora guardada 10 min"
+    },
+    "proposal-block-hours-agenda-phone.dc.html": {
+      "x": 0,
+      "y": 46281,
+      "w": 390,
+      "h": 844,
+      "title": "Bloquear horas · Agenda: «+» con «Bloquear horas», «Bloquear» en el espacio libre y el bloqueo en el día (tweak: menú)",
+      "page": "propuestas",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-block-hours-sheet-phone.dc.html": {
+      "x": 470,
+      "y": 46281,
+      "w": 390,
+      "h": 844,
+      "title": "Bloquear horas · Hoja «No estaré disponible» (tweaks: cuándo, cita en el rango)",
+      "page": "propuestas",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-value-metrics-agenda-phone.dc.html": {
+      "x": 0,
+      "y": 47495,
+      "w": 390,
+      "h": 844,
+      "title": "Métricas · Agenda (celular): «Tu mes con Sepárame» (tweak: cuenta nueva)",
+      "page": "propuestas",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-value-metrics-desktop-card.dc.html": {
+      "x": 470,
+      "y": 47495,
+      "w": 360,
+      "h": 390,
+      "title": "Métricas · Agenda (escritorio): primera tarjeta de la columna derecha",
+      "page": "propuestas",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "proposal-value-metrics-stats-phone.dc.html": {
+      "x": 910,
+      "y": 47495,
+      "w": 390,
+      "h": 1760,
+      "title": "Métricas · Estadísticas: «Lo que Sepárame hizo por ti», cancelaciones, horas más pedidas y anticipación",
+      "page": "propuestas",
+      "radius": 28,
+      "is_interactive": true
+    },
+    "client-booking-logo.dc.html": {
+      "x": 2820,
+      "y": 2380,
+      "w": 390,
+      "h": 844,
+      "page": "linea-a",
+      "radius": 28,
+      "is_interactive": true,
+      "title": "Por pasos — 1 · Con el logo del profesional (si no hay, las iniciales como siempre)"
+    },
+    "pro-public-profile-logo.dc.html": {
+      "x": 8160,
+      "y": 10544,
+      "w": 1280,
+      "h": 860,
+      "page": "linea-a",
+      "is_interactive": true,
+      "title": "Profesional — Perfil público con «Logo o foto» subido (en Equipo: logo del consultorio y de cada profesional)"
     }
   },
   "createdOnFiles": {
@@ -1496,6 +1585,38 @@
       "w": 240,
       "x": 0,
       "y": 16544
+    },
+    "pBlockHours": {
+      "x": 0,
+      "y": 46031,
+      "text": "APROBADA · Bloquear horas en dos toques desde la agenda, sin nombre obligatorio y visible en el día",
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "propuestas"
+    },
+    "pBlockHoursSticky": {
+      "x": 940,
+      "y": 46281,
+      "w": 440,
+      "page": "propuestas",
+      "fill": "blue",
+      "text": "Qué cambia al bloquear horas\n• Desde la agenda: el «+» abre «Nueva cita» o «Bloquear horas»; cada «Espacio libre» trae «Bloquear» (llega con ese día y esas horas).\n• En escritorio: botón «Bloquear horas» junto a «Nueva cita» y la misma hoja como ventana. Disponibilidad la sigue teniendo.\n• Atajos: Hoy · Mañana · Otro día · Varios días, y «Toda la mañana», «Toda la tarde», «Desde ahora».\n• El nombre ya no es obligatorio (queda «No disponible»); el motivo solo lo ves tú.\n• Varios días con horas = esas horas CADA día (hoy el bloqueo corre seguido de un día al otro).\n• Si hay citas en el rango, se avisa: siguen en pie, no se cancelan solas.\n• El bloqueo se ve en el día y en la semana, con «Quitar» (y «Deshacer»)."
+    },
+    "pValueMetrics": {
+      "x": 0,
+      "y": 47245,
+      "text": "APROBADA · Métricas de valor: lo que Sepárame hizo por ti, en la agenda y en Estadísticas",
+      "kind": "title1",
+      "maxW": 1840,
+      "page": "propuestas"
+    },
+    "pValueMetricsSticky": {
+      "x": 1380,
+      "y": 47495,
+      "w": 460,
+      "page": "propuestas",
+      "fill": "blue",
+      "text": "Cómo se mide cada número (periodo elegido)\n• Se reservaron solas: citas que tus clientes separaron desde tu enlace (no las que agendas tú).\n• Tiempo ahorrado ≈ 5 min por cita separada en línea (lo que toma acordarla por chat o llamada). Se muestra como estimado.\n• Recordatorios enviados y «Confirmaron asistencia»: % de citas con recordatorio que respondieron «Sí, voy».\n• Cupos recuperados: citas separadas por alguien de la lista de espera después del aviso de cupo libre.\n• Cancelaciones: total y cuántas con menos de 24 h.\n• Horas más pedidas y anticipación promedio (días entre que reservan y la cita).\nTodo sale de datos que ya guardamos; no se agrega rastreo de clientes."
     }
   },
   "order": [
@@ -1623,7 +1744,16 @@
     "pro-waitlist-phone.dc.html",
     "account-signup-invited.dc.html",
     "site-landing-desktop.dc.html",
-    "site-landing-phone.dc.html"
+    "site-landing-phone.dc.html",
+    "client-booking-steps-slot-taken.dc.html",
+    "client-booking-steps-verifying.dc.html",
+    "proposal-block-hours-agenda-phone.dc.html",
+    "proposal-block-hours-sheet-phone.dc.html",
+    "proposal-value-metrics-agenda-phone.dc.html",
+    "proposal-value-metrics-desktop-card.dc.html",
+    "proposal-value-metrics-stats-phone.dc.html",
+    "client-booking-logo.dc.html",
+    "pro-public-profile-logo.dc.html"
   ],
   "pages": [
     {

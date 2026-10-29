@@ -28,6 +28,8 @@ export interface ProProfile {
   email: string;
   /** Team plan: set only on team members (no user of their own; managed by this owner). */
   ownerId?: string;
+  /** Logo or photo shown on the booking page instead of the initials (site path under /media/). */
+  logo?: string;
   createdAt: ISOInstant;
   updatedAt: ISOInstant;
 }
@@ -131,6 +133,8 @@ export interface Appointment {
   cancelReason?: string;
   /** When the 24 h reminder went out (absent = pending or not applicable). */
   reminderSentAt?: ISOInstant;
+  /** Booked by a waitlist client after the «Se liberó un cupo» email for that day (a recovered slot). */
+  fromWaitlist?: boolean;
   /** Attendance confirmation by the client (missing on old items = 'pending'). */
   clientConfirmation: ClientConfirmation;
   confirmedAt?: ISOInstant;
@@ -210,6 +214,29 @@ export interface ProStats {
   bySource: { client: number; pro: number };
   /** Share of past appointments that ended as no-show, 0–1. */
   noShowRate: number;
+  /** «Lo que Sepárame hizo por ti». */
+  value: {
+    /** Confirmed appointments the clients booked themselves from the public link. */
+    online: number;
+    /** online / confirmed appointments, 0–1. */
+    onlineShare: number;
+    /** Estimate: online × MINUTES_SAVED_PER_ONLINE_BOOKING (shared/stats.ts). */
+    savedMinutes: number;
+    /** 24 h reminders that went out for appointments of the range. */
+    remindersSent: number;
+    /** Of the confirmed appointments with a reminder, the share whose client answered «Sí, voy», 0–1. */
+    confirmationRate: number;
+    /** Booked by a waitlist client after the «Se liberó un cupo» email (`Appointment.fromWaitlist`). */
+    recovered: number;
+  };
+  /** Cancelled less than 24 h before the start. */
+  cancelledLate: number;
+  /** Confirmed appointments by Bogotá start hour (0–23), only hours that have some, ascending. */
+  byHour: { hour: number; appointments: number }[];
+  /** Average days between an online booking and its appointment (one decimal); null without online bookings. */
+  avgLeadDays: number | null;
+  /** Share of online bookings for the same or the next day, 0–1. */
+  shortLeadShare: number;
 }
 
 // ── Subscriptions, prices, payments ────────────────────────────────────────
@@ -391,6 +418,7 @@ export interface TeamMember {
   title: string;
   slug: string;
   isOwner: boolean;
+  logo?: string;
 }
 
 export interface Team {
@@ -400,5 +428,7 @@ export interface Team {
   seats: number;
   /** Owner first, then the members in the order they were added. */
   members: TeamMember[];
+  /** The consultorio's logo on its page (site path under /media/). */
+  logo?: string;
   createdAt: ISOInstant;
 }

@@ -1,15 +1,18 @@
 import { formatDuration, formatInstantTime } from '@shared/format';
 import { holidayOn } from '@shared/holidays';
 import { addDays, bogotaDate, weekdayOf, type ISODate } from '@shared/time';
-import type { Appointment, WeeklySchedule } from '@shared/types';
+import type { Appointment, Block, WeeklySchedule } from '@shared/types';
 import { cx } from '../../components/ui/cx';
-import { isNewAppointment } from '../../lib/agenda';
+import { blocksOn, isNewAppointment } from '../../lib/agenda';
+import { LockIcon } from '../../components/ui/icons';
 import { formatDayTitle, plural } from '../../lib/format';
 
 interface Props {
   weekStart: ISODate;
   today: ISODate;
   appointments: Appointment[];
+  /** «No disponible» periods, one muted line per day they touch. */
+  blocks?: Block[];
   schedule: WeeklySchedule | undefined;
   now: Date;
   onPickDay: (date: ISODate) => void;
@@ -20,12 +23,13 @@ interface Props {
 const DOT = { confirmed: 'bg-primary', new: 'bg-accent', cancelled: 'bg-line-strong' } as const;
 
 /** Seven compact day groups in the same line-A style as the day list. */
-export function WeekView({ weekStart, today, appointments, schedule, now, onPickDay, onPickAppointment }: Props) {
+export function WeekView({ weekStart, today, appointments, blocks = [], schedule, now, onPickDay, onPickAppointment }: Props) {
   return (
     <div className="flex flex-col gap-[10px]">
       {Array.from({ length: 7 }, (_, i) => {
         const date = addDays(weekStart, i);
         const list = appointments.filter((a) => bogotaDate(a.start) === date);
+        const dayBlocks = blocksOn(date, blocks);
         const active = list.filter((a) => a.status === 'confirmed');
         const holiday = holidayOn(date);
         const closed = (schedule?.[weekdayOf(date)] ?? []).length === 0;
@@ -46,6 +50,13 @@ export function WeekView({ weekStart, today, appointments, schedule, now, onPick
                 {holiday ? 'Festivo' : closed && !active.length ? 'Cerrado' : active.length ? plural(active.length, 'cita', 'citas') : 'Sin citas'}
               </span>
             </button>
+            {dayBlocks.map((b) => (
+              <div key={b.block.id} className="flex items-center gap-3 text-[13px] text-ink-2 bg-white/60 border-2 border-line rounded-[12px] px-3 py-2 min-h-11">
+                <LockIcon size={14} className="shrink-0" />
+                <span className="font-bold">{b.allDay ? 'Todo el día' : `${formatInstantTime(b.start)} – ${formatInstantTime(b.end)}`}</span>
+                <span className="min-w-0 truncate">No disponible</span>
+              </div>
+            ))}
             {list.length > 0 && (
               <ul className="m-0 p-0 list-none flex flex-col gap-1">
                 {list.map((a) => {

@@ -32,6 +32,7 @@ interface Props {
 export interface Assignee {
   name: string;
   initials: string;
+  logo?: string;
   /** Position in the team (avatar color). */
   index: number;
 }
@@ -40,7 +41,7 @@ export interface Assignee {
 function AssigneeNote({ assignee }: { assignee: Assignee }) {
   return (
     <div role="status" class="flex gap-2 items-center text-[14px] text-ink-2 min-h-6 -mt-1 fade-in">
-      <MemberAvatar initials={assignee.initials} index={assignee.index} size={24} />
+      <MemberAvatar initials={assignee.initials} logo={assignee.logo} index={assignee.index} size={24} />
       <span>
         Te atiende: <strong class="font-bold text-ink">{assignee.name}</strong> <span class="text-[13px] text-muted">(libre a esa hora)</span>
       </span>

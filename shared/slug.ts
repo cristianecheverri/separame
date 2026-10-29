@@ -7,7 +7,7 @@ export const SLUG_MIN = 3;
 export const SLUG_MAX = 40;
 
 export const RESERVED_SLUGS = new Set([
-  'api', 'app', 'admin', 'dev', 'www', 'c', 'b', 'w', 'r', 'assets', 'static', 'public', 'templates', '_templates',
+  'api', 'app', 'admin', 'dev', 'www', 'c', 'b', 'w', 'r', 'assets', 'static', 'media', 'public', 'templates', '_templates',
   'login', 'ingresar', 'registro', 'cuenta', 'panel', 'config', 'soporte', 'ayuda', 'precios', 'planes',
   'terminos', 'privacidad', 'politica-de-privacidad', 'legal', 'privacy', 'terms', 'separame', 'mail', 'noreply', 'no-disponible',
   'index', '404', 'favicon', 'robots', 'sitemap', 'manifest', 'sw', 'blog', 'status',

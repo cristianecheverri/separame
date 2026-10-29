@@ -1,5 +1,6 @@
 import { STATS_MAX_DAYS, type StatsResponse } from '../../shared/api';
 import { bookableMinutes, type Interval } from '../../shared/availability';
+import { derivedStats } from '../../shared/stats';
 import { addDays, bogotaDate, diffDays, jsWeekday, toInstant, type ISODate } from '../../shared/time';
 import type { BookingRules, ProStats, WeeklySchedule } from '../../shared/types';
 import { queryAll } from '../lib/dynamo';
@@ -93,10 +94,12 @@ export function computeStats(input: StatsInput): ProStats {
     byWeekday,
     bySource,
     noShowRate: ratio(noShows, attended + noShows + unmarked),
+    ...derivedStats(inRange),
   };
 }
 
-export async function proStats(proId: string, from: ISODate, to: ISODate, now: Date = new Date()): Promise<StatsResponse> {
+/** `withClients: false` (the agenda card) skips the client records: new / returning come back as 0. */
+export async function proStats(proId: string, from: ISODate, to: ISODate, now: Date = new Date(), opts: { withClients?: boolean } = {}): Promise<StatsResponse> {
   const days = diffDays(from, to) + 1;
   if (days > STATS_MAX_DAYS) throw validationError({ to: `El rango puede ser de máximo ${STATS_MAX_DAYS} días` });
   const prevTo = addDays(from, -1);
@@ -106,7 +109,7 @@ export async function proStats(proId: string, from: ISODate, to: ISODate, now: D
     appointmentItemsBetween(proId, toInstant(prevFrom, '00:00'), toInstant(addDays(to, 1), '00:00')),
     getSettings(proId),
     listBlocks(proId),
-    queryAll<{ key: string; firstSeenAt: string }>({
+    opts.withClients === false ? Promise.resolve([]) : queryAll<{ key: string; firstSeenAt: string }>({
       KeyConditionExpression: 'PK = :pk AND begins_with(SK, :p)',
       ExpressionAttributeNames: { '#k': 'key', '#f': 'firstSeenAt' },
       ExpressionAttributeValues: { ':pk': proPk(proId), ':p': CLIENT_PREFIX },
