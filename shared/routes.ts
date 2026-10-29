@@ -58,6 +58,7 @@ export const BACKGROUND_FUNCTIONS = {
   streamAppointments: fn('stream-appointments', 'DynamoDB stream: appointment events → emails, client history, waitlist offers, web push', { timeoutSec: 60 }),
   streamPublish: fn('stream-publish', 'DynamoDB stream: regenerate the static /<slug> page on profile/service changes', { timeoutSec: 60 }),
   sesFeedback: fn('ses-feedback', 'SES bounces/complaints via SNS: suppress the address'),
+  mailForward: fn('mail-forward', 'Inbound soporte@ (prod): forward the received message to the operator, Reply-To the sender'),
   cognitoPreSignUp: fn('cognito-pre-signup', 'Cognito: reject disposable email domains; remember the referral code of the sign-up'),
   cognitoCustomMessage: fn('cognito-custom-message', 'Cognito: branded sign-in code email'),
 } as const;
@@ -163,6 +164,9 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/admin/pros/{proId}', fn: 'adminSubscriptions', auth: 'admin' },
   { method: 'POST', path: '/admin/pros/{proId}/manual-payments', fn: 'adminSubscriptions', auth: 'admin' },
   { method: 'POST', path: '/admin/pros/{proId}/payment-notices/{paymentId}/reject', fn: 'adminSubscriptions', auth: 'admin' },
+  // «Ayúdanos a mejorar» messages: list (newest first) and mark answered / new.
+  { method: 'GET', path: '/admin/feedback', fn: 'adminSubscriptions', auth: 'admin' },
+  { method: 'POST', path: '/admin/feedback/status', fn: 'adminSubscriptions', auth: 'admin' },
 
   { method: 'GET', path: '/admin/prices', fn: 'adminPrices', auth: 'admin' },
   { method: 'POST', path: '/admin/prices', fn: 'adminPrices', auth: 'admin' },

@@ -2,7 +2,7 @@
 import { keepPreviousData, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
   apiPaths,
-  type AdminProDetailResponse, type AdminTeamsResponse, type AdminStatsResponse, type AppointmentsResponse, type AvailabilitySettingsResponse, type CalendarSyncResponse,
+  type AdminFeedbackResponse, type AdminProDetailResponse, type AdminTeamsResponse, type AdminStatsResponse, type AppointmentsResponse, type AvailabilitySettingsResponse, type CalendarSyncResponse,
   type BillingResponse, type ClientDetailResponse, type ClientsResponse, type ListPricesResponse, type PushConfigResponse, type StatsResponse, type WaitlistResponse, type ListSubscriptionsQuery, type ListSubscriptionsResponse,
   type MeResponse, type MigrationsResponse, type ProSlotsResponse, type ServicesResponse,
 } from '@shared/api';
@@ -44,6 +44,7 @@ export const keys = {
   adminPrices: ['admin', 'prices'] as const,
   adminMigrations: ['admin', 'migrations'] as const,
   adminTeams: ['admin', 'teams'] as const,
+  adminFeedback: ['admin', 'feedback'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.get<MeResponse>(apiPaths.me()), staleTime: 60_000 });
@@ -216,6 +217,7 @@ export const useAdminMigrations = () =>
   useQuery({ queryKey: keys.adminMigrations, queryFn: () => api.get<MigrationsResponse>(apiPaths.adminMigrations()) });
 
 export const useAdminTeams = () => useQuery({ queryKey: keys.adminTeams, queryFn: () => api.get<AdminTeamsResponse>(apiPaths.adminTeams()) });
+export const useAdminFeedback = () => useQuery({ queryKey: keys.adminFeedback, queryFn: () => api.get<AdminFeedbackResponse>(apiPaths.adminFeedback()) });
 
 export const useInvalidate = () => {
   const qc = useQueryClient();

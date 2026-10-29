@@ -38,7 +38,7 @@ tienen sus llaves en prod. Marca cada punto al terminarlo.
   - [ ] Verificar la marca "Sepárame" en la SIC.
   - [ ] Hablar con un contador: régimen y facturación electrónica DIAN.
   - [ ] Pasarme responsable, cédula o NIT y correo de contacto para completar
-        privacidad y términos (y decidir si creamos `soporte@separame.app`).
+        privacidad y términos (`soporte@separame.app` ya existe y te llega al correo personal).
   - [x] Textos legales al día con el producto (23-oct): entrada con contraseña, gracia de 3 días,
         plan para equipos, referidos, avisos al celular, clientes sin correo y contacto solo por
         los correos del plan o los pagos (Cognito y el aviso de calendario responden al operador).
@@ -106,8 +106,11 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       10 min, marca `ONCE / unpaid-trials-to-fundador-v2`); quien tiene pagos o un «Ya pagué» conserva la v1.
 - [x] «Ayúdanos a mejorar» en el panel (Más → Ayúdanos a mejorar): idea / duda / algo no funciona → correo a
       ADMIN_EMAIL con Reply-To del profesional; queda guardado (`FEEDBACK#`).
-- [ ] soporte@separame.app no tiene buzón: los correos que lleguen ahí se pierden. Decidir si se reenvía
-      (MX + reenvío) o se quita de donde aparezca.
+- [x] soporte@separame.app (solo prod): MX + regla en el conjunto de reglas de SES de la cuenta
+      (`blobhive-inbox`) → S3 `inbox/` (30 días) → Lambda `mail-forward` que lo reenvía al correo personal
+      del operador con Reply-To del remitente (descarta spam y virus). Aparece en privacidad y términos.
+- [x] Admin → «Mensajes»: lo que llega de «Ayúdanos a mejorar» (Nuevos / Todos, Responder por correo,
+      marcar como respondido; contador en el menú).
 - [x] Página principal: sin el chip «Para profesionales en Colombia», celular del inicio igual al paso
       «Día y hora» real, tarjeta «Tu agenda del día» sin textos montados, 4 planes.
 - [x] Desplegado y probado en dev y prod.

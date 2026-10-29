@@ -14,6 +14,8 @@ export const STAGES: readonly Stage[] = ['dev', 'prod'];
 
 /** Operator inbox: alarms, budget notifications and the seeded admin user. */
 const OPERATOR_EMAIL = 'crisechevrri@gmail.com';
+/** SES allows one ACTIVE receipt rule set per region: the account's (created by blobhive, used by Cartazos too). */
+const SHARED_RECEIPT_RULE_SET = 'blobhive-inbox';
 
 /**
  * Google Search Console ownership of the `separame.app` Domain property (covers
@@ -59,6 +61,13 @@ export interface StageConfig {
   indexable: boolean;
   /** TXT value proving domain ownership to Google Search Console (prod only; null = none yet). */
   siteVerification: string | null;
+  /**
+   * prod only: inbound mail for `soporte@<apex>` — SES receives it (MX on the apex), keeps the
+   * raw message 30 days in S3 and a Lambda forwards it to `forwardTo` with Reply-To the sender.
+   * The rule is appended to the account's single ACTIVE receipt rule set (shared with Cartazos
+   * and blobhive). null = no inbound mail (dev).
+   */
+  supportInbox: { address: string; forwardTo: string; ruleSetName: string } | null;
 }
 
 /** Validates the `-c stage=dev|prod` context value. */
@@ -113,6 +122,7 @@ export function stageConfig(scope: Construct, stage: Stage): StageConfig {
     corsOrigins: isProd ? [siteUrl] : [siteUrl, ...DEV_LOCAL_ORIGINS],
     indexable: isProd,
     siteVerification: isProd && GOOGLE_SITE_VERIFICATION ? GOOGLE_SITE_VERIFICATION : null,
+    supportInbox: isProd ? { address: `soporte@${domains.mail}`, forwardTo: OPERATOR_EMAIL, ruleSetName: SHARED_RECEIPT_RULE_SET } : null,
   };
 }
 

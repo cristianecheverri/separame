@@ -61,6 +61,10 @@ export const teamRequestKey = (ownerId: string) => ({ PK: proPk(ownerId), SK: TE
 /** Immutable copy of a reviewed request, kept when a new one replaces it (audit of seat changes). */
 export const teamRequestHistoryKey = (ownerId: string, createdAt: ISOInstant) => ({ PK: proPk(ownerId), SK: `${TEAM_REQUEST}#${createdAt}` });
 export const TEAMS_GSI1PK = 'TEAMS';
+/** GSI1: every «Ayúdanos a mejorar» message, newest first for the admin. */
+export const FEEDBACK_GSI1PK = 'FEEDBACK';
+export const FEEDBACK_PREFIX = 'FEEDBACK#';
+export const feedbackKey = (proId: string, createdAt: ISOInstant) => ({ PK: proPk(proId), SK: `${FEEDBACK_PREFIX}${createdAt}` });
 export const TEAM_REQUESTS_GSI1PK = 'TEAMREQS';
 export const teamGsi1Sk = (createdAt: ISOInstant, ownerId: string) => `${createdAt}#${ownerId}`;
 export const slugKey = (slug: string) => ({ PK: `SLUG#${slug}`, SK: 'SLUG' });

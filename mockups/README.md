@@ -55,6 +55,7 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `admin-pro-detail-manual-payment.dc.html` | Admin: detalle del profesional, «Referido por…», «Sus referidos», aviso de pago (Aprobar / Rechazar) y pago manual | `A-Admin-Profesional` |
 | `admin-prices.dc.html` | Admin: precios y migraciones | `A-Admin-Precios` |
 | `admin-overview.dc.html` | Admin: resumen (indicadores, avisos por revisar, por atender, últimos pagos) | `admin-overview` |
+| `admin-feedback.dc.html` | Admin: «Mensajes» de «Ayúdanos a mejorar» — Nuevos / Todos, Responder por correo y marcar como respondido (tweak: filtro) | `admin-feedback` |
 | `client-booking-single-service.dc.html` | Reserva cuando hay un solo servicio: 3 pasos con banda verde, chips y los mismos cambios de la reserva por pasos (tweak `step`) | `client-booking-single-service` |
 | `client-booking-single-service-at-step-{2,3}.dc.html` | El mismo flujo abierto en "Tus datos" y "Confirmar" (importa `client-booking-single-service`) | `client-booking-single-service-at-step-2/3` |
 | `client-waitlist-full-day.dc.html` | Día lleno: tarjeta "¿No encuentras hora?" | `client-waitlist-full-day` |

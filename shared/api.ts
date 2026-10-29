@@ -433,6 +433,33 @@ export interface FeedbackRequest {
   page?: string;
 }
 
+export type FeedbackStatus = 'new' | 'answered';
+
+/** A «Ayúdanos a mejorar» message as the admin lists it (who sent it is snapshotted when it arrives). */
+export interface FeedbackEntry {
+  proId: string;
+  createdAt: ISOInstant;
+  kind: FeedbackKind;
+  message: string;
+  page?: string;
+  status: FeedbackStatus;
+  name: string;
+  email: string;
+  slug: string;
+}
+
+export interface AdminFeedbackResponse {
+  /** Newest first. */
+  entries: FeedbackEntry[];
+  newCount: number;
+}
+
+export interface UpdateFeedbackStatusRequest {
+  proId: string;
+  createdAt: ISOInstant;
+  status: FeedbackStatus;
+}
+
 export interface UploadLogoRequest {
   /** The image (PNG, JPG or WebP, ≤ 256 px) as base64, without the `data:` prefix. */
   image: string;
@@ -809,6 +836,8 @@ export const apiPaths = {
   publicHold: (slug: string, holdId: string) => `/public/pros/${enc(slug)}/holds/${enc(holdId)}`,
   profileLogo: () => '/me/profile/logo',
   feedback: () => '/me/feedback',
+  adminFeedback: () => '/admin/feedback',
+  adminFeedbackStatus: () => '/admin/feedback/status',
   teamLogo: () => '/me/team/logo',
   publicAppointment: (token: string) => `/public/appointments/${enc(token)}`,
   publicCancel: (token: string) => `/public/appointments/${enc(token)}/cancel`,

@@ -200,6 +200,12 @@ export const feedbackSchema = z.object({
   page: z.string().trim().max(200).regex(/^\/[^?#\s]*$/).optional(),
 });
 
+export const updateFeedbackStatusSchema = z.object({
+  proId: z.string().min(1).max(64),
+  createdAt: isoInstantSchema,
+  status: z.enum(['new', 'answered']),
+});
+
 /** A logo already shrunk by the panel, base64 without the `data:` prefix (type checked from the bytes). */
 export const uploadLogoSchema = z.object({
   image: z.string().min(16, 'Elige una imagen').max(MAX_LOGO_BASE64, 'La imagen es muy pesada').regex(/^[A-Za-z0-9+/]+={0,2}$/, 'Imagen inválida'),

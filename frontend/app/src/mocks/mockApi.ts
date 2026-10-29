@@ -5,7 +5,7 @@
 import type { ZodType } from 'zod';
 import {
   ACTING_PRO_HEADER,
-  type AdminProDetailResponse, type AdminSubscriptionRow, type AdminTeamRequestRow, type AdminTeamRow, type AdminTeamsResponse, type TeamResponse, type TeamView,
+  type AdminProDetailResponse, type AdminSubscriptionRow, type AdminTeamRequestRow, type AdminTeamRow, type AdminTeamsResponse, type FeedbackEntry, type TeamResponse, type TeamView,
 } from '@shared/api';
 import type { AppointmentsResponse, CreateAppointmentRequest, CreateBlockRequest,
   CreateMigrationRequest, CreatePriceRequest, ErrorCode, ManualPaymentRequest, MeResponse, OnboardingRequest,
@@ -15,7 +15,7 @@ import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
   MAX_APPOINTMENTS_RANGE_DAYS, approveTeamSchema, createAppointmentSchema, teamMemberSchema, teamRequestSchema, updateTeamSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
-  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, uploadLogoSchema, feedbackSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
+  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, uploadLogoSchema, feedbackSchema, updateClientNotesSchema, updateFeedbackStatusSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil, teamPackageAmount } from '@shared/subscription';
@@ -57,6 +57,8 @@ interface Db {
   members: Record<string, { profile: ProProfile; data: Scoped }>;
   adminTeamRequests: AdminTeamRequestRow[];
   adminTeams: AdminTeamRow[];
+  /** «Ayúdanos a mejorar» messages, newest first (Admin · Mensajes). */
+  feedback: FeedbackEntry[];
 }
 
 /** Per-professional data: the acting header swaps a member's into `db` while a /me route runs. */
@@ -138,6 +140,7 @@ export function resetMockDb(options: { state: fx.MockState; isAdmin: boolean; bi
     members: team.team ? { [fx.julianProfile.id]: memberEntry(fx.julianData()), [fx.saraProfile.id]: memberEntry(fx.saraData()) } : {},
     adminTeamRequests: clone(fx.adminTeamRequests).map((r) => ({ ...r, subscription: subscriptionOfRow(r.ownerId) })),
     adminTeams: clone(fx.adminActiveTeams),
+    feedback: clone(fx.adminFeedback),
   };
   if (team.team) for (const slug of [fx.TEAM_SLUG, fx.julianProfile.slug, fx.saraProfile.slug]) db.takenSlugs.add(slug);
   // Referral program (boards referral-*).
@@ -453,8 +456,12 @@ function setProLogo(proId: string, logo: string | undefined) {
 }
 const logoDataUrl = (image: string) => `data:image/webp;base64,${image}`;
 on('POST', '/me/feedback', (_p, body) => {
-  requireProfile();
-  validate(feedbackSchema, body);
+  const profile = requireProfile();
+  const { kind, message, page } = validate(feedbackSchema, body);
+  db.feedback.unshift({
+    proId: profile.id, createdAt: now().toISOString(), kind, message, ...(page ? { page } : {}),
+    status: 'new', name: profile.name, email: profile.email, slug: profile.slug,
+  });
   return { ok: true };
 });
 on('PUT', '/me/profile/logo', (_p, body) => {
@@ -800,6 +807,15 @@ on('PUT', '/me/team/members/{id}', ([id], body) => {
   return teamResponse();
 });
 
+on('GET', '/admin/feedback', () => (requireAdmin(), { entries: db.feedback, newCount: db.feedback.filter((e) => e.status === 'new').length }));
+on('POST', '/admin/feedback/status', (_p, body) => {
+  requireAdmin();
+  const { proId, createdAt, status } = validate(updateFeedbackStatusSchema, body);
+  const entry = db.feedback.find((e) => e.proId === proId && e.createdAt === createdAt);
+  if (!entry) throw new HttpError(404, 'not_found', 'Mensaje no encontrado');
+  entry.status = status;
+  return { ok: true };
+});
 on('GET', '/admin/teams', (): AdminTeamsResponse => (requireAdmin(), { requests: db.adminTeamRequests, teams: db.adminTeams }));
 function reviewTeamRequest(ownerId: string) {
   const row = db.adminTeamRequests.find((r) => r.ownerId === ownerId);

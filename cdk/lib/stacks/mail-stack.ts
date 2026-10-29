@@ -1,5 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as ses from 'aws-cdk-lib/aws-ses';
+import * as sesActions from 'aws-cdk-lib/aws-ses-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as route53 from 'aws-cdk-lib/aws-route53';
@@ -8,7 +11,7 @@ import { Construct } from 'constructs';
 import { HOSTED_ZONE_ID, ROOT_DOMAIN } from '../../../shared/infra';
 import { BACKGROUND_FUNCTIONS } from '../../../shared/routes';
 import type { StageConfig } from '../config';
-import type { MailSender } from '../grants';
+import { grantSendEmail, type MailSender } from '../grants';
 import { commonEnvironment, createFunction } from '../lambda';
 
 export interface MailStackProps extends cdk.StackProps {
@@ -27,8 +30,13 @@ export interface MailStackProps extends cdk.StackProps {
  *    it again (on top of the account-level suppression list).
  *
  * The SES account is shared with Cartazos and blobhive: bad hygiene here would
- * hurt them too. The account's shared receipt rule set is NOT touched (no
- * inbound mail for now).
+ * hurt them too.
+ *
+ * Inbound (prod only, `config.supportInbox`): mail to soporte@ is received by
+ * SES (MX on the apex), stored raw in a private bucket (30 days) and forwarded
+ * by `mail-forward` to the operator with Reply-To the sender. SES allows one
+ * ACTIVE receipt rule set per region, so the rule is appended to the account's
+ * existing one, exactly as Cartazos does.
  */
 export class MailStack extends cdk.Stack {
   /** Identity + configuration set ARNs, for scoped `ses:SendEmail` grants. */
@@ -132,7 +140,46 @@ export class MailStack extends cdk.Stack {
       }),
     };
 
+    if (config.supportInbox) this.supportInbox(config, zone, config.supportInbox);
+
     new cdk.CfnOutput(this, 'MailFrom', { value: config.mailFrom });
     new cdk.CfnOutput(this, 'ConfigurationSetName', { value: this.configurationSet.configurationSetName });
+  }
+
+  private supportInbox(config: StageConfig, zone: route53.IHostedZone, inbox: NonNullable<StageConfig['supportInbox']>): void {
+    const bucket = new s3.Bucket(this, 'InboundMail', {
+      bucketName: `${config.prefix}-inbound-mail-${this.account}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      // Ephemeral: the forwarded copy is what matters.
+      lifecycleRules: [{ expiration: cdk.Duration.days(30) }],
+      removalPolicy: config.removalPolicy,
+    });
+
+    const forwarder = createFunction(this, {
+      config,
+      def: BACKGROUND_FUNCTIONS.mailForward,
+      environment: { ...commonEnvironment(config), MAIL_FROM: inbox.address, FORWARD_TO: inbox.forwardTo, SES_CONFIG_SET: config.configSetName },
+    });
+    bucket.grantRead(forwarder, 'inbox/*');
+    grantSendEmail(forwarder, this.sender);
+    bucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(forwarder), { prefix: 'inbox/' });
+
+    // The apex receives mail at SES (MAIL FROM keeps its own MX on mail.<apex>).
+    new route53.MxRecord(this, 'InboundMx', {
+      zone,
+      values: [{ priority: 10, hostName: `inbound-smtp.${this.region}.amazonaws.com` }],
+    });
+
+    ses.ReceiptRuleSet.fromReceiptRuleSetName(this, 'SharedRuleSet', inbox.ruleSetName).addRule('SeparameSupport', {
+      recipients: [inbox.address],
+      scanEnabled: true,
+      tlsPolicy: ses.TlsPolicy.OPTIONAL,
+      actions: [new sesActions.S3({ bucket, objectKeyPrefix: 'inbox/' })],
+    });
+
+    new cdk.CfnOutput(this, 'SupportAddress', { value: inbox.address });
+    new cdk.CfnOutput(this, 'SupportForwardsTo', { value: inbox.forwardTo });
   }
 }

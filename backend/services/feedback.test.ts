@@ -25,7 +25,10 @@ beforeEach(() => {
 describe('sendFeedback («Ayúdanos a mejorar»)', () => {
   it('keeps the message and emails the operator, replying goes to the professional', async () => {
     await sendFeedback(PRO_ID, { kind: 'idea', message: 'Que se pueda reservar en pareja.\nGracias', page: '/agenda' }, NOW);
-    expect(ddb.commandCalls(PutCommand)[0].args[0].input.Item).toMatchObject({ PK: `PRO#${PRO_ID}`, SK: 'FEEDBACK#2026-10-29T15:00:00.000Z', kind: 'idea', page: '/agenda' });
+    expect(ddb.commandCalls(PutCommand)[0].args[0].input.Item).toMatchObject({
+      PK: `PRO#${PRO_ID}`, SK: 'FEEDBACK#2026-10-29T15:00:00.000Z', kind: 'idea', page: '/agenda', status: 'new',
+      name: profile.name, email: profile.email, slug: profile.slug, GSI1PK: 'FEEDBACK', GSI1SK: `2026-10-29T15:00:00.000Z#${PRO_ID}`,
+    });
     const mail = ses.commandCalls(SendEmailCommand)[0].args[0].input;
     expect(mail.Destination?.ToAddresses).toEqual(['ops@separame.app']);
     expect(mail.ReplyToAddresses).toEqual([profile.email]);
@@ -45,3 +48,30 @@ describe('sendFeedback («Ayúdanos a mejorar»)', () => {
     expect(ddb.commandCalls(PutCommand)).toHaveLength(1);
   });
 });
+
+describe('admin: «Ayúdanos a mejorar» messages', () => {
+  it('lists them newest first with how many are new, and marks one answered', async () => {
+    const { listFeedback, setFeedbackStatus } = await import('./feedback');
+    const { QueryCommand } = await import('@aws-sdk/lib-dynamodb');
+    ddb.on(QueryCommand, { IndexName: 'gsi1', ExpressionAttributeValues: { ':pk': 'FEEDBACK' } }).resolves({
+      Items: [
+        { proId: 'p2', createdAt: '2026-10-29T16:00:00.000Z', kind: 'problem', message: 'No carga', status: 'new', name: 'Ana', email: 'ana@correo.com', slug: 'ana' },
+        { proId: 'p1', createdAt: '2026-10-29T15:00:00.000Z', kind: 'idea', message: 'Idea', status: 'answered', name: 'Laura', email: 'l@correo.com', slug: 'laura' },
+      ],
+    });
+    const res = await listFeedback();
+    expect(res.newCount).toBe(1);
+    expect(res.entries.map((e) => e.proId)).toEqual(['p2', 'p1']);
+    expect(ddb.commandCalls(QueryCommand)[0].args[0].input.ScanIndexForward).toBe(false);
+
+    await setFeedbackStatus('p2', '2026-10-29T16:00:00.000Z', 'answered', NOW);
+    expect(ddb.commandCalls(UpdateCommand).at(-1)!.args[0].input).toMatchObject({ Key: { PK: 'PRO#p2', SK: 'FEEDBACK#2026-10-29T16:00:00.000Z' }, ExpressionAttributeValues: { ':s': 'answered' } });
+  });
+
+  it('an unknown message is not_found', async () => {
+    const { setFeedbackStatus } = await import('./feedback');
+    ddb.on(UpdateCommand).rejects(conditionalFailure());
+    await expect(setFeedbackStatus('p9', '2026-10-29T16:00:00.000Z', 'answered')).rejects.toMatchObject({ code: 'not_found' });
+  });
+});
+

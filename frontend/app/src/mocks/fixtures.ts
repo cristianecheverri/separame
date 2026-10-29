@@ -3,7 +3,7 @@
  * with 5 days left, today = Tue 20 Oct 2026, the admin rows (Estudio Lúa in
  * grace…) and the price versions (Fundador / Mensual / Estándar draft).
  */
-import type { AdminSubscriptionRow } from '@shared/api';
+import type { AdminSubscriptionRow, FeedbackEntry } from '@shared/api';
 import type { PaymentInstructions } from '@shared/types';
 import { DEFAULT_RULES } from '@shared/availability';
 import { addDays, toInstant, type ISODate } from '@shared/time';
@@ -419,4 +419,23 @@ export const adminActiveTeams = [
   { ownerId: 'pro-andres', ownerName: 'Andrés Restrepo', name: 'Bufete Restrepo', slug: 'bufete-restrepo', seats: 1, used: 1, priceName: 'Fundador', extraProfessionalCop: 3900, accessUntil: '2027-01-14T14:00:00.000Z' },
   { ownerId: 'pro-camilo', ownerName: 'Camilo Arango', name: 'Entrena Arango', slug: 'entrena-arango', seats: 3, used: 2, priceName: 'Fundador', extraProfessionalCop: 3900, accessUntil: '2027-04-03T14:00:00.000Z' },
   { ownerId: 'pro-felipe', ownerName: 'Felipe Mora', name: 'Tutorías Mora', slug: 'tutorias-mora', seats: 2, used: 2, priceName: 'Mensual', extraProfessionalCop: 3900, accessUntil: '2026-11-30T14:00:00.000Z' },
+];
+
+/** Admin · Mensajes: what professionals sent from «Ayúdanos a mejorar» (newest first). */
+export const adminFeedback: FeedbackEntry[] = [
+  {
+    proId: 'pro-camilo', createdAt: '2026-10-20T13:40:00.000Z', kind: 'idea', status: 'new',
+    message: 'Sería bueno poder cobrar un anticipo al reservar: muchos clientes no llegan a la primera sesión.',
+    name: 'Camilo Arango', email: 'camilo@entrena.co', slug: 'camilo-entrena',
+  },
+  {
+    proId: 'pro-lua', createdAt: '2026-10-19T22:05:00.000Z', kind: 'problem', status: 'new',
+    message: 'Ayer subí el logo desde el celular y en la página de reservas se veía cortado.\nDespués lo volví a subir y ya quedó bien.',
+    name: 'Estudio Lúa', email: 'hola@estudiolua.co', slug: 'estudio-lua',
+  },
+  {
+    proId: 'pro-felipe', createdAt: '2026-10-15T16:20:00.000Z', kind: 'question', status: 'answered',
+    message: '¿Puedo tener servicios de 90 minutos solo los sábados?',
+    name: 'Felipe Mora', email: 'felipe@tutorias.co', slug: 'profe-felipe',
+  },
 ];

@@ -1296,6 +1296,16 @@
       "radius": 28,
       "is_interactive": true,
       "title": "Profesional — «Ayúdanos a mejorar» (Más → Ayúdanos a mejorar; tweak: enviado)"
+    },
+    "admin-feedback.dc.html": {
+      "x": 5440,
+      "y": 6074,
+      "w": 1280,
+      "h": 980,
+      "page": "linea-a",
+      "title": "Admin — Mensajes de «Ayúdanos a mejorar» (tweak: filtro)",
+      "is_interactive": true,
+      "expand": "fill"
     }
   },
   "createdOnFiles": {
@@ -1764,7 +1774,8 @@
     "proposal-value-metrics-stats-phone.dc.html",
     "client-booking-logo.dc.html",
     "pro-public-profile-logo.dc.html",
-    "pro-feedback-phone.dc.html"
+    "pro-feedback-phone.dc.html",
+    "admin-feedback.dc.html"
   ],
   "pages": [
     {

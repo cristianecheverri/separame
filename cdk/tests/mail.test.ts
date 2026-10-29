@@ -23,6 +23,28 @@ describe('MailStack DNS', () => {
   });
 });
 
+describe('soporte@ inbound mail', () => {
+  it('prod: MX on the apex, a rule on the shared active rule set to a 30-day bucket, and the forwarder', () => {
+    const template = templateOf('prod', (s) => s.mail);
+    template.hasResourceProperties('AWS::SES::ReceiptRule', {
+      RuleSetName: 'blobhive-inbox',
+      Rule: { Recipients: ['soporte@separame.app'], ScanEnabled: true, Enabled: true },
+    });
+    const mx = resourcesOf(template, 'AWS::Route53::RecordSet').filter(([, r]) => r.Properties.Type === 'MX');
+    expect(mx.some(([, r]) => r.Properties.Name === 'separame.app.' && JSON.stringify(r.Properties.ResourceRecords).includes('inbound-smtp.us-east-1.amazonaws.com'))).toBe(true);
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'separame-prod-mail-forward',
+      Environment: { Variables: { MAIL_FROM: 'soporte@separame.app', FORWARD_TO: 'crisechevrri@gmail.com' } },
+    });
+    template.hasResourceProperties('AWS::S3::Bucket', { LifecycleConfiguration: { Rules: [{ ExpirationInDays: 30, Status: 'Enabled' }] } });
+  });
+
+  it('dev: no inbound mail at all (the shared rule set is not touched)', () => {
+    const template = templateOf('dev', (s) => s.mail);
+    template.resourceCountIs('AWS::SES::ReceiptRule', 0);
+  });
+});
+
 describe('Turnstile site key', () => {
   it('prod functions get the real public site key; dev gets the always-pass test key', async () => {
     const { TURNSTILE_PROD_SITE_KEY, TURNSTILE_TEST_KEYS } = await import('../../shared/infra');

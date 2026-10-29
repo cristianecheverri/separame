@@ -64,6 +64,7 @@ export const routes: RouteObject[] = [
                       { path: 'pros/:proId', lazy: page(() => import('../features/admin/AdminProDetailPage'), 'AdminProDetailPage') },
                       { path: 'prices', lazy: page(() => import('../features/admin/AdminPricesPage'), 'AdminPricesPage') },
                       { path: 'teams', lazy: page(() => import('../features/admin/AdminTeamsPage'), 'AdminTeamsPage') },
+                      { path: 'feedback', lazy: page(() => import('../features/admin/AdminFeedbackPage'), 'AdminFeedbackPage') },
                     ],
                   },
                 ],
