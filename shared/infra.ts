@@ -38,6 +38,7 @@
  *  PRO#<proId>                      CLIENT#<clientKey>         ClientRecord (aggregates from appointment events + notes)
  *  PRO#<proId>                      WAIT#<entryId>             WaitlistEntry (TTL: last date + 1 day)
  *  PRO#<proId>                      PUSH#<sha256(endpoint)>    web push subscription of one device
+ *  PRO#<proId>                      FEEDBACK#<createdAtISO>    { kind, message, page? } — «Ayúdanos a mejorar» (also emailed to ADMIN_EMAIL)
  *  PRO#<proId>                      HOLD#<holdId>              { serviceId, start, end, bufferMin, expiresAt (epoch ms) } — an hour a
  *                                                              visitor of the booking page is holding (busy for everyone else
  *                                                              until expiresAt; TTL: expiresAt + 1 h)

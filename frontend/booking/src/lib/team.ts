@@ -161,6 +161,8 @@ export async function settleInBatches<T, R>(items: readonly T[], run: (item: T) 
  */
 export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
   const assigneesByService = new Map<string, Map<string, Offering>>();
+  /** «Cualquiera disponible»: the member each hold id is currently held with. */
+  const heldWith = new Map<string, string>();
   const isAny = (slug: string) => slug === page.team.slug;
   /** The member an hour of «Cualquiera disponible» goes to; an unknown hour (stale page) is handled like a taken one. */
   const assignee = (serviceId: string, start: string): Offering => {
@@ -192,6 +194,13 @@ export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
       assigneesByService.set(merged.id, assignees);
       return data;
     },
+    async releaseHold(slug, holdId) {
+      if (!isAny(slug)) return base.releaseHold(slug, holdId);
+      // «Cualquiera disponible» held it with one of the members.
+      const member = heldWith.get(holdId);
+      heldWith.delete(holdId);
+      if (member) await base.releaseHold(member, holdId);
+    },
     async createBooking(slug, body) {
       if (!isAny(slug)) return base.createBooking(slug, body);
       const offering = assignee(body.serviceId, body.start);
@@ -200,7 +209,12 @@ export function createTeamApi(base: ApiClient, page: TeamPage): TeamApi {
     async holdSlot(slug, body) {
       if (!isAny(slug)) return base.holdSlot(slug, body);
       const offering = assignee(body.serviceId, body.start);
-      return base.holdSlot(offering.member.slug, { ...body, serviceId: offering.service.id });
+      const result = await base.holdSlot(offering.member.slug, { ...body, serviceId: offering.service.id });
+      // The new hour went to another professional: the one held before with them is freed at once.
+      const previous = heldWith.get(body.holdId);
+      heldWith.set(body.holdId, offering.member.slug);
+      if (previous && previous !== offering.member.slug) void base.releaseHold(previous, body.holdId).catch(() => undefined);
+      return result;
     },
     async joinWaitlist(slug, body) {
       if (!isAny(slug)) return base.joinWaitlist(slug, body);

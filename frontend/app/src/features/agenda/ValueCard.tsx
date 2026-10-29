@@ -90,11 +90,18 @@ export function ValueCard({ variant, onShare, className }: { variant: 'phone' | 
         </>
       )}
       {variant === 'phone' ? (
-        <div className="grid grid-cols-3 gap-2">
+        // Three tiles side by side; under 360 px they would overflow, so each becomes a «label · value» row.
+        <div className="grid grid-cols-3 gap-2 max-[359px]:grid-cols-1 max-[359px]:gap-0">
           {items.map((f) => (
-            <div key={f.long} className="bg-white/12 rounded-[16px] p-[10px] flex flex-col gap-1 min-w-0">
-              <span className="font-display font-extrabold text-[20px] leading-none whitespace-nowrap">{f.value}</span>
-              <span className="text-[12px] leading-[1.3] text-mint">{f.short}</span>
+            <div
+              key={f.long}
+              className="bg-white/12 rounded-[16px] p-[10px] flex flex-col gap-1 min-w-0 max-[359px]:bg-transparent max-[359px]:rounded-none max-[359px]:px-0 max-[359px]:py-2 max-[359px]:border-t max-[359px]:border-white/16 max-[359px]:flex-row-reverse max-[359px]:justify-between max-[359px]:items-baseline max-[359px]:gap-3"
+            >
+              <span className="font-display font-extrabold text-[20px] max-[359px]:text-[16px] leading-none whitespace-nowrap">{f.value}</span>
+              <span className="text-[12px] max-[359px]:text-[14px] leading-[1.3] text-mint">
+                <span className="max-[359px]:hidden">{f.short}</span>
+                <span className="min-[360px]:hidden">{f.long}</span>
+              </span>
             </div>
           ))}
         </div>

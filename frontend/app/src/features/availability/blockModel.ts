@@ -71,7 +71,7 @@ export interface HourPreset {
  * range, before / from noon), «Desde ahora» only today. Hours the pro doesn't
  * work fall back to 8–12 and 2–6.
  */
-export function hourPresets(day: ISODate, schedule: WeeklySchedule | undefined, today: ISODate, now: Date): HourPreset[] {
+export function hourPresets(day: ISODate, schedule: WeeklySchedule | undefined, today: ISODate, now: Date, range = false): HourPreset[] {
   const ranges = schedule?.[weekdayOf(day)] ?? [];
   const morning = ranges.filter((r) => r.start < '12:00');
   const afternoon = ranges.filter((r) => r.end > '12:00' && r.start >= '12:00');
@@ -79,7 +79,8 @@ export function hourPresets(day: ISODate, schedule: WeeklySchedule | undefined, 
     { key: 'morning', label: 'Toda la mañana', startTime: morning[0]?.start ?? '08:00', endTime: morning.at(-1)?.end ?? '12:00' },
     { key: 'afternoon', label: 'Toda la tarde', startTime: afternoon[0]?.start ?? '14:00', endTime: afternoon.at(-1)?.end ?? '18:00' },
   ];
-  if (day === today) {
+  // «Desde ahora» means today only: over several days it would block from that hour every day.
+  if (day === today && !range) {
     const start = nextHalfHour(now);
     const end = ranges.at(-1)?.end ?? '18:00';
     if (start < end) presets.push({ key: 'fromNow', label: 'Desde ahora', startTime: start, endTime: end });
@@ -104,21 +105,35 @@ export function blockRequest(draft: BlockDraft, today: ISODate): CreateBlockRequ
   };
 }
 
-const hours = (draft: BlockDraft) => `${formatTime(draft.startTime)} – ${formatTime(draft.endTime)}`;
+/** "2:30 – 6:00 p. m." (one «p. m.» when both share it) or "11:00 a. m. – 1:00 p. m.". */
+export function hoursRange(start: HHmm, end: HHmm): string {
+  const a = formatTime(start);
+  const b = formatTime(end);
+  const meridiem = / [ap]\. m\.$/;
+  const sameHalf = a.match(meridiem)?.[0] === b.match(meridiem)?.[0];
+  return `${sameHalf ? a.replace(meridiem, '') : a} – ${b}`;
+}
 /** "vie 23 oct." */
 const shortDay = (date: ISODate) => formatDayShortMonth(date).toLowerCase();
-/** "del 20 al 23 oct." (same month) or "del 30 oct. al 2 nov.". */
+/** "Del 20 al 23 oct." (same month) or "Del 30 oct. al 2 nov.". */
 function span(from: ISODate, to: ISODate): string {
   const sameMonth = from.slice(0, 7) === to.slice(0, 7);
-  return `del ${sameMonth ? Number(from.slice(8)) : shortDay(from).replace(/^\S+ /, '')} al ${shortDay(to).replace(/^\S+ /, '')}`;
+  return `Del ${sameMonth ? Number(from.slice(8)) : shortDay(from).replace(/^\S+ /, '')} al ${shortDay(to).replace(/^\S+ /, '')}`;
 }
 
-/** «Bloquear hoy · 2:00 – 4:00 p. m.», «Bloquear mañana todo el día», «Bloquear el vie 23 oct. …», «Bloquear del 20 al 23 oct.». */
-export function submitLabel(draft: BlockDraft, today: ISODate): string {
+/**
+ * What the button will block, shown right above it (the button itself says «Bloquear»):
+ * «Hoy · 2:00 – 4:00 p. m.», «Mañana · todo el día», «Vie 23 oct. · todo el día»,
+ * «Del 29 oct. al 2 nov. · 2:30 – 6:00 p. m.».
+ */
+export function blockSummary(draft: BlockDraft, today: ISODate): string {
   const first = firstDay(draft, today);
-  const day = draft.when === 'today' ? 'hoy' : draft.when === 'tomorrow' ? 'mañana' : `el ${shortDay(first)}`;
-  if (draft.when === 'range') return `Bloquear ${span(draft.from, draft.to)}${draft.allDay ? '' : ` · ${hours(draft)}`}`;
-  return `Bloquear ${day}${draft.allDay ? ' todo el día' : ` · ${hours(draft)}`}`;
+  const when =
+    draft.when === 'range' ? span(draft.from, draft.to)
+      : draft.when === 'today' ? 'Hoy'
+        : draft.when === 'tomorrow' ? 'Mañana'
+          : formatDayShortMonth(first);
+  return `${when} · ${draft.allDay ? 'todo el día' : hoursRange(draft.startTime, draft.endTime)}`;
 }
 
 /** Confirmed appointments the blocked periods would cover (they stay; the sheet only warns). */

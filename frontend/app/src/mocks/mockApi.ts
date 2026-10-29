@@ -15,7 +15,7 @@ import { computeAvailability, computeDay } from '@shared/availability';
 import { upcomingHolidays } from '@shared/holidays';
 import {
   MAX_APPOINTMENTS_RANGE_DAYS, approveTeamSchema, createAppointmentSchema, teamMemberSchema, teamRequestSchema, updateTeamSchema, createBlockSchema, createMigrationSchema, createPriceSchema, manualPaymentSchema,
-  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, uploadLogoSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
+  moveAppointmentSchema, onboardingSchema, pushSubscriptionSchema, removePushSubscriptionSchema, setOutcomeSchema, statsQuerySchema, updateCalendarSyncSchema, uploadLogoSchema, feedbackSchema, updateClientNotesSchema, paymentNoticeSchema, putAvailabilitySchema, rejectNoticeSchema, upsertServiceSchema,
 } from '@shared/schemas';
 import { slugProblem } from '@shared/slug';
 import { computeSubscription, extendPaidUntil, teamPackageAmount } from '@shared/subscription';
@@ -452,6 +452,11 @@ function setProLogo(proId: string, logo: string | undefined) {
   else db.members[proId].profile = apply(db.members[proId].profile);
 }
 const logoDataUrl = (image: string) => `data:image/webp;base64,${image}`;
+on('POST', '/me/feedback', (_p, body) => {
+  requireProfile();
+  validate(feedbackSchema, body);
+  return { ok: true };
+});
 on('PUT', '/me/profile/logo', (_p, body) => {
   requireWritable();
   const { image } = validate(uploadLogoSchema, body);

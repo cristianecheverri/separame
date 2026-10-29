@@ -92,6 +92,8 @@ export const availabilityQuerySchema = z.object({
   holdId: z.uuid().optional(),
 });
 
+export const holdIdSchema = z.object({ holdId: z.uuid() });
+
 export const holdSlotSchema = z.object({
   serviceId: z.string().min(1).max(64),
   start: isoInstantSchema,
@@ -188,6 +190,14 @@ export const bookingRulesSchema = z.object({
 export const putAvailabilitySchema = z.object({
   schedule: weeklyScheduleSchema,
   rules: bookingRulesSchema,
+});
+
+export const FEEDBACK_MESSAGE_MAX = 2000;
+
+export const feedbackSchema = z.object({
+  kind: z.enum(['idea', 'question', 'problem']),
+  message: z.string().trim().min(5, 'Cuéntanos un poco más').max(FEEDBACK_MESSAGE_MAX, 'Es muy largo: resúmelo un poco'),
+  page: z.string().trim().max(200).regex(/^\/[^?#\s]*$/).optional(),
 });
 
 /** A logo already shrunk by the panel, base64 without the `data:` prefix (type checked from the bytes). */

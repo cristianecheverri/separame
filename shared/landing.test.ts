@@ -27,16 +27,18 @@ const template = [
 describe('toPublicPrices', () => {
   it('derives packages, monthly equivalents and the best deal from the founder version', () => {
     expect(toPublicPrices(LANDING_DEFAULT_PRICE)).toEqual({
-      priceVersionId: 'fundador-v1',
+      priceVersionId: 'fundador-v2',
       name: 'Fundador',
       founder: true,
       currency: 'COP',
       fromMonthlyCop: 5000,
       trialDays: TRIAL_DAYS,
       packages: [
+        // 29-oct-2026: 3 months at the $5.000 reference, 6 for the price of 5, 12 for the price of 9, the month alone last.
         { months: 3, amountCop: 15000, monthlyCop: 5000, freeMonths: 0, best: false },
-        { months: 6, amountCop: 30000, monthlyCop: 5000, freeMonths: 0, best: false },
-        { months: 12, amountCop: 50000, monthlyCop: 4167, freeMonths: 2, best: true },
+        { months: 6, amountCop: 25000, monthlyCop: 4167, freeMonths: 1, best: false },
+        { months: 12, amountCop: 45000, monthlyCop: 3750, freeMonths: 3, best: true },
+        { months: 1, amountCop: 5900, monthlyCop: 5900, freeMonths: 0, best: false },
       ],
       extraProfessionalCop: 3900,
     });
@@ -56,7 +58,7 @@ describe('toPublicPrices', () => {
   });
 
   it('falls back to the cheapest monthly equivalent when the version has no headline price', () => {
-    expect(toPublicPrices({ ...LANDING_DEFAULT_PRICE, monthlyCop: null }).fromMonthlyCop).toBe(4167);
+    expect(toPublicPrices({ ...LANDING_DEFAULT_PRICE, monthlyCop: null }).fromMonthlyCop).toBe(3750);
   });
 });
 
@@ -67,7 +69,8 @@ describe('renderLandingPrices', () => {
     expect(html).toContain('Precio fundador: <!--price:from-->$5.000<!--/price:from-->');
     expect(html).not.toContain('old');
     expect(html).toContain('<article class="plan"><span class="plan-tag">Precio fundador</span><h3 class="plan-name">3 meses</h3><div class="plan-amount">$15.000</div><div class="plan-monthly">$5.000 al mes</div></article>');
-    expect(html).toContain('<article class="plan plan-best"><span class="plan-tag">El más conveniente</span><h3 class="plan-name">12 meses</h3><div class="plan-amount">$50.000</div><div class="plan-monthly">$4.167 al mes · 2 meses gratis</div></article>');
+    expect(html).toContain('<article class="plan plan-best"><span class="plan-tag">El más conveniente</span><h3 class="plan-name">12 meses</h3><div class="plan-amount">$45.000</div><div class="plan-monthly">$3.750 al mes · 3 meses gratis</div></article>');
+    expect(html).toContain('<h3 class="plan-name">Mes a mes</h3><div class="plan-amount">$5.900</div><div class="plan-monthly">Sin compromiso</div>');
     expect([...landingSlotsIn(html)].sort()).toEqual(['extra', 'founder', 'from', 'jsonld', 'plans']);
   });
 
@@ -76,7 +79,7 @@ describe('renderLandingPrices', () => {
     const json = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(html)![1];
     expect(JSON.parse(json)).toMatchObject({
       '@type': 'SoftwareApplication',
-      offers: { '@type': 'AggregateOffer', priceCurrency: 'COP', lowPrice: 15000, highPrice: 50000, offerCount: 3 },
+      offers: { '@type': 'AggregateOffer', priceCurrency: 'COP', lowPrice: 5900, highPrice: 45000, offerCount: 4 },
     });
   });
 

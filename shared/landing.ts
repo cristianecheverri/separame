@@ -21,15 +21,16 @@ import type { PriceVersion } from './types';
  * (a backend test keeps them equal).
  */
 export const LANDING_DEFAULT_PRICE: PriceVersion = {
-  id: 'fundador-v1',
-  code: 'fundador-v1',
+  id: 'fundador-v2',
+  code: 'fundador-v2',
   name: 'Fundador',
   currency: 'COP',
   monthlyCop: 5000,
   packages: [
+    { months: 1, amountCop: 5900 },
     { months: 3, amountCop: 15000 },
-    { months: 6, amountCop: 30000 },
-    { months: 12, amountCop: 50000 },
+    { months: 6, amountCop: 25000 },
+    { months: 12, amountCop: 45000 },
   ],
   extraProfessionalCop: 3900,
   status: 'active',

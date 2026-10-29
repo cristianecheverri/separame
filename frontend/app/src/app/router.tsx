@@ -44,6 +44,7 @@ export const routes: RouteObject[] = [
                       { path: 'availability', lazy: page(() => import('../features/availability/AvailabilityPage'), 'AvailabilityPage') },
                       { path: 'calendar-sync', lazy: page(() => import('../features/calendar/CalendarSyncPage'), 'CalendarSyncPage') },
                       { path: 'billing', lazy: page(() => import('../features/billing/BillingPage'), 'BillingPage') },
+                      { path: 'feedback', lazy: page(() => import('../features/feedback/FeedbackPage'), 'FeedbackPage') },
                       { path: 'profile', lazy: page(() => import('../features/profile/ProfilePage'), 'ProfilePage') },
                       { path: 'team', lazy: page(() => import('../features/team/TeamPage'), 'TeamPage') },
                       { path: 'team/request', lazy: page(() => import('../features/team/TeamRequestPage'), 'TeamRequestPage') },

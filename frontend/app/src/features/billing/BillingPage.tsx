@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPaths, type BillingResponse, type PaymentNoticeRequest, type PaymentNoticeResponse, type ReferralsResponse } from '@shared/api';
@@ -75,7 +76,7 @@ function Instructions({ instructions }: { instructions: PaymentInstructions | nu
   if (!instructions) {
     return (
       <div className="bg-surface rounded-[16px] p-4 text-[14px] text-ink-2 leading-[1.45]">
-        Escríbenos y te contamos cómo pagar: <a href="mailto:soporte@separame.app" className="font-bold">soporte@separame.app</a>
+        Escríbenos y te contamos cómo pagar: <Link to="/feedback" className="font-bold">Ayúdanos a mejorar</Link>
       </div>
     );
   }
@@ -241,7 +242,11 @@ function Plans({ data, savedMonths }: { data: BillingResponse; savedMonths: numb
   const pending = data.payments.some(isPendingNotice);
 
   if (!plan) {
-    return <div className={cx(ui.card, 'text-[14px] text-ink-2')}>Tu plan todavía no tiene paquetes. Escríbenos a soporte@separame.app y te ayudamos.</div>;
+    return (
+      <div className={cx(ui.card, 'text-[14px] text-ink-2')}>
+        Tu plan todavía no tiene paquetes. Escríbenos desde <Link to="/feedback" className="font-bold">Ayúdanos a mejorar</Link> y te ayudamos.
+      </div>
+    );
   }
 
   return (

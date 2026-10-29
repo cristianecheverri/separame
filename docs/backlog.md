@@ -95,6 +95,19 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       cuenta como «Sin margen»; las citas viejas sueltan su cola de 10 min cuando alguien reserva justo después.
 - [x] «Separar mi cita» más rápido: el captcha se resuelve desde «Tus datos» y la reserva lee en paralelo.
 - [x] «Volver a la agenda» tras reservar (un solo servicio) ya no se queda cargando y trae horas nuevas.
+- [x] Equipo: al pasar de un profesional a otro, la hora retenida con el primero se suelta al instante
+      (`DELETE /public/pros/{slug}/holds/{holdId}`); un profesional nuevo hereda el margen elegido por el dueño.
+- [x] Celulares angostos (320 px): hoja de bloqueo con resumen sobre «Bloquear» y opciones en varias
+      líneas (sin «Desde ahora» en varios días); «<Mes> con Sepárame» en filas; aviso corto de la prueba.
+- [x] Precios nuevos (29-oct): 1 mes $5.900, 3 meses $15.000, 6 meses $25.000, 12 meses $45.000 —versión
+      «Fundador v2», creada sola una vez al desplegar y por defecto para cuentas nuevas; quien ya tiene la v1
+      la conserva (migrarlos, si se quiere, desde Admin → Precios con el aviso de 30 días).
+- [x] «Ayúdanos a mejorar» en el panel (Más → Ayúdanos a mejorar): idea / duda / algo no funciona → correo a
+      ADMIN_EMAIL con Reply-To del profesional; queda guardado (`FEEDBACK#`).
+- [ ] soporte@separame.app no tiene buzón: los correos que lleguen ahí se pierden. Decidir si se reenvía
+      (MX + reenvío) o se quita de donde aparezca.
+- [x] Página principal: sin el chip «Para profesionales en Colombia», celular del inicio igual al paso
+      «Día y hora» real, tarjeta «Tu agenda del día» sin textos montados, 4 planes.
 - [x] Desplegado y probado en dev y prod.
 
 ### Bloquear horas, métricas de valor, logo y rendimiento (29-oct)

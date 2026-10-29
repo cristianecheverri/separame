@@ -1286,6 +1286,16 @@
       "page": "linea-a",
       "is_interactive": true,
       "title": "Profesional — Perfil público con «Logo o foto» subido (en Equipo: logo del consultorio y de cada profesional)"
+    },
+    "pro-feedback-phone.dc.html": {
+      "x": 9520,
+      "y": 10544,
+      "w": 390,
+      "h": 844,
+      "page": "linea-a",
+      "radius": 28,
+      "is_interactive": true,
+      "title": "Profesional — «Ayúdanos a mejorar» (Más → Ayúdanos a mejorar; tweak: enviado)"
     }
   },
   "createdOnFiles": {
@@ -1753,7 +1763,8 @@
     "proposal-value-metrics-desktop-card.dc.html",
     "proposal-value-metrics-stats-phone.dc.html",
     "client-booking-logo.dc.html",
-    "pro-public-profile-logo.dc.html"
+    "pro-public-profile-logo.dc.html",
+    "pro-feedback-phone.dc.html"
   ],
   "pages": [
     {

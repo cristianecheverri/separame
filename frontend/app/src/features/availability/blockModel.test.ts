@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toInstant } from '@shared/time';
 import type { Appointment } from '@shared/types';
-import { blockRequest, coveredAppointments, hourPresets, initialDraft, nextHalfHour, submitLabel, type BlockDraft } from './blockModel';
+import { blockRequest, coveredAppointments, hourPresets, initialDraft, blockSummary, hoursRange, nextHalfHour, type BlockDraft } from './blockModel';
 
 const TODAY = '2026-10-20';
 const NOW = new Date(toInstant(TODAY, '10:10'));
@@ -40,12 +40,13 @@ describe('blockModel', () => {
     expect(blockRequest(draft({ when: 'range', from: '2026-10-23', to: '2026-10-20', allDay: true }), TODAY)).toBeNull();
   });
 
-  it('labels the button with what will be blocked', () => {
-    expect(submitLabel(draft({ startTime: '14:00', endTime: '16:00' }), TODAY)).toBe('Bloquear hoy · 2:00 p. m. – 4:00 p. m.');
-    expect(submitLabel(draft({ when: 'tomorrow', allDay: true }), TODAY)).toBe('Bloquear mañana todo el día');
-    expect(submitLabel(draft({ when: 'other', date: '2026-10-23', allDay: true }), TODAY)).toBe('Bloquear el vie 23 oct. todo el día');
-    expect(submitLabel(draft({ when: 'range', from: '2026-10-20', to: '2026-10-23', allDay: true }), TODAY)).toBe('Bloquear del 20 al 23 oct.');
-    expect(submitLabel(draft({ when: 'range', from: '2026-10-30', to: '2026-11-02', allDay: true }), TODAY)).toBe('Bloquear del 30 oct. al 2 nov.');
+  it('sums up what will be blocked above the button, short enough for a phone', () => {
+    expect(blockSummary(draft({ startTime: '14:00', endTime: '16:00' }), TODAY)).toBe('Hoy · 2:00 – 4:00 p. m.');
+    expect(blockSummary(draft({ when: 'tomorrow', allDay: true }), TODAY)).toBe('Mañana · todo el día');
+    expect(blockSummary(draft({ when: 'other', date: '2026-10-23', allDay: true }), TODAY)).toBe('Vie 23 oct. · todo el día');
+    expect(blockSummary(draft({ when: 'range', from: '2026-10-20', to: '2026-10-23', allDay: true }), TODAY)).toBe('Del 20 al 23 oct. · todo el día');
+    expect(blockSummary(draft({ when: 'range', from: '2026-10-29', to: '2026-11-02', startTime: '14:30', endTime: '18:00' }), TODAY)).toBe('Del 29 oct. al 2 nov. · 2:30 – 6:00 p. m.');
+    expect(hoursRange('11:00', '13:00')).toBe('11:00 a. m. – 1:00 p. m.');
   });
 
   it('hour shortcuts follow the weekly hours; «Desde ahora» only today', () => {
@@ -53,6 +54,8 @@ describe('blockModel', () => {
       ['Toda la mañana', '08:00', '12:00'], ['Toda la tarde', '14:00', '18:00'], ['Desde ahora', '10:30', '18:00'],
     ]);
     expect(hourPresets('2026-10-21', schedule, TODAY, NOW).map((p) => p.key)).toEqual(['morning', 'afternoon']);
+    // Several days from today: «Desde ahora» would mean that hour every day.
+    expect(hourPresets(TODAY, schedule, TODAY, NOW, true).map((p) => p.key)).toEqual(['morning', 'afternoon']);
   });
 
   it('warns about the confirmed appointments the range covers, every day of a repeat', () => {

@@ -264,6 +264,8 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   const latestRef = useRef({ draft, done, steps });
   const holdIdRef = useRef(boot.draft.holdId ?? newUuid());
   const holdRef = useRef<HoldAttempt | null>(null);
+  /** The page slug the current hold was placed through (team page: a member, or the team's for «Cualquiera disponible»). */
+  const heldSlugRef = useRef<string | null>(null);
 
   const stepIndex = Math.max(0, steps.indexOf(step));
   const apiSlug = profile?.slug ?? slug;
@@ -487,6 +489,10 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
    * failure lets the client go on (the booking itself still can't double-book).
    */
   const hold = (serviceId: string, start: string): Promise<boolean> => {
+    // Another professional than the last hold (team page): free that one at once.
+    const previousSlug = heldSlugRef.current;
+    heldSlugRef.current = apiSlug;
+    if (previousSlug && previousSlug !== apiSlug) void api.releaseHold(previousSlug, holdIdRef.current).catch(() => undefined);
     const result = api
       .holdSlot(apiSlug, { serviceId, start, holdId: holdIdRef.current })
       .then((res) => {
@@ -596,6 +602,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       });
       holdIdRef.current = newUuid();
       holdRef.current = null;
+      heldSlugRef.current = null;
       setHeldStart(null);
       saveJson(doneKey, result);
       removeKey(draftKey);

@@ -116,6 +116,28 @@ describe('createTeamApi', () => {
   });
 });
 
+describe('«Cualquiera disponible» holds', () => {
+  it('a new hour with another professional frees the hold kept with the previous one at once', async () => {
+    const base = createMockApi(new URLSearchParams('delay=0'));
+    const hold = vi.spyOn(base, 'holdSlot');
+    const release = vi.spyOn(base, 'releaseHold');
+    const page = teamPageOf(MOCK_TEAM);
+    const api = createTeamApi(base, page);
+    const serviceId = page.any.services[0].id;
+    const days = (await api.getAvailability(MOCK_TEAM.slug, { serviceId, from: '2026-10-22', days: 1 })).days[0].slots;
+    const holdId = '7a1d2c3b-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+    const [first, other] = [days.find((s) => api.assigneeOf(serviceId, s)?.member.slug === 'dra-sara-gomez')!, days.find((s) => api.assigneeOf(serviceId, s)?.member.slug !== 'dra-sara-gomez')!];
+    await api.holdSlot(MOCK_TEAM.slug, { serviceId, start: first, holdId });
+    expect(release).not.toHaveBeenCalled();
+    await api.holdSlot(MOCK_TEAM.slug, { serviceId, start: other, holdId });
+    expect(hold).toHaveBeenLastCalledWith(api.assigneeOf(serviceId, other)!.member.slug, expect.objectContaining({ holdId }));
+    expect(release).toHaveBeenCalledWith('dra-sara-gomez', holdId);
+    // Leaving «Cualquiera disponible» (picking someone): released with whoever holds it now.
+    await api.releaseHold(MOCK_TEAM.slug, holdId);
+    expect(release).toHaveBeenLastCalledWith(api.assigneeOf(serviceId, other)!.member.slug, holdId);
+  });
+});
+
 describe('«Cualquiera disponible» waitlist', () => {
   it('sends one request to the team route with every member offering the service', async () => {
     const base = createMockApi(new URLSearchParams());

@@ -81,6 +81,8 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/public/pros/{slug}/bookings', fn: 'publicBooking', auth: 'public', throttle: 'booking' },
   // Every picked hour (and every "Siguiente") holds it: stage throttle + a per-IP limit, not the booking one.
   { method: 'POST', path: '/public/pros/{slug}/holds', fn: 'publicBooking', auth: 'public' },
+  // The visitor switched to another professional (team page): the old hold goes at once.
+  { method: 'DELETE', path: '/public/pros/{slug}/holds/{holdId}', fn: 'publicBooking', auth: 'public' },
   { method: 'GET', path: '/public/appointments/{token}', fn: 'publicAppointment', auth: 'public' },
   { method: 'GET', path: '/public/appointments/{token}/ics', fn: 'publicAppointment', auth: 'public' },
   { method: 'POST', path: '/public/appointments/{token}/cancel', fn: 'publicAppointment', auth: 'public', throttle: 'booking' },
@@ -104,6 +106,8 @@ export const ROUTES: RouteDef[] = [
   // Logo or photo of the acting professional (owner or a team member), shrunk by the panel to a few KB.
   { method: 'PUT', path: '/me/profile/logo', fn: 'proAccount', auth: 'pro' },
   { method: 'DELETE', path: '/me/profile/logo', fn: 'proAccount', auth: 'pro' },
+  // «Ayúdanos a mejorar»: emailed to the operator.
+  { method: 'POST', path: '/me/feedback', fn: 'proAccount', auth: 'pro' },
 
   { method: 'GET', path: '/me/services', fn: 'proServices', auth: 'pro' },
   { method: 'POST', path: '/me/services', fn: 'proServices', auth: 'pro' },

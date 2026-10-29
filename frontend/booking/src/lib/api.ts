@@ -43,6 +43,8 @@ export interface ApiClient {
   createBooking(slug: string, body: CreateBookingRequest): Promise<CreateBookingResponse>;
   /** Holds the picked hour a few minutes for this visitor (`slot_taken` when it is no longer free). */
   holdSlot(slug: string, body: HoldSlotRequest): Promise<HoldSlotResponse>;
+  /** Frees this visitor's hold at once (they moved on to another professional). */
+  releaseHold(slug: string, holdId: string): Promise<void>;
   getAppointment(token: string): Promise<ManagedAppointmentResponse>;
   cancelAppointment(token: string, body: CancelBookingRequest): Promise<BookingMutationResponse>;
   rescheduleAppointment(token: string, body: RescheduleBookingRequest): Promise<BookingMutationResponse>;
@@ -59,7 +61,7 @@ export interface ApiClient {
 const TIMEOUT_MS = 15_000;
 
 export function createHttpApi(baseUrl: string): ApiClient {
-  async function request<T>(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
+  async function request<T>(path: string, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: unknown): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let response: Response;
@@ -88,6 +90,7 @@ export function createHttpApi(baseUrl: string): ApiClient {
     getAvailability: (slug, query) => request(apiPaths.publicAvailability(slug, query)),
     createBooking: (slug, body) => request(apiPaths.publicBookings(slug), 'POST', body),
     holdSlot: (slug, body) => request(apiPaths.publicHolds(slug), 'POST', body),
+    releaseHold: (slug, holdId) => request(apiPaths.publicHold(slug, holdId), 'DELETE'),
     getAppointment: (token) => request(apiPaths.publicAppointment(token)),
     cancelAppointment: (token, body) => request(apiPaths.publicCancel(token), 'POST', body),
     rescheduleAppointment: (token, body) => request(apiPaths.publicReschedule(token), 'POST', body),

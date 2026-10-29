@@ -1,4 +1,4 @@
-import { CONFIRM_ACTION_PARAM } from '../../shared/api';
+import { CONFIRM_ACTION_PARAM, type FeedbackRequest } from '../../shared/api';
 import type { ISODate, ISOInstant } from '../../shared/time';
 import type { Appointment, Payment, PriceVersion, ProProfile, TeamRequest, WaitlistEntry } from '../../shared/types';
 import { env } from '../lib/env';
@@ -6,6 +6,7 @@ import { manageTokenFor } from '../lib/tokens';
 import { googleCalendarUrl, outlookCalendarUrl } from './calendar-links';
 import { clientCalendarEvent, clientIcsFile, manageUrl } from './client-ics';
 import { sendEmail, type CalendarInvite, type SendResult } from './sender';
+import { feedbackAdminEmail } from './templates/feedback';
 import { proCalendarEmail, type ProCalendarKind } from './templates/pro-calendar';
 import { waitlistJoinedEmail, waitlistOfferEmail } from './templates/waitlist';
 import { bookingConfirmedEmail, type BookingEmailData } from './templates/booking-confirmed';
@@ -236,6 +237,18 @@ export async function sendNoticeRejected(input: { profile: ProProfile; payment: 
     to: input.profile.email,
     replyTo: operatorReplyTo(),
   });
+}
+
+// ── «Ayúdanos a mejorar» ───────────────────────────────────────────────────
+
+/** Operator alert; skipped (logged) when ADMIN_EMAIL isn't configured (the message stays stored). */
+export async function sendFeedbackToAdmin(input: { profile: ProProfile; feedback: FeedbackRequest; plan: string }): Promise<SendResult> {
+  const to = env.adminEmail();
+  if (!to) {
+    log.warn('ADMIN_EMAIL not set: feedback email skipped', { proId: input.profile.id });
+    return 'skipped';
+  }
+  return sendEmail({ ...feedbackAdminEmail({ siteUrl: env.siteUrl(), ...input }), to, replyTo: input.profile.email });
 }
 
 // ── Team plan ──────────────────────────────────────────────────────────────

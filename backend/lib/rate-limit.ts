@@ -27,6 +27,7 @@ export const RATE_RULES = {
   /** Every picked hour and every "Siguiente" of the booking page holds the hour again. */
   holdPerIp: { scope: 'hold-ip', max: 40, window: 10 },
   paymentNoticePerPro: { scope: 'notice-pro', max: 5, window: 'day' },
+  feedbackPerPro: { scope: 'feedback-pro', max: 10, window: 'day' },
   waitlistPerIp: { scope: 'wait-ip', max: 5, window: 10 },
   waitlistPerEmail: { scope: 'wait-email', max: 5, window: 'day' },
 } satisfies Record<string, RateLimitRule>;

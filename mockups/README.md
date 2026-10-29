@@ -92,7 +92,8 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `pro-stats-phone.dc.html` | Estadísticas en el celular: 2 columnas, chips de periodo deslizables y barra inferior | `pro-stats-phone` |
 | `pro-calendar-sync-phone.dc.html` | Tu calendario y avisos en el celular (invitaciones → avisos → calendario suscrito → nota) | `pro-calendar-sync-phone` |
 | `pro-ios-install-sheet-phone.dc.html` | Hoja "Instalar en iPhone" sobre la agenda | `pro-ios-install-sheet-phone` |
-| `pro-more-sheet-phone.dc.html` | Menú «Más» del celular (hoja verde con el resto de secciones, plan y «Cerrar sesión») | `pro-more-sheet-phone` |
+| `pro-more-sheet-phone.dc.html` | Menú «Más» del celular (hoja verde con el resto de secciones —incluida «Ayúdanos a mejorar»—, plan y «Cerrar sesión») | `pro-more-sheet-phone` |
+| `pro-feedback-phone.dc.html` | «Ayúdanos a mejorar»: una idea, una duda o algo que no funciona → al correo del equipo, que responde al del profesional (tweak `sent`) | `pro-feedback-phone` |
 | `pro-new-appointment-phone.dc.html` | Nueva cita en el celular: buscar cliente con sugerencias, servicio preseleccionado y resumen de la hora (tweak `picked`) | `pro-new-appointment-phone` |
 | `pro-waitlist-phone.dc.html` | Citas · Lista de espera en el celular, con «Agendar» y menú ⋯ | `pro-waitlist-phone` |
 | `account-login.dc.html` | Entrar | `account-login` |
@@ -103,7 +104,7 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `account-new-password.dc.html` | Crear contraseña en el primer ingreso (cuenta creada por el admin) | `account-new-password` |
 | `onboarding-step-1.dc.html` | Onboarding: paso 1 de 5 (tu perfil) | `onboarding-step-1` |
 | `onboarding-done.dc.html` | Onboarding: "¡Listo!" | `onboarding-done` |
-| `landing-desktop.dc.html` | Landing de separame.app en escritorio (la implementada; en el lienzo, `site-landing-desktop`) | `site-landing-desktop` |
+| `landing-desktop.dc.html` | Landing de separame.app en escritorio (la implementada; en el lienzo, `site-landing-desktop`): celular del hero = paso «Día y hora» real; precios de 1, 3, 6 y 12 meses | `site-landing-desktop` |
 | `landing-phone.dc.html` | Landing de separame.app en el celular (en el lienzo, `site-landing-phone`) | `site-landing-phone` |
 
 ## Propuestas (por aprobar)

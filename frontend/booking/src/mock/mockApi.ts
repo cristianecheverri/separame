@@ -160,6 +160,9 @@ export function createMockApi(params: URLSearchParams): ApiClient {
       }
       return { expiresAt: new Date(Date.now() + HOLD_MINUTES * 60_000).toISOString() };
     },
+    async releaseHold() {
+      await wait();
+    },
     async createBooking(slug, body: CreateBookingRequest) {
       await wait();
       if (!active) throw new ApiError('agenda_unavailable', 'Agenda no disponible', 409);

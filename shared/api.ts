@@ -415,6 +415,24 @@ export interface CreateBlockRequest {
   repeatUntil?: ISODate;
 }
 
+// ── «Ayúdanos a mejorar» ─────────────────────────────────────────────────────
+
+export type FeedbackKind = 'idea' | 'question' | 'problem';
+
+export const FEEDBACK_KINDS: { kind: FeedbackKind; label: string }[] = [
+  { kind: 'idea', label: 'Una idea' },
+  { kind: 'question', label: 'Una duda' },
+  { kind: 'problem', label: 'Algo no funciona' },
+];
+
+/** A professional's suggestion, question or problem: emailed to the operator (Reply-To = the pro). */
+export interface FeedbackRequest {
+  kind: FeedbackKind;
+  message: string;
+  /** Where in the panel they were (a path, no query): helps reproduce a problem. */
+  page?: string;
+}
+
 export interface UploadLogoRequest {
   /** The image (PNG, JPG or WebP, ≤ 256 px) as base64, without the `data:` prefix. */
   image: string;
@@ -788,7 +806,9 @@ export const apiPaths = {
   publicAvailability: (slug: string, q: AvailabilityQuery) => `/public/pros/${enc(slug)}/availability${qs({ ...q })}`,
   publicBookings: (slug: string) => `/public/pros/${enc(slug)}/bookings`,
   publicHolds: (slug: string) => `/public/pros/${enc(slug)}/holds`,
+  publicHold: (slug: string, holdId: string) => `/public/pros/${enc(slug)}/holds/${enc(holdId)}`,
   profileLogo: () => '/me/profile/logo',
+  feedback: () => '/me/feedback',
   teamLogo: () => '/me/team/logo',
   publicAppointment: (token: string) => `/public/appointments/${enc(token)}`,
   publicCancel: (token: string) => `/public/appointments/${enc(token)}/cancel`,

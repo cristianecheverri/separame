@@ -36,6 +36,7 @@ function moreNav(hasTeam: boolean): NavItem[] {
     { to: '/profile', label: 'Perfil público' },
     ...(hasTeam ? [{ to: '/team', label: 'Equipo' }] : []),
     { to: '/billing', label: 'Suscripción' },
+    { to: '/feedback', label: 'Ayúdanos a mejorar' },
   ];
 }
 

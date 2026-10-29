@@ -4,7 +4,7 @@ import { capitalize, formatDayLong, formatInstantTime, formatTime } from '@share
 import { bogotaDate, todayBogota, type HHmm, type ISODate } from '@shared/time';
 import { Chip } from '../../components/ui/Chip';
 import { Field } from '../../components/ui/Field';
-import { AlertIcon, CalendarIcon, LockIcon } from '../../components/ui/icons';
+import { AlertIcon, CalendarIcon } from '../../components/ui/icons';
 import { Modal } from '../../components/ui/Modal';
 import { PillSelect } from '../../components/ui/PillSelect';
 import { ui } from '../../components/ui/styles';
@@ -16,7 +16,7 @@ import { formatDayShortMonth } from '../../lib/format';
 import { useAgendaAppointments, useAvailability } from '../../lib/queries';
 import { timeStepsWith } from './scheduleModel';
 import {
-  WHEN_OPTIONS, blockRequest, coveredAppointments, firstDay, hourPresets, initialDraft, submitLabel, type BlockDraft, type BlockWhen,
+  WHEN_OPTIONS, blockRequest, coveredAppointments, firstDay, hourPresets, initialDraft, blockSummary, type BlockDraft, type BlockWhen,
 } from './blockModel';
 import { useBlocks } from './useBlocks';
 
@@ -46,7 +46,7 @@ export function BlockSheet({ prefill, onClose }: { prefill?: BlockPrefill; onClo
   const request = blockRequest(draft, today);
   const appointments = useAgendaAppointments(day, lastDay < day ? day : lastDay).data?.appointments;
   const covered = useMemo(() => (request && appointments ? coveredAppointments(request, appointments) : []), [request, appointments]);
-  const presets = draft.allDay ? [] : hourPresets(day, schedule, today, clock);
+  const presets = draft.allDay ? [] : hourPresets(day, schedule, today, clock, draft.when === 'range');
   const timeOptions = (current: string) => timeStepsWith(current).map((t) => ({ value: t, label: formatTime(t) }));
 
   const pickWhen = (when: BlockWhen) => set({ when, allDay: when === 'range' ? true : draft.when === 'range' ? false : draft.allDay });
@@ -74,16 +74,26 @@ export function BlockSheet({ prefill, onClose }: { prefill?: BlockPrefill; onClo
       title="No estaré disponible"
       description="Nadie podrá reservar en ese rango. Tus citas no cambian."
       footer={
-        <button type="submit" form="block-form" disabled={create.isPending} className="h-[52px] w-full rounded-full bg-primary text-white font-bold text-[16px] inline-flex items-center justify-center gap-2 hover:bg-primary-dark disabled:opacity-80">
-          <LockIcon size={18} />
-          {create.isPending ? 'Guardando…' : submitLabel(draft, today)}
-        </button>
+        <div className="w-full flex flex-col gap-2">
+          <div id="block-summary" className="text-center text-[14px] font-semibold text-ink-2" aria-live="polite">
+            {blockSummary(draft, today)}
+          </div>
+          <button
+            type="submit"
+            form="block-form"
+            disabled={create.isPending}
+            aria-describedby="block-summary"
+            className="h-[52px] w-full rounded-full bg-primary text-white font-bold text-[16px] inline-flex items-center justify-center hover:bg-primary-dark disabled:opacity-80"
+          >
+            {create.isPending ? 'Guardando…' : 'Bloquear'}
+          </button>
+        </div>
       }
     >
       <form id="block-form" onSubmit={submit} className="flex flex-col gap-5" noValidate>
         <div className="flex flex-col gap-2">
           <div id="block-when" className={ui.label}>¿Cuándo?</div>
-          <div role="group" aria-labelledby="block-when" className="flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-5 px-5 pb-[2px] sm:mx-0 sm:px-0 sm:flex-wrap">
+          <div role="group" aria-labelledby="block-when" className="flex flex-wrap gap-2">
             {WHEN_OPTIONS.map((o) => (
               <Chip key={o.key} selected={draft.when === o.key} onClick={() => pickWhen(o.key)} className="whitespace-nowrap shrink-0">
                 {o.label}
@@ -124,7 +134,7 @@ export function BlockSheet({ prefill, onClose }: { prefill?: BlockPrefill; onClo
           </div>
           {!draft.allDay && (
             <>
-              <div role="group" aria-label="Atajos de horas" className="flex gap-2 overflow-x-auto [scrollbar-width:none] -mx-5 px-5 pb-[2px] sm:mx-0 sm:px-0 sm:flex-wrap">
+              <div role="group" aria-label="Atajos de horas" className="flex flex-wrap gap-2">
                 {presets.map((p) => (
                   <Chip
                     key={p.key}

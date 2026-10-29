@@ -3,7 +3,7 @@ import type { CreatePriceRequest, PriceWithUsage, UpdatePriceRequest } from '../
 import { LEGACY_EXTRA_PROFESSIONAL_COP } from '../../shared/subscription';
 import type { PricePackage, PriceVersion } from '../../shared/types';
 import {
-  ddb, getItem, isConditionalFailure, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem,
+  ddb, failedOnCondition, getItem, isConditionalFailure, queryAll, stripKeys, table, transactWrite, type Item, type TransactItem,
 } from '../lib/dynamo';
 import { ApiError, validationError } from '../lib/http';
 import { PRICE_PK, PRICE_PREFIX, priceKey } from '../lib/keys';
@@ -16,22 +16,32 @@ import { listSubItems } from './subscriptions';
  * the version's stable code (`fundador-v1`).
  */
 
+/**
+ * The prices decided on 29-oct-2026 (owner): 1 month $5.900, 3 months $15.000
+ * ($5.000 a month, the reference), 6 months $25.000 (one free) and 12 months
+ * $45.000 (three free). Seeded on a fresh table, and created once — as the
+ * default for new sign-ups — on a table that predates it (see
+ * `ensureDefaultPrices`). Existing subscriptions keep their own version.
+ */
+export const CURRENT_DEFAULT_PRICE: Omit<PriceVersion, 'createdAt'> = {
+  id: 'fundador-v2',
+  code: 'fundador-v2',
+  name: 'Fundador',
+  currency: 'COP',
+  monthlyCop: 5000,
+  packages: [
+    { months: 1, amountCop: 5900 },
+    { months: 3, amountCop: 15000 },
+    { months: 6, amountCop: 25000 },
+    { months: 12, amountCop: 45000 },
+  ],
+  extraProfessionalCop: LEGACY_EXTRA_PROFESSIONAL_COP,
+  status: 'active',
+  isDefault: true,
+};
+
 export const DEFAULT_PRICE_SEEDS: Omit<PriceVersion, 'createdAt'>[] = [
-  {
-    id: 'fundador-v1',
-    code: 'fundador-v1',
-    name: 'Fundador',
-    currency: 'COP',
-    monthlyCop: 5000,
-    packages: [
-      { months: 3, amountCop: 15000 },
-      { months: 6, amountCop: 30000 },
-      { months: 12, amountCop: 50000 },
-    ],
-    extraProfessionalCop: LEGACY_EXTRA_PROFESSIONAL_COP,
-    status: 'active',
-    isDefault: true,
-  },
+  CURRENT_DEFAULT_PRICE,
   {
     id: 'mensual-v1',
     code: 'mensual-v1',
@@ -64,10 +74,33 @@ export async function listPrices(consistent = false): Promise<PriceVersion[]> {
   return items.map(toPrice).sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
 }
 
+/**
+ * A table seeded before CURRENT_DEFAULT_PRICE existed gets it once: created
+ * active and made the default (the previous default stops being offered to new
+ * sign-ups; its subscribers keep it). Never again once it exists — even if an
+ * admin later archives it or picks another default.
+ */
+async function introduceCurrentDefault(existing: PriceVersion[], now: Date): Promise<boolean> {
+  if (existing.some((p) => p.id === CURRENT_DEFAULT_PRICE.id)) return false;
+  const T = table();
+  try {
+    await transactWrite([
+      { Put: { TableName: T, Item: { ...priceKey(CURRENT_DEFAULT_PRICE.id), ...CURRENT_DEFAULT_PRICE, createdAt: now.toISOString() }, ConditionExpression: 'attribute_not_exists(PK)' } },
+      ...existing.filter((p) => p.isDefault).map((p): TransactItem => ({
+        Update: { TableName: T, Key: priceKey(p.id), UpdateExpression: 'SET isDefault = :f', ExpressionAttributeValues: { ':f': false } },
+      })),
+    ]);
+  } catch (err) {
+    // Another Lambda introduced it at the same moment.
+    if (!failedOnCondition(err)) throw err;
+  }
+  return true;
+}
+
 /** Seeds the default versions on a fresh table (idempotent: conditional puts). */
 export async function ensureDefaultPrices(now: Date = new Date()): Promise<PriceVersion[]> {
   const existing = await listPrices(true);
-  if (existing.length > 0) return existing;
+  if (existing.length > 0) return (await introduceCurrentDefault(existing, now)) ? listPrices(true) : existing;
   const createdAt = now.toISOString();
   for (const seed of DEFAULT_PRICE_SEEDS) {
     try {

@@ -35,7 +35,7 @@ describe('POST /me/onboarding', () => {
     expect(items[0].Put!.Item).toMatchObject(ownerKey(SUB_ID));
     expect(items[1].Put!.Item).toMatchObject(slugKey('dra-laura-perez'));
     const sub = items[3].Put!.Item!;
-    expect(sub).toMatchObject({ SK: 'SUB', trialEndsAt: new Date(NOW.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(), paidUntil: null, priceVersionId: 'fundador-v1', GSI1PK: 'SUBS' });
+    expect(sub).toMatchObject({ SK: 'SUB', trialEndsAt: new Date(NOW.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(), paidUntil: null, priceVersionId: 'fundador-v2', GSI1PK: 'SUBS' });
     expect(items[5].Put!.Item).toMatchObject(trialKey(trialHash('laura@correo.com')));
     expect(parse(res).subscription.state).toBe('trial');
   });

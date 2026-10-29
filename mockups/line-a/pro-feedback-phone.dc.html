@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ayúdanos a mejorar — celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E4F}a:hover{color:#084C37}
+textarea::placeholder{color:#8A968F}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F6F4; font-family: 'Figtree', system-ui, sans-serif; color: #15241D; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <header style="height: 60px; flex-shrink: 0; background: #0B6E4F; color: #FFFFFF; padding: 0 16px; display: flex; align-items: center">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1">sepárame<span style="color: #FFC93C">.</span></span>
+  </header>
+  <main style="padding: 20px 16px 96px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; line-height: 1.15; letter-spacing: -0.8px">Ayúdanos a mejorar</h1>
+      <div style="font-size: 15px; color: #56645D; line-height: 1.45">Una idea, una duda o algo que no funciona: lo leemos todo y te respondemos a <strong style="color: #15241D">laura@consultoriolaura.co</strong>.</div>
+    </div>
+    <sc-if value="{{form}}" hint-placeholder-val="{{ true }}">
+      <form style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div id="fb-kind" style="font-size: 14px; font-weight: 600">¿Qué nos quieres contar?</div>
+          <div role="group" aria-labelledby="fb-kind" style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{kinds}}" as="k" hint-placeholder-count="3">
+              <button type="button" onClick="{{k.pick}}" aria-pressed="{{k.selected}}" style="{{k.style}}">{{k.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="fb-msg" style="font-size: 14px; font-weight: 600">Tu mensaje</label>
+          <textarea id="fb-msg" rows="6" placeholder="{{placeholder}}" style="width: 100%; box-sizing: border-box; border-radius: 14px; border: 2px solid #E3E8E5; background: #FFFFFF; padding: 12px 14px; font: inherit; font-size: 16px; color: #15241D; resize: none"></textarea>
+          <span style="font-size: 12px; color: #56645D">0 / 2000</span>
+        </div>
+        <div><button type="button" onClick="{{send}}" style="height: 48px; padding: 0 24px; border-radius: 999px; border: 0; background: #0B6E4F; font: inherit; font-weight: 700; font-size: 15px; color: #FFFFFF; cursor: pointer">Enviar</button></div>
+      </form>
+    </sc-if>
+    <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+      <section role="status" style="background: #FFFFFF; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start">
+        <span style="width: 44px; height: 44px; border-radius: 999px; background: #EAF5F0; color: #0B6E4F; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px">¡Gracias! Ya nos llegó.</h2>
+        <p style="margin: 0; font-size: 15px; color: #3E4C45; line-height: 1.45">Si necesita respuesta, te escribimos a tu correo. Así vamos haciendo Sepárame a tu medida.</p>
+        <button type="button" onClick="{{again}}" style="height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #CFDAD4; background: #FFFFFF; font: inherit; font-weight: 700; font-size: 14px; color: #15241D; cursor: pointer">Enviar otro mensaje</button>
+      </section>
+    </sc-if>
+  </main>
+  <nav aria-label="Navegación principal" style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; box-sizing: border-box; background: #FFFFFF; border-top: 1px solid #E3E8E5; padding: 4px 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center">
+    <a href="pro-agenda-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span><span style="font-size: 12px; color: #56645D; font-weight: 600">Agenda</span></a>
+    <a href="pro-appointments-waitlist.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"></path></svg></span><span style="font-size: 12px; color: #56645D; font-weight: 600">Citas</span></a>
+    <a href="pro-clients-phone.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center; color: #56645D"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"></path></svg></span><span style="font-size: 12px; color: #56645D; font-weight: 600">Clientes</span></a>
+    <a href="pro-more-sheet-phone.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none"><span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #EAF5F0; color: #0B6E4F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg></span><span style="font-size: 12px; color: #0B6E4F; font-weight: 700">Más</span></a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"sent":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = Object.assign({ kind: 0, sent: !!this.props.sent }, this.state || {});
+    const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;cursor:pointer;';
+    const kinds = ['Una idea', 'Una duda', 'Algo no funciona'];
+    const placeholders = ['Qué te gustaría que Sepárame hiciera por ti', 'Qué quieres saber', 'Qué pasó y dónde (paso, pantalla o botón)'];
+    return {
+      form: !st.sent,
+      sent: st.sent,
+      send: () => this.setState({ sent: true }),
+      again: () => this.setState({ sent: false }),
+      placeholder: placeholders[st.kind],
+      kinds: kinds.map((label, i) => ({ label, selected: st.kind === i, pick: () => this.setState({ kind: i }), style: chip + (st.kind === i ? 'background:#FFC93C;border-color:#FFC93C;' : 'background:#FFFFFF;border-color:#E3E8E5;') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -361,3 +361,26 @@ describe('appointments booked with the old 10-minute margin', () => {
   });
 });
 
+
+describe('DELETE /public/pros/{slug}/holds/{holdId}', () => {
+  const release = (holdId: string) => apiEvent('DELETE /public/pros/{slug}/holds/{holdId}', { path: { slug: profile.slug, holdId } });
+
+  it('frees the hold item and its lock units at once (only units it still owns)', async () => {
+    mockPro();
+    ddb.on(GetCommand, { Key: holdKey(PRO_ID, HOLD_ID) }).resolves({ Item: { ...liveHold(HOLD_ID), durationMin: 30, bufferMin: 0 } });
+    ddb.on(DeleteCommand).resolves({});
+    const res = await handler(release(HOLD_ID));
+    expect(res.statusCode).toBe(204);
+    const deletes = ddb.commandCalls(DeleteCommand).map((c) => c.args[0].input);
+    expect(deletes[0].Key).toEqual(holdKey(PRO_ID, HOLD_ID));
+    expect(deletes.slice(1).map((d) => d.Key!.SK)).toEqual(['10:00', '10:05', '10:10', '10:15', '10:20', '10:25']);
+    expect(deletes.slice(1).every((d) => d.ConditionExpression === 'holdId = :hold')).toBe(true);
+  });
+
+  it('an unknown hold is a no-op; a malformed id is 400', async () => {
+    mockPro();
+    expect((await handler(release(HOLD_ID))).statusCode).toBe(204);
+    expect(ddb.commandCalls(DeleteCommand)).toHaveLength(0);
+    expect((await handler(release('nope'))).statusCode).toBe(400);
+  });
+});

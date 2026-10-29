@@ -34,7 +34,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
 
       <div style="display: flex; flex-direction: column; gap: 8px">
         <div id="bh-when" style="font-size: 14px; font-weight: 600">¿Cuándo?</div>
-        <div role="group" aria-labelledby="bh-when" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 0 20px 2px">
+        <div role="group" aria-labelledby="bh-when" style="display: flex; flex-wrap: wrap; gap: 8px">
           <sc-for list="{{whens}}" as="w" hint-placeholder-count="4">
             <button onClick="{{w.pick}}" aria-pressed="{{w.selected}}" style="{{w.style}}">{{w.label}}</button>
           </sc-for>
@@ -71,7 +71,7 @@ a{color:#0B6E4F}a:hover{color:#084C37}
         </div>
 
         <sc-if value="{{hours}}" hint-placeholder-val="{{ true }}">
-          <div role="group" aria-label="Atajos de horas" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 0 20px 2px">
+          <div role="group" aria-label="Atajos de horas" style="display: flex; flex-wrap: wrap; gap: 8px">
             <sc-for list="{{presets}}" as="p" hint-placeholder-count="3">
               <button onClick="{{p.pick}}" aria-pressed="{{p.selected}}" style="{{p.style}}">{{p.label}}</button>
             </sc-for>
@@ -107,7 +107,8 @@ a{color:#0B6E4F}a:hover{color:#084C37}
     </div>
 
     <div style="padding: 12px 20px 20px; border-top: 1px solid #E3E8E5; display: flex; flex-direction: column; gap: 8px">
-      <a href="proposal-block-hours-agenda-phone.dc.html" style="height: 52px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>{{submitLabel}}</a>
+      <div id="bh-summary" aria-live="polite" style="text-align: center; font-size: 14px; font-weight: 600; color: #3E4C45">{{summary}}</div>
+      <a href="proposal-block-hours-agenda-phone.dc.html" aria-describedby="bh-summary" style="height: 52px; border-radius: 999px; background: #0B6E4F; color: #FFFFFF; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; text-decoration: none">Bloquear</a>
     </div>
   </div>
 </div>
@@ -118,6 +119,9 @@ class Component extends DCLogic {
     const whenNames = ['hoy', 'mañana', 'otro día', 'varios días'];
     const initial = Math.max(0, whenNames.indexOf(this.props.when || 'hoy'));
     const st = Object.assign({ when: initial, allDay: initial === 3, preset: null, from: '2:00 p. m.', to: '4:00 p. m.' }, this.state || {});
+    // «2:00 – 4:00 p. m.»: one «p. m.» when both hours share it.
+    const half = (t) => t.slice(-5);
+    const hoursRange = (a, b) => (half(a) === half(b) ? a.slice(0, -6) : a) + ' – ' + b;
     const chip = 'height:44px;padding:0 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;border:2px solid;color:#15241D;white-space:nowrap;flex-shrink:0;cursor:pointer;';
     const on = 'background:#FFC93C;border-color:#FFC93C;';
     const off = 'background:#FFFFFF;border-color:#E3E8E5;';
@@ -129,9 +133,10 @@ class Component extends DCLogic {
       { label: 'Desde ahora', from: '10:30 a. m.', to: '6:00 p. m.' }
     ];
     const range = st.when === 3;
-    const hoursText = st.from + ' – ' + st.to;
-    const whenText = ['hoy', 'mañana', 'el vie 23 oct.', 'del 20 al 23 oct.'][st.when];
-    const submitLabel = 'Bloquear ' + whenText + (st.allDay ? (range ? '' : ' todo el día') : ' · ' + hoursText);
+    const whenText = ['Hoy', 'Mañana', 'Vie 23 oct.', 'Del 20 al 23 oct.'][st.when];
+    const summary = whenText + ' · ' + (st.allDay ? 'todo el día' : hoursRange(st.from, st.to));
+    // «Desde ahora» means today only.
+    const shown = presets.filter((p, i) => i < 2 || st.when === 0);
     return {
       whens: labels.map((label, i) => ({
         label, selected: st.when === i,
@@ -147,7 +152,7 @@ class Component extends DCLogic {
       toggleAllDay: () => this.setState({ allDay: !st.allDay }),
       switchStyle: 'width:52px;height:32px;border-radius:999px;border:0;padding:3px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;' + (st.allDay ? 'background:#0B6E4F;justify-content:flex-end;' : 'background:#CFDAD4;justify-content:flex-start;'),
       knobStyle: 'width:26px;height:26px;border-radius:999px;background:#FFFFFF;box-shadow:0 1px 3px rgba(21,36,29,0.25);display:block;',
-      presets: presets.map((p, i) => ({
+      presets: shown.map((p, i) => ({
         label: p.label, selected: st.preset === i,
         pick: () => this.setState({ preset: i, from: p.from, to: p.to }),
         style: chip + (st.preset === i ? on : off)
@@ -155,7 +160,7 @@ class Component extends DCLogic {
       fromLabel: st.from,
       toLabel: st.to,
       showConflict: !!this.props.conflict,
-      submitLabel
+      summary
     };
   }
 }

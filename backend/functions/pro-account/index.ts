@@ -1,9 +1,10 @@
-import { onboardingSchema, slugCheckQuerySchema, updateProfileSchema, uploadLogoSchema } from '../../../shared/schemas';
+import { feedbackSchema, onboardingSchema, slugCheckQuerySchema, updateProfileSchema, uploadLogoSchema } from '../../../shared/schemas';
 import { requirePro } from '../../lib/auth';
 import { created, createApiHandler, ok, parseBody, parseQuery, type ApiEvent } from '../../lib/http';
 import { log } from '../../lib/logger';
-import { getMe, onboard, slugCheck, updateProfile } from '../../services/profiles';
+import { getMe, onboard, requireProId, slugCheck, updateProfile } from '../../services/profiles';
 import { unpublishSlug } from '../../services/publish';
+import { sendFeedback } from '../../services/feedback';
 import { setLogo, storeLogo } from '../../services/media';
 import { requireWritable } from '../../services/subscriptions';
 import { actingProId, getTeamResponse, syncMembersWithOwner } from '../../services/teams';
@@ -17,6 +18,12 @@ async function writableProId(event: ApiEvent): Promise<string> {
 
 /** Current professional: me, onboarding, profile edit (incl. slug change), logo and slug availability. */
 export const handler = createApiHandler({
+  'POST /me/feedback': async (event) => {
+    const input = parseBody(event, feedbackSchema);
+    await sendFeedback(await requireProId(requirePro(event)), input);
+    return ok({ ok: true });
+  },
+
   'PUT /me/profile/logo': async (event) => {
     const input = parseBody(event, uploadLogoSchema);
     const proId = await writableProId(event);

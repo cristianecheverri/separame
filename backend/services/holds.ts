@@ -55,6 +55,19 @@ async function releaseUnits(proId: string, holdId: string, units: ISOInstant[]):
   if (failed.length) log.warn('hold release failed', { proId, holdId, failed: failed.length });
 }
 
+/**
+ * The visitor moved on to another professional (team page): their hold here
+ * is freed at once instead of blocking the hour until it expires. Only the
+ * holder knows the id; unknown or already-gone holds are a no-op.
+ */
+export async function releaseHold(proId: string, holdId: string): Promise<void> {
+  const hold = await getItem<HoldItem>(holdKey(proId, holdId), true);
+  if (!hold) return;
+  await ddb.send(new DeleteCommand({ TableName: table(), Key: holdKey(proId, holdId) }));
+  await releaseUnits(proId, holdId, unitsOf(hold));
+  log.info('hold released', { proId, holdId });
+}
+
 export async function placeHold(input: {
   proId: string; service: Service; start: ISOInstant; holdId: string; now: Date;
 }): Promise<HoldSlotResponse> {

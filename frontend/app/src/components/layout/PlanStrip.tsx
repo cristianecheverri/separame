@@ -9,13 +9,16 @@ import { ChevronRightIcon } from '../ui/icons';
 /** Trial days left at which phones start showing the strip. */
 const TRIAL_WARN_DAYS = 3;
 
-function stripContent(sub: SubscriptionStatus): { text: string; cta: string; className: string } | null {
+/** `short`: the same notice for phones under 360 px, where the full one would be cut. */
+function stripContent(sub: SubscriptionStatus): { text: string; short: string; cta: string; className: string } | null {
   if (sub.state === 'grace') {
-    return { text: `Renueva antes del ${formatDateNoYear(bogotaDate(sub.graceUntil))}`, cta: 'Renovar', className: 'bg-warn-soft' };
+    const date = formatDateNoYear(bogotaDate(sub.graceUntil));
+    return { text: `Renueva antes del ${date}`, short: `Renueva: ${date}`, cta: 'Renovar', className: 'bg-warn-soft' };
   }
   if (sub.state === 'trial' && sub.daysLeft <= TRIAL_WARN_DAYS) {
     const text = sub.daysLeft <= 0 ? 'Hoy termina tu prueba gratis' : sub.daysLeft === 1 ? 'Te queda 1 día de prueba' : `Te quedan ${sub.daysLeft} días de prueba`;
-    return { text, cta: 'Elegir plan', className: 'bg-accent' };
+    const short = sub.daysLeft <= 0 ? 'Último día de prueba' : sub.daysLeft === 1 ? '1 día de prueba' : `${sub.daysLeft} días de prueba`;
+    return { text, short, cta: 'Elegir plan', className: 'bg-accent' };
   }
   return null;
 }
@@ -36,7 +39,10 @@ export function PlanStrip({ subscription }: { subscription: SubscriptionStatus }
         content.className,
       )}
     >
-      <span className="grow min-w-0 truncate font-semibold">{content.text}</span>
+      <span className="grow min-w-0 truncate font-semibold">
+        <span className="max-[359px]:hidden">{content.text}</span>
+        <span aria-hidden="true" className="min-[360px]:hidden">{content.short}</span>
+      </span>
       <span className="shrink-0 inline-flex items-center gap-1 font-bold underline underline-offset-2">
         {content.cta}
         <ChevronRightIcon size={14} />

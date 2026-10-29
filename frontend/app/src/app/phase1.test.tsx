@@ -142,7 +142,8 @@ describe('blocking hours from the agenda', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Bloquear horas' }));
     const sheet = await screen.findByRole('dialog', { name: 'No estaré disponible' });
     await user.click(within(sheet).getByRole('button', { name: 'Toda la tarde' }));
-    await user.click(within(sheet).getByRole('button', { name: /^Bloquear hoy · 2:00 p\. m\. – 6:00 p\. m\.$/ }));
+    expect(within(sheet).getByText('Hoy · 2:00 – 6:00 p. m.')).toBeInTheDocument();
+    await user.click(within(sheet).getByRole('button', { name: 'Bloquear' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Listo: nadie podrá reservar en ese horario.')).toBeInTheDocument();
     const unblock = await screen.findByRole('button', { name: 'Quitar el bloqueo de las 2:00 p. m.' });
@@ -156,7 +157,7 @@ describe('blocking hours from the agenda', () => {
     await renderApp('/');
     await user.click(await screen.findByRole('button', { name: 'Bloquear el espacio libre de las 9:30 a. m.' }));
     const sheet = await screen.findByRole('dialog', { name: 'No estaré disponible' });
-    expect(within(sheet).getByRole('button', { name: /^Bloquear hoy · 9:30 a\. m\. – 10:00 a\. m\.$/ })).toBeInTheDocument();
+    expect(within(sheet).getByText('Hoy · 9:30 – 10:00 a. m.')).toBeInTheDocument();
     await user.click(within(sheet).getByRole('button', { name: 'Toda la mañana' }));
     expect(await within(sheet).findByText(/Tienes \d+ citas en ese horario\./)).toBeInTheDocument();
   });

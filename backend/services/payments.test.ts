@@ -35,7 +35,13 @@ beforeEach(() => {
   clearParamCache();
   ddb.on(GetCommand).resolves({});
   ddb.on(GetCommand, { Key: profileKey(PRO_ID) }).resolves({ Item: profile });
-  ddb.on(GetCommand, { Key: priceKey('fundador-v1') }).resolves({ Item: { ...DEFAULT_PRICE_SEEDS[0], createdAt: NOW.toISOString() } });
+  // A subscriber of the first founder version keeps its frozen prices (6 months = $30.000).
+  ddb.on(GetCommand, { Key: priceKey('fundador-v1') }).resolves({
+    Item: {
+      ...DEFAULT_PRICE_SEEDS[0], id: 'fundador-v1', code: 'fundador-v1', createdAt: NOW.toISOString(),
+      packages: [{ months: 3, amountCop: 15000 }, { months: 6, amountCop: 30000 }, { months: 12, amountCop: 50000 }],
+    },
+  });
   ddb.on(QueryCommand).resolves({ Items: [] });
   ddb.on(UpdateCommand).resolves({});
   ddb.on(TransactWriteCommand).resolves({});

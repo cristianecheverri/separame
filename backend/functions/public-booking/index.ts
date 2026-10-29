@@ -1,10 +1,10 @@
-import { createBookingSchema, holdSlotSchema } from '../../../shared/schemas';
-import { ApiError, created, createApiHandler, ok, parseBody, pathParam, sourceIp, type ApiEvent } from '../../lib/http';
+import { createBookingSchema, holdIdSchema, holdSlotSchema } from '../../../shared/schemas';
+import { ApiError, created, createApiHandler, noContent, ok, parseBody, pathParam, sourceIp, validationError, type ApiEvent } from '../../lib/http';
 import { hitRateLimit, RATE_RULES } from '../../lib/rate-limit';
 import { verifyTurnstile } from '../../lib/turnstile';
 import { createAppointment, createBookingResponse } from '../../services/appointments';
 import { linkSecret } from '../../lib/tokens';
-import { placeHold } from '../../services/holds';
+import { placeHold, releaseHold } from '../../services/holds';
 import { proIdBySlug, requireProfile } from '../../services/profiles';
 import { requireService } from '../../services/services';
 import { assertBookable, loadSubscription } from '../../services/subscriptions';
@@ -29,6 +29,16 @@ async function bookableProId(event: ApiEvent, now: Date): Promise<string> {
 }
 
 export const handler = createApiHandler({
+  'DELETE /public/pros/{slug}/holds/{holdId}': async (event) => {
+    const parsed = holdIdSchema.safeParse({ holdId: pathParam(event, 'holdId') });
+    if (!parsed.success) throw validationError({ holdId: 'Retención inválida' });
+    const { holdId } = parsed.data;
+    await hitRateLimit(RATE_RULES.holdPerIp, sourceIp(event));
+    const proId = await proIdBySlug(pathParam(event, 'slug').toLowerCase());
+    if (proId) await releaseHold(proId, holdId);
+    return noContent();
+  },
+
   'POST /public/pros/{slug}/holds': async (event) => {
     const input = parseBody(event, holdSlotSchema);
     await hitRateLimit(RATE_RULES.holdPerIp, sourceIp(event));
