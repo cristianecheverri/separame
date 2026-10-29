@@ -14,7 +14,7 @@ export function manageUrlFor(token: string): string {
 }
 
 /** Text links stacked at the bottom: 44 px tall hit areas, negative margins keep the visual rhythm. */
-const BOTTOM_LINK = 'inline-flex items-center min-h-11 px-3 -my-2';
+const BOTTOM_LINK = 'inline-flex items-center min-h-11 px-3';
 const CALENDAR_PRIMARY = `${PRIMARY_BUTTON.replace('text-[17px]', 'text-[16px]')} gap-2.5 hover:text-white`;
 const CALENDAR_OTHER =
   'h-12 rounded-full border-2 border-line bg-white flex items-center justify-center gap-2 font-bold text-[14px] text-ink no-underline whitespace-nowrap hover:border-line-strong hover:text-ink';
@@ -152,7 +152,7 @@ export function Confirmed({ result, icsUrl, agendaSlug, onRestart }: {
           <SaveLinkNotice url={manageUrl} />
         )}
 
-        <div class="mt-auto flex flex-col gap-2.5">
+        <div class="mt-auto flex flex-col gap-3">
           <a href={`${SITE_PATHS.manage}${encodeURIComponent(manageToken)}`} class={MANAGE_BUTTON}>
             Cancelar o reprogramar
           </a>

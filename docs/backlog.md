@@ -102,6 +102,8 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
 - [x] Precios nuevos (29-oct): 1 mes $5.900, 3 meses $15.000, 6 meses $25.000, 12 meses $45.000 —versión
       «Fundador v2», creada sola una vez al desplegar y por defecto para cuentas nuevas; quien ya tiene la v1
       la conserva (migrarlos, si se quiere, desde Admin → Precios con el aviso de 30 días).
+- [x] Cuentas en prueba que nunca pagaron: pasan una sola vez de «Fundador v1» a «Fundador v2» (tarea de
+      10 min, marca `ONCE / unpaid-trials-to-fundador-v2`); quien tiene pagos o un «Ya pagué» conserva la v1.
 - [x] «Ayúdanos a mejorar» en el panel (Más → Ayúdanos a mejorar): idea / duda / algo no funciona → correo a
       ADMIN_EMAIL con Reply-To del profesional; queda guardado (`FEEDBACK#`).
 - [ ] soporte@separame.app no tiene buzón: los correos que lleguen ahí se pierden. Decidir si se reenvía
@@ -127,15 +129,15 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       `marketing/social/out/` ya dicen 15).
 
 ### Detalles pendientes de la ronda del 21-oct
-- [ ] "Olvidar mis datos" en la reserva. Lo pospusiste; confirmar si va esta semana.
-- [ ] `theme-color` verde en la reserva (en Android la barra de estado queda blanca sobre la
+- [x] "Olvidar mis datos" en la reserva (29-oct: «Olvidar» en el aviso de datos guardados). Lo pospusiste; confirmar si va esta semana.
+- [x] `theme-color` verde en la reserva (29-oct) (en Android la barra de estado queda blanca sobre la
       banda verde).
 - [ ] Saludo de la agenda en el celular: "Hola, Laura · 6 citas hoy" se parte en 2 líneas a
       375 px (el mockup lo muestra en una).
 - [ ] Barra "Cambios sin guardar" también en Servicios y Perfil (hoy solo en Disponibilidad).
 - [ ] "Espacio libre" mide el hueco sin el margen entre citas; unificar con la preselección
       del servicio.
-- [ ] Áreas táctiles: el enlace "política de privacidad" dentro del texto de autorización, y
+- [x] Áreas táctiles (29-oct): el enlace "política de privacidad" dentro del texto de autorización, y
       "Cancelar o reprogramar" / "Volver a la agenda" un poco juntos en la confirmación.
 - [ ] Página principal: justo después de un despliegue muestra los precios por defecto hasta
       que pasa la tarea de 10 minutos. Regenerarla también al terminar el despliegue.

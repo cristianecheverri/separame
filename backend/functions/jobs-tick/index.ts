@@ -2,6 +2,7 @@ import { log } from '../../lib/logger';
 import { sendDueReminders, sendRenewalNotices } from '../../services/jobs';
 import { publishLanding } from '../../services/landing';
 import { processMigrations } from '../../services/migrations';
+import { moveUnpaidTrials } from '../../services/price-upgrade';
 import { publishSitemap } from '../../services/sitemap';
 import { cleanSiteAssets } from '../../services/site-assets';
 
@@ -31,6 +32,8 @@ export const handler = async (): Promise<void> => {
   await step('reminders', () => sendDueReminders(now, BUDGET.reminders));
   await step('renewals', () => sendRenewalNotices(now, BUDGET.renewals));
   await step('migrations', () => processMigrations(now, BUDGET.migrations));
+  // Once (marker item): unpaid trials on the first founder version get the 29-oct-2026 prices.
+  await step('priceUpgrade', () => moveUnpaidTrials(now));
   // Two HEAD requests when nothing changed; re-renders / after a deploy or a price change.
   await step('landing', () => publishLanding({ now }));
   await step('sitemap', () => publishSitemap(now));

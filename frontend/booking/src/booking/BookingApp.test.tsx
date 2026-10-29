@@ -428,7 +428,28 @@ describe('BookingApp', () => {
     expect((screen.getByLabelText('Celular') as HTMLInputElement).value).toBe('300 123 4567');
     // The consent is asked every time.
     expect((consent() as HTMLInputElement).checked).toBe(false);
+
+    // «Olvidar»: gone from this phone, the form starts empty and nothing is prefilled again.
+    click('Olvidar');
+    expect(localStorage.getItem('separame:contact')).toBeNull();
+    expect(screen.queryByText('Usamos los datos que guardaste en este celular.')).toBeNull();
+    expect((screen.getByLabelText('Nombre completo') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Celular') as HTMLInputElement).value).toBe('');
+    expect((screen.getByRole('checkbox', { name: /Recordar mis datos en este celular/ }) as HTMLInputElement).checked).toBe(false);
     localStorage.clear();
+  });
+
+  it('paints the phone status bar green under the green profile band, white on the other steps', async () => {
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#FFFFFF';
+    document.head.appendChild(meta);
+    renderApp();
+    expect(meta.content).toBe('#0B6E4F');
+    click(/Valoración/);
+    await next();
+    expect(meta.content).toBe('#FFFFFF');
+    meta.remove();
   });
 
   it('checks a typed field when it loses focus; placeholders never look like real data', async () => {

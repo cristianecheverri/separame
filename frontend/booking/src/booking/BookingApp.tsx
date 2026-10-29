@@ -79,6 +79,8 @@ const BLOCKED_LABELS = {
   when: 'Elige día y hora',
   hour: 'Elige una hora',
 } as const;
+const THEME_GREEN = '#0B6E4F';
+const THEME_WHITE = '#FFFFFF';
 const SLOT_TAKEN_NOTICE = 'Alguien acaba de separar esa hora. Elige otra, por favor.';
 /** The page stayed open past the hour's start (it can only be booked a few minutes after it starts). */
 const SLOT_STARTED_NOTICE = 'Esa hora ya empezó. Elige otra, por favor.';
@@ -522,6 +524,15 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
     });
   };
 
+  /** «Olvidar»: the saved contact leaves this phone and the form starts empty. */
+  const forgetContact = () => {
+    saveContact(null);
+    setPrefilled(false);
+    setErrors({});
+    setDraft((d) => ({ ...d, name: '', phone: '', email: '', remember: false }));
+    document.getElementById(FIELD_IDS.name)?.focus();
+  };
+
   const changeField = (field: ContactField, value: string | boolean) => {
     const next = { ...draft, [field]: value };
     setDraft(next);
@@ -663,6 +674,12 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
     setStep(steps[0]);
   };
 
+  // Android paints the status bar with theme-color: green while the green profile band is at the top.
+  const greenTop = screen === 'unavailable' || !shownProfile || (screen === 'flow' && !done && !waitlistOpen && stepIndex === 0 && !shortScreen);
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', greenTop ? THEME_GREEN : THEME_WHITE);
+  }, [greenTop]);
+
   // ── Screens ──
   if (screen === 'notfound') {
     return <MissingScreen title="Esta agenda no existe" text="Revisa el enlace o pídele a quien te lo compartió que te lo envíe de nuevo." />;
@@ -784,6 +801,7 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
               remember={Boolean(draft.remember)}
               onRemember={(remember) => setDraft((d) => ({ ...d, remember }))}
               prefilled={prefilled && Boolean(draft.remember)}
+              onForget={forgetContact}
               heldMinutes={heldStart && heldStart === draft.start ? HOLD_MINUTES : null}
               titleRef={titleRef}
             />

@@ -59,6 +59,7 @@
  *  SITEASSETS                       SITEASSETS                 { builds: { <assetDir>: buildId }, lastUsed: { <bucketKey>: ISO }, checkedAt,
  *                                                              cleanedAt } — old hashed site assets cleanup (shared/site-assets.ts)
  *  MIGRATION                        MIGRATION#<id>             PriceMigration
+ *  ONCE                             <taskName>                 { at, … } — marker of a one-time data task (e.g. unpaid-trials-to-fundador-v2)
  *  EMAIL#<key>                      SENT                       email idempotency marker (TTL)
  *  IDEMP#<proId>#<idempotencyKey>   IDEMP                      { apptId, start, serviceId } — public booking retry marker,
  *                                                              written in the booking transaction (TTL: 24 h)

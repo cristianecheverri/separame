@@ -34,7 +34,7 @@ se renombraron al exportar y sus enlaces internos apuntan a los nombres exportad
 | `client-booking-steps-verifying.dc.html` | Paso 3 con la hora guardada («Te guardamos esta hora 10 minutos mientras escribes tus datos.») y el botón «Verificando la hora…» mientras se revalida (importa `client-booking-steps`, tweak `hold`) | `client-booking-steps-verifying` |
 | `client-booking-logo.dc.html` | Paso 1 con el logo del profesional en la banda (tweak `logo` de `client-booking-steps`; sin logo, las iniciales como siempre). En la página del consultorio la banda lleva el logo del consultorio y «¿Con quién?» el de cada profesional | `client-booking-logo` |
 | `pro-public-profile-logo.dc.html` | Perfil público con «Logo o foto» subido (tweak `logo` de `pro-public-profile`): «Cambiar imagen» / «Quitar». En «Equipo» van el logo del consultorio y el de cada profesional | `pro-public-profile-logo` |
-| `client-booking-returning.dc.html` | «Tus datos» de un cliente que vuelve: datos guardados y aviso «Usamos los datos que guardaste en este celular.» | `client-booking-returning` |
+| `client-booking-returning.dc.html` | «Tus datos» de un cliente que vuelve: datos guardados y aviso «Usamos los datos que guardaste en este celular.» con «Olvidar» | `client-booking-returning` |
 | `client-booking-landscape.dc.html` | Reserva en horizontal (844×390): encabezado compacto, chips en una fila, nombre y celular lado a lado | `client-booking-landscape` |
 | `client-booking-steps-at-step-{2,3,4}.dc.html` | El mismo flujo abierto en el paso 2, 3 y 4 (importa `client-booking-steps`) | `Pasos-2/3/4` |
 | `client-booking-single-page.dc.html` | Reserva en una sola página (referencia del encabezado del perfil) | `Main` |

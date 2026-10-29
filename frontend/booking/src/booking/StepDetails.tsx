@@ -27,6 +27,8 @@ interface Props extends Omit<FieldsProps, 'emailHint' | 'consentPurpose' | 'emai
   onRemember: (remember: boolean) => void;
   /** The fields came prefilled from this phone's saved data. */
   prefilled: boolean;
+  /** «Olvidar mis datos»: deletes them from this phone and empties the fields. */
+  onForget: () => void;
   /** Minutes the picked hour is held for the client (null: not held). */
   heldMinutes?: number | null;
 }
@@ -50,7 +52,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 const CHECKBOX = 'w-[22px] h-[22px] m-0 shrink-0 accent-primary cursor-pointer';
 const CHECK_LABEL = 'min-h-11 flex gap-3 items-start text-[13px] leading-[1.45] text-ink-2 cursor-pointer';
 
-export function StepDetails({ titleRef, remember, onRemember, prefilled, heldMinutes = null, ...fields }: Props) {
+export function StepDetails({ titleRef, remember, onRemember, prefilled, onForget, heldMinutes = null, ...fields }: Props) {
   return (
     <section class="flex flex-col gap-3.5 short:gap-2.5">
       <StepTitle titleRef={titleRef}>¿A nombre de quién?</StepTitle>
@@ -61,9 +63,16 @@ export function StepDetails({ titleRef, remember, onRemember, prefilled, heldMin
         </p>
       )}
       {prefilled && (
-        <div class="bg-primary-soft rounded-2xl py-3 px-3.5 flex gap-2 items-center text-[14px] leading-[1.4]">
+        <div class="bg-primary-soft rounded-2xl py-1 pl-3.5 pr-1.5 flex gap-2 items-center text-[14px] leading-[1.4]">
           <Check size={18} strokeWidth={2.2} stroke="#0B6E4F" class="shrink-0" />
-          <span>Usamos los datos que guardaste en este celular.</span>
+          <span class="grow min-w-0 py-2">Usamos los datos que guardaste en este celular.</span>
+          <button
+            type="button"
+            onClick={onForget}
+            class="shrink-0 min-h-11 px-2.5 rounded-full border-0 bg-transparent font-bold text-[14px] text-primary underline underline-offset-2 hover:text-primary-dark"
+          >
+            Olvidar
+          </button>
         </div>
       )}
       <ContactFields
@@ -199,7 +208,8 @@ export function ContactFields({ form, errors, onChange, onBlur, emailOptional = 
           />
           <span>
             Autorizo el tratamiento de mis datos personales para {consentPurpose}, según la{' '}
-            <a href={PRIVACY_URL} target="_blank" rel="noopener" class="text-primary">
+            {/* Inline, but with a finger-sized hit area (the padding doesn't move the text). */}
+            <a href={PRIVACY_URL} target="_blank" rel="noopener" class="text-primary py-3 -my-3 relative">
               política de privacidad
             </a>{' '}
             (Ley 1581 de 2012).
