@@ -14,6 +14,7 @@ import { newId } from '../lib/ids';
 import { log } from '../lib/logger';
 import { ownerKey, profileKey, settingsKey, slugKey, subKey, trialKey } from '../lib/keys';
 import { sha256Hex } from '../lib/tokens';
+import { RULES_VERSION } from './availability';
 import { defaultPrice } from './prices';
 import { ensureReferralCode, onboardingReferralOp, resolveOnboardingReferral } from './referrals';
 import { toPublicService } from './services';
@@ -136,7 +137,7 @@ export async function onboard(user: AuthUser, input: OnboardingRequest, now: Dat
     { Put: { TableName: T, Item: { ...slugKey(profile.slug), proId, createdAt: at }, ConditionExpression: 'attribute_not_exists(PK)' } },
     { Put: { TableName: T, Item: { ...profileKey(proId), ...profile, cognitoSub: user.sub }, ConditionExpression: 'attribute_not_exists(PK)' } },
     { Put: { TableName: T, Item: { ...subKey(proId), ...sub, ...subIndexAttrs(sub) } } },
-    { Put: { TableName: T, Item: { ...settingsKey(proId), proId, schedule: DEFAULT_SCHEDULE, rules: DEFAULT_RULES, updatedAt: at } } },
+    { Put: { TableName: T, Item: { ...settingsKey(proId), proId, schedule: DEFAULT_SCHEDULE, rules: DEFAULT_RULES, rulesVersion: RULES_VERSION, updatedAt: at } } },
   ];
   if (!trialUsed) {
     items.push({ Put: { TableName: T, Item: { ...trialKey(hash), proId, at }, ConditionExpression: 'attribute_not_exists(PK)' } });

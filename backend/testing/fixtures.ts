@@ -74,7 +74,8 @@ export function subItem(overrides: Partial<SubItem> = {}): SubItem {
   };
 }
 
-export const settings = { schedule: DEFAULT_SCHEDULE, rules: DEFAULT_RULES };
+/** A pro who chose a 10-minute margin in Disponibilidad (the default is none since 29-oct-2026). */
+export const settings = { schedule: DEFAULT_SCHEDULE, rules: { ...DEFAULT_RULES, bufferMin: 10 }, rulesVersion: 2 };
 
 export function canceledTx(codes: string[]): Error {
   return Object.assign(new Error(`Transaction cancelled, please refer cancellation reasons for specific reasons [${codes.join(', ')}]`), {

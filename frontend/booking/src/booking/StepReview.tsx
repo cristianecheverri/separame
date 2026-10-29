@@ -1,4 +1,3 @@
-import type { ComponentChildren } from 'preact';
 import { Pin } from '../components/icons';
 import { RevealedNotice } from '../components/ui';
 import { StepTitle, type StepId } from './FlowChrome';
@@ -18,11 +17,10 @@ interface Props {
   address: string;
   error: string | null;
   onEdit: (step: StepId) => void;
-  captcha: ComponentChildren;
   titleRef: preact.Ref<HTMLHeadingElement>;
 }
 
-export function StepReview({ rows, address, error, onEdit, captcha, titleRef }: Props) {
+export function StepReview({ rows, address, error, onEdit, titleRef }: Props) {
   return (
     <section class="flex flex-col gap-3.5">
       <StepTitle titleRef={titleRef}>¿Todo bien?</StepTitle>
@@ -54,7 +52,6 @@ export function StepReview({ rows, address, error, onEdit, captcha, titleRef }: 
         </div>
       )}
       {error && <RevealedNotice message={error} />}
-      {captcha}
     </section>
   );
 }

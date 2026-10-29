@@ -91,7 +91,11 @@ Primero el diseño en el lienzo para que lo apruebes, luego la implementación.
       (lienzo y `mockups/line-a/` al día: hora tomada y «Verificando la hora…»).
 - [x] Sin anticipación mínima, una hora que empezó se puede pedir hasta 5 min después
       (`STARTED_SLOT_GRACE_MIN`); en la reserva, «Esa hora ya empezó…» si la página quedó abierta.
-- [ ] Desplegar a dev y probarlo con dos celulares a la vez; luego a prod.
+- [x] Sin margen entre citas por defecto (29-oct): el margen de 10 min que se guardó al crear cada cuenta
+      cuenta como «Sin margen»; las citas viejas sueltan su cola de 10 min cuando alguien reserva justo después.
+- [x] «Separar mi cita» más rápido: el captcha se resuelve desde «Tus datos» y la reserva lee en paralelo.
+- [x] «Volver a la agenda» tras reservar (un solo servicio) ya no se queda cargando y trae horas nuevas.
+- [x] Desplegado y probado en dev y prod.
 
 ### Bloquear horas, métricas de valor, logo y rendimiento (29-oct)
 - [x] Bloquear horas desde la agenda: «+» → «Bloquear horas», «Bloquear» en el espacio libre, el bloqueo

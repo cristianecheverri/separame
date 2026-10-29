@@ -205,6 +205,24 @@ describe('BookingApp', () => {
     expect(screen.getByText(MOCK_PROFILE.initials)).toBeTruthy();
   });
 
+  it('«Volver a la agenda» after booking (single service) shows fresh hours, without the one just booked', async () => {
+    renderApp('', { ...MOCK_PROFILE, services: MOCK_PROFILE.services.slice(0, 1) });
+    click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
+    click('10:00 a. m.');
+    await next();
+    fireEvent.input(screen.getByLabelText('Nombre completo'), { target: { value: 'Mariana Gómez' } });
+    fireEvent.input(screen.getByLabelText('Celular'), { target: { value: '300 123 4567' } });
+    fireEvent.click(consent());
+    await next();
+    click('Separar mi cita');
+    await screen.findByRole('heading', { name: '¡Listo, Mariana! Tu cita quedó separada.' });
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la agenda' }));
+    expect(screen.getByText('Paso 1 de 3 · Día y hora')).toBeTruthy();
+    click(await screen.findByRole('button', { name: 'Jueves 22 de octubre' }));
+    await screen.findByRole('button', { name: '10:30 a. m.' });
+    expect(screen.queryByRole('button', { name: '10:00 a. m.' })).toBeNull();
+  });
+
   it('shows a retry message on network errors', async () => {
     renderApp('fail=network');
     await goToReview();

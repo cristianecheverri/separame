@@ -8,7 +8,7 @@ import { cancellationCodes, ddb, getItem, isConditionalFailure, MAX_TRANSACT_ITE
 import { ApiError } from '../lib/http';
 import { holdKey, lockKey } from '../lib/keys';
 import { log } from '../lib/logger';
-import { LOCK_FREE, lockDiff, lockFreeValues } from './appointments';
+import { LOCK_FREE, lockDiff, lockFreeValues, withStaleTailRetry } from './appointments';
 import { loadContext } from './availability';
 
 /**
@@ -92,13 +92,15 @@ export async function placeHold(input: {
       },
     })),
   ];
-  try {
-    await transactWrite(ops);
-  } catch (err) {
-    // A unit is booked or held by someone else (or a concurrent transaction is taking it).
-    if (cancellationCodes(err).length) throw new ApiError('slot_taken');
-    throw err;
-  }
+  await withStaleTailRetry(proId, units, hold.bufferMin, async () => {
+    try {
+      await transactWrite(ops);
+    } catch (err) {
+      // A unit is booked or held by someone else (or a concurrent transaction is taking it).
+      if (cancellationCodes(err).length) throw new ApiError('slot_taken');
+      throw err;
+    }
+  });
   await releaseUnits(proId, holdId, release);
   log.info('slot held', { proId, holdId, start });
   return { expiresAt: new Date(hold.expiresAt).toISOString() };

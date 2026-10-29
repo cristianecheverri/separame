@@ -330,3 +330,34 @@ describe('POST /public/pros/{slug}/holds', () => {
     expect(parse(res).error.fields).toHaveProperty('holdId');
   });
 });
+
+describe('appointments booked with the old 10-minute margin', () => {
+  // A 9:30–10:00 appointment from before 29-oct still locks 10:00 and 10:05 (its old tail).
+  const legacy = { id: 'old1', start: '2026-10-21T14:30:00.000Z', durationMin: 30, lockBufferMin: 10 };
+
+  it('a booking right after it trims the stale tail and goes through on the retry', async () => {
+    mockPro();
+    ddb.on(GetCommand, { Key: settingsKey(PRO_ID) }).resolves({ Item: { schedule: settings.schedule, rules: { ...settings.rules, bufferMin: 0 }, rulesVersion: 2 } });
+    ddb.on(QueryCommand, { IndexName: 'lsi1-start', ProjectionExpression: 'id, #s, durationMin, lockBufferMin' }).resolves({ Items: [legacy] });
+    ddb.on(TransactWriteCommand)
+      .rejectsOnce(canceledTx(['None', 'ConditionalCheckFailed']))
+      .resolves({});
+    const res = await handler(booking(START));
+    expect(res.statusCode).toBe(201);
+    const txs = ddb.commandCalls(TransactWriteCommand).map((c) => c.args[0].input.TransactItems!);
+    // 1st: the booking (refused) · 2nd: the trim · 3rd: the booking again.
+    expect(txs).toHaveLength(3);
+    expect(txs[1][0].Update).toMatchObject({ Key: apptKey(PRO_ID, 'old1'), UpdateExpression: 'SET lockBufferMin = :new', ExpressionAttributeValues: { ':new': 0, ':old': 10 } });
+    expect(txs[1].slice(1).map((t) => t.Delete!.Key!.SK)).toEqual(['10:00', '10:05']);
+    expect(txs[2]).toEqual(txs[0]);
+  });
+
+  it('a real conflict (nothing stale to trim) is still slot_taken', async () => {
+    mockPro();
+    ddb.on(TransactWriteCommand).rejects(canceledTx(['None', 'ConditionalCheckFailed']));
+    const res = await handler(booking(START));
+    expect(parse(res).error.code).toBe('slot_taken');
+    expect(ddb.commandCalls(TransactWriteCommand)).toHaveLength(1);
+  });
+});
+

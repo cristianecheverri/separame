@@ -232,6 +232,72 @@ export async function writeWithLocks(input: {
   await releaseLocks(proId, apptId, input.release);
 }
 
+/** Longest appointment + margin (schema: 480 + 120 min): how far back an appointment can still hold a unit. */
+const MAX_LOCK_SPAN_MIN = 480 + 120;
+
+/**
+ * Appointments booked when the margin was longer (the old default was 10 min)
+ * still hold lock units after their end. When a new lock needs one of those
+ * stale tail units, the neighbour gives it up: its tail units beyond today's
+ * margin are deleted and its `lockBufferMin` lowered in one transaction (so its
+ * own cancel or move later releases exactly what it still holds). Returns how
+ * many neighbours were trimmed.
+ */
+export async function trimStaleTails(proId: string, units: ISOInstant[], bufferMin: number): Promise<number> {
+  if (units.length === 0) return 0;
+  const wanted = new Set(units.map(unitId));
+  const items = await queryAll({
+    IndexName: LSI1.name,
+    KeyConditionExpression: 'PK = :pk AND #sk BETWEEN :from AND :to',
+    FilterExpression: '#st = :c',
+    ExpressionAttributeNames: { '#sk': LSI1.sk, '#st': 'status', '#s': 'start' },
+    ExpressionAttributeValues: {
+      ':pk': proPk(proId), ':from': apptStartSk(addMinutes(units[0], -MAX_LOCK_SPAN_MIN)), ':to': apptStartSk(units[units.length - 1]), ':c': 'confirmed',
+    },
+    ProjectionExpression: 'id, #s, durationMin, lockBufferMin',
+    ConsistentRead: true,
+  });
+  let trimmed = 0;
+  for (const a of items) {
+    const old = Number(a.lockBufferMin ?? 0);
+    if (old <= bufferMin) continue;
+    const { release } = lockDiff(lockUnits(a.start, a.durationMin, old), lockUnits(a.start, a.durationMin, bufferMin));
+    if (!release.some((u) => wanted.has(unitId(u)))) continue;
+    try {
+      await transactWrite([
+        {
+          Update: {
+            TableName: table(),
+            Key: apptKey(proId, a.id),
+            UpdateExpression: 'SET lockBufferMin = :new',
+            ConditionExpression: '#st = :c AND lockBufferMin = :old',
+            ExpressionAttributeNames: { '#st': 'status' },
+            ExpressionAttributeValues: { ':new': bufferMin, ':old': old, ':c': 'confirmed' },
+          },
+        },
+        ...release.map((u) => lockDelete(proId, a.id, u)),
+      ]);
+      trimmed++;
+      log.info('stale lock tail trimmed', { proId, appointmentId: a.id, from: old, to: bufferMin });
+    } catch (err) {
+      // Changed meanwhile (moved, cancelled, trimmed by a concurrent booking): the retry sees the truth.
+      if (!cancellationCodes(err).length) throw err;
+    }
+  }
+  return trimmed;
+}
+
+/** Runs a lock write; when it hits a stale tail of an older appointment, trims it and tries once more. */
+export async function withStaleTailRetry(proId: string, units: ISOInstant[], bufferMin: number, write: () => Promise<void>): Promise<void> {
+  try {
+    await write();
+  } catch (err) {
+    if (!(err instanceof ApiError && err.code === 'slot_taken')) throw err;
+    if ((await trimStaleTails(proId, units, bufferMin)) === 0) throw err;
+    await write();
+  }
+}
+
 async function releaseLocks(proId: string, apptId: string, units: ISOInstant[]): Promise<void> {
   for (const chunk of chunks(units, MAX_TRANSACT_ITEMS)) {
     await transactWrite(chunk.map((u) => lockDelete(proId, apptId, u)));
@@ -309,14 +375,15 @@ const idempotencyPut = (proId: string, key: string, marker: IdempotencyMarker, n
 export async function createAppointment(input: CreateAppointmentInput): Promise<AppointmentItem> {
   const { proId, service, now, idempotencyKey, holdId } = input;
   const start = normalize(input.start);
-  if (idempotencyKey) {
-    const replayed = await replayedAppointment(proId, idempotencyKey, start, service.id);
-    if (replayed) return replayed;
-  }
-  const ctx = await loadContext({
-    proId, durationMin: service.durationMin, from: bogotaDate(start), days: 1, now,
-    ignoreMinNotice: input.ignoreMinNotice, excludeHoldId: holdId, consistent: true,
-  });
+  // The retry check and the fresh slot data are independent reads: one round trip instead of two.
+  const [replayed, ctx] = await Promise.all([
+    idempotencyKey ? replayedAppointment(proId, idempotencyKey, start, service.id) : undefined,
+    loadContext({
+      proId, durationMin: service.durationMin, from: bogotaDate(start), days: 1, now,
+      ignoreMinNotice: input.ignoreMinNotice, excludeHoldId: holdId, consistent: true,
+    }),
+  ]);
+  if (replayed) return replayed;
   if (!isSlotBookable(start, ctx)) throw new ApiError('slot_taken');
 
   const at = now.toISOString();
@@ -340,17 +407,18 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   if (idempotencyKey) main.push(idempotencyPut(proId, idempotencyKey, { apptId: id, start, serviceId: service.id }, now));
   // Unconditional: the hold may have expired (and been deleted) while the client typed.
   if (holdId) main.push({ Delete: { TableName: table(), Key: holdKey(proId, holdId) } });
+  const units = lockUnits(start, service.durationMin, ctx.rules.bufferMin);
   try {
-    await writeWithLocks({
+    await withStaleTailRetry(proId, units, ctx.rules.bufferMin, () => writeWithLocks({
       proId,
       apptId: id,
       main,
-      acquire: lockUnits(start, service.durationMin, ctx.rules.bufferMin),
+      acquire: units,
       release: [],
       lockTtl: lockTtlFor(start, service.durationMin, ctx.rules.bufferMin),
       now,
       holdId,
-    });
+    }));
   } catch (err) {
     // Two copies of the same attempt raced: the loser fails on the marker or the locks.
     const replayed = idempotencyKey ? await replayedAppointment(proId, idempotencyKey, start, service.id) : undefined;
@@ -404,7 +472,7 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
     update += ' REMOVE #g2pk, #g2sk';
   }
 
-  await writeWithLocks({
+  await withStaleTailRetry(appt.proId, acquire, ctx.rules.bufferMin, () => writeWithLocks({
     proId: appt.proId,
     apptId: appt.id,
     main: [{
@@ -421,7 +489,7 @@ export async function moveAppointment(input: MoveAppointmentInput): Promise<Appo
     release,
     lockTtl: lockTtlFor(start, appt.durationMin, ctx.rules.bufferMin),
     now,
-  });
+  }));
   log.info('appointment moved', { proId: appt.proId, appointmentId: appt.id, actor: input.actor });
   return {
     ...appt, start, end, updatedAt: at, lastChangedBy: input.actor, lockBufferMin: ctx.rules.bufferMin, revision: revisionOf(appt) + 1,

@@ -2,7 +2,8 @@ import { DynamoDBDocumentClient, PutCommand, TransactWriteCommand } from '@aws-s
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { PRO_ID, setTestEnv } from '../testing/fixtures';
-import { addBlocks, BLOCK_RETENTION_DAYS } from './availability';
+import { DEFAULT_RULES } from '../../shared/availability';
+import { addBlocks, BLOCK_RETENTION_DAYS, effectiveRules, RULES_VERSION } from './availability';
 
 setTestEnv();
 const ddb = mockClient(DynamoDBDocumentClient);
@@ -40,5 +41,18 @@ describe('addBlocks', () => {
     const tx = ddb.commandCalls(TransactWriteCommand)[0].args[0].input.TransactItems!;
     expect(tx).toHaveLength(4);
     expect(tx.every((t) => t.Put!.Item!.label === 'Diligencia')).toBe(true);
+  });
+});
+
+describe('effectiveRules', () => {
+  it('the old default 10-minute margin saved at sign-up reads as «Sin margen»', () => {
+    expect(effectiveRules({ rules: { ...DEFAULT_RULES, bufferMin: 10 } }).bufferMin).toBe(0);
+  });
+  it('a margin chosen in Disponibilidad since then is kept (also 10)', () => {
+    expect(effectiveRules({ rules: { ...DEFAULT_RULES, bufferMin: 10 }, rulesVersion: RULES_VERSION }).bufferMin).toBe(10);
+    expect(effectiveRules({ rules: { ...DEFAULT_RULES, bufferMin: 15 } }).bufferMin).toBe(15);
+  });
+  it('no settings yet: the defaults (no margin)', () => {
+    expect(effectiveRules(undefined)).toEqual(DEFAULT_RULES);
   });
 });

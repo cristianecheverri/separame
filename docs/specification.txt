@@ -207,9 +207,10 @@ ARQUITECTURA (todo serverless, casi gratis en reposo)
     Al tocar una hora en la reserva, se le guarda al cliente 10 minutos
     (nadie más la puede tomar) y se revalida en cada "Siguiente"; si ya
     no está libre, vuelve a "Día y hora" antes de escribir sus datos.
-    Con margen entre citas, la agenda ofrece la hora justo después del
-    margen (10:40 tras una cita de 10:00–10:30) y la última que termina
-    antes de él (9:20), en vez de perder la media hora de cada lado.
+    Por defecto no hay margen entre citas (29-oct): una agenda de 30
+    minutos se reserva seguida. Si el profesional elige un margen, la
+    agenda ofrece la hora justo después de él (10:40 tras una cita de
+    10:00–10:30) y la última que termina antes (9:20).
     Sin anticipación mínima (citas que agenda el profesional, o si la
     pone en 0), una hora que acaba de empezar se puede pedir hasta 5
     minutos después de su inicio; luego ya no aparece.

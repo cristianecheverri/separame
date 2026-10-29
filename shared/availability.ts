@@ -60,8 +60,12 @@ export interface AvailabilityContext {
   now: Date;
 }
 
+/**
+ * No margin between appointments by default (owner's decision, 29-oct-2026): a 30-minute
+ * agenda books back to back. A pro can still choose one in Disponibilidad.
+ */
 export const DEFAULT_RULES: BookingRules = {
-  bufferMin: 10,
+  bufferMin: 0,
   minNoticeMin: 120,
   maxDaysAhead: 60,
   slotStepMin: 30,

@@ -3,6 +3,7 @@ import { ApiError, created, createApiHandler, ok, parseBody, pathParam, sourceIp
 import { hitRateLimit, RATE_RULES } from '../../lib/rate-limit';
 import { verifyTurnstile } from '../../lib/turnstile';
 import { createAppointment, createBookingResponse } from '../../services/appointments';
+import { linkSecret } from '../../lib/tokens';
 import { placeHold } from '../../services/holds';
 import { proIdBySlug, requireProfile } from '../../services/profiles';
 import { requireService } from '../../services/services';
@@ -40,20 +41,34 @@ export const handler = createApiHandler({
   'POST /public/pros/{slug}/bookings': async (event) => {
     const input = parseBody(event, createBookingSchema);
     const ip = sourceIp(event);
-    await hitRateLimit(RATE_RULES.bookingPerIp, ip);
-    await hitRateLimit(RATE_RULES.bookingPerPhone, input.client.phone);
-    if (input.client.email) await hitRateLimit(RATE_RULES.bookingPerEmail, input.client.email);
-    if (!(await verifyTurnstile(input.turnstileToken, ip))) throw new ApiError('captcha_failed');
-
     const now = new Date();
-    const proId = await bookableProId(event, now);
+    // Independent steps run together (the client waits on this request): the rate limits, the
+    // Cloudflare check and the reads of the agenda. Nothing is written before all of them pass.
+    const [captchaOk, proId] = await Promise.all([
+      (async () => {
+        await Promise.all([
+          hitRateLimit(RATE_RULES.bookingPerIp, ip),
+          hitRateLimit(RATE_RULES.bookingPerPhone, input.client.phone),
+          ...(input.client.email ? [hitRateLimit(RATE_RULES.bookingPerEmail, input.client.email)] : []),
+        ]);
+        return verifyTurnstile(input.turnstileToken, ip);
+      })(),
+      proIdBySlug(pathParam(event, 'slug').toLowerCase()),
+    ]);
+    if (!captchaOk) throw new ApiError('captcha_failed');
+    if (!proId) throw new ApiError('not_found', 'No encontramos esta agenda.');
 
-    const service = await requireService(proId, input.serviceId, { visibleOnly: true });
+    const [{ status }, service, pro] = await Promise.all([
+      loadSubscription(proId, now),
+      requireService(proId, input.serviceId, { visibleOnly: true }),
+      requireProfile(proId),
+      linkSecret(), // warms the cache the manage link is signed with (SSM, once per container)
+    ]);
+    assertBookable(status);
     const appt = await createAppointment({
       proId, service, start: input.start, client: input.client, createdBy: 'client', now, idempotencyKey: input.idempotencyKey,
       holdId: input.holdId,
     });
-    const pro = await requireProfile(proId);
     return created(await createBookingResponse(appt, pro));
   },
 });

@@ -19,6 +19,8 @@ const ctx = (over: Partial<AvailabilityContext> = {}): AvailabilityContext => ({
 });
 
 const times = (slots: string[]) => slots.map(bogotaTime);
+/** A pro who chose a 10-minute margin (none by default). */
+const BUFFERED = { ...DEFAULT_RULES, bufferMin: 10 };
 
 describe('computeDay', () => {
   it('offers every 30-min start that fits inside the weekly ranges', () => {
@@ -66,7 +68,7 @@ describe('computeDay', () => {
 
   it('keeps the buffer around existing appointments', () => {
     const busy = [{ start: toInstant('2026-10-22', '10:00'), end: toInstant('2026-10-22', '10:30') }];
-    const slots = times(computeDay('2026-10-22', ctx({ busy })).slots);
+    const slots = times(computeDay('2026-10-22', ctx({ busy, rules: BUFFERED })).slots);
     // 9:30–10:00 would end exactly at 10:00 (< 10 min gap) and 10:30 starts right at the end.
     expect(slots).not.toContain('09:30');
     expect(slots).not.toContain('10:00');
@@ -77,13 +79,19 @@ describe('computeDay', () => {
 
   it('offers the starts right around the buffer instead of losing the neighbouring grid slots', () => {
     const busy = [{ start: toInstant('2026-10-22', '10:00'), end: toInstant('2026-10-22', '10:30') }];
-    const slots = times(computeDay('2026-10-22', ctx({ busy })).slots);
+    const slots = times(computeDay('2026-10-22', ctx({ busy, rules: BUFFERED })).slots);
     expect(slots.slice(0, 7)).toEqual(['08:00', '08:30', '09:00', '09:20', '10:40', '11:00', '11:30']);
     // The extra starts are real slots: their locks never touch the booked appointment's.
-    const booked = new Set(lockUnits(busy[0].start, 30, DEFAULT_RULES.bufferMin));
+    const booked = new Set(lockUnits(busy[0].start, 30, BUFFERED.bufferMin));
     for (const at of ['09:20', '10:40']) {
-      expect(lockUnits(toInstant('2026-10-22', at), 30, DEFAULT_RULES.bufferMin).some((u) => booked.has(u))).toBe(false);
+      expect(lockUnits(toInstant('2026-10-22', at), 30, BUFFERED.bufferMin).some((u) => booked.has(u))).toBe(false);
     }
+  });
+
+  it('by default there is no margin: a 30-minute agenda books back to back', () => {
+    expect(DEFAULT_RULES.bufferMin).toBe(0);
+    const busy = [{ start: toInstant('2026-10-22', '10:00'), end: toInstant('2026-10-22', '10:30') }];
+    expect(times(computeDay('2026-10-22', ctx({ busy })).slots).slice(0, 7)).toEqual(['08:00', '08:30', '09:00', '09:30', '10:30', '11:00', '11:30']);
   });
 
   it('without a buffer the grid slots next to an appointment stay (no extra starts)', () => {
@@ -94,7 +102,7 @@ describe('computeDay', () => {
 
   it('extra starts stay inside the weekly range', () => {
     const busy = [{ start: toInstant('2026-10-22', '11:00'), end: toInstant('2026-10-22', '11:30') }];
-    const slots = times(computeDay('2026-10-22', ctx({ busy })).slots);
+    const slots = times(computeDay('2026-10-22', ctx({ busy, rules: BUFFERED })).slots);
     // 11:40 would end at 12:10, after the morning range.
     expect(slots).not.toContain('11:40');
     expect(slots).toContain('10:20');

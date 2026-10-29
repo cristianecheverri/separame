@@ -33,15 +33,30 @@ export const toBlock = (item: Item): Block => {
   return { id, label, start, end };
 };
 
+/**
+ * SETTINGS written before 29-oct-2026 carry the old default 10-minute margin
+ * that every account got at sign-up. Those items have no `rulesVersion` and
+ * read as «Sin margen»; a margin saved from Disponibilidad since then
+ * (`rulesVersion` = RULES_VERSION) is kept as chosen.
+ */
+export const RULES_VERSION = 2;
+export const LEGACY_DEFAULT_BUFFER_MIN = 10;
+
+export function effectiveRules(item: Partial<SettingsItem & { rulesVersion: number }> | undefined): BookingRules {
+  const rules = { ...DEFAULT_RULES, ...(item?.rules ?? {}) };
+  const legacy = item?.rules !== undefined && item.rulesVersion !== RULES_VERSION;
+  return legacy && rules.bufferMin === LEGACY_DEFAULT_BUFFER_MIN ? { ...rules, bufferMin: 0 } : rules;
+}
+
 export async function getSettings(proId: string, consistent = false): Promise<SettingsItem> {
-  const item = await getItem<SettingsItem>(settingsKey(proId), consistent);
-  return { schedule: item?.schedule ?? DEFAULT_SCHEDULE, rules: { ...DEFAULT_RULES, ...(item?.rules ?? {}) } };
+  const item = await getItem<SettingsItem & { rulesVersion?: number }>(settingsKey(proId), consistent);
+  return { schedule: item?.schedule ?? DEFAULT_SCHEDULE, rules: effectiveRules(item) };
 }
 
 export async function putSettings(proId: string, input: PutAvailabilityRequest, now: Date = new Date()): Promise<void> {
   await ddb.send(new PutCommand({
     TableName: table(),
-    Item: { ...settingsKey(proId), proId, schedule: input.schedule, rules: input.rules, updatedAt: now.toISOString() },
+    Item: { ...settingsKey(proId), proId, schedule: input.schedule, rules: input.rules, rulesVersion: RULES_VERSION, updatedAt: now.toISOString() },
   }));
 }
 

@@ -601,7 +601,13 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
       removeKey(draftKey);
       saveContact(draft.remember ? { name: draft.name.trim(), phone: formatPhone(normalizePhone(draft.phone)), email: normalizeEmail(draft.email) } : null);
       history.replaceState({ sep: 'done', d: depthRef.current } satisfies HistoryState, '');
-      setDraft(EMPTY_DRAFT);
+      // A fresh attempt: the only service comes preselected again (else «Volver a la agenda» would open
+      // «Día y hora» without a service), the saved contact is prefilled, and the availability fetched
+      // before this booking is dropped so the booked hour doesn't show as free.
+      const fresh = withSavedContact(EMPTY_DRAFT);
+      setDraft(teamPage ? fresh.draft : withSingleService(fresh.draft, fetchedProfile));
+      setPrefilled(fresh.prefilled);
+      setAvailability({});
       setDone(result);
       track('booking_confirmed', { pro_slug: trackSlug, has_email: normalizeEmail(draft.email) ? 'yes' : 'no', ...proChoice });
     } catch (error) {
@@ -641,6 +647,8 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
   /** «Volver a la agenda» from the confirmation: a fresh booking on this same page. */
   const restart = () => {
     removeKey(doneKey);
+    // The confirmation may have stayed open a while: hours are fetched again.
+    setAvailability({});
     depthRef.current = 0;
     history.replaceState({ sep: steps[0], d: 0 } satisfies HistoryState, '');
     focusTitleRef.current = true;
@@ -780,11 +788,15 @@ export function BookingApp({ slug, initialProfile, team = null, runtime }: Props
               error={submitError}
               onEdit={go}
               titleRef={titleRef}
-              captcha={captcha.box}
             />
           )}
           {stepIndex === 0 && <LegalLinks class="mt-auto pt-6" />}
         </div>
+        {/*
+          The invisible captcha starts on «Tus datos» and lives outside the keyed step, so Cloudflare
+          hands the token over while the client types: «Separar mi cita» doesn't wait for it.
+        */}
+        {(step === 'details' || step === 'review') && captcha.box && <div class="px-5 pb-4 -mt-1">{captcha.box}</div>}
       </main>
       <FlowFooter>
         {step === 'review' && captcha.needsInteraction && <CaptchaHint />}
