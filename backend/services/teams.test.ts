@@ -119,7 +119,8 @@ describe('addTeamMember', () => {
     expect(member.Put!.Item).toMatchObject({
       ...profileKey(memberId), name: 'Dra. Sara Gómez', slug: 'dra-sara-gomez', ownerId: PRO_ID, city: profile.city, email: profile.email,
     });
-    expect(memberSettings.Put!.Item).toMatchObject({ ...settingsKey(memberId), schedule: settings.schedule });
+    // The owner's margin as it applies today (10 min in the fixture), kept as a chosen one.
+    expect(memberSettings.Put!.Item).toMatchObject({ ...settingsKey(memberId), schedule: settings.schedule, rules: { bufferMin: 10 }, rulesVersion: 2 });
     expect(tx().some((t) => t.Put?.Item?.SK === 'SUB' || String(t.Put?.Item?.PK).startsWith('OWNER#'))).toBe(false);
   });
 

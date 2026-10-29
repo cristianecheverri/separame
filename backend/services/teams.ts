@@ -17,7 +17,7 @@ import {
 } from '../lib/keys';
 import { log } from '../lib/logger';
 import { sendTeamApproved, sendTeamRejected, sendTeamRequestToAdmin } from '../mail/notifications';
-import { getSettings } from './availability';
+import { getSettings, RULES_VERSION } from './availability';
 import { requirePrice } from './prices';
 import { publicUrl, requireProfile, requireProId, toProfile } from './profiles';
 import { loadSubscription, requireWritable, subscriptionStatus, type SubItem } from './subscriptions';
@@ -215,7 +215,8 @@ export async function addTeamMember(ownerId: string, body: UpsertTeamMemberBody,
     },
     { Put: { TableName: T, Item: { ...slugKey(body.slug), proId: memberId, createdAt: at }, ConditionExpression: 'attribute_not_exists(PK)' } },
     { Put: { TableName: T, Item: { ...profileKey(memberId), ...profile }, ConditionExpression: 'attribute_not_exists(PK)' } },
-    { Put: { TableName: T, Item: { ...settingsKey(memberId), proId: memberId, schedule: settings.schedule, rules: settings.rules, updatedAt: at } } },
+    // The owner's rules as they apply today (already resolved): the member keeps exactly that margin.
+    { Put: { TableName: T, Item: { ...settingsKey(memberId), proId: memberId, schedule: settings.schedule, rules: settings.rules, rulesVersion: RULES_VERSION, updatedAt: at } } },
   ]).catch((err: unknown) => {
     if (failedConditionIndex(err) === 0) throw new ApiError('conflict', 'Usaste todos tus cupos. Solicita más desde «Equipo».');
     slugTakenOr(err, 1);
